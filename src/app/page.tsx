@@ -114,7 +114,9 @@ export default function WeekGlancePage() {
   const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
+  
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isPreviewSuppressedByClickRef = useRef(false);
 
   const t = translations[currentLanguage];
 
@@ -149,7 +151,7 @@ export default function WeekGlancePage() {
     setCurrentDayIndex(adjustedDayIndex);
     setIsAfter6PMToday(today.getHours() >= 18);
     
-    return () => { // Cleanup timer on unmount
+    return () => { 
       clearTimeoutIfNecessary();
     };
 
@@ -209,6 +211,8 @@ export default function WeekGlancePage() {
   };
 
   const handleDaySelect = useCallback((day: string) => {
+    setHoverPreviewData(null); 
+    isPreviewSuppressedByClickRef.current = true;
     setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
   }, []);
 
@@ -247,6 +251,9 @@ export default function WeekGlancePage() {
 
   const handleDayHoverStart = useCallback((dayData: { dayName: string; notes: string; imageHint: string }) => {
     clearTimeoutIfNecessary();
+    if (isPreviewSuppressedByClickRef.current) {
+      return;
+    }
     setHoverPreviewData({
       ...dayData,
       altText: t.thumbnailPreviewAlt(dayData.dayName),
@@ -254,6 +261,7 @@ export default function WeekGlancePage() {
   }, [t, clearTimeoutIfNecessary]);
 
   const handleDayHoverEnd = useCallback(() => {
+    isPreviewSuppressedByClickRef.current = false; 
     clearTimeoutIfNecessary();
     hidePreviewTimerRef.current = setTimeout(() => {
       setHoverPreviewData(null);
