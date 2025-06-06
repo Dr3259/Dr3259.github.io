@@ -26,7 +26,7 @@ import {
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
     Trash2, Hourglass, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus, Star as StarIcon, FileEdit,
-    Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock
+    Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock, CalendarCheck
 } from 'lucide-react';
 
 export type CategoryType = 'work' | 'study' | 'shopping' | 'organizing' | 'relaxing' | 'cooking' | 'childcare' | 'dating';
@@ -36,7 +36,7 @@ export interface TodoItem {
   text: string;
   completed: boolean;
   category: CategoryType | null;
-  deadline: 'hour' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
+  deadline: 'hour' | 'today' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
   importance: 'important' | 'notImportant' | null;
 }
 
@@ -66,6 +66,7 @@ interface TodoModalProps {
     categories: Record<CategoryType, string>;
     deadlines: {
         hour: string;
+        today: string;
         tomorrow: string;
         thisWeek: string;
         nextWeek: string;
@@ -91,6 +92,7 @@ const CategoryIcons: Record<CategoryType, React.ElementType> = {
 
 const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
   hour: Hourglass,
+  today: CalendarCheck,
   tomorrow: Sunrise,
   thisWeek: CalendarRange,
   nextWeek: ArrowRightToLine,
@@ -192,7 +194,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      onClose(); // This will also trigger the useEffect to reset form if modal is re-opened
+      onClose();
     }
   };
 
@@ -202,8 +204,8 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   };
 
   const getDeadlineTooltip = (deadline: TodoItem['deadline']) => {
-    if (!deadline) return '';
-    return `${translations.deadlineLabel} ${translations.deadlines[deadline]}`;
+    if (!deadline || !translations.deadlines[deadline as keyof typeof translations.deadlines]) return '';
+    return `${translations.deadlineLabel} ${translations.deadlines[deadline as keyof typeof translations.deadlines]}`;
   }
 
   const getImportanceTooltip = (importance: TodoItem['importance']) => {
@@ -258,6 +260,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="hour">{translations.deadlines.hour}</SelectItem>
+                    <SelectItem value="today">{translations.deadlines.today}</SelectItem>
                     <SelectItem value="tomorrow">{translations.deadlines.tomorrow}</SelectItem>
                     <SelectItem value="thisWeek">{translations.deadlines.thisWeek}</SelectItem>
                     <SelectItem value="nextWeek">{translations.deadlines.nextWeek}</SelectItem>
@@ -324,7 +327,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                             </TooltipContent>
                           </Tooltip>
                         )}
-                        {DeadlineIcon && (
+                        {DeadlineIcon && todo.deadline && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <DeadlineIcon className="h-4 w-4 text-muted-foreground" />
@@ -395,3 +398,5 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
+
+    

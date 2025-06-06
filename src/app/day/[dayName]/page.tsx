@@ -95,6 +95,7 @@ const translations = {
         } as Record<CategoryType, string>,
         deadlines: {
             hour: '一小时内',
+            today: '今天',
             tomorrow: '明天',
             thisWeek: '这周内',
             nextWeek: '下周内',
@@ -153,6 +154,7 @@ const translations = {
         } as Record<CategoryType, string>,
         deadlines: {
             hour: 'Within the hour',
+            today: 'Today',
             tomorrow: 'Tomorrow',
             thisWeek: 'This Week',
             nextWeek: 'Next Week',
@@ -366,3 +368,5 @@ export default function DayDetailPage() {
     </TooltipProvider>
   );
 }
+
+    
