@@ -223,13 +223,19 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Input
-              id="todo-item-text"
-              value={newItemText}
-              onChange={(e) => setNewItemText(e.target.value)}
-              placeholder={translations.addItemPlaceholder}
-              className="bg-background"
-            />
+            <div className="relative">
+              <Input
+                id="todo-item-text"
+                value={newItemText}
+                onChange={(e) => setNewItemText(e.target.value)}
+                placeholder={translations.addItemPlaceholder}
+                className="bg-background pr-14" // Added padding for counter
+                maxLength={50}
+              />
+              <div className="absolute bottom-1/2 right-3 translate-y-1/2 text-xs text-muted-foreground">
+                {newItemText.length} / 50
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <Label htmlFor="todo-category" className="text-xs">{translations.categoryLabel}</Label>
