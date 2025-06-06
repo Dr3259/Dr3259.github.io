@@ -180,7 +180,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleDeleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
-    if (editingTodoId === id) { 
+    if (editingTodoId === id) {
         resetForm();
     }
   };
@@ -214,31 +214,32 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-card">
-        <DialogHeader>
-          <DialogTitle>{translations.modalTitle(hourSlot)}</DialogTitle>
+      <DialogContent className="sm:max-w-lg bg-card p-6">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl font-semibold">{translations.modalTitle(hourSlot)}</DialogTitle>
           <DialogDescription>
             {translations.modalDescription}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
+
+        <div className="space-y-6">
+          <div className="space-y-4">
             <div className="relative">
               <Input
                 id="todo-item-text"
                 value={newItemText}
                 onChange={(e) => setNewItemText(e.target.value)}
                 placeholder={translations.addItemPlaceholder}
-                className="bg-background pr-14" // Added padding for counter
+                className="bg-background pr-14 py-2.5 text-base"
                 maxLength={50}
               />
               <div className="absolute bottom-1/2 right-3 translate-y-1/2 text-xs text-muted-foreground">
                 {newItemText.length} / 50
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <Label htmlFor="todo-category" className="text-xs">{translations.categoryLabel}</Label>
+                <Label htmlFor="todo-category" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.categoryLabel}</Label>
                 <Select
                   value={newCategory === null ? undefined : newCategory}
                   onValueChange={(value) => setNewCategory(value as CategoryType)}
@@ -254,7 +255,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="todo-deadline" className="text-xs">{translations.deadlineLabel}</Label>
+                <Label htmlFor="todo-deadline" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.deadlineLabel}</Label>
                 <Select
                   value={newDeadline === null ? undefined : newDeadline}
                   onValueChange={(value) => setNewDeadline(value as TodoItem['deadline'])}
@@ -273,7 +274,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="todo-importance" className="text-xs">{translations.importanceLabel}</Label>
+                <Label htmlFor="todo-importance" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.importanceLabel}</Label>
                 <Select
                   value={newImportance === null ? undefined : newImportance}
                   onValueChange={(value) => setNewImportance(value as TodoItem['importance'])}
@@ -288,35 +289,36 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 </Select>
               </div>
             </div>
-            <Button onClick={handleAddOrUpdateItem} className="w-full mt-2">
+            <Button onClick={handleAddOrUpdateItem} className="w-full py-2.5 text-base">
               {editingTodoId ? translations.updateButton : translations.addButton}
             </Button>
           </div>
 
-          <ScrollArea className="h-[200px] w-full rounded-md border p-2 bg-background/50">
+          <ScrollArea className="h-[220px] w-full rounded-lg border p-3 bg-background/30 shadow-inner">
            <TooltipProvider>
             {todos.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">{translations.noTodos}</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{translations.noTodos}</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-2.5">
                 {todos.map(todo => {
                   const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
                   const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
 
                   return (
-                    <li key={todo.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 group">
-                      <div className="flex items-center space-x-2 flex-grow min-w-0">
+                    <li key={todo.id} className="flex items-center justify-between p-2.5 rounded-md bg-background hover:bg-muted/60 group shadow-sm transition-shadow hover:shadow-md">
+                      <div className="flex items-center space-x-2.5 flex-grow min-w-0">
                          <Checkbox
                           id={`todo-${todo.id}`}
                           checked={todo.completed}
                           onCheckedChange={() => toggleTodoCompletion(todo.id)}
                           aria-label={todo.completed ? translations.markIncomplete : translations.markComplete}
+                          className="border-primary/50"
                         />
-                        <div className="flex items-center space-x-1 shrink-0">
+                        <div className="flex items-center space-x-1.5 shrink-0">
                           {CategoryIcon && todo.category && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <CategoryIcon className="h-4 w-4 text-muted-foreground" />
+                                <CategoryIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground/80 transition-colors" />
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>{getCategoryTooltip(todo.category)}</p>
@@ -326,7 +328,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           {DeadlineIcon && todo.deadline && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <DeadlineIcon className="h-4 w-4 text-muted-foreground" />
+                                <DeadlineIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground/80 transition-colors" />
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>{getDeadlineTooltip(todo.deadline)}</p>
@@ -336,7 +338,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           {todo.importance === 'important' && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <StarIcon className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                <StarIcon className="h-4 w-4 text-amber-400 fill-amber-400 group-hover:text-amber-500 group-hover:fill-amber-500 transition-colors" />
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>{getImportanceTooltip(todo.importance)}</p>
@@ -346,7 +348,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                         </div>
                         <label
                           htmlFor={`todo-${todo.id}`}
-                          className={`text-sm cursor-pointer ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
+                          className={`text-sm cursor-pointer flex-1 min-w-0 ${todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'}`}
                           title={todo.text}
                         >
                           {todo.text.length > 20 ? todo.text.substring(0, 20) + '...' : todo.text}
@@ -358,7 +360,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-primary opacity-50 group-hover:opacity-100"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary opacity-30 group-hover:opacity-100 transition-opacity"
                               onClick={() => handleStartEdit(todo)}
                               aria-label={translations.editTodo}
                             >
@@ -374,7 +376,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                              <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-30 group-hover:opacity-100 transition-opacity"
                               onClick={() => handleDeleteTodo(todo.id)}
                               aria-label={translations.deleteTodo}
                             >
@@ -394,13 +396,15 @@ export const TodoModal: React.FC<TodoModalProps> = ({
             </TooltipProvider>
           </ScrollArea>
         </div>
-        <DialogFooter>
+        <DialogFooter className="mt-6">
           <DialogClose asChild>
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose} className="py-2.5">Cancel</Button>
           </DialogClose>
-          <Button onClick={handleSave}>{translations.saveButton}</Button>
+          <Button onClick={handleSave} className="py-2.5">{translations.saveButton}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+
+    
