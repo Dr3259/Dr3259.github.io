@@ -2,12 +2,13 @@
 // src/app/day/[dayName]/page.tsx
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ListChecks, ClipboardList, Link2, MessageSquareText } from 'lucide-react';
+import { ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText } from 'lucide-react'; // Renamed Link2 to avoid conflict
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TodoModal, type TodoItem } from '@/components/TodoModal'; // Import TodoModal and TodoItem type
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -66,6 +67,17 @@ const translations = {
     addLink: '添加分享链接',
     addReflection: '添加个人感悟',
     noItemsForHour: '此时间段暂无记录事项。',
+    todoModal: {
+        modalTitle: (hourSlot: string) => `${hourSlot} - 待办事项`,
+        modalDescription: '在此处添加、编辑或删除您的待办事项。',
+        addItemPlaceholder: '输入新的待办事项...',
+        addButton: '添加',
+        saveButton: '保存',
+        noTodos: '还没有待办事项。',
+        markComplete: '标记为已完成',
+        markIncomplete: '标记为未完成',
+        deleteTodo: '删除待办事项',
+    }
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -86,25 +98,47 @@ const translations = {
     addLink: 'Add Link',
     addReflection: 'Add Reflection',
     noItemsForHour: 'No items recorded for this hour.',
+    todoModal: {
+        modalTitle: (hourSlot: string) => `${hourSlot} - To-do List`,
+        modalDescription: 'Add, edit, or delete your to-do items here.',
+        addItemPlaceholder: 'Enter a new to-do item...',
+        addButton: 'Add',
+        saveButton: 'Save',
+        noTodos: 'No to-do items yet.',
+        markComplete: 'Mark as complete',
+        markIncomplete: 'Mark as incomplete',
+        deleteTodo: 'Delete to-do item',
+    }
   }
 };
 
 type LanguageKey = keyof typeof translations;
 
+interface SelectedSlotDetails {
+  dayName: string;
+  hourSlot: string;
+}
+
 export default function DayDetailPage() {
   const params = useParams();
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
   
-  const [currentLanguage, setCurrentLanguage] = React.useState<LanguageKey>('en');
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+  const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
+  const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SelectedSlotDetails | null>(null);
+  const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
 
-  React.useEffect(() => {
+
+  useEffect(() => {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
+    // In a real app, you would load 'allTodos' from localStorage or a backend here
   }, []);
   
   const t = translations[currentLanguage];
+  const tTodoModal = translations[currentLanguage].todoModal;
 
   const notes = ""; 
   const rating = ""; 
@@ -118,14 +152,31 @@ export default function DayDetailPage() {
     { key: 'evening', label: t.evening }
   ];
 
-  // Placeholder for actual items data structure
-  // const [hourlyItems, setHourlyItems] = React.useState<Record<string, any[]>>({});
+  const handleOpenTodoModal = (hourSlot: string) => {
+    setSelectedSlotForTodo({ dayName, hourSlot });
+    setIsTodoModalOpen(true);
+  };
 
-  // Placeholder functions for adding items
-  // const handleAddItem = (hourSlot: string, itemType: string) => {
-  //   console.log(`Add ${itemType} to ${hourSlot} for ${dayName}`);
-  //   // Here you would update state to add the item
-  // };
+  const handleCloseTodoModal = () => {
+    setIsTodoModalOpen(false);
+    setSelectedSlotForTodo(null);
+  };
+
+  const handleSaveTodosFromModal = (day: string, hourSlot: string, updatedTodos: TodoItem[]) => {
+    setAllTodos(prevAllTodos => ({
+      ...prevAllTodos,
+      [day]: {
+        ...(prevAllTodos[day] || {}),
+        [hourSlot]: updatedTodos,
+      },
+    }));
+    // In a real app, you would save 'allTodos' to localStorage or a backend here
+    console.log(`Todos saved for ${day} - ${hourSlot}:`, updatedTodos);
+  };
+  
+  const getTodosForSlot = (targetDayName: string, targetHourSlot: string): TodoItem[] => {
+    return allTodos[targetDayName]?.[targetHourSlot] || [];
+  };
 
   return (
     <TooltipProvider>
@@ -185,7 +236,7 @@ export default function DayDetailPage() {
                               <div className="flex space-x-1">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenTodoModal(slot)}>
                                       <ListChecks className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
@@ -206,7 +257,7 @@ export default function DayDetailPage() {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                                      <Link2 className="h-4 w-4" />
+                                      <LinkIconLucide className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -226,7 +277,12 @@ export default function DayDetailPage() {
                               </div>
                             </div>
                             <div className="p-2 border rounded-md min-h-[60px] bg-background/50">
-                              <p className="text-xs text-muted-foreground italic">{t.noItemsForHour}</p>
+                              {/* This area will display the actual todos in the future */}
+                              <p className="text-xs text-muted-foreground italic">
+                                {getTodosForSlot(dayName, slot).length > 0 
+                                  ? `${getTodosForSlot(dayName, slot).length} to-do item(s)`
+                                  : t.noItemsForHour}
+                              </p>
                             </div>
                           </div>
                         ))}
@@ -243,6 +299,17 @@ export default function DayDetailPage() {
           </div>
         </main>
       </div>
+      {isTodoModalOpen && selectedSlotForTodo && (
+        <TodoModal
+          isOpen={isTodoModalOpen}
+          onClose={handleCloseTodoModal}
+          onSaveTodos={handleSaveTodosFromModal}
+          dayName={selectedSlotForTodo.dayName}
+          hourSlot={selectedSlotForTodo.hourSlot}
+          initialTodos={getTodosForSlot(selectedSlotForTodo.dayName, selectedSlotForTodo.hourSlot)}
+          translations={tTodoModal}
+        />
+      )}
     </TooltipProvider>
   );
 }
