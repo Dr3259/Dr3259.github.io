@@ -109,7 +109,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xl bg-card p-6">
         <DialogHeader className="mb-4">
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="text-xl font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             {initialData ? translations.modalTitleEdit(initialData.title || 'Note') : translations.modalTitleNew}
           </DialogTitle>
           <DialogDescription>
@@ -186,4 +186,3 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
     </Dialog>
   );
 };
-
