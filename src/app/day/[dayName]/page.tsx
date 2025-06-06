@@ -3,13 +3,20 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import type { ParsedUrlQuery } from 'querystring';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText } from 'lucide-react'; // Renamed Link2 to avoid conflict
+import {
+    ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText,
+    Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock,
+    Hourglass, CalendarCheck, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus,
+    Star as StarIcon, FileEdit, Trash2
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -47,7 +54,6 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
 };
 
 
-// Basic translations (can be expanded)
 const translations = {
   'zh-CN': {
     dayDetailsTitle: (dayName: string) => `${dayName} - 详情`,
@@ -68,10 +74,15 @@ const translations = {
     addLink: '添加分享链接',
     addReflection: '添加个人感悟',
     noItemsForHour: '此时间段暂无记录事项。',
+    editItem: '编辑事项',
+    deleteItem: '删除事项',
+    markComplete: '标记为已完成',
+    markIncomplete: '标记为未完成',
     todoModal: {
         modalTitle: (hourSlot: string) => `${hourSlot} - 待办事项`,
         modalDescription: '在此处添加、编辑或删除您的待办事项。',
         addItemPlaceholder: '输入新的待办事项...',
+        categoryInputPlaceholder: '例如：处理邮件，购买牛奶 (可选)',
         addButton: '添加',
         updateButton: '更新',
         saveButton: '保存',
@@ -127,10 +138,15 @@ const translations = {
     addLink: 'Add Link',
     addReflection: 'Add Reflection',
     noItemsForHour: 'No items recorded for this hour.',
+    editItem: 'Edit item',
+    deleteItem: 'Delete item',
+    markComplete: 'Mark as complete',
+    markIncomplete: 'Mark as incomplete',
     todoModal: {
         modalTitle: (hourSlot: string) => `${hourSlot} - To-do List`,
         modalDescription: 'Add, edit, or delete your to-do items here.',
         addItemPlaceholder: 'Enter a new to-do item...',
+        categoryInputPlaceholder: 'E.g., Process emails, Buy milk (optional)',
         addButton: 'Add',
         updateButton: 'Update',
         saveButton: 'Save',
@@ -171,10 +187,31 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
-interface SelectedSlotDetails {
+interface SlotDetails {
   dayName: string;
   hourSlot: string;
 }
+
+const CategoryIcons: Record<CategoryType, React.ElementType> = {
+  work: Briefcase,
+  study: BookOpen,
+  shopping: ShoppingCart,
+  organizing: Archive,
+  relaxing: Coffee,
+  cooking: ChefHat,
+  childcare: Baby,
+  dating: CalendarClock,
+};
+
+const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
+  hour: Hourglass,
+  today: CalendarCheck,
+  tomorrow: Sunrise,
+  thisWeek: CalendarRange,
+  nextWeek: ArrowRightToLine,
+  nextMonth: CalendarPlus,
+};
+
 
 export default function DayDetailPage() {
   const params = useParams();
@@ -182,8 +219,10 @@ export default function DayDetailPage() {
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
-  const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SelectedSlotDetails | null>(null);
+  const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
   const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
+  const [editingTodoItem, setEditingTodoItem] = useState<TodoItem | null>(null);
+  const [editingTodoSlotDetails, setEditingTodoSlotDetails] = useState<SlotDetails | null>(null);
 
 
   useEffect(() => {
@@ -192,7 +231,23 @@ export default function DayDetailPage() {
       setCurrentLanguage(browserLang);
     }
     // In a real app, you would load 'allTodos' from localStorage or a backend here
+    const storedTodos = localStorage.getItem('allWeekTodos');
+    if (storedTodos) {
+        try {
+            setAllTodos(JSON.parse(storedTodos));
+        } catch (e) {
+            console.error("Failed to parse todos from localStorage", e);
+        }
+    }
   }, []);
+
+  const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
+    try {
+        localStorage.setItem('allWeekTodos', JSON.stringify(updatedTodos));
+    } catch (e) {
+        console.error("Failed to save todos to localStorage", e);
+    }
+  };
 
   const t = translations[currentLanguage];
   const tTodoModal = translations[currentLanguage].todoModal;
@@ -211,29 +266,94 @@ export default function DayDetailPage() {
 
   const handleOpenTodoModal = (hourSlot: string) => {
     setSelectedSlotForTodo({ dayName, hourSlot });
+    setEditingTodoItem(null); // Ensure we are not in "specific item edit" mode
+    setEditingTodoSlotDetails(null);
     setIsTodoModalOpen(true);
   };
 
   const handleCloseTodoModal = () => {
     setIsTodoModalOpen(false);
     setSelectedSlotForTodo(null);
+    setEditingTodoItem(null);
+    setEditingTodoSlotDetails(null);
   };
 
-  const handleSaveTodosFromModal = (day: string, hourSlot: string, updatedTodos: TodoItem[]) => {
-    setAllTodos(prevAllTodos => ({
-      ...prevAllTodos,
-      [day]: {
-        ...(prevAllTodos[day] || {}),
-        [hourSlot]: updatedTodos,
-      },
-    }));
-    // In a real app, you would save 'allTodos' to localStorage or a backend here
-    console.log(`Todos saved for ${day} - ${hourSlot}:`, updatedTodos);
+  const handleSaveTodosFromModal = (day: string, hourSlot: string, updatedTodosInSlot: TodoItem[]) => {
+    setAllTodos(prevAllTodos => {
+      const newAllTodos = {
+        ...prevAllTodos,
+        [day]: {
+          ...(prevAllTodos[day] || {}),
+          [hourSlot]: updatedTodosInSlot,
+        },
+      };
+      saveAllTodosToLocalStorage(newAllTodos);
+      return newAllTodos;
+    });
+  };
+  
+  const handleToggleTodoCompletionInPage = (targetDay: string, targetHourSlot: string, todoId: string) => {
+    setAllTodos(prevAllTodos => {
+      const daySlots = prevAllTodos[targetDay] || {};
+      const slotTodos = daySlots[targetHourSlot] || [];
+      const updatedSlotTodos = slotTodos.map(todo =>
+        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
+      );
+      const newAllTodos = {
+        ...prevAllTodos,
+        [targetDay]: {
+          ...daySlots,
+          [targetHourSlot]: updatedSlotTodos,
+        },
+      };
+      saveAllTodosToLocalStorage(newAllTodos);
+      return newAllTodos;
+    });
+  };
+
+  const handleDeleteTodoInPage = (targetDay: string, targetHourSlot: string, todoId: string) => {
+    setAllTodos(prevAllTodos => {
+      const daySlots = prevAllTodos[targetDay] || {};
+      const slotTodos = daySlots[targetHourSlot] || [];
+      const updatedSlotTodos = slotTodos.filter(todo => todo.id !== todoId);
+      const newAllTodos = {
+        ...prevAllTodos,
+        [targetDay]: {
+          ...daySlots,
+          [targetHourSlot]: updatedSlotTodos,
+        },
+      };
+      saveAllTodosToLocalStorage(newAllTodos);
+      return newAllTodos;
+    });
+  };
+
+  const handleOpenEditModalInPage = (targetDay: string, targetHourSlot: string, todoToEdit: TodoItem) => {
+    setEditingTodoItem(todoToEdit);
+    setEditingTodoSlotDetails({ dayName: targetDay, hourSlot: targetHourSlot });
+    setSelectedSlotForTodo({ dayName: targetDay, hourSlot: targetHourSlot }); // Modal needs this context
+    setIsTodoModalOpen(true);
   };
 
   const getTodosForSlot = (targetDayName: string, targetHourSlot: string): TodoItem[] => {
     return allTodos[targetDayName]?.[targetHourSlot] || [];
   };
+
+  const getCategoryTooltipText = (category: CategoryType | null) => {
+    if (!category || !tTodoModal.categories[category]) return '';
+    return `${tTodoModal.categoryLabel} ${tTodoModal.categories[category]}`;
+  };
+
+  const getDeadlineTooltipText = (deadline: TodoItem['deadline']) => {
+    if (!deadline || !tTodoModal.deadlines[deadline as keyof typeof tTodoModal.deadlines]) return '';
+    return `${tTodoModal.deadlineLabel} ${tTodoModal.deadlines[deadline as keyof typeof tTodoModal.deadlines]}`;
+  };
+
+  const getImportanceTooltipText = (importance: TodoItem['importance']) => {
+    if (importance === 'important') return `${tTodoModal.importanceLabel} ${tTodoModal.importances.important}`;
+    return '';
+  };
+
 
   return (
     <TooltipProvider>
@@ -286,80 +406,133 @@ export default function DayDetailPage() {
 
                     {hourlySlots.length > 0 ? (
                       <div className="space-y-3 mt-4">
-                        {hourlySlots.map((slot, slotIndex) => (
-                          <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
-                            <div className="flex justify-between items-center mb-2">
-                              <p className="text-sm font-semibold text-foreground/90">{slot}</p>
-                              <div className="flex space-x-1">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenTodoModal(slot)}>
-                                      <ListChecks className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{t.addTodo}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                                      <ClipboardList className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{t.addMeetingNote}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                                      <LinkIconLucide className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{t.addLink}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                                      <MessageSquareText className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{t.addReflection}</p>
-                                  </TooltipContent>
-                                </Tooltip>
+                        {hourlySlots.map((slot, slotIndex) => {
+                          const todosForSlot = getTodosForSlot(dayName, slot);
+                          return (
+                            <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
+                              <div className="flex justify-between items-center mb-2">
+                                <p className="text-sm font-semibold text-foreground/90">{slot}</p>
+                                <div className="flex space-x-1">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenTodoModal(slot)}>
+                                        <ListChecks className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{t.addTodo}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                        <ClipboardList className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{t.addMeetingNote}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                        <LinkIconLucide className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{t.addLink}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                        <MessageSquareText className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{t.addReflection}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
                               </div>
-                            </div>
-                            <div className="p-2 border rounded-md bg-background/50">
-                                {(() => {
-                                  const todosForSlot = getTodosForSlot(dayName, slot);
-                                  if (todosForSlot.length > 0) {
-                                    return (
-                                      <ul className="space-y-1">
-                                        {todosForSlot.map((todo) => (
-                                          <li key={todo.id} className="flex items-center space-x-2 text-xs">
-                                            <Checkbox id={`slot-todo-${dayName}-${slot}-${todo.id}`} checked={todo.completed} disabled className="cursor-default border-primary/50" />
-                                            <label htmlFor={`slot-todo-${dayName}-${slot}-${todo.id}`} className={`${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground/90'}`}>
-                                              {todo.text}
-                                            </label>
+                              <div className="p-2 border rounded-md bg-background/50 group/todolist">
+                                  {todosForSlot.length > 0 ? (
+                                    <ul className="space-y-2">
+                                      {todosForSlot.map((todo) => {
+                                        const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
+                                        const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
+                                        return (
+                                          <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
+                                            <div className="flex items-center space-x-2 flex-grow min-w-0">
+                                              <Checkbox
+                                                id={`daypage-todo-${dayName}-${slot}-${todo.id}`}
+                                                checked={todo.completed}
+                                                onCheckedChange={() => handleToggleTodoCompletionInPage(dayName, slot, todo.id)}
+                                                aria-label={todo.completed ? t.markIncomplete : t.markComplete}
+                                                className="border-primary/50 shrink-0"
+                                              />
+                                              <div className="flex items-center space-x-1 shrink-0">
+                                                {CategoryIcon && todo.category && (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
+                                                    <TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent>
+                                                  </Tooltip>
+                                                )}
+                                                {DeadlineIcon && todo.deadline && (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
+                                                    <TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent>
+                                                  </Tooltip>
+                                                )}
+                                                {todo.importance === 'important' && (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger>
+                                                    <TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent>
+                                                  </Tooltip>
+                                                )}
+                                              </div>
+                                              <label
+                                                htmlFor={`daypage-todo-${dayName}-${slot}-${todo.id}`}
+                                                className={cn(
+                                                  "text-xs cursor-pointer flex-1 min-w-0",
+                                                  todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'
+                                                )}
+                                                title={todo.text}
+                                              >
+                                                {todo.text.length > 25 ? todo.text.substring(0, 25) + '...' : todo.text}
+                                              </label>
+                                            </div>
+                                            <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dayName, slot, todo)}>
+                                                    <FileEdit className="h-3.5 w-3.5" />
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{t.editItem}</p></TooltipContent>
+                                              </Tooltip>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dayName, slot, todo.id)}>
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{t.deleteItem}</p></TooltipContent>
+                                              </Tooltip>
+                                            </div>
                                           </li>
-                                        ))}
-                                      </ul>
-                                    );
-                                  } else {
-                                    return (
-                                      <p className="text-xs text-muted-foreground italic">
-                                        {t.noItemsForHour}
-                                      </p>
-                                    );
-                                  }
-                                })()}
-                              </div>
-                          </div>
-                        ))}
+                                        );
+                                      })}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      {t.noItemsForHour}
+                                    </p>
+                                  )}
+                                </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="p-3 border rounded-md bg-background/50 mt-4">
@@ -382,8 +555,10 @@ export default function DayDetailPage() {
           hourSlot={selectedSlotForTodo.hourSlot}
           initialTodos={getTodosForSlot(selectedSlotForTodo.dayName, selectedSlotForTodo.hourSlot)}
           translations={tTodoModal}
+          defaultEditingTodoId={editingTodoItem && editingTodoSlotDetails?.dayName === selectedSlotForTodo.dayName && editingTodoSlotDetails?.hourSlot === selectedSlotForTodo.hourSlot ? editingTodoItem.id : undefined}
         />
       )}
     </TooltipProvider>
   );
 }
+

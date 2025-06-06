@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -51,6 +51,7 @@ interface TodoModalProps {
     modalTitle: (hourSlot: string) => string;
     modalDescription: string;
     addItemPlaceholder: string;
+    categoryInputPlaceholder: string;
     addButton: string;
     updateButton: string;
     saveButton: string;
@@ -76,7 +77,8 @@ interface TodoModalProps {
         important: string;
         notImportant: string;
     };
-  }
+  };
+  defaultEditingTodoId?: string;
 }
 
 const CategoryIcons: Record<CategoryType, React.ElementType> = {
@@ -107,7 +109,8 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   dayName,
   hourSlot,
   initialTodos = [],
-  translations
+  translations,
+  defaultEditingTodoId
 }) => {
   const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
   const [newItemText, setNewItemText] = useState('');
@@ -116,20 +119,26 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   const [newImportance, setNewImportance] = useState<TodoItem['importance']>(null);
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-        setTodos(initialTodos);
-        resetForm();
-    }
-  }, [isOpen, initialTodos]);
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNewItemText('');
     setNewCategory(null);
     setNewDeadline(null);
     setNewImportance(null);
     setEditingTodoId(null);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+        setTodos(initialTodos); // Always reset todos to initialTodos when modal opens/re-opens
+        const itemToEdit = defaultEditingTodoId ? initialTodos.find(t => t.id === defaultEditingTodoId) : null;
+        if (itemToEdit) {
+            handleStartEdit(itemToEdit);
+        } else {
+            resetForm(); // Clear form if not editing a specific item
+        }
+    }
+  }, [isOpen, initialTodos, defaultEditingTodoId, resetForm]);
+
 
   const handleAddOrUpdateItem = () => {
     if (newItemText.trim() === '') return;
@@ -187,7 +196,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleSave = () => {
     onSaveTodos(dayName, hourSlot, todos);
-    onClose();
+    onClose(); // This will trigger reset via useEffect if defaultEditingTodoId is cleared by parent
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -243,10 +252,10 @@ export const TodoModal: React.FC<TodoModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <Label htmlFor="todo-category" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.categoryLabel}</Label>
-                <Select
-                  value={newCategory === null ? undefined : newCategory}
-                  onValueChange={(value) => setNewCategory(value as CategoryType)}
-                >
+                 <Select
+                    value={newCategory || undefined}
+                    onValueChange={(value) => setNewCategory(value as CategoryType)}
+                 >
                   <SelectTrigger id="todo-category" className="w-full bg-background">
                     <SelectValue placeholder={translations.selectPlaceholder} />
                   </SelectTrigger>
@@ -260,7 +269,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
               <div>
                 <Label htmlFor="todo-deadline" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.deadlineLabel}</Label>
                 <Select
-                  value={newDeadline === null ? undefined : newDeadline}
+                  value={newDeadline || undefined}
                   onValueChange={(value) => setNewDeadline(value as TodoItem['deadline'])}
                 >
                   <SelectTrigger id="todo-deadline" className="w-full bg-background">
@@ -279,7 +288,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
               <div>
                 <Label htmlFor="todo-importance" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.importanceLabel}</Label>
                 <Select
-                  value={newImportance === null ? undefined : newImportance}
+                  value={newImportance || undefined}
                   onValueChange={(value) => setNewImportance(value as TodoItem['importance'])}
                 >
                   <SelectTrigger id="todo-importance" className="w-full bg-background">
@@ -311,11 +320,11 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                     <li key={todo.id} className="flex items-center justify-between p-2.5 rounded-md bg-background hover:bg-muted/60 group shadow-sm transition-shadow hover:shadow-md">
                       <div className="flex items-center space-x-2.5 flex-grow min-w-0">
                          <Checkbox
-                          id={`todo-${todo.id}`}
+                          id={`modal-todo-${todo.id}`}
                           checked={todo.completed}
                           onCheckedChange={() => toggleTodoCompletion(todo.id)}
                           aria-label={todo.completed ? translations.markIncomplete : translations.markComplete}
-                          className="border-primary/50"
+                          className="border-primary/50 shrink-0"
                         />
                         <div className="flex items-center space-x-1.5 shrink-0">
                           {CategoryIcon && todo.category && (
@@ -350,7 +359,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           )}
                         </div>
                         <label
-                          htmlFor={`todo-${todo.id}`}
+                          htmlFor={`modal-todo-${todo.id}`}
                           className={`text-sm cursor-pointer flex-1 min-w-0 ${todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'}`}
                           title={todo.text}
                         >
@@ -409,3 +418,4 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
+
