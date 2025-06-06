@@ -24,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { 
-    Trash2, Hourglass, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus, Star as StarIcon,
+import {
+    Trash2, Hourglass, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus, Star as StarIcon, FileEdit,
     Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock
 } from 'lucide-react';
 
@@ -35,7 +35,7 @@ export interface TodoItem {
   id: string;
   text: string;
   completed: boolean;
-  category: CategoryType | null; 
+  category: CategoryType | null;
   deadline: 'hour' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
   importance: 'important' | 'notImportant' | null;
 }
@@ -52,10 +52,12 @@ interface TodoModalProps {
     modalDescription: string;
     addItemPlaceholder: string;
     addButton: string;
+    updateButton: string;
     saveButton: string;
     noTodos: string;
     markComplete: string;
     markIncomplete: string;
+    editTodo: string;
     deleteTodo: string;
     categoryLabel: string;
     deadlineLabel: string;
@@ -110,32 +112,62 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   const [newCategory, setNewCategory] = useState<CategoryType | null>(null);
   const [newDeadline, setNewDeadline] = useState<TodoItem['deadline']>(null);
   const [newImportance, setNewImportance] = useState<TodoItem['importance']>(null);
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
         setTodos(initialTodos);
-        setNewItemText('');
-        setNewCategory(null);
-        setNewDeadline(null);
-        setNewImportance(null);
+        resetForm();
     }
   }, [isOpen, initialTodos]);
 
-  const handleAddItem = () => {
-    if (newItemText.trim() === '') return;
-    const newTodo: TodoItem = {
-      id: Date.now().toString(),
-      text: newItemText.trim(),
-      completed: false,
-      category: newCategory,
-      deadline: newDeadline,
-      importance: newImportance,
-    };
-    setTodos(prevTodos => [...prevTodos, newTodo]);
+  const resetForm = () => {
     setNewItemText('');
     setNewCategory(null);
     setNewDeadline(null);
     setNewImportance(null);
+    setEditingTodoId(null);
+  };
+
+  const handleAddOrUpdateItem = () => {
+    if (newItemText.trim() === '') return;
+
+    if (editingTodoId) {
+      // Update existing item
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === editingTodoId
+            ? {
+                ...todo,
+                text: newItemText.trim(),
+                category: newCategory,
+                deadline: newDeadline,
+                importance: newImportance,
+              }
+            : todo
+        )
+      );
+    } else {
+      // Add new item
+      const newTodo: TodoItem = {
+        id: Date.now().toString(),
+        text: newItemText.trim(),
+        completed: false,
+        category: newCategory,
+        deadline: newDeadline,
+        importance: newImportance,
+      };
+      setTodos(prevTodos => [...prevTodos, newTodo]);
+    }
+    resetForm();
+  };
+
+  const handleStartEdit = (todoToEdit: TodoItem) => {
+    setEditingTodoId(todoToEdit.id);
+    setNewItemText(todoToEdit.text);
+    setNewCategory(todoToEdit.category);
+    setNewDeadline(todoToEdit.deadline);
+    setNewImportance(todoToEdit.importance);
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -148,6 +180,9 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleDeleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
+    if (editingTodoId === id) { // If deleting the item being edited, reset form
+        resetForm();
+    }
   };
 
   const handleSave = () => {
@@ -157,7 +192,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      onClose();
+      onClose(); // This will also trigger the useEffect to reset form if modal is re-opened
     }
   };
 
@@ -246,7 +281,9 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 </Select>
               </div>
             </div>
-            <Button onClick={handleAddItem} className="w-full mt-2">{translations.addButton}</Button>
+            <Button onClick={handleAddOrUpdateItem} className="w-full mt-2">
+              {editingTodoId ? translations.updateButton : translations.addButton}
+            </Button>
           </div>
 
           <ScrollArea className="h-[200px] w-full rounded-md border p-2 bg-background/50">
@@ -307,15 +344,38 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                             </TooltipContent>
                           </Tooltip>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100"
-                          onClick={() => handleDeleteTodo(todo.id)}
-                          aria-label={translations.deleteTodo}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary opacity-50 group-hover:opacity-100"
+                              onClick={() => handleStartEdit(todo)}
+                              aria-label={translations.editTodo}
+                            >
+                              <FileEdit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{translations.editTodo}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                             <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100"
+                              onClick={() => handleDeleteTodo(todo.id)}
+                              aria-label={translations.deleteTodo}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{translations.deleteTodo}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </li>
                   );
@@ -327,7 +387,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
           </DialogClose>
           <Button onClick={handleSave}>{translations.saveButton}</Button>
         </DialogFooter>

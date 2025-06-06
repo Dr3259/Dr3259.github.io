@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText } from 'lucide-react'; // Renamed Link2 to avoid conflict
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { TodoModal, type TodoItem } from '@/components/TodoModal'; 
+import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -18,16 +18,16 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
     return [];
   }
 
-  const startTimeStr = match[1]; 
-  const endTimeStr = match[2];   
+  const startTimeStr = match[1];
+  const endTimeStr = match[2];
 
   const startHour = parseInt(startTimeStr.split(':')[0]);
   let endHour = parseInt(endTimeStr.split(':')[0]);
 
   if (endTimeStr === "00:00" && startHour !== 0 && endHour === 0) {
-      endHour = 24; 
+      endHour = 24;
   }
-  
+
   const slots: string[] = [];
   if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
      if (!(startHour < 24 && endHour === 0)) {
@@ -72,10 +72,12 @@ const translations = {
         modalDescription: '在此处添加、编辑或删除您的待办事项。',
         addItemPlaceholder: '输入新的待办事项...',
         addButton: '添加',
+        updateButton: '更新',
         saveButton: '保存',
         noTodos: '还没有待办事项。',
         markComplete: '标记为已完成',
         markIncomplete: '标记为未完成',
+        editTodo: '编辑待办事项',
         deleteTodo: '删除待办事项',
         categoryLabel: '性质:',
         deadlineLabel: '完成时间:',
@@ -90,7 +92,7 @@ const translations = {
             cooking: '做饭',
             childcare: '带娃',
             dating: '约会',
-        },
+        } as Record<CategoryType, string>,
         deadlines: {
             hour: '一小时内',
             tomorrow: '明天',
@@ -128,10 +130,12 @@ const translations = {
         modalDescription: 'Add, edit, or delete your to-do items here.',
         addItemPlaceholder: 'Enter a new to-do item...',
         addButton: 'Add',
+        updateButton: 'Update',
         saveButton: 'Save',
         noTodos: 'No to-do items yet.',
         markComplete: 'Mark as complete',
         markIncomplete: 'Mark as incomplete',
+        editTodo: 'Edit to-do item',
         deleteTodo: 'Delete to-do item',
         categoryLabel: 'Category:',
         deadlineLabel: 'Deadline:',
@@ -146,7 +150,7 @@ const translations = {
             cooking: 'Cooking',
             childcare: 'Childcare',
             dating: 'Dating/Appointment',
-        },
+        } as Record<CategoryType, string>,
         deadlines: {
             hour: 'Within the hour',
             tomorrow: 'Tomorrow',
@@ -172,7 +176,7 @@ interface SelectedSlotDetails {
 export default function DayDetailPage() {
   const params = useParams();
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
-  
+
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SelectedSlotDetails | null>(null);
@@ -186,12 +190,12 @@ export default function DayDetailPage() {
     }
     // In a real app, you would load 'allTodos' from localStorage or a backend here
   }, []);
-  
+
   const t = translations[currentLanguage];
   const tTodoModal = translations[currentLanguage].todoModal;
 
-  const notes = ""; 
-  const rating = ""; 
+  const notes = "";
+  const rating = "";
 
   const timeIntervals = [
     { key: 'midnight', label: t.midnight },
@@ -223,7 +227,7 @@ export default function DayDetailPage() {
     // In a real app, you would save 'allTodos' to localStorage or a backend here
     console.log(`Todos saved for ${day} - ${hourSlot}:`, updatedTodos);
   };
-  
+
   const getTodosForSlot = (targetDayName: string, targetHourSlot: string): TodoItem[] => {
     return allTodos[targetDayName]?.[targetHourSlot] || [];
   };
@@ -244,7 +248,7 @@ export default function DayDetailPage() {
           <h1 className="text-3xl font-headline font-semibold text-primary mb-6">
             {t.dayDetailsTitle(dayName)}
           </h1>
-          
+
           <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
             <div className="space-y-4">
               <div>
@@ -253,7 +257,7 @@ export default function DayDetailPage() {
                   <p className="text-muted-foreground">{notes || t.noData}</p>
                 </div>
               </div>
-              
+
               <div>
                 <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
                 <div className="p-3 border rounded-md bg-background/50">
@@ -276,7 +280,7 @@ export default function DayDetailPage() {
                     <h3 className="text-lg font-medium text-foreground mb-1">{mainTitle}</h3>
                     {timeRangeSubtext && <p className="text-xs text-muted-foreground mb-2">{timeRangeSubtext}</p>}
                     <div className="h-1 w-full bg-primary/30 rounded-full mb-3"></div>
-                    
+
                     {hourlySlots.length > 0 ? (
                       <div className="space-y-3 mt-4">
                         {hourlySlots.map((slot, slotIndex) => (
@@ -327,9 +331,8 @@ export default function DayDetailPage() {
                               </div>
                             </div>
                             <div className="p-2 border rounded-md min-h-[60px] bg-background/50">
-                              {/* This area will display the actual todos in the future */}
                               <p className="text-xs text-muted-foreground italic">
-                                {getTodosForSlot(dayName, slot).length > 0 
+                                {getTodosForSlot(dayName, slot).length > 0
                                   ? `${getTodosForSlot(dayName, slot).length} to-do item(s)`
                                   : t.noItemsForHour}
                               </p>
