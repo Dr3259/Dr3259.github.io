@@ -912,48 +912,49 @@ export default function DayDetailPage() {
         </header>
 
         <main className="w-full max-w-4xl">
-          <h1 className="text-3xl font-headline font-semibold text-primary mb-6">
-            {t.dayDetailsTitle(dayName)}
-          </h1>
-
           {dailyNoteDisplayMode !== 'pending' && (
-            <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
-                  {dailyNoteDisplayMode === 'read' ? (
-                      <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
-                      {dailyNote ? (
-                          <ScrollArea className="max-h-48">
-                          <p className="text-sm text-foreground whitespace-pre-wrap">{dailyNote}</p>
-                          </ScrollArea>
-                      ) : (
-                          <p className="text-muted-foreground italic">{t.noData}</p>
-                      )}
-                      </div>
-                  ) : ( 
-                      <div>
-                      <Textarea
-                          value={dailyNote}
-                          onChange={(e) => handleDailyNoteChange(e.target.value)}
-                          placeholder={t.notesPlaceholder}
-                          className="min-h-[100px] bg-background/50 text-sm"
-                          maxLength={MAX_DAILY_NOTE_LENGTH}
-                      />
-                      <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                          {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
-                      </div>
-                      </div>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
-                  <div className="p-3 border rounded-md bg-background/50">
-                    <p className="text-muted-foreground">{rating || t.noData}</p>
+            <>
+              <h1 className="text-3xl font-headline font-semibold text-primary mb-6">
+                {t.dayDetailsTitle(dayName)}
+              </h1>
+              <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
+                    {dailyNoteDisplayMode === 'read' ? (
+                        <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
+                        {dailyNote ? (
+                            <ScrollArea className="max-h-48">
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{dailyNote}</p>
+                            </ScrollArea>
+                        ) : (
+                            <p className="text-muted-foreground italic">{t.noData}</p>
+                        )}
+                        </div>
+                    ) : ( 
+                        <div>
+                        <Textarea
+                            value={dailyNote}
+                            onChange={(e) => handleDailyNoteChange(e.target.value)}
+                            placeholder={t.notesPlaceholder}
+                            className="min-h-[100px] bg-background/50 text-sm"
+                            maxLength={MAX_DAILY_NOTE_LENGTH}
+                        />
+                        <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                            {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
+                        </div>
+                        </div>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
+                    <div className="p-3 border rounded-md bg-background/50">
+                      <p className="text-muted-foreground">{rating || t.noData}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           <div>
