@@ -14,9 +14,9 @@ interface DayBoxProps {
 }
 
 const RATING_OPTIONS = [
-  { type: 'excellent' as const, Icon: ThumbsUp, label: 'Excellent' },
-  { type: 'average' as const, Icon: Meh, label: 'Average' },
-  { type: 'terrible' as const, Icon: ThumbsDown, label: 'Terrible' },
+  { type: 'excellent' as const, Icon: ThumbsUp, label: '好极了' },
+  { type: 'average' as const, Icon: Meh, label: '一般般' },
+  { type: 'terrible' as const, Icon: ThumbsDown, label: '糟透了' },
 ];
 
 export const DayBox: FC<DayBoxProps> = ({ dayName, isSelected, onClick, hasNotes, rating, onRatingChange }) => {
@@ -31,13 +31,13 @@ export const DayBox: FC<DayBoxProps> = ({ dayName, isSelected, onClick, hasNotes
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick()}}
       aria-pressed={isSelected}
-      aria-label={`Select ${dayName}`}
+      aria-label={`选择 ${dayName}`}
     >
       <CardHeader className="p-2 pb-1 text-center">
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label="Has notes"/>}
+        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label="有笔记"/>}
       </CardContent>
       <CardFooter className="p-2 pt-1 mt-auto w-full">
         <div className="flex justify-around w-full">
@@ -52,7 +52,7 @@ export const DayBox: FC<DayBoxProps> = ({ dayName, isSelected, onClick, hasNotes
                 "p-1 rounded-full hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                 rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
-              aria-label={`Rate as ${label}`}
+              aria-label={`评价为 ${label}`}
               aria-pressed={rating === type}
             >
               <Icon className="w-4 h-4 sm:w-5 sm:h-5" />

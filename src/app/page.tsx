@@ -6,7 +6,7 @@ import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
 import { LogIn, Github } from "lucide-react";
 
-const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS_OF_WEEK = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
 const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
 
@@ -21,7 +21,7 @@ const WeChatIcon = () => (
 
 const AlibabaIcon = () => (
   <svg viewBox="0 0 1024 1024" fill="currentColor" className="w-6 h-6">
-    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-85.3 109.9c-11.2 14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
+    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-85.3 109.9c-11.2-14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
   </svg>
 );
 
@@ -51,7 +51,7 @@ export default function WeekGlancePage() {
         setNotes(JSON.parse(storedNotes));
       }
     } catch (error) {
-      console.error("Failed to parse notes from localStorage:", error);
+      console.error("无法从localStorage解析笔记:", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY_NOTES);
     }
 
@@ -61,7 +61,7 @@ export default function WeekGlancePage() {
         setRatings(JSON.parse(storedRatings));
       }
     } catch (error) {
-      console.error("Failed to parse ratings from localStorage:", error);
+      console.error("无法从localStorage解析评分:", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY_RATINGS);
     }
   }, []);
@@ -76,7 +76,7 @@ export default function WeekGlancePage() {
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings));
       } catch (error) {
-        console.error("Failed to save ratings to localStorage:", error);
+        console.error("无法将评分保存到localStorage:", error);
       }
       return updatedRatings;
     });
@@ -87,15 +87,15 @@ export default function WeekGlancePage() {
       <header className="mb-10 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
         <div>
           <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
-            Week Glance
+            周览
           </h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Organize your week, one day at a time.
+            规划你的一周，一日一览。
           </p>
         </div>
         <Button variant="outline" size="sm">
           <LogIn className="mr-2 h-4 w-4" />
-          Login
+          登录
         </Button>
       </header>
 
@@ -116,22 +116,22 @@ export default function WeekGlancePage() {
       <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
         <div className="border-t border-border pt-6">
           <p className="text-center text-sm text-muted-foreground mb-4">
-            Join our community and help us grow!
+            加入我们的社区，帮助我们成长！
           </p>
           <div className="flex justify-center items-center space-x-6">
-            <a href="#" aria-label="WeChat" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label="微信" className="text-muted-foreground hover:text-primary transition-colors">
               <WeChatIcon />
             </a>
-            <a href="#" aria-label="Alibaba" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label="阿里巴巴" className="text-muted-foreground hover:text-primary transition-colors">
               <AlibabaIcon />
             </a>
-            <a href="#" aria-label="Bilibili" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label="哔哩哔哩" className="text-muted-foreground hover:text-primary transition-colors">
               <BilibiliIcon />
             </a>
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
             </a>
-            <a href="#" aria-label="Google" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label="谷歌" className="text-muted-foreground hover:text-primary transition-colors">
               <GoogleIcon />
             </a>
           </div>
