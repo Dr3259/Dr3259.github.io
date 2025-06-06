@@ -541,6 +541,14 @@ export default function DayDetailPage() {
     let currentIntervalKeyForScroll: string | null = null;
 
     for (const interval of timeIntervals) {
+      const hourlySlots = generateHourlySlots(interval.label);
+      const hasContentInInterval = hourlySlots.some(slot => 
+          (allTodos[dayName]?.[slot]?.length || 0) > 0 ||
+          (allMeetingNotes[dayName]?.[slot]?.length || 0) > 0 ||
+          (allShareLinks[dayName]?.[slot]?.length || 0) > 0 ||
+          (allReflections[dayName]?.[slot]?.length || 0) > 0
+      );
+
       const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
       if (!match) continue;
 
@@ -553,13 +561,12 @@ export default function DayDetailPage() {
       const intervalStartTotalMinutes = startH * 60 + startM;
       const intervalEndTotalMinutes = endH * 60 + endM;
       
-      // Check if the entire interval is in the past based on pageLoadTime
       const pageLoadHourForIntervalCheck = pageLoadTime.getHours();
       const pageLoadMinuteForIntervalCheck = pageLoadTime.getMinutes();
       const pageLoadTotalMinutesForIntervalCheck = pageLoadHourForIntervalCheck * 60 + pageLoadMinuteForIntervalCheck;
 
-      if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck) {
-        continue; // This entire interval was past at page load, so it's not rendered
+      if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck && !hasContentInInterval) {
+        continue; // This entire interval was past at page load AND has no content, so it's not rendered
       }
 
 
@@ -567,11 +574,9 @@ export default function DayDetailPage() {
         firstVisibleIntervalKeyForScroll = interval.key;
       }
       
-      // Determine active interval using live current time ('now')
       if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
         newActiveKey = interval.key;
-        currentIntervalKeyForScroll = interval.key; // This interval is active right now
-        // break; // Don't break, continue to set firstVisible for scrolling if active is filtered out by pageLoadTime
+        currentIntervalKeyForScroll = interval.key; 
       }
     }
     
@@ -582,9 +587,9 @@ export default function DayDetailPage() {
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
       setTimeout(() => {
         intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
-      }, 100); // Small delay to ensure rendering completion
+      }, 100); 
     }
-  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime]);
+  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
 
   // --- To-do Modal and Item Handlers ---
@@ -955,6 +960,14 @@ export default function DayDetailPage() {
             <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle}</h2>
             <div className="grid grid-cols-1 gap-6">
               {timeIntervals.map(interval => {
+                const hourlySlotsForInterval = generateHourlySlots(interval.label);
+                const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot => 
+                  (getTodosForSlot(dayName, slot).length > 0) ||
+                  (getMeetingNotesForSlot(dayName, slot).length > 0) ||
+                  (getShareLinksForSlot(dayName, slot).length > 0) ||
+                  (getReflectionsForSlot(dayName, slot).length > 0)
+                );
+
                 if (isViewingCurrentDay && typeof window !== 'undefined') {
                   const pageLoadHour = pageLoadTime.getHours();
                   const pageLoadMinute = pageLoadTime.getMinutes();
@@ -968,8 +981,8 @@ export default function DayDetailPage() {
                     if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
                     
                     const intervalEndTotalMinutes = endH * 60 + endM;
-                    if (intervalEndTotalMinutes <= pageLoadTotalMinutes) {
-                      return null; // Hide entire past major interval on current day
+                    if (intervalEndTotalMinutes <= pageLoadTotalMinutes && !hasContentInAnySlotOfInterval) {
+                      return null; 
                     }
                   }
                 }
@@ -995,10 +1008,16 @@ export default function DayDetailPage() {
                     {hourlySlots.length > 0 ? (
                       <div className="space-y-3 mt-4">
                         {hourlySlots.map((slot, slotIndex) => {
+                          const todosForSlot = getTodosForSlot(dayName, slot);
+                          const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
+                          const shareLinksForSlot = getShareLinksForSlot(dayName, slot);
+                          const reflectionsForSlot = getReflectionsForSlot(dayName, slot);
+                          const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
+
                           if (isViewingCurrentDay && typeof window !== 'undefined') {
                             const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                             if (slotTimeMatch) {
-                              const slotEndTimeStr = slotTimeMatch[2]; // e.g., "06:00" or "24:00"
+                              const slotEndTimeStr = slotTimeMatch[2]; 
                               const slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
                               const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
                               
@@ -1008,17 +1027,11 @@ export default function DayDetailPage() {
                               const pageLoadMinute = pageLoadTime.getMinutes();
                               const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
 
-                              if (slotEndTotalMinutes <= pageLoadTotalMinutes) {
-                                return null; // Hide past hourly slot on current day
+                              if (slotEndTotalMinutes <= pageLoadTotalMinutes && !hasAnyContentForThisSlot) {
+                                return null; 
                               }
                             }
                           }
-
-                          const todosForSlot = getTodosForSlot(dayName, slot);
-                          const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
-                          const shareLinksForSlot = getShareLinksForSlot(dayName, slot);
-                          const reflectionsForSlot = getReflectionsForSlot(dayName, slot);
-                          const hasAnyContent = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
                           
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
@@ -1067,9 +1080,9 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                 </div>
                               </div>
-                              {/* To-Do List Display */}
-                              <div className="p-2 border rounded-md bg-background/50 group/todolist mb-3">
-                                  {todosForSlot.length > 0 ? (
+                              
+                              {todosForSlot.length > 0 && (
+                                <div className="p-2 border rounded-md bg-background/50 group/todolist mb-3">
                                     <ul className="space-y-2 p-px">
                                       {todosForSlot.map((todo) => {
                                         const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
@@ -1137,16 +1150,12 @@ export default function DayDetailPage() {
                                         );
                                       })}
                                     </ul>
-                                  ) : (
-                                    <p className="text-xs text-muted-foreground italic">
-                                      {t.noItemsForHour}
-                                    </p>
-                                  )}
                                 </div>
-                                {/* Meeting Notes Display */}
+                              )}
+                              
+                              {meetingNotesForSlot.length > 0 && (
                                 <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist mb-3">
                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.meetingNotesSectionTitle}</h4>
-                                  {meetingNotesForSlot.length > 0 ? (
                                     <ul className="space-y-2 p-px">
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
@@ -1174,16 +1183,12 @@ export default function DayDetailPage() {
                                           </li>
                                         ))}
                                     </ul>
-                                  ) : (
-                                    <p className="text-xs text-muted-foreground italic">
-                                      {t.noMeetingNotesForHour}
-                                    </p>
-                                  )}
                                 </div>
-                                {/* Share Links Display */}
+                              )}
+
+                              {shareLinksForSlot.length > 0 && (
                                 <div className="p-2 border rounded-md bg-background/50 group/linklist mb-3">
                                   <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.linksSectionTitle}</h4>
-                                  {shareLinksForSlot.length > 0 ? (
                                     <ul className="space-y-2 p-px">
                                       {shareLinksForSlot.map((link) => (
                                         <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
@@ -1217,16 +1222,12 @@ export default function DayDetailPage() {
                                         </li>
                                       ))}
                                     </ul>
-                                  ) : (
-                                    <p className="text-xs text-muted-foreground italic">
-                                      {t.noLinksForHour}
-                                    </p>
-                                  )}
                                 </div>
-                                {/* Personal Reflections Display */}
+                              )}
+                              
+                              {reflectionsForSlot.length > 0 && (
                                 <div className="p-2 border rounded-md bg-background/50 group/reflectionlist">
                                   <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.reflectionsSectionTitle}</h4>
-                                  {reflectionsForSlot.length > 0 ? (
                                     <ul className="space-y-2 p-px">
                                       {reflectionsForSlot.map((reflection) => (
                                         <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
@@ -1256,19 +1257,12 @@ export default function DayDetailPage() {
                                         </li>
                                       ))}
                                     </ul>
-                                  ) : (
-                                     <p className="text-xs text-muted-foreground italic">
-                                      {t.noReflectionsForHour}
-                                    </p>
-                                  )}
                                 </div>
+                              )}
 
-                                {!hasAnyContent && (
+                              {!hasAnyContentForThisSlot && (
                                      <p className="text-xs text-muted-foreground italic mt-2 text-center">
-                                      {/* This message will show if ALL sub-sections are empty. 
-                                          The individual "no items" messages above handle specific sections.
-                                          Alternatively, one could choose to show nothing here or a generic placeholder.
-                                      */}
+                                      {t.noItemsForHour}
                                     </p>
                                 )}
                             </div>
@@ -1276,8 +1270,6 @@ export default function DayDetailPage() {
                         })}
                       </div>
                     ) : (
-                      // This case occurs if generateHourlySlots returns an empty array,
-                      // which might happen if the interval parsing failed.
                       <div className="p-3 border rounded-md bg-background/50 mt-4">
                         <p className="text-sm text-muted-foreground italic">{t.activitiesPlaceholder(interval.label)}</p>
                       </div>
