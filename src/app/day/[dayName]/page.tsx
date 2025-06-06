@@ -1036,7 +1036,14 @@ export default function DayDetailPage() {
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
                               <div className="flex justify-between items-center mb-2">
-                                <p className="text-sm font-semibold text-foreground/90">{slot}</p>
+                                <div className="flex items-baseline">
+                                  <p className="text-sm font-semibold text-foreground/90">{slot}</p>
+                                  {!hasAnyContentForThisSlot && (
+                                    <p className="text-xs text-muted-foreground italic ml-2">
+                                      {t.noItemsForHour}
+                                    </p>
+                                  )}
+                                </div>
                                 <div className="flex space-x-1">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1259,12 +1266,6 @@ export default function DayDetailPage() {
                                     </ul>
                                 </div>
                               )}
-
-                              {!hasAnyContentForThisSlot && (
-                                     <p className="text-xs text-muted-foreground italic mt-2 text-center">
-                                      {t.noItemsForHour}
-                                    </p>
-                                )}
                             </div>
                           );
                         })}
