@@ -6,6 +6,7 @@ import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
 import { LogIn, Github, Languages } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"; // Added Card components
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -170,7 +171,7 @@ export default function WeekGlancePage() {
   }, []);
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-12 px-4">
+    <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
       <header className="mb-12 sm:mb-16 w-full max-w-4xl flex justify-between items-center">
         <div>
           <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
@@ -209,18 +210,22 @@ export default function WeekGlancePage() {
         ))}
       </div>
 
-      <div className="w-full max-w-4xl mb-12 sm:mb-16">
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-primary">
-          {t.weeklySummaryTitle}
-        </h2>
-        <Textarea
-          placeholder={t.weeklySummaryPlaceholder}
-          value={weeklySummary}
-          onChange={(e) => handleSummaryChange(e.target.value)}
-          className="min-h-[120px] sm:min-h-[150px] bg-background border-border focus:ring-primary text-base rounded-lg"
-          aria-label={t.weeklySummaryTitle}
-        />
-      </div>
+      <Card className="w-full max-w-4xl mb-12 sm:mb-16 rounded-xl shadow-lg">
+        <CardHeader>
+           <CardTitle className="text-2xl sm:text-3xl font-semibold text-primary">
+             {t.weeklySummaryTitle}
+           </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Textarea
+            placeholder={t.weeklySummaryPlaceholder}
+            value={weeklySummary}
+            onChange={(e) => handleSummaryChange(e.target.value)}
+            className="min-h-[120px] sm:min-h-[150px] bg-background border-border focus:ring-primary text-base rounded-lg w-full"
+            aria-label={t.weeklySummaryTitle}
+          />
+        </CardContent>
+      </Card>
 
       <footer className="mt-auto pt-12 pb-8 w-full max-w-4xl">
         <div className="border-t border-border pt-8">
@@ -249,3 +254,5 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
+    
