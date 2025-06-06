@@ -4,11 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
-import { LogIn, Github, Languages } from "lucide-react"; // 导入 Languages 图标
-
-const DAYS_OF_WEEK = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
-const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
-const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
+import { LogIn, Github, Languages } from "lucide-react";
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -38,11 +34,69 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
+const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
+
+const translations = {
+  'zh-CN': {
+    pageTitle: '周览',
+    pageSubtitle: '规划你的一周，一日一览。',
+    languageButtonText: 'English',
+    loginButtonText: '登录',
+    daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
+    communityPrompt: '加入我们的社区，帮助我们成长！',
+    selectDayAria: (day: string) => `选择 ${day}`,
+    hasNotesAria: '有笔记',
+    ratingLabels: {
+      excellent: '好极了',
+      average: '一般般',
+      terrible: '糟透了',
+    },
+    wechatAria: '微信',
+    alibabaAria: '阿里巴巴',
+    bilibiliAria: '哔哩哔哩',
+    githubAria: 'GitHub',
+    googleAria: '谷歌',
+  },
+  'en': {
+    pageTitle: 'Week Glance',
+    pageSubtitle: 'Plan your week, one day at a glance.',
+    languageButtonText: '中文',
+    loginButtonText: 'Login',
+    daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    communityPrompt: 'Join our community and help us grow!',
+    selectDayAria: (day: string) => `Select ${day}`,
+    hasNotesAria: 'Has notes',
+    ratingLabels: {
+      excellent: 'Excellent',
+      average: 'Average',
+      terrible: 'Terrible',
+    },
+    wechatAria: 'WeChat',
+    alibabaAria: 'Alibaba',
+    bilibiliAria: 'Bilibili',
+    githubAria: 'GitHub',
+    googleAria: 'Google',
+  }
+};
+type LanguageKey = keyof typeof translations;
+
 
 export default function WeekGlancePage() {
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
+
+  const t = translations[currentLanguage];
+
+  useEffect(() => {
+    const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
+    setCurrentLanguage(browserLang);
+    if (typeof document !== 'undefined') {
+        document.documentElement.lang = browserLang;
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -60,11 +114,19 @@ export default function WeekGlancePage() {
       if (storedRatings) {
         setRatings(JSON.parse(storedRatings));
       }
-    } catch (error) { // Added missing opening curly brace here
+    } catch (error) {
       console.error("无法从localStorage解析评分:", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY_RATINGS);
     }
   }, []);
+
+  const toggleLanguage = () => {
+    const newLang = currentLanguage === 'zh-CN' ? 'en' : 'zh-CN';
+    setCurrentLanguage(newLang);
+    if (typeof document !== 'undefined') {
+        document.documentElement.lang = newLang;
+    }
+  };
 
   const handleDaySelect = useCallback((day: string) => {
     setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
@@ -87,26 +149,26 @@ export default function WeekGlancePage() {
       <header className="mb-10 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
         <div>
           <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
-            周览
+            {t.pageTitle}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            规划你的一周，一日一览。
+            {t.pageSubtitle}
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={toggleLanguage}>
             <Languages className="mr-2 h-4 w-4" />
-            English
+            {t.languageButtonText}
           </Button>
           <Button variant="outline" size="sm">
             <LogIn className="mr-2 h-4 w-4" />
-            登录
+            {t.loginButtonText}
           </Button>
         </div>
       </header>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-4xl place-items-center mb-10">
-        {DAYS_OF_WEEK.map((day) => (
+        {t.daysOfWeek.map((day) => (
           <DayBox
             key={day}
             dayName={day}
@@ -115,6 +177,9 @@ export default function WeekGlancePage() {
             hasNotes={!!notes[day]?.trim()}
             rating={ratings[day] || null}
             onRatingChange={(newRating) => handleRatingChange(day, newRating)}
+            ariaLabelSelectDay={t.selectDayAria(day)}
+            ariaLabelHasNotes={t.hasNotesAria}
+            ratingUiLabels={t.ratingLabels}
           />
         ))}
       </div>
@@ -122,22 +187,22 @@ export default function WeekGlancePage() {
       <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
         <div className="border-t border-border pt-6">
           <p className="text-center text-sm text-muted-foreground mb-4">
-            加入我们的社区，帮助我们成长！
+            {t.communityPrompt}
           </p>
           <div className="flex justify-center items-center space-x-6">
-            <a href="#" aria-label="微信" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label={t.wechatAria} className="text-muted-foreground hover:text-primary transition-colors">
               <WeChatIcon />
             </a>
-            <a href="#" aria-label="阿里巴巴" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label={t.alibabaAria} className="text-muted-foreground hover:text-primary transition-colors">
               <AlibabaIcon />
             </a>
-            <a href="#" aria-label="哔哩哔哩" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label={t.bilibiliAria} className="text-muted-foreground hover:text-primary transition-colors">
               <BilibiliIcon />
             </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
             </a>
-            <a href="#" aria-label="谷歌" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="#" aria-label={t.googleAria} className="text-muted-foreground hover:text-primary transition-colors">
               <GoogleIcon />
             </a>
           </div>

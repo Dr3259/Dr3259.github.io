@@ -1,25 +1,47 @@
 
 import type { FC } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FileText, ThumbsUp, ThumbsDown, Meh } from "lucide-react";
+
+type RatingValue = 'excellent' | 'terrible' | 'average';
 
 interface DayBoxProps {
   dayName: string;
   isSelected: boolean;
   onClick: () => void;
   hasNotes?: boolean;
-  rating: 'excellent' | 'terrible' | 'average' | null;
-  onRatingChange: (newRating: 'excellent' | 'terrible' | 'average' | null) => void;
+  rating: RatingValue | null;
+  onRatingChange: (newRating: RatingValue | null) => void;
+  ariaLabelSelectDay: string;
+  ariaLabelHasNotes?: string;
+  ratingUiLabels: {
+    excellent: string;
+    average: string;
+    terrible: string;
+  };
 }
 
-const RATING_OPTIONS = [
-  { type: 'excellent' as const, Icon: ThumbsUp, label: '好极了' },
-  { type: 'average' as const, Icon: Meh, label: '一般般' },
-  { type: 'terrible' as const, Icon: ThumbsDown, label: '糟透了' },
-];
+const RATING_ICONS: Record<RatingValue, LucideIcon> = {
+  excellent: ThumbsUp,
+  average: Meh,
+  terrible: ThumbsDown,
+};
 
-export const DayBox: FC<DayBoxProps> = ({ dayName, isSelected, onClick, hasNotes, rating, onRatingChange }) => {
+const RATING_ORDER: RatingValue[] = ['excellent', 'average', 'terrible'];
+
+export const DayBox: FC<DayBoxProps> = ({
+  dayName,
+  isSelected,
+  onClick,
+  hasNotes,
+  rating,
+  onRatingChange,
+  ariaLabelSelectDay,
+  ariaLabelHasNotes,
+  ratingUiLabels,
+}) => {
   return (
     <Card
       className={cn(
@@ -31,33 +53,37 @@ export const DayBox: FC<DayBoxProps> = ({ dayName, isSelected, onClick, hasNotes
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick()}}
       aria-pressed={isSelected}
-      aria-label={`选择 ${dayName}`}
+      aria-label={ariaLabelSelectDay}
     >
       <CardHeader className="p-2 pb-1 text-center">
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label="有笔记"/>}
+        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label={ariaLabelHasNotes}/>}
       </CardContent>
       <CardFooter className="p-2 pt-1 mt-auto w-full">
         <div className="flex justify-around w-full">
-          {RATING_OPTIONS.map(({ type, Icon, label }) => (
-            <button
-              key={type}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent DayBox onClick
-                onRatingChange(rating === type ? null : type);
-              }}
-              className={cn(
-                "p-1 rounded-full hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
-              aria-label={`评价为 ${label}`}
-              aria-pressed={rating === type}
-            >
-              <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          ))}
+          {RATING_ORDER.map((type) => {
+            const Icon = RATING_ICONS[type];
+            const label = ratingUiLabels[type];
+            return (
+              <button
+                key={type}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent DayBox onClick
+                  onRatingChange(rating === type ? null : type);
+                }}
+                className={cn(
+                  "p-1 rounded-full hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                  rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label={label}
+                aria-pressed={rating === type}
+              >
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            );
+          })}
         </div>
       </CardFooter>
     </Card>
