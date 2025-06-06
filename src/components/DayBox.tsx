@@ -1,9 +1,8 @@
 
 "use client";
 
-import type { FC } from 'react';
+import React, { useState, FC } from 'react'; // Added React and useState
 import type { LucideIcon } from 'lucide-react';
-// import Image from 'next/image'; // Removed next/image from here as preview is handled by DayHoverPreview
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,7 @@ interface DayBoxProps {
   onClick: () => void;
   notes: string;
   onNotesChange: (newNote: string) => void;
-  hasNotes?: boolean; 
+  hasNotes?: boolean;
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
@@ -61,9 +60,11 @@ export const DayBox: FC<DayBoxProps> = ({
   onHoverEnd,
   imageHint,
 }) => {
+  const [isHovered, setIsHovered] = useState(false); // Internal hover state
+
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
   const showNotesIndicator = !!notes.trim();
-  
+
   const isDisabled = isPastDay && !showNotesIndicator && !rating && !isSelected;
 
   const handleCardClick = () => {
@@ -78,36 +79,44 @@ export const DayBox: FC<DayBoxProps> = ({
     }
   };
 
-  const handleMouseEnter = () => {
+  const handleCardMouseEnter = () => {
+    setIsHovered(true);
     if (isPastDay && !isDisabled) {
       onHoverStart({ dayName, notes, imageHint });
     }
   };
 
-  const handleMouseLeave = () => {
+  const handleCardMouseLeave = () => {
+    setIsHovered(false);
     if (isPastDay && !isDisabled) {
       onHoverEnd();
     }
   };
 
+  const showBlueHighlight = isSelected && isHovered && !isDisabled;
+
   return (
     <Card
       className={cn(
-        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", 
+        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isDisabled
-          ? "opacity-50 cursor-not-allowed bg-card border-transparent" 
-          : [ 
+          ? "opacity-50 cursor-not-allowed bg-card border-transparent"
+          : [
               "cursor-pointer",
-              isSelected
-                ? "border-primary shadow-lg scale-105 bg-primary/10" 
-                : "border-transparent bg-card",
-              !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105",
-            ],
-        isCurrentDay && !isSelected && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" 
+              showBlueHighlight
+                ? "border-primary shadow-lg scale-105 bg-primary/10" // Blue highlight: Selected AND Hovered
+                : [ // Not blue highlighted (either unselected, or selected but not hovered)
+                    "border-transparent bg-card", // Default appearance
+                    !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105", // General hover for non-selected
+                    isSelected && !isHovered && "hover:border-primary/50", // Subtle hover for selected but not hovered
+                  ],
+              // Amber ring for current day, if not blue highlighted
+              isCurrentDay && !isDisabled && !showBlueHighlight && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
+            ]
       )}
       onClick={handleCardClick}
-      onMouseEnter={handleMouseEnter} 
-      onMouseLeave={handleMouseLeave} 
+      onMouseEnter={handleCardMouseEnter}
+      onMouseLeave={handleCardMouseLeave}
       role="button"
       tabIndex={isDisabled ? -1 : 0}
       onKeyDown={handleCardKeyDown}
@@ -123,11 +132,11 @@ export const DayBox: FC<DayBoxProps> = ({
            <Textarea
             value={notes}
             onChange={(e) => {
-              e.stopPropagation(); 
+              e.stopPropagation();
               onNotesChange(e.target.value);
             }}
-            onClick={(e) => e.stopPropagation()} 
-            placeholder={ratingUiLabels.average} 
+            onClick={(e) => e.stopPropagation()}
+            placeholder={ratingUiLabels.average}
             className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
             aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
           />
@@ -145,12 +154,12 @@ export const DayBox: FC<DayBoxProps> = ({
                 <button
                   key={type}
                   onClick={(e) => {
-                    e.stopPropagation(); 
+                    e.stopPropagation();
                     onRatingChange(rating === type ? null : type);
                   }}
                   className={cn(
                     "p-1 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                    "hover:bg-accent/50", 
+                    "hover:bg-accent/50",
                     rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-label={label}
