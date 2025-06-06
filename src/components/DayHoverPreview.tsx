@@ -13,6 +13,7 @@ interface DayHoverPreviewProps {
   altText: string;
   onMouseEnterPreview?: () => void;
   onMouseLeavePreview?: () => void;
+  onClickPreview?: () => void;
 }
 
 export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
@@ -21,14 +22,16 @@ export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
   altText,
   onMouseEnterPreview,
   onMouseLeavePreview,
+  onClickPreview,
 }) => {
   const imageUrl = `https://placehold.co/420x280.png`;
 
   return (
     <Card 
-      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[460px] bg-card shadow-2xl border-2 border-primary/50"
+      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[460px] bg-card shadow-2xl border-2 border-primary/50 cursor-pointer"
       onMouseEnter={onMouseEnterPreview}
       onMouseLeave={onMouseLeavePreview}
+      onClick={onClickPreview}
     >
       <CardContent className="p-4">
         <div className="mb-3">

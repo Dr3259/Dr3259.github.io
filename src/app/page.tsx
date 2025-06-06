@@ -268,6 +268,10 @@ export default function WeekGlancePage() {
     setHoverPreviewData(null); 
   }, []);
 
+  const handlePreviewClick = useCallback(() => {
+    setHoverPreviewData(null);
+  }, []);
+
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -352,6 +356,7 @@ export default function WeekGlancePage() {
           altText={hoverPreviewData.altText}
           onMouseEnterPreview={handlePreviewMouseEnter}
           onMouseLeavePreview={handlePreviewMouseLeave}
+          onClickPreview={handlePreviewClick}
         />
       )}
 
