@@ -16,6 +16,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
 import { MeetingNoteModal, type MeetingNoteItem, type MeetingNoteModalTranslations } from '@/components/MeetingNoteModal';
+import { ShareLinkModal, type ShareLinkItem, type ShareLinkModalTranslations } from '@/components/ShareLinkModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
@@ -140,6 +141,23 @@ const translations = {
         cancelButton: '取消',
         deleteButton: '删除记录',
     } as MeetingNoteModalTranslations,
+    shareLinkModal: {
+        modalTitleNew: '新分享链接',
+        modalTitleEdit: (titleOrUrl: string) => `编辑链接: ${titleOrUrl}`,
+        modalDescription: '在此处添加、编辑或删除您的分享链接。',
+        urlLabel: '链接 URL:',
+        urlPlaceholder: 'https://example.com',
+        titleLabel: '标题 (可选):',
+        titlePlaceholder: '输入链接标题或描述...',
+        saveButton: '保存链接',
+        updateButton: '更新链接',
+        cancelButton: '取消',
+        deleteButton: '删除链接',
+    } as ShareLinkModalTranslations,
+    linksSectionTitle: '分享链接',
+    noLinksForHour: '此时间段暂无分享链接。',
+    editLink: '编辑链接',
+    deleteLink: '删除链接',
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -225,6 +243,23 @@ const translations = {
         cancelButton: 'Cancel',
         deleteButton: 'Delete Note',
     } as MeetingNoteModalTranslations,
+    shareLinkModal: {
+        modalTitleNew: 'New Share Link',
+        modalTitleEdit: (titleOrUrl: string) => `Edit Link: ${titleOrUrl}`,
+        modalDescription: 'Add, edit, or delete your share links here.',
+        urlLabel: 'Link URL:',
+        urlPlaceholder: 'https://example.com',
+        titleLabel: 'Title (optional):',
+        titlePlaceholder: 'Enter link title or description...',
+        saveButton: 'Save Link',
+        updateButton: 'Update Link',
+        cancelButton: 'Cancel',
+        deleteButton: 'Delete Link',
+    } as ShareLinkModalTranslations,
+    linksSectionTitle: 'Shared Links',
+    noLinksForHour: 'No links recorded for this hour.',
+    editLink: 'Edit Link',
+    deleteLink: 'Delete Link',
   }
 };
 
@@ -261,6 +296,7 @@ export default function DayDetailPage() {
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+
   // To-do states
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
@@ -274,6 +310,13 @@ export default function DayDetailPage() {
   const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
   const [editingMeetingNoteItem, setEditingMeetingNoteItem] = useState<MeetingNoteItem | null>(null);
   const [editingMeetingNoteSlotDetails, setEditingMeetingNoteSlotDetails] = useState<SlotDetails | null>(null);
+
+  // Share Link states
+  const [isShareLinkModalOpen, setIsShareLinkModalOpen] = useState(false);
+  const [selectedSlotForShareLink, setSelectedSlotForShareLink] = useState<SlotDetails | null>(null);
+  const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
+  const [editingShareLinkItem, setEditingShareLinkItem] = useState<ShareLinkItem | null>(null);
+  const [editingShareLinkSlotDetails, setEditingShareLinkSlotDetails] = useState<SlotDetails | null>(null);
 
 
   useEffect(() => {
@@ -298,6 +341,14 @@ export default function DayDetailPage() {
             console.error("Failed to parse meeting notes from localStorage", e);
         }
     }
+    const storedShareLinks = localStorage.getItem('allWeekShareLinks');
+    if (storedShareLinks) {
+        try {
+            setAllShareLinks(JSON.parse(storedShareLinks));
+        } catch (e) {
+            console.error("Failed to parse share links from localStorage", e);
+        }
+    }
   }, []);
 
   const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
@@ -316,9 +367,18 @@ export default function DayDetailPage() {
     }
   };
 
+  const saveAllShareLinksToLocalStorage = (updatedLinks: Record<string, Record<string, ShareLinkItem[]>>) => {
+    try {
+        localStorage.setItem('allWeekShareLinks', JSON.stringify(updatedLinks));
+    } catch (e) {
+        console.error("Failed to save share links to localStorage", e);
+    }
+  };
+
   const t = translations[currentLanguage];
   const tTodoModal = translations[currentLanguage].todoModal;
   const tMeetingNoteModal = translations[currentLanguage].meetingNoteModal;
+  const tShareLinkModal = translations[currentLanguage].shareLinkModal;
 
   const notes = ""; // General notes for the day, not related to specific items
   const rating = "";
@@ -480,6 +540,77 @@ export default function DayDetailPage() {
     return allMeetingNotes[targetDayName]?.[targetHourSlot] || [];
   };
 
+  // --- Share Link Modal and Item Handlers ---
+  const handleOpenShareLinkModal = (hourSlot: string, linkToEdit?: ShareLinkItem) => {
+    setSelectedSlotForShareLink({ dayName, hourSlot });
+    setEditingShareLinkItem(linkToEdit || null);
+    setEditingShareLinkSlotDetails(linkToEdit ? { dayName, hourSlot } : null);
+    setIsShareLinkModalOpen(true);
+  };
+
+  const handleCloseShareLinkModal = () => {
+    setIsShareLinkModalOpen(false);
+    setSelectedSlotForShareLink(null);
+    setEditingShareLinkItem(null);
+    setEditingShareLinkSlotDetails(null);
+  };
+
+  const handleSaveShareLinkFromModal = (day: string, hourSlot: string, savedLink: ShareLinkItem) => {
+    setAllShareLinks(prevAllLinks => {
+      const dayLinks = prevAllLinks[day] || {};
+      const slotLinks = dayLinks[hourSlot] || [];
+
+      const existingLinkIndex = slotLinks.findIndex(l => l.id === savedLink.id);
+      let updatedSlotLinks;
+      if (existingLinkIndex > -1) {
+        updatedSlotLinks = slotLinks.map((l, index) => index === existingLinkIndex ? savedLink : l);
+      } else {
+        updatedSlotLinks = [...slotLinks, savedLink];
+      }
+
+      const newAllLinks = {
+        ...prevAllLinks,
+        [day]: {
+          ...dayLinks,
+          [hourSlot]: updatedSlotLinks,
+        },
+      };
+      saveAllShareLinksToLocalStorage(newAllLinks);
+      return newAllLinks;
+    });
+  };
+
+  const handleDeleteShareLinkInPage = (targetDay: string, targetHourSlot: string, linkId: string) => {
+    setAllShareLinks(prevAllLinks => {
+      const dayLinks = prevAllLinks[targetDay] || {};
+      const slotLinks = dayLinks[targetHourSlot] || [];
+      const updatedSlotLinks = slotLinks.filter(link => link.id !== linkId);
+      const newAllLinks = {
+        ...prevAllLinks,
+        [targetDay]: {
+          ...dayLinks,
+          [targetHourSlot]: updatedSlotLinks,
+        },
+      };
+      saveAllShareLinksToLocalStorage(newAllLinks);
+      return newAllLinks;
+    });
+  };
+
+  const handleDeleteLinkFromModal = (linkId: string) => {
+    if (selectedSlotForShareLink) {
+      handleDeleteShareLinkInPage(selectedSlotForShareLink.dayName, selectedSlotForShareLink.hourSlot, linkId);
+    }
+  };
+
+  const handleOpenEditShareLinkModalInPage = (targetDay: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
+    handleOpenShareLinkModal(targetHourSlot, linkToEdit);
+  };
+
+  const getShareLinksForSlot = (targetDayName: string, targetHourSlot: string): ShareLinkItem[] => {
+    return allShareLinks[targetDayName]?.[targetHourSlot] || [];
+  };
+
 
   // --- Tooltip Text Helpers ---
   const getCategoryTooltipText = (category: CategoryType | null) => {
@@ -552,6 +683,7 @@ export default function DayDetailPage() {
                         {hourlySlots.map((slot, slotIndex) => {
                           const todosForSlot = getTodosForSlot(dayName, slot);
                           const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
+                          const shareLinksForSlot = getShareLinksForSlot(dayName, slot);
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
                               <div className="flex justify-between items-center mb-2">
@@ -579,7 +711,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenShareLinkModal(slot)}>
                                         <LinkIconLucide className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -639,12 +771,12 @@ export default function DayDetailPage() {
                                               <label
                                                 htmlFor={`daypage-todo-${dayName}-${slot}-${todo.id}`}
                                                 className={cn(
-                                                  "text-xs cursor-pointer flex-1 min-w-0",
+                                                  "text-xs cursor-pointer flex-1 min-w-0 truncate",
                                                   todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'
                                                 )}
                                                 title={todo.text}
                                               >
-                                                {todo.text.length > 25 ? todo.text.substring(0, 25) + '...' : todo.text}
+                                                {todo.text}
                                               </label>
                                             </div>
                                             <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
@@ -676,14 +808,14 @@ export default function DayDetailPage() {
                                   )}
                                 </div>
                                 {/* Meeting Notes Display */}
-                                <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist">
+                                <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist mb-3">
                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.meetingNotesSectionTitle}</h4>
                                   {meetingNotesForSlot.length > 0 ? (
                                     <ul className="space-y-2 p-px">
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                            <span className="text-xs text-foreground/90 flex-1 min-w-0" title={note.title}>
-                                              {note.title.length > 30 ? note.title.substring(0, 30) + '...' : (note.title || t.noData)}
+                                            <span className="text-xs text-foreground/90 flex-1 min-w-0 truncate" title={note.title}>
+                                              {note.title || t.noData}
                                             </span>
                                             <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
                                               <Tooltip>
@@ -709,6 +841,49 @@ export default function DayDetailPage() {
                                   ) : (
                                     <p className="text-xs text-muted-foreground italic">
                                       {t.noMeetingNotesForHour}
+                                    </p>
+                                  )}
+                                </div>
+                                {/* Share Links Display */}
+                                <div className="p-2 border rounded-md bg-background/50 group/linklist">
+                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.linksSectionTitle}</h4>
+                                  {shareLinksForSlot.length > 0 ? (
+                                    <ul className="space-y-2 p-px">
+                                      {shareLinksForSlot.map((link) => (
+                                        <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
+                                          <a
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-primary hover:underline flex-1 min-w-0 truncate"
+                                            title={link.title || link.url}
+                                          >
+                                            {link.title || link.url}
+                                          </a>
+                                          <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/linkitem:opacity-100 transition-opacity">
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditShareLinkModalInPage(dayName, slot, link)}>
+                                                  <FileEdit className="h-3.5 w-3.5" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent><p>{t.editLink}</p></TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteShareLinkInPage(dayName, slot, link.id)}>
+                                                  <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent><p>{t.deleteLink}</p></TooltipContent>
+                                            </Tooltip>
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      {t.noLinksForHour}
                                     </p>
                                   )}
                                 </div>
@@ -750,6 +925,18 @@ export default function DayDetailPage() {
             hourSlot={selectedSlotForMeetingNote.hourSlot}
             initialData={editingMeetingNoteItem && editingMeetingNoteSlotDetails?.dayName === selectedSlotForMeetingNote.dayName && editingMeetingNoteSlotDetails?.hourSlot === selectedSlotForMeetingNote.hourSlot ? editingMeetingNoteItem : null}
             translations={tMeetingNoteModal}
+        />
+      )}
+      {isShareLinkModalOpen && selectedSlotForShareLink && (
+        <ShareLinkModal
+            isOpen={isShareLinkModalOpen}
+            onClose={handleCloseShareLinkModal}
+            onSave={handleSaveShareLinkFromModal}
+            onDelete={editingShareLinkItem ? handleDeleteLinkFromModal : undefined}
+            dayName={selectedSlotForShareLink.dayName}
+            hourSlot={selectedSlotForShareLink.hourSlot}
+            initialData={editingShareLinkItem && editingShareLinkSlotDetails?.dayName === selectedSlotForShareLink.dayName && editingShareLinkSlotDetails?.hourSlot === selectedSlotForShareLink.hourSlot ? editingShareLinkItem : null}
+            translations={tShareLinkModal}
         />
       )}
     </TooltipProvider>
