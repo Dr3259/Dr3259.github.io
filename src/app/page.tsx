@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
 import { LogIn, Github, Languages } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea"; // Added Textarea import
+import { Textarea } from "@/components/ui/textarea";
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -18,7 +18,7 @@ const WeChatIcon = () => (
 
 const AlibabaIcon = () => (
   <svg viewBox="0 0 1024 1024" fill="currentColor" className="w-6 h-6">
-    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2-16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5-11.8-2.2-16.6l-85.3 109.9c-11.2-14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
+    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5-11.8-2.2-16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5-11.8-2.2-16.6l-85.3 109.9c-11.2-14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
   </svg>
 );
 
@@ -37,7 +37,7 @@ const GoogleIcon = () => (
 
 const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
-const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary'; // New key for summary
+const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary';
 
 const translations = {
   'zh-CN': {
@@ -93,7 +93,7 @@ export default function WeekGlancePage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
-  const [weeklySummary, setWeeklySummary] = useState<string>(''); // State for weekly summary
+  const [weeklySummary, setWeeklySummary] = useState<string>('');
 
   const t = translations[currentLanguage];
 
@@ -129,7 +129,7 @@ export default function WeekGlancePage() {
     try {
       const storedSummary = localStorage.getItem(LOCAL_STORAGE_KEY_SUMMARY);
       if (storedSummary) {
-        setWeeklySummary(storedSummary); // Load summary as plain string
+        setWeeklySummary(storedSummary);
       }
     } catch (error) {
       console.error("无法从localStorage加载总结:", error);
@@ -209,7 +209,6 @@ export default function WeekGlancePage() {
         ))}
       </div>
 
-      {/* Weekly Summary Section */}
       <div className="w-full max-w-4xl mb-12 sm:mb-16">
         <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-primary">
           {t.weeklySummaryTitle}
@@ -218,7 +217,7 @@ export default function WeekGlancePage() {
           placeholder={t.weeklySummaryPlaceholder}
           value={weeklySummary}
           onChange={(e) => handleSummaryChange(e.target.value)}
-          className="min-h-[120px] sm:min-h-[150px] bg-card border-border focus:ring-primary text-base rounded-lg shadow-sm"
+          className="min-h-[120px] sm:min-h-[150px] bg-background border-border focus:ring-primary text-base rounded-lg"
           aria-label={t.weeklySummaryTitle}
         />
       </div>
