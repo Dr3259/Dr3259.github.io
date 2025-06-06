@@ -68,6 +68,7 @@ const translations = {
     ratingLabel: '本日评价:',
     noData: '暂无数据',
     notesPlaceholder: '记录今天的总结...',
+    summaryAvailableLater: '总结可在下午6点后填写。',
     timeIntervalsTitle: '每日安排',
     midnight: '凌晨 (00:00 - 05:00)',
     earlyMorning: '清晨 (05:00 - 09:00)',
@@ -187,6 +188,7 @@ const translations = {
     ratingLabel: 'Daily Rating:',
     noData: 'No data available',
     notesPlaceholder: 'Write your summary for the day...',
+    summaryAvailableLater: 'Summary can be written after 6 PM.',
     timeIntervalsTitle: 'Daily Schedule',
     midnight: 'Midnight (00:00 - 05:00)',
     earlyMorning: 'Early Morning (05:00 - 09:00)',
@@ -329,12 +331,15 @@ const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType
 };
 
 const MAX_DAILY_NOTE_LENGTH = 1000;
+type DailyNoteDisplayMode = 'read' | 'edit' | 'pending';
+
 
 export default function DayDetailPage() {
   const params = useParams();
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
 
   // Daily Notes state
   const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({});
@@ -373,6 +378,9 @@ export default function DayDetailPage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
+    
+    const today = new Date();
+    setIsAfter6PMToday(today.getHours() >= 18);
 
     const storedDailyNotes = localStorage.getItem('allWeekDailyNotes');
     if (storedDailyNotes) {
@@ -483,7 +491,7 @@ export default function DayDetailPage() {
     });
   };
 
-  const dailyNoteDisplayMode = useMemo(() => {
+  const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
     if (typeof window === 'undefined') return 'edit'; // Default for SSR or pre-hydration
 
     const todayDate = new Date();
@@ -500,8 +508,11 @@ export default function DayDetailPage() {
     if (viewingDayIndex < systemDayIndex) {
         return 'read'; // Past day
     }
-    return 'edit'; // Current or future day
-  }, [dayName, currentLanguage]);
+    if (viewingDayIndex === systemDayIndex) { // Current day
+        return isAfter6PMToday ? 'edit' : 'pending';
+    }
+    return 'edit'; // Future day
+  }, [dayName, currentLanguage, isAfter6PMToday, translations]);
 
 
   // --- To-do Modal and Item Handlers ---
@@ -842,7 +853,7 @@ export default function DayDetailPage() {
                         <p className="text-muted-foreground italic">{t.noData}</p>
                     )}
                     </div>
-                ) : (
+                ) : dailyNoteDisplayMode === 'edit' ? (
                     <div>
                     <Textarea
                         value={dailyNote}
@@ -855,7 +866,11 @@ export default function DayDetailPage() {
                         {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
                     </div>
                     </div>
-                )}
+                ) : dailyNoteDisplayMode === 'pending' ? (
+                     <div className="p-3 border rounded-md min-h-[100px] bg-background/50 flex items-center justify-center">
+                        <p className="text-muted-foreground italic">{t.summaryAvailableLater}</p>
+                    </div>
+                ) : null}
               </div>
 
               <div>
