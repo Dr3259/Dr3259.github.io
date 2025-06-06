@@ -3,10 +3,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
-// Removed Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle from 'ui/card' as they are no longer used for the notes section
-// Removed Textarea from 'ui/textarea' as it's no longer used
-// Removed Button from 'ui/button' as it's no longer used for saving notes
-// Removed useToast hook as it's no longer used
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const LOCAL_STORAGE_KEY = 'weekGlanceNotes';
@@ -14,8 +10,6 @@ const LOCAL_STORAGE_KEY = 'weekGlanceNotes';
 export default function WeekGlancePage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
-  // Removed currentNoteInput state
-  // Removed useToast()
 
   useEffect(() => {
     try {
@@ -29,13 +23,9 @@ export default function WeekGlancePage() {
     }
   }, []);
 
-  // Removed useEffect that updated currentNoteInput
-
   const handleDaySelect = useCallback((day: string) => {
     setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
   }, []);
-
-  // Removed handleSaveNote function
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-8 sm:py-10 px-4">
@@ -48,35 +38,17 @@ export default function WeekGlancePage() {
         </p>
       </header>
 
-      <div className="flex flex-col items-center w-full max-w-4xl mb-10">
-        {/* Top Row: 4 boxes */}
-        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-4 sm:mb-6">
-          {DAYS_OF_WEEK.slice(0, 4).map((day) => (
-            <DayBox
-              key={day}
-              dayName={day}
-              isSelected={selectedDay === day}
-              onClick={() => handleDaySelect(day)}
-              hasNotes={!!notes[day]?.trim()}
-            />
-          ))}
-        </div>
-
-        {/* Bottom Row: 3 boxes */}
-        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-          {DAYS_OF_WEEK.slice(4, 7).map((day) => (
-            <DayBox
-              key={day}
-              dayName={day}
-              isSelected={selectedDay === day}
-              onClick={() => handleDaySelect(day)}
-              hasNotes={!!notes[day]?.trim()}
-            />
-          ))}
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-4xl place-items-center mb-10">
+        {DAYS_OF_WEEK.map((day) => (
+          <DayBox
+            key={day}
+            dayName={day}
+            isSelected={selectedDay === day}
+            onClick={() => handleDaySelect(day)}
+            hasNotes={!!notes[day]?.trim()}
+          />
+        ))}
       </div>
-
-      {/* Removed the Card section for displaying/editing notes */}
     </main>
   );
 }
