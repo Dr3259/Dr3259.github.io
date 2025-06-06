@@ -40,22 +40,30 @@ export interface MeetingNoteModalTranslations {
   saveButton: string;
   updateButton: string;
   cancelButton: string;
+  deleteButton: string; // New
 }
 
 interface MeetingNoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (day: string, hourSlot: string, note: MeetingNoteItem) => void;
+  onDelete?: (noteId: string) => void; // New
   dayName: string;
   hourSlot: string;
   initialData?: MeetingNoteItem | null;
   translations: MeetingNoteModalTranslations;
 }
 
+const MAX_TITLE_LENGTH = 100;
+const MAX_NOTES_LENGTH = 1000;
+const MAX_ATTENDEES_LENGTH = 200;
+const MAX_ACTION_ITEMS_LENGTH = 500;
+
 export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   dayName,
   hourSlot,
   initialData,
@@ -83,8 +91,8 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
   }, [isOpen, initialData]);
 
   const handleSaveOrUpdate = () => {
-    if (title.trim() === '' && notes.trim() === '') { 
-        onClose(); 
+    if (title.trim() === '' && notes.trim() === '') {
+        onClose();
         return;
     }
 
@@ -98,7 +106,14 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
     onSave(dayName, hourSlot, noteData);
     onClose();
   };
-  
+
+  const handleDeleteClick = () => {
+    if (initialData?.id && onDelete) {
+        onDelete(initialData.id);
+    }
+    onClose(); // Close the modal after invoking the delete callback
+  };
+
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onClose();
@@ -126,11 +141,13 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
               <Input
                 id="meeting-title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value.substring(0,100))}
+                onChange={(e) => setTitle(e.target.value.substring(0, MAX_TITLE_LENGTH))}
                 placeholder={translations.titlePlaceholder}
                 className="bg-background text-base py-2.5"
-                maxLength={100}
               />
+              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                {title.length}/{MAX_TITLE_LENGTH}
+              </div>
             </div>
 
             <div>
@@ -140,10 +157,13 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
               <Textarea
                 id="meeting-notes"
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => setNotes(e.target.value.substring(0, MAX_NOTES_LENGTH))}
                 placeholder={translations.notesPlaceholder}
                 className="bg-background min-h-[120px] text-base"
               />
+              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                {notes.length}/{MAX_NOTES_LENGTH}
+              </div>
             </div>
 
             <div>
@@ -153,10 +173,13 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
               <Input
                 id="meeting-attendees"
                 value={attendees}
-                onChange={(e) => setAttendees(e.target.value)}
+                onChange={(e) => setAttendees(e.target.value.substring(0, MAX_ATTENDEES_LENGTH))}
                 placeholder={translations.attendeesPlaceholder}
                 className="bg-background text-base py-2.5"
               />
+              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                {attendees.length}/{MAX_ATTENDEES_LENGTH}
+              </div>
             </div>
 
             <div>
@@ -166,21 +189,35 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
               <Textarea
                 id="meeting-action-items"
                 value={actionItems}
-                onChange={(e) => setActionItems(e.target.value)}
+                onChange={(e) => setActionItems(e.target.value.substring(0, MAX_ACTION_ITEMS_LENGTH))}
                 placeholder={translations.actionItemsPlaceholder}
                 className="bg-background min-h-[80px] text-base"
               />
+              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                {actionItems.length}/{MAX_ACTION_ITEMS_LENGTH}
+              </div>
             </div>
           </div>
         </ScrollArea>
 
-        <DialogFooter className="mt-6">
-           <Button onClick={handleSaveOrUpdate} className="py-2.5">
+        <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          {initialData && onDelete && (
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClick}
+              className="py-2.5 mt-2 sm:mt-0 sm:mr-auto"
+            >
+              {translations.deleteButton}
+            </Button>
+          )}
+          <DialogClose asChild>
+            <Button variant="outline" onClick={onClose} className="py-2.5 mt-2 sm:mt-0">
+                {translations.cancelButton}
+            </Button>
+          </DialogClose>
+          <Button onClick={handleSaveOrUpdate} className="py-2.5">
             {initialData ? translations.updateButton : translations.saveButton}
           </Button>
-          <DialogClose asChild>
-            <Button variant="outline" onClick={onClose} className="py-2.5">{translations.cancelButton}</Button>
-          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

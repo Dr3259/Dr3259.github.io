@@ -138,6 +138,7 @@ const translations = {
         saveButton: '保存记录',
         updateButton: '更新记录',
         cancelButton: '取消',
+        deleteButton: '删除记录',
     } as MeetingNoteModalTranslations,
   },
   'en': {
@@ -222,6 +223,7 @@ const translations = {
         saveButton: 'Save Note',
         updateButton: 'Update Note',
         cancelButton: 'Cancel',
+        deleteButton: 'Delete Note',
     } as MeetingNoteModalTranslations,
   }
 };
@@ -279,7 +281,7 @@ export default function DayDetailPage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    
+
     const storedTodos = localStorage.getItem('allWeekTodos');
     if (storedTodos) {
         try {
@@ -305,7 +307,7 @@ export default function DayDetailPage() {
         console.error("Failed to save todos to localStorage", e);
     }
   };
-  
+
   const saveAllMeetingNotesToLocalStorage = (updatedNotes: Record<string, Record<string, MeetingNoteItem[]>>) => {
     try {
         localStorage.setItem('allWeekMeetingNotes', JSON.stringify(updatedNotes));
@@ -333,7 +335,7 @@ export default function DayDetailPage() {
   // --- To-do Modal and Item Handlers ---
   const handleOpenTodoModal = (hourSlot: string) => {
     setSelectedSlotForTodo({ dayName, hourSlot });
-    setEditingTodoItem(null); 
+    setEditingTodoItem(null);
     setEditingTodoSlotDetails(null);
     setIsTodoModalOpen(true);
   };
@@ -358,7 +360,7 @@ export default function DayDetailPage() {
       return newAllTodos;
     });
   };
-  
+
   const handleToggleTodoCompletionInPage = (targetDay: string, targetHourSlot: string, todoId: string) => {
     setAllTodos(prevAllTodos => {
       const daySlots = prevAllTodos[targetDay] || {};
@@ -425,7 +427,7 @@ export default function DayDetailPage() {
     setAllMeetingNotes(prevAllNotes => {
       const dayNotes = prevAllNotes[day] || {};
       const slotNotes = dayNotes[hourSlot] || [];
-      
+
       const existingNoteIndex = slotNotes.findIndex(n => n.id === savedNote.id);
       let updatedSlotNotes;
       if (existingNoteIndex > -1) {
@@ -463,10 +465,17 @@ export default function DayDetailPage() {
     });
   };
 
+  const handleDeleteNoteFromModal = (noteId: string) => {
+    if (selectedSlotForMeetingNote) {
+        handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dayName, selectedSlotForMeetingNote.hourSlot, noteId);
+    }
+    // The modal itself will call onClose after invoking this.
+  };
+
   const handleOpenEditMeetingNoteModalInPage = (targetDay: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
     handleOpenMeetingNoteModal(targetHourSlot, noteToEdit);
   };
-  
+
   const getMeetingNotesForSlot = (targetDayName: string, targetHourSlot: string): MeetingNoteItem[] => {
     return allMeetingNotes[targetDayName]?.[targetHourSlot] || [];
   };
@@ -674,7 +683,7 @@ export default function DayDetailPage() {
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                             <span className="text-xs text-foreground/90 flex-1 min-w-0" title={note.title}>
-                                              {note.title.length > 30 ? note.title.substring(0, 30) + '...' : note.title || t.noData}
+                                              {note.title.length > 30 ? note.title.substring(0, 30) + '...' : (note.title || t.noData)}
                                             </span>
                                             <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
                                               <Tooltip>
@@ -736,6 +745,7 @@ export default function DayDetailPage() {
             isOpen={isMeetingNoteModalOpen}
             onClose={handleCloseMeetingNoteModal}
             onSave={handleSaveMeetingNoteFromModal}
+            onDelete={editingMeetingNoteItem ? handleDeleteNoteFromModal : undefined}
             dayName={selectedSlotForMeetingNote.dayName}
             hourSlot={selectedSlotForMeetingNote.hourSlot}
             initialData={editingMeetingNoteItem && editingMeetingNoteSlotDetails?.dayName === selectedSlotForMeetingNote.dayName && editingMeetingNoteSlotDetails?.hourSlot === selectedSlotForMeetingNote.hourSlot ? editingMeetingNoteItem : null}
