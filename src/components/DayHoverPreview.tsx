@@ -3,30 +3,28 @@
 
 import type { FC } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // Removed CardHeader, CardTitle
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DayHoverPreviewProps {
-  dayName: string;
+  dayName: string; // Prop remains as it's passed by parent, altText depends on it
   notes: string;
   imageHint: string;
   altText: string;
 }
 
 export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
-  dayName,
   notes,
   imageHint,
   altText,
+  // dayName is not directly rendered as a title in this component anymore
 }) => {
   const imageUrl = `https://placehold.co/300x200.png`;
 
   return (
     <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-80 sm:w-96 bg-card shadow-2xl border-2 border-primary/50">
-      <CardHeader className="p-4">
-        <CardTitle className="text-xl text-primary">{dayName}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
+      {/* CardHeader containing the CardTitle with dayName has been removed */}
+      <CardContent className="p-4"> {/* Adjusted padding from "p-4 pt-0" to "p-4" */}
         <div className="mb-3">
           <Image
             src={imageUrl}
