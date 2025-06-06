@@ -342,7 +342,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                         </div>
                         <label
                           htmlFor={`todo-${todo.id}`}
-                          className={`text-sm cursor-pointer truncate ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
+                          className={`text-sm cursor-pointer ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
                           title={todo.text}
                         >
                           {todo.text}
