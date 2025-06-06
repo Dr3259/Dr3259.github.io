@@ -841,37 +841,35 @@ export default function DayDetailPage() {
 
           <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
             <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
-                {dailyNoteDisplayMode === 'read' ? (
-                    <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
-                    {dailyNote ? (
-                        <ScrollArea className="max-h-48">
-                        <p className="text-sm text-foreground whitespace-pre-wrap">{dailyNote}</p>
-                        </ScrollArea>
-                    ) : (
-                        <p className="text-muted-foreground italic">{t.noData}</p>
-                    )}
-                    </div>
-                ) : dailyNoteDisplayMode === 'edit' ? (
-                    <div>
-                    <Textarea
-                        value={dailyNote}
-                        onChange={(e) => handleDailyNoteChange(e.target.value)}
-                        placeholder={t.notesPlaceholder}
-                        className="min-h-[100px] bg-background/50 text-sm"
-                        maxLength={MAX_DAILY_NOTE_LENGTH}
-                    />
-                    <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                        {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
-                    </div>
-                    </div>
-                ) : dailyNoteDisplayMode === 'pending' ? (
-                     <div className="p-3 border rounded-md min-h-[100px] bg-background/50 flex items-center justify-center">
-                        <p className="text-muted-foreground italic">{t.summaryAvailableLater}</p>
-                    </div>
-                ) : null}
-              </div>
+              {dailyNoteDisplayMode !== 'pending' && (
+                <div>
+                  <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
+                  {dailyNoteDisplayMode === 'read' ? (
+                      <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
+                      {dailyNote ? (
+                          <ScrollArea className="max-h-48">
+                          <p className="text-sm text-foreground whitespace-pre-wrap">{dailyNote}</p>
+                          </ScrollArea>
+                      ) : (
+                          <p className="text-muted-foreground italic">{t.noData}</p>
+                      )}
+                      </div>
+                  ) : dailyNoteDisplayMode === 'edit' ? (
+                      <div>
+                      <Textarea
+                          value={dailyNote}
+                          onChange={(e) => handleDailyNoteChange(e.target.value)}
+                          placeholder={t.notesPlaceholder}
+                          className="min-h-[100px] bg-background/50 text-sm"
+                          maxLength={MAX_DAILY_NOTE_LENGTH}
+                      />
+                      <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                          {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
+                      </div>
+                      </div>
+                  ) : null }
+                </div>
+              )}
 
               <div>
                 <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
