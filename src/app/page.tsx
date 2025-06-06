@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
 import { LogIn, Github, Languages } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea"; // Added Textarea import
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -36,6 +37,7 @@ const GoogleIcon = () => (
 
 const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
+const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary'; // New key for summary
 
 const translations = {
   'zh-CN': {
@@ -52,6 +54,8 @@ const translations = {
       average: '一般般',
       terrible: '糟透了',
     },
+    weeklySummaryTitle: '本周总结',
+    weeklySummaryPlaceholder: '写下你的本周总结...',
     wechatAria: '微信',
     alibabaAria: '阿里巴巴',
     bilibiliAria: '哔哩哔哩',
@@ -72,6 +76,8 @@ const translations = {
       average: 'Average',
       terrible: 'Terrible',
     },
+    weeklySummaryTitle: 'Weekly Summary',
+    weeklySummaryPlaceholder: 'Write your weekly summary here...',
     wechatAria: 'WeChat',
     alibabaAria: 'Alibaba',
     bilibiliAria: 'Bilibili',
@@ -87,6 +93,7 @@ export default function WeekGlancePage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
+  const [weeklySummary, setWeeklySummary] = useState<string>(''); // State for weekly summary
 
   const t = translations[currentLanguage];
 
@@ -118,6 +125,15 @@ export default function WeekGlancePage() {
       console.error("无法从localStorage解析评分:", error);
       localStorage.removeItem(LOCAL_STORAGE_KEY_RATINGS);
     }
+
+    try {
+      const storedSummary = localStorage.getItem(LOCAL_STORAGE_KEY_SUMMARY);
+      if (storedSummary) {
+        setWeeklySummary(storedSummary); // Load summary as plain string
+      }
+    } catch (error) {
+      console.error("无法从localStorage加载总结:", error);
+    }
   }, []);
 
   const toggleLanguage = () => {
@@ -144,9 +160,18 @@ export default function WeekGlancePage() {
     });
   }, []);
 
+  const handleSummaryChange = useCallback((summary: string) => {
+    setWeeklySummary(summary);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY_SUMMARY, summary);
+    } catch (error) {
+      console.error("无法将总结保存到localStorage:", error);
+    }
+  }, []);
+
   return (
-    <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-8 sm:py-10 px-4">
-      <header className="mb-10 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
+    <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-12 px-4">
+      <header className="mb-12 sm:mb-16 w-full max-w-4xl flex justify-between items-center">
         <div>
           <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
             {t.pageTitle}
@@ -167,7 +192,7 @@ export default function WeekGlancePage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-4xl place-items-center mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
         {t.daysOfWeek.map((day) => (
           <DayBox
             key={day}
@@ -184,9 +209,23 @@ export default function WeekGlancePage() {
         ))}
       </div>
 
-      <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
-        <div className="border-t border-border pt-6">
-          <p className="text-center text-sm text-muted-foreground mb-4">
+      {/* Weekly Summary Section */}
+      <div className="w-full max-w-4xl mb-12 sm:mb-16">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-primary">
+          {t.weeklySummaryTitle}
+        </h2>
+        <Textarea
+          placeholder={t.weeklySummaryPlaceholder}
+          value={weeklySummary}
+          onChange={(e) => handleSummaryChange(e.target.value)}
+          className="min-h-[120px] sm:min-h-[150px] bg-card border-border focus:ring-primary text-base rounded-lg shadow-sm"
+          aria-label={t.weeklySummaryTitle}
+        />
+      </div>
+
+      <footer className="mt-auto pt-12 pb-8 w-full max-w-4xl">
+        <div className="border-t border-border pt-8">
+          <p className="text-center text-sm text-muted-foreground mb-6">
             {t.communityPrompt}
           </p>
           <div className="flex justify-center items-center space-x-6">
