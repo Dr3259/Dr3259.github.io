@@ -2,8 +2,9 @@
 import type { FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { FileText, ThumbsUp, ThumbsDown, Meh } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Meh } from "lucide-react"; // FileText removed as notes are now directly editable
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -11,13 +12,16 @@ interface DayBoxProps {
   dayName: string;
   isSelected: boolean;
   onClick: () => void;
-  hasNotes?: boolean;
+  notes: string;
+  onNotesChange: (newNote: string) => void;
+  hasNotes?: boolean; // Kept for potential future use, but primary note indicator is editable content
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
+  isPastDay: boolean;
   todayLabel: string;
   selectDayLabel: string;
-  hasNotesLabel?: string;
+  hasNotesLabel?: string; // Kept for aria if needed
   ratingUiLabels: {
     excellent: string;
     average: string;
@@ -37,16 +41,21 @@ export const DayBox: FC<DayBoxProps> = ({
   dayName,
   isSelected,
   onClick,
-  hasNotes,
+  notes,
+  onNotesChange,
+  hasNotes, // Directly using notes.length for visual cues now
   rating,
   onRatingChange,
   isCurrentDay,
+  isPastDay,
   todayLabel,
   selectDayLabel,
   hasNotesLabel,
   ratingUiLabels,
 }) => {
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
+  const showNotesIndicator = !!notes.trim();
+
 
   return (
     <Card
@@ -56,7 +65,8 @@ export const DayBox: FC<DayBoxProps> = ({
           ? "border-primary shadow-lg scale-105 bg-primary/10" 
           : "border-transparent hover:border-accent/70 bg-card",
         isCurrentDay && !isSelected && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400",
-        isCurrentDay && isSelected && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" // Ensure ring is visible even when selected
+        isCurrentDay && isSelected && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400",
+        isPastDay && !showNotesIndicator && !rating && !isSelected && "opacity-50"
       )}
       onClick={onClick}
       role="button"
@@ -69,7 +79,21 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label={hasNotesLabel}/>}
+        {isSelected ? (
+           <Textarea
+            value={notes}
+            onChange={(e) => {
+              e.stopPropagation(); // Prevent card onClick from firing
+              onNotesChange(e.target.value);
+            }}
+            onClick={(e) => e.stopPropagation()} // Prevent card onClick when clicking textarea
+            placeholder={ratingUiLabels.average} // Using a generic placeholder, can be improved
+            className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
+            aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
+          />
+        ) : (
+          showNotesIndicator && <div className="w-2 h-2 rounded-full bg-primary" aria-label={hasNotesLabel}></div>
+        )}
       </CardContent>
       <CardFooter className="p-2 pt-1 mt-auto w-full">
         <div className="flex justify-around w-full">
@@ -80,7 +104,7 @@ export const DayBox: FC<DayBoxProps> = ({
               <button
                 key={type}
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent DayBox onClick
+                  e.stopPropagation(); 
                   onRatingChange(rating === type ? null : type);
                 }}
                 className={cn(
@@ -99,3 +123,5 @@ export const DayBox: FC<DayBoxProps> = ({
     </Card>
   );
 };
+
+    

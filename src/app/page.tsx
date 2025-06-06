@@ -19,7 +19,7 @@ const WeChatIcon = () => (
 
 const AlibabaIcon = () => (
   <svg viewBox="0 0 1024 1024" fill="currentColor" className="w-6 h-6">
-    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5-11.8-2.2-16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5-11.8-2.2-16.6l-85.3 109.9c-11.2-14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
+    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2-16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2-16.6l-85.3 109.9c-11.2-14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
   </svg>
 );
 
@@ -106,14 +106,12 @@ export default function WeekGlancePage() {
   const t = translations[currentLanguage];
 
   useEffect(() => {
-    // Determine and set initial language
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
     setCurrentLanguage(browserLang);
     if (typeof document !== 'undefined') {
         document.documentElement.lang = browserLang;
     }
 
-    // Determine and set initial theme
     const storedTheme = localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null;
     const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     
@@ -125,17 +123,14 @@ export default function WeekGlancePage() {
     }
     setTheme(initialTheme);
 
-    // Determine current day index
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-    // Adjust to match t.daysOfWeek array (Monday = 0, Sunday = 6)
+    const dayOfWeek = today.getDay(); 
     const adjustedDayIndex = (dayOfWeek + 6) % 7;
     setCurrentDayIndex(adjustedDayIndex);
 
   }, []);
 
   useEffect(() => {
-    // Apply theme to HTML tag and save to localStorage whenever theme changes
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -192,6 +187,18 @@ export default function WeekGlancePage() {
     setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
   }, []);
 
+  const handleNotesChange = useCallback((day: string, newNote: string) => {
+    setNotes(prevNotes => {
+      const updatedNotes = { ...prevNotes, [day]: newNote };
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_NOTES, JSON.stringify(updatedNotes));
+      } catch (error) {
+        console.error("无法将笔记保存到localStorage:", error);
+      }
+      return updatedNotes;
+    });
+  }, []);
+
   const handleRatingChange = useCallback((day: string, newRating: RatingType) => {
     setRatings(prevRatings => {
       const updatedRatings = { ...prevRatings, [day]: newRating };
@@ -246,10 +253,13 @@ export default function WeekGlancePage() {
             dayName={day}
             isSelected={selectedDay === day}
             onClick={() => handleDaySelect(day)}
+            notes={notes[day] || ''}
+            onNotesChange={(newNote) => handleNotesChange(day, newNote)}
             hasNotes={!!notes[day]?.trim()}
             rating={ratings[day] || null}
             onRatingChange={(newRating) => handleRatingChange(day, newRating)}
             isCurrentDay={currentDayIndex !== null && index === currentDayIndex}
+            isPastDay={currentDayIndex !== null && index < currentDayIndex}
             todayLabel={t.todayPrefix}
             selectDayLabel={t.selectDayAria(day)}
             hasNotesLabel={t.hasNotesAria}
@@ -301,3 +311,5 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
+    
