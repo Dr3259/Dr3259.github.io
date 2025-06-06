@@ -69,7 +69,7 @@ const translations = {
     noData: '暂无数据',
     notesPlaceholder: '记录今天的总结...',
     summaryAvailableLater: '总结可在下午6点后填写。',
-    timeIntervalsTitle: '每日安排',
+    timeIntervalsTitle: '当日规划',
     midnight: '凌晨 (00:00 - 05:00)',
     earlyMorning: '清晨 (05:00 - 09:00)',
     morning: '上午 (09:00 - 12:00)',
