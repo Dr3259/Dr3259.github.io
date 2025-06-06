@@ -17,8 +17,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
 import { MeetingNoteModal, type MeetingNoteItem, type MeetingNoteModalTranslations } from '@/components/MeetingNoteModal';
 import { ShareLinkModal, type ShareLinkItem, type ShareLinkModalTranslations } from '@/components/ShareLinkModal';
+import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations } from '@/components/ReflectionModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -158,6 +161,21 @@ const translations = {
     noLinksForHour: '此时间段暂无分享链接。',
     editLink: '编辑链接',
     deleteLink: '删除链接',
+    reflectionModal: {
+        modalTitleNew: '新个人感悟',
+        modalTitleEdit: '编辑感悟',
+        modalDescription: '在此处记录您的个人感悟。',
+        textLabel: '感悟内容:',
+        textPlaceholder: '输入您的感悟...',
+        saveButton: '保存感悟',
+        updateButton: '更新感悟',
+        cancelButton: '取消',
+        deleteButton: '删除感悟',
+    } as ReflectionModalTranslations,
+    reflectionsSectionTitle: '个人感悟',
+    noReflectionsForHour: '此时间段暂无个人感悟。',
+    editReflection: '编辑感悟',
+    deleteReflection: '删除感悟',
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -260,6 +278,21 @@ const translations = {
     noLinksForHour: 'No links recorded for this hour.',
     editLink: 'Edit Link',
     deleteLink: 'Delete Link',
+    reflectionModal: {
+        modalTitleNew: 'New Personal Reflection',
+        modalTitleEdit: 'Edit Reflection',
+        modalDescription: 'Record your personal reflections here.',
+        textLabel: 'Reflection:',
+        textPlaceholder: 'Enter your reflection...',
+        saveButton: 'Save Reflection',
+        updateButton: 'Update Reflection',
+        cancelButton: 'Cancel',
+        deleteButton: 'Delete Reflection',
+    } as ReflectionModalTranslations,
+    reflectionsSectionTitle: 'Personal Reflections',
+    noReflectionsForHour: 'No reflections recorded for this hour.',
+    editReflection: 'Edit Reflection',
+    deleteReflection: 'Delete Reflection',
   }
 };
 
@@ -318,6 +351,13 @@ export default function DayDetailPage() {
   const [editingShareLinkItem, setEditingShareLinkItem] = useState<ShareLinkItem | null>(null);
   const [editingShareLinkSlotDetails, setEditingShareLinkSlotDetails] = useState<SlotDetails | null>(null);
 
+  // Reflection states
+  const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
+  const [selectedSlotForReflection, setSelectedSlotForReflection] = useState<SlotDetails | null>(null);
+  const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
+  const [editingReflectionItem, setEditingReflectionItem] = useState<ReflectionItem | null>(null);
+  const [editingReflectionSlotDetails, setEditingReflectionSlotDetails] = useState<SlotDetails | null>(null);
+
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -349,6 +389,14 @@ export default function DayDetailPage() {
             console.error("Failed to parse share links from localStorage", e);
         }
     }
+    const storedReflections = localStorage.getItem('allWeekReflections');
+    if (storedReflections) {
+        try {
+            setAllReflections(JSON.parse(storedReflections));
+        } catch (e) {
+            console.error("Failed to parse reflections from localStorage", e);
+        }
+    }
   }, []);
 
   const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
@@ -375,10 +423,21 @@ export default function DayDetailPage() {
     }
   };
 
+  const saveAllReflectionsToLocalStorage = (updatedReflections: Record<string, Record<string, ReflectionItem[]>>) => {
+    try {
+        localStorage.setItem('allWeekReflections', JSON.stringify(updatedReflections));
+    } catch (e) {
+        console.error("Failed to save reflections to localStorage", e);
+    }
+  };
+
+
   const t = translations[currentLanguage];
   const tTodoModal = translations[currentLanguage].todoModal;
   const tMeetingNoteModal = translations[currentLanguage].meetingNoteModal;
   const tShareLinkModal = translations[currentLanguage].shareLinkModal;
+  const tReflectionModal = translations[currentLanguage].reflectionModal;
+
 
   const notes = ""; // General notes for the day, not related to specific items
   const rating = "";
@@ -529,7 +588,6 @@ export default function DayDetailPage() {
     if (selectedSlotForMeetingNote) {
         handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dayName, selectedSlotForMeetingNote.hourSlot, noteId);
     }
-    // The modal itself will call onClose after invoking this.
   };
 
   const handleOpenEditMeetingNoteModalInPage = (targetDay: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
@@ -611,6 +669,77 @@ export default function DayDetailPage() {
     return allShareLinks[targetDayName]?.[targetHourSlot] || [];
   };
 
+  // --- Reflection Modal and Item Handlers ---
+  const handleOpenReflectionModal = (hourSlot: string, reflectionToEdit?: ReflectionItem) => {
+    setSelectedSlotForReflection({ dayName, hourSlot });
+    setEditingReflectionItem(reflectionToEdit || null);
+    setEditingReflectionSlotDetails(reflectionToEdit ? { dayName, hourSlot } : null);
+    setIsReflectionModalOpen(true);
+  };
+
+  const handleCloseReflectionModal = () => {
+    setIsReflectionModalOpen(false);
+    setSelectedSlotForReflection(null);
+    setEditingReflectionItem(null);
+    setEditingReflectionSlotDetails(null);
+  };
+
+  const handleSaveReflectionFromModal = (day: string, hourSlot: string, savedReflection: ReflectionItem) => {
+    setAllReflections(prevAllReflections => {
+      const dayReflections = prevAllReflections[day] || {};
+      const slotReflections = dayReflections[hourSlot] || [];
+
+      const existingReflectionIndex = slotReflections.findIndex(r => r.id === savedReflection.id);
+      let updatedSlotReflections;
+      if (existingReflectionIndex > -1) {
+        updatedSlotReflections = slotReflections.map((r, index) => index === existingReflectionIndex ? savedReflection : r);
+      } else {
+        updatedSlotReflections = [...slotReflections, savedReflection];
+      }
+
+      const newAllReflections = {
+        ...prevAllReflections,
+        [day]: {
+          ...dayReflections,
+          [hourSlot]: updatedSlotReflections,
+        },
+      };
+      saveAllReflectionsToLocalStorage(newAllReflections);
+      return newAllReflections;
+    });
+  };
+
+  const handleDeleteReflectionInPage = (targetDay: string, targetHourSlot: string, reflectionId: string) => {
+    setAllReflections(prevAllReflections => {
+      const dayReflections = prevAllReflections[targetDay] || {};
+      const slotReflections = dayReflections[targetHourSlot] || [];
+      const updatedSlotReflections = slotReflections.filter(reflection => reflection.id !== reflectionId);
+      const newAllReflections = {
+        ...prevAllReflections,
+        [targetDay]: {
+          ...dayReflections,
+          [targetHourSlot]: updatedSlotReflections,
+        },
+      };
+      saveAllReflectionsToLocalStorage(newAllReflections);
+      return newAllReflections;
+    });
+  };
+
+  const handleDeleteReflectionFromModal = (reflectionId: string) => {
+    if (selectedSlotForReflection) {
+      handleDeleteReflectionInPage(selectedSlotForReflection.dayName, selectedSlotForReflection.hourSlot, reflectionId);
+    }
+  };
+
+  const handleOpenEditReflectionModalInPage = (targetDay: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
+    handleOpenReflectionModal(targetHourSlot, reflectionToEdit);
+  };
+
+  const getReflectionsForSlot = (targetDayName: string, targetHourSlot: string): ReflectionItem[] => {
+    return allReflections[targetDayName]?.[targetHourSlot] || [];
+  };
+
 
   // --- Tooltip Text Helpers ---
   const getCategoryTooltipText = (category: CategoryType | null) => {
@@ -684,6 +813,7 @@ export default function DayDetailPage() {
                           const todosForSlot = getTodosForSlot(dayName, slot);
                           const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
                           const shareLinksForSlot = getShareLinksForSlot(dayName, slot);
+                          const reflectionsForSlot = getReflectionsForSlot(dayName, slot);
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
                               <div className="flex justify-between items-center mb-2">
@@ -721,7 +851,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenReflectionModal(slot)}>
                                         <MessageSquareText className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -845,7 +975,7 @@ export default function DayDetailPage() {
                                   )}
                                 </div>
                                 {/* Share Links Display */}
-                                <div className="p-2 border rounded-md bg-background/50 group/linklist">
+                                <div className="p-2 border rounded-md bg-background/50 group/linklist mb-3">
                                   <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.linksSectionTitle}</h4>
                                   {shareLinksForSlot.length > 0 ? (
                                     <ul className="space-y-2 p-px">
@@ -884,6 +1014,45 @@ export default function DayDetailPage() {
                                   ) : (
                                     <p className="text-xs text-muted-foreground italic">
                                       {t.noLinksForHour}
+                                    </p>
+                                  )}
+                                </div>
+                                {/* Personal Reflections Display */}
+                                <div className="p-2 border rounded-md bg-background/50 group/reflectionlist">
+                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.reflectionsSectionTitle}</h4>
+                                  {reflectionsForSlot.length > 0 ? (
+                                    <ul className="space-y-2 p-px">
+                                      {reflectionsForSlot.map((reflection) => (
+                                        <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
+                                          <ScrollArea className="max-h-20 w-full mr-2">
+                                            <p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>
+                                              {reflection.text}
+                                            </p>
+                                          </ScrollArea>
+                                          <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditReflectionModalInPage(dayName, slot, reflection)}>
+                                                  <FileEdit className="h-3.5 w-3.5" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent><p>{t.editReflection}</p></TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteReflectionInPage(dayName, slot, reflection.id)}>
+                                                  <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent><p>{t.deleteReflection}</p></TooltipContent>
+                                            </Tooltip>
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      {t.noReflectionsForHour}
                                     </p>
                                   )}
                                 </div>
@@ -937,6 +1106,18 @@ export default function DayDetailPage() {
             hourSlot={selectedSlotForShareLink.hourSlot}
             initialData={editingShareLinkItem && editingShareLinkSlotDetails?.dayName === selectedSlotForShareLink.dayName && editingShareLinkSlotDetails?.hourSlot === selectedSlotForShareLink.hourSlot ? editingShareLinkItem : null}
             translations={tShareLinkModal}
+        />
+      )}
+      {isReflectionModalOpen && selectedSlotForReflection && (
+        <ReflectionModal
+            isOpen={isReflectionModalOpen}
+            onClose={handleCloseReflectionModal}
+            onSave={handleSaveReflectionFromModal}
+            onDelete={editingReflectionItem ? handleDeleteReflectionFromModal : undefined}
+            dayName={selectedSlotForReflection.dayName}
+            hourSlot={selectedSlotForReflection.hourSlot}
+            initialData={editingReflectionItem && editingReflectionSlotDetails?.dayName === selectedSlotForReflection.dayName && editingReflectionSlotDetails?.hourSlot === selectedSlotForReflection.hourSlot ? editingReflectionItem : null}
+            translations={tReflectionModal}
         />
       )}
     </TooltipProvider>
