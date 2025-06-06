@@ -1,6 +1,10 @@
 
+"use client";
+
 import type { FC } from 'react';
+import { useState } from 'react'; // Added useState
 import type { LucideIcon } from 'lucide-react';
+import Image from 'next/image'; // Added next/image
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -52,6 +56,8 @@ export const DayBox: FC<DayBoxProps> = ({
   hasNotesLabel,
   ratingUiLabels,
 }) => {
+  const [isHovered, setIsHovered] = useState(false); // Added hover state
+
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
   const showNotesIndicator = !!notes.trim();
   
@@ -69,6 +75,8 @@ export const DayBox: FC<DayBoxProps> = ({
     }
   };
 
+  const showThumbnail = isHovered && isPastDay && !isDisabled;
+
   return (
     <Card
       className={cn(
@@ -79,11 +87,14 @@ export const DayBox: FC<DayBoxProps> = ({
               "cursor-pointer",
               isSelected
                 ? "border-primary shadow-lg scale-105 bg-primary/10" 
-                : "border-transparent bg-card hover:border-accent/70 hover:shadow-xl hover:scale-105", 
+                : "border-transparent bg-card",
+              !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105", // Apply hover only if not selected and not disabled
             ],
         isCurrentDay && !isSelected && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" 
       )}
       onClick={handleCardClick}
+      onMouseEnter={() => setIsHovered(true)} // Set hover state
+      onMouseLeave={() => setIsHovered(false)} // Clear hover state
       role="button"
       tabIndex={isDisabled ? -1 : 0}
       onKeyDown={handleCardKeyDown}
@@ -95,7 +106,16 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {isSelected && !isDisabled ? (
+        {showThumbnail ? (
+          <Image
+            src="https://placehold.co/100x80.png"
+            alt="Thumbnail preview"
+            width={100}
+            height={80}
+            className="rounded-md object-cover"
+            data-ai-hint="activity memory"
+          />
+        ) : isSelected && !isDisabled ? (
            <Textarea
             value={notes}
             onChange={(e) => {
@@ -131,6 +151,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
+                  disabled={isDisabled} // Ensure rating buttons are also disabled
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
