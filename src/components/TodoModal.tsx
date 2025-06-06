@@ -23,7 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Trash2, Briefcase, ShoppingCart, BookOpen, Hourglass, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus, Star as StarIcon } from 'lucide-react';
 
 export interface TodoItem {
   id: string;
@@ -74,6 +75,21 @@ interface TodoModalProps {
   }
 }
 
+const CategoryIcons: Record<NonNullable<TodoItem['category']>, React.ElementType> = {
+  work: Briefcase,
+  life: ShoppingCart,
+  study: BookOpen,
+};
+
+const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
+  hour: Hourglass,
+  tomorrow: Sunrise,
+  thisWeek: CalendarRange,
+  nextWeek: ArrowRightToLine,
+  nextMonth: CalendarPlus,
+};
+
+
 export const TodoModal: React.FC<TodoModalProps> = ({
   isOpen,
   onClose,
@@ -91,8 +107,8 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-        setTodos(initialTodos); 
-        setNewItemText(''); 
+        setTodos(initialTodos);
+        setNewItemText('');
         setNewCategory(null);
         setNewDeadline(null);
         setNewImportance(null);
@@ -102,7 +118,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   const handleAddItem = () => {
     if (newItemText.trim() === '') return;
     const newTodo: TodoItem = {
-      id: Date.now().toString(), 
+      id: Date.now().toString(),
       text: newItemText.trim(),
       completed: false,
       category: newCategory,
@@ -139,9 +155,25 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     }
   };
 
+  const getCategoryTooltip = (category: TodoItem['category']) => {
+    if (!category) return '';
+    return `${translations.categoryLabel} ${translations.categories[category]}`;
+  }
+
+  const getDeadlineTooltip = (deadline: TodoItem['deadline']) => {
+    if (!deadline) return '';
+    return `${translations.deadlineLabel} ${translations.deadlines[deadline]}`;
+  }
+
+  const getImportanceTooltip = (importance: TodoItem['importance']) => {
+    if (importance === 'important') return `${translations.importanceLabel} ${translations.importances.important}`;
+    return '';
+  }
+
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card"> {/* Adjusted max-width for more content */}
+      <DialogContent className="sm:max-w-lg bg-card">
         <DialogHeader>
           <DialogTitle>{translations.modalTitle(hourSlot)}</DialogTitle>
           <DialogDescription>
@@ -216,33 +248,71 @@ export const TodoModal: React.FC<TodoModalProps> = ({
               <p className="text-sm text-muted-foreground text-center py-4">{translations.noTodos}</p>
             ) : (
               <ul className="space-y-2">
-                {todos.map(todo => (
-                  <li key={todo.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 group">
-                    <div className="flex items-center space-x-3">
-                       <Checkbox
-                        id={`todo-${todo.id}`}
-                        checked={todo.completed}
-                        onCheckedChange={() => toggleTodoCompletion(todo.id)}
-                        aria-label={todo.completed ? translations.markIncomplete : translations.markComplete}
-                      />
-                      <label
-                        htmlFor={`todo-${todo.id}`}
-                        className={`text-sm cursor-pointer ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100"
-                      onClick={() => handleDeleteTodo(todo.id)}
-                      aria-label={translations.deleteTodo}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
+                {todos.map(todo => {
+                  const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
+                  const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
+
+                  return (
+                    <li key={todo.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 group">
+                      <div className="flex items-center space-x-3 flex-grow min-w-0">
+                         <Checkbox
+                          id={`todo-${todo.id}`}
+                          checked={todo.completed}
+                          onCheckedChange={() => toggleTodoCompletion(todo.id)}
+                          aria-label={todo.completed ? translations.markIncomplete : translations.markComplete}
+                        />
+                        <label
+                          htmlFor={`todo-${todo.id}`}
+                          className={`text-sm cursor-pointer truncate ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
+                          title={todo.text}
+                        >
+                          {todo.text}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-1.5 ml-2 shrink-0">
+                        {CategoryIcon && (
+                           <Tooltip>
+                            <TooltipTrigger asChild>
+                              <CategoryIcon className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{getCategoryTooltip(todo.category)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {DeadlineIcon && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DeadlineIcon className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{getDeadlineTooltip(todo.deadline)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {todo.importance === 'important' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <StarIcon className="h-4 w-4 text-amber-500 fill-amber-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{getImportanceTooltip(todo.importance)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100"
+                          onClick={() => handleDeleteTodo(todo.id)}
+                          aria-label={translations.deleteTodo}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </ScrollArea>
@@ -257,3 +327,4 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
+
