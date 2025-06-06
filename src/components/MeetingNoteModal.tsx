@@ -118,7 +118,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
-          <div className="space-y-4 px-1">
+          <div className="space-y-4 p-2">
             <div>
               <Label htmlFor="meeting-title" className="text-xs font-medium text-muted-foreground mb-1 block">
                 {translations.titleLabel}
