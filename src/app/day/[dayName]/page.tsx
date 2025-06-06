@@ -839,9 +839,9 @@ export default function DayDetailPage() {
             {t.dayDetailsTitle(dayName)}
           </h1>
 
-          <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
-            <div className="space-y-4">
-              {dailyNoteDisplayMode !== 'pending' && (
+          {dailyNoteDisplayMode !== 'pending' && (
+            <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
+              <div className="space-y-4">
                 <div>
                   <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
                   {dailyNoteDisplayMode === 'read' ? (
@@ -854,7 +854,7 @@ export default function DayDetailPage() {
                           <p className="text-muted-foreground italic">{t.noData}</p>
                       )}
                       </div>
-                  ) : dailyNoteDisplayMode === 'edit' ? (
+                  ) : ( /* 'edit' mode */
                       <div>
                       <Textarea
                           value={dailyNote}
@@ -867,19 +867,17 @@ export default function DayDetailPage() {
                           {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
                       </div>
                       </div>
-                  ) : null }
+                  )}
                 </div>
-              )}
-
-              <div>
-                <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
-                <div className="p-3 border rounded-md bg-background/50">
-                  {/* Placeholder for rating UI - to be implemented if needed */}
-                  <p className="text-muted-foreground">{rating || t.noData}</p>
+                <div>
+                  <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
+                  <div className="p-3 border rounded-md bg-background/50">
+                    <p className="text-muted-foreground">{rating || t.noData}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div>
             <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle}</h2>
