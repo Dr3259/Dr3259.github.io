@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
+import { DayHoverPreview } from '@/components/DayHoverPreview'; // New import
 import { Button } from "@/components/ui/button";
 import { LogIn, Github, Languages, Sun, Moon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,6 +66,7 @@ const translations = {
     googleAria: '谷歌',
     toggleThemeAria: '切换主题',
     todayPrefix: '今天',
+    thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -89,10 +91,18 @@ const translations = {
     googleAria: 'Google',
     toggleThemeAria: 'Toggle theme',
     todayPrefix: 'Today',
+    thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
   }
 };
 type LanguageKey = keyof typeof translations;
 type Theme = 'light' | 'dark';
+
+interface HoverPreviewData {
+  dayName: string;
+  notes: string;
+  imageHint: string; 
+  altText: string;
+}
 
 export default function WeekGlancePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
@@ -102,6 +112,7 @@ export default function WeekGlancePage() {
   const [weeklySummary, setWeeklySummary] = useState<string>('');
   const [theme, setTheme] = useState<Theme>('light');
   const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
+  const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
 
   const t = translations[currentLanguage];
 
@@ -125,7 +136,7 @@ export default function WeekGlancePage() {
 
     const today = new Date();
     const dayOfWeek = today.getDay(); 
-    const adjustedDayIndex = (dayOfWeek + 6) % 7;
+    const adjustedDayIndex = (dayOfWeek + 6) % 7; 
     setCurrentDayIndex(adjustedDayIndex);
 
   }, []);
@@ -220,6 +231,18 @@ export default function WeekGlancePage() {
     }
   }, []);
 
+  const handleDayHoverStart = useCallback((dayData: { dayName: string; notes: string; imageHint: string }) => {
+    setHoverPreviewData({
+      ...dayData,
+      altText: t.thumbnailPreviewAlt(dayData.dayName),
+    });
+  }, [t]);
+
+  const handleDayHoverEnd = useCallback(() => {
+    setHoverPreviewData(null);
+  }, []);
+
+
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
       <header className="mb-12 sm:mb-16 w-full max-w-4xl flex justify-between items-center">
@@ -264,6 +287,9 @@ export default function WeekGlancePage() {
             selectDayLabel={t.selectDayAria(day)}
             hasNotesLabel={t.hasNotesAria}
             ratingUiLabels={t.ratingLabels}
+            onHoverStart={handleDayHoverStart}
+            onHoverEnd={handleDayHoverEnd}
+            imageHint="activity memory" 
           />
         ))}
          <Card className="w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
@@ -283,6 +309,15 @@ export default function WeekGlancePage() {
             </CardContent>
           </Card>
       </div>
+
+      {hoverPreviewData && (
+        <DayHoverPreview
+          dayName={hoverPreviewData.dayName}
+          notes={hoverPreviewData.notes}
+          imageHint={hoverPreviewData.imageHint}
+          altText={hoverPreviewData.altText}
+        />
+      )}
 
       <footer className="mt-auto pt-12 pb-8 w-full max-w-4xl">
         <div className="border-t border-border pt-8">
@@ -311,5 +346,3 @@ export default function WeekGlancePage() {
     </main>
   );
 }
-
-    
