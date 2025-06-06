@@ -16,6 +16,7 @@ const translations = {
     ratingLabel: '评价:',
     noData: '暂无数据',
     timeIntervalsTitle: '每日安排',
+    凌晨: '凌晨', // Added
     earlyMorning: '清晨',
     morning: '上午',
     afternoon: '下午',
@@ -29,6 +30,7 @@ const translations = {
     ratingLabel: 'Rating:',
     noData: 'No data available',
     timeIntervalsTitle: 'Daily Schedule',
+    midnight: 'Midnight', // Added
     earlyMorning: 'Early Morning',
     morning: 'Morning',
     afternoon: 'Afternoon',
@@ -50,6 +52,7 @@ export default function DayDetailPage() {
   const rating = ""; 
 
   const timeIntervals = [
+    { key: 'midnight', label: currentLanguage === 'zh-CN' ? t.凌晨 : t.midnight }, // Added
     { key: 'earlyMorning', label: t.earlyMorning },
     { key: 'morning', label: t.morning },
     { key: 'afternoon', label: t.afternoon },
