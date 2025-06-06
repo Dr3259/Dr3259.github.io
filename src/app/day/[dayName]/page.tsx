@@ -21,7 +21,7 @@ const translations = {
     morning: '上午 (09:00 - 12:00)',
     afternoon: '下午 (12:00 - 18:00)',
     evening: '晚上 (18:00 - 24:00)',
-    activitiesPlaceholder: (intervalName: string) => `记录${intervalName.split(' ')[0]}的活动...` // Extract base name for placeholder
+    activitiesPlaceholder: (intervalName: string) => `记录${intervalName.split(' ')[0]}的活动...`
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -35,7 +35,7 @@ const translations = {
     morning: 'Morning (09:00 - 12:00)',
     afternoon: 'Afternoon (12:00 - 18:00)',
     evening: 'Evening (18:00 - 24:00)',
-    activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName.split(' (')[0]}...` // Extract base name for placeholder
+    activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName.split(' (')[0]}...`
   }
 };
 
@@ -99,7 +99,8 @@ export default function DayDetailPage() {
             {timeIntervals.map(interval => (
               <div key={interval.key} className="bg-card p-4 rounded-lg shadow-lg">
                 <h3 className="text-lg font-medium text-foreground mb-1">{interval.label.split(' (')[0]}</h3>
-                <p className="text-xs text-muted-foreground mb-3">{interval.label.includes('(') ? `(${interval.label.split(' (')[1]}` : ''}</p>
+                <p className="text-xs text-muted-foreground mb-2">{interval.label.includes('(') ? `(${interval.label.split(' (')[1]}` : ''}</p>
+                <div className="h-1 w-full bg-primary/30 rounded-full mb-3"></div>
                 <div className="p-3 border rounded-md min-h-[80px] bg-background/50">
                   <p className="text-sm text-muted-foreground italic">{t.activitiesPlaceholder(interval.label)}</p>
                 </div>
