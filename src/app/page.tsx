@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
-import { DayHoverPreview } from '@/components/DayHoverPreview'; // New import
+import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
 import { LogIn, Github, Languages, Sun, Moon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -113,6 +113,7 @@ export default function WeekGlancePage() {
   const [theme, setTheme] = useState<Theme>('light');
   const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
 
   const t = translations[currentLanguage];
 
@@ -138,6 +139,7 @@ export default function WeekGlancePage() {
     const dayOfWeek = today.getDay(); 
     const adjustedDayIndex = (dayOfWeek + 6) % 7; 
     setCurrentDayIndex(adjustedDayIndex);
+    setIsAfter6PMToday(today.getHours() >= 18);
 
   }, []);
 
@@ -270,28 +272,36 @@ export default function WeekGlancePage() {
       </header>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
-        {t.daysOfWeek.map((day, index) => (
-          <DayBox
-            key={day}
-            dayName={day}
-            isSelected={selectedDay === day}
-            onClick={() => handleDaySelect(day)}
-            notes={notes[day] || ''}
-            onNotesChange={(newNote) => handleNotesChange(day, newNote)}
-            hasNotes={!!notes[day]?.trim()}
-            rating={ratings[day] || null}
-            onRatingChange={(newRating) => handleRatingChange(day, newRating)}
-            isCurrentDay={currentDayIndex !== null && index === currentDayIndex}
-            isPastDay={currentDayIndex !== null && index < currentDayIndex}
-            todayLabel={t.todayPrefix}
-            selectDayLabel={t.selectDayAria(day)}
-            hasNotesLabel={t.hasNotesAria}
-            ratingUiLabels={t.ratingLabels}
-            onHoverStart={handleDayHoverStart}
-            onHoverEnd={handleDayHoverEnd}
-            imageHint="activity memory" 
-          />
-        ))}
+        {t.daysOfWeek.map((day, index) => {
+          const isCurrentDay = currentDayIndex !== null && index === currentDayIndex;
+          const isPastDay = currentDayIndex !== null && index < currentDayIndex;
+          const isFutureDay = currentDayIndex !== null && index > currentDayIndex;
+          
+          return (
+            <DayBox
+              key={day}
+              dayName={day}
+              isSelected={selectedDay === day}
+              onClick={() => handleDaySelect(day)}
+              notes={notes[day] || ''}
+              onNotesChange={(newNote) => handleNotesChange(day, newNote)}
+              hasNotes={!!notes[day]?.trim()}
+              rating={ratings[day] || null}
+              onRatingChange={(newRating) => handleRatingChange(day, newRating)}
+              isCurrentDay={isCurrentDay}
+              isPastDay={isPastDay}
+              isFutureDay={isFutureDay}
+              isAfter6PMToday={isAfter6PMToday}
+              todayLabel={t.todayPrefix}
+              selectDayLabel={t.selectDayAria(day)}
+              hasNotesLabel={t.hasNotesAria}
+              ratingUiLabels={t.ratingLabels}
+              onHoverStart={handleDayHoverStart}
+              onHoverEnd={handleDayHoverEnd}
+              imageHint="activity memory" 
+            />
+          );
+        })}
          <Card className="w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
             <CardHeader className="p-2 pb-1 text-center">
                <CardTitle className="text-lg sm:text-xl font-medium text-foreground">

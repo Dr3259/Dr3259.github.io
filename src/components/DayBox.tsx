@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, FC } from 'react'; // Added React and useState
+import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,8 @@ interface DayBoxProps {
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
   isPastDay: boolean;
+  isFutureDay: boolean;
+  isAfter6PMToday: boolean;
   todayLabel: string;
   selectDayLabel: string;
   hasNotesLabel?: string;
@@ -52,6 +54,8 @@ export const DayBox: FC<DayBoxProps> = ({
   onRatingChange,
   isCurrentDay,
   isPastDay,
+  isFutureDay,
+  isAfter6PMToday,
   todayLabel,
   selectDayLabel,
   hasNotesLabel,
@@ -60,7 +64,7 @@ export const DayBox: FC<DayBoxProps> = ({
   onHoverEnd,
   imageHint,
 }) => {
-  const [isHovered, setIsHovered] = useState(false); // Internal hover state
+  const [isHovered, setIsHovered] = useState(false);
 
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
   const showNotesIndicator = !!notes.trim();
@@ -95,6 +99,10 @@ export const DayBox: FC<DayBoxProps> = ({
 
   const showBlueHighlight = isSelected && isHovered && !isDisabled;
 
+  const showRatingIcons = 
+    !isDisabled && 
+    (isPastDay || (isCurrentDay && isAfter6PMToday));
+
   return (
     <Card
       className={cn(
@@ -104,12 +112,11 @@ export const DayBox: FC<DayBoxProps> = ({
           : [
               "cursor-pointer",
               showBlueHighlight
-                ? "border-primary shadow-lg scale-105 bg-primary/10" // Blue highlight: Selected AND Hovered
-                : [ // Not blue highlighted (either unselected, OR selected but not hovered)
-                    "border-transparent bg-card", // Default appearance
-                    !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105", // General hover for non-selected
+                ? "border-primary shadow-lg scale-105 bg-primary/10"
+                : [ 
+                    "border-transparent bg-card", 
+                    !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105",
                   ],
-              // Amber ring for current day, if not blue highlighted
               isCurrentDay && !isDisabled && !showBlueHighlight && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
             ]
       )}
@@ -135,7 +142,7 @@ export const DayBox: FC<DayBoxProps> = ({
               onNotesChange(e.target.value);
             }}
             onClick={(e) => e.stopPropagation()}
-            placeholder={ratingUiLabels.average} // Note: This placeholder might be better as a generic "notes" placeholder
+            placeholder={ratingUiLabels.average}
             className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
             aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
           />
@@ -143,7 +150,7 @@ export const DayBox: FC<DayBoxProps> = ({
           showNotesIndicator && <div className="w-2 h-2 rounded-full bg-primary" aria-label={hasNotesLabel}></div>
         )}
       </CardContent>
-      {!isDisabled && (
+      {showRatingIcons && (
         <CardFooter className="p-2 pt-1 mt-auto w-full">
           <div className="flex justify-around w-full">
             {RATING_ORDER.map((type) => {
@@ -163,7 +170,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
-                  disabled={isDisabled} // This check might be redundant if CardFooter is not rendered when isDisabled
+                  disabled={isDisabled}
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
