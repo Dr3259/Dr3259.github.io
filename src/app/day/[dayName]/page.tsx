@@ -2,7 +2,7 @@
 // src/app/day/[dayName]/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ParsedUrlQuery } from 'querystring';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -372,6 +372,9 @@ export default function DayDetailPage() {
   const [editingReflectionItem, setEditingReflectionItem] = useState<ReflectionItem | null>(null);
   const [editingReflectionSlotDetails, setEditingReflectionSlotDetails] = useState<SlotDetails | null>(null);
 
+  const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -474,14 +477,14 @@ export default function DayDetailPage() {
   const dailyNote = allDailyNotes[dayName] || "";
   const rating = ""; // Placeholder for daily rating, if implemented later
 
-  const timeIntervals = [
+  const timeIntervals = useMemo(() => [
     { key: 'midnight', label: t.midnight },
     { key: 'earlyMorning', label: t.earlyMorning },
     { key: 'morning', label: t.morning },
     { key: 'noon', label: t.noon },
     { key: 'afternoon', label: t.afternoon },
     { key: 'evening', label: t.evening }
-  ];
+  ], [t]);
 
   const handleDailyNoteChange = (newNote: string) => {
     setAllDailyNotes(prev => {
@@ -491,28 +494,76 @@ export default function DayDetailPage() {
     });
   };
 
-  const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
-    if (typeof window === 'undefined') return 'edit'; // Default for SSR or pre-hydration
-
+  const isViewingCurrentDay = useMemo(() => {
+    if (typeof window === 'undefined') return false;
     const todayDate = new Date();
-    const systemDayIndex = (todayDate.getDay() + 6) % 7; // 0 for Mon, 6 for Sun
-    
+    const systemDayIndex = (todayDate.getDay() + 6) % 7;
     const currentLangDays = translations[currentLanguage].daysOfWeek;
     const viewingDayIndex = currentLangDays.findIndex(d => d === dayName);
+    return viewingDayIndex === systemDayIndex;
+  }, [dayName, currentLanguage, translations]);
 
-    if (viewingDayIndex === -1) {
-        console.warn(`Could not determine index for dayName: ${dayName} with lang ${currentLanguage}. Defaulting to edit mode.`);
-        return 'edit';
+  const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
+    if (!isViewingCurrentDay) { // Past or Future day
+        return (translations[currentLanguage].daysOfWeek.findIndex(d => d === dayName) < ((new Date().getDay() + 6) % 7)) ? 'read' : 'edit';
+    }
+    // Current day
+    return isAfter6PMToday ? 'edit' : 'pending';
+  }, [dayName, currentLanguage, isAfter6PMToday, translations, isViewingCurrentDay]);
+
+
+  useEffect(() => {
+    if (!isViewingCurrentDay || typeof window === 'undefined') {
+      setActiveIntervalKey(null);
+      return;
     }
 
-    if (viewingDayIndex < systemDayIndex) {
-        return 'read'; // Past day
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
+
+    let newActiveKey: string | null = null;
+    let firstVisibleIntervalKeyForScroll: string | null = null;
+    let currentIntervalKeyForScroll: string | null = null;
+
+    for (const interval of timeIntervals) {
+      const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+      if (!match) continue;
+
+      const [, startTimeStr, endTimeStr] = match;
+      const [startH, startM] = startTimeStr.split(':').map(Number);
+      let [endH, endM] = endTimeStr.split(':').map(Number);
+      if (endTimeStr === "00:00" && startH > 0 && endH === 0) endH = 24;
+
+      const intervalStartTotalMinutes = startH * 60 + startM;
+      const intervalEndTotalMinutes = endH * 60 + endM;
+
+      if (currentTimeTotalMinutes >= intervalEndTotalMinutes) {
+        continue; // Interval is past
+      }
+
+      if (!firstVisibleIntervalKeyForScroll) {
+        firstVisibleIntervalKeyForScroll = interval.key;
+      }
+
+      if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
+        newActiveKey = interval.key;
+        currentIntervalKeyForScroll = interval.key;
+        break; 
+      }
     }
-    if (viewingDayIndex === systemDayIndex) { // Current day
-        return isAfter6PMToday ? 'edit' : 'pending';
+    
+    setActiveIntervalKey(newActiveKey);
+
+    const targetKeyForScroll = currentIntervalKeyForScroll || firstVisibleIntervalKeyForScroll;
+
+    if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
+      setTimeout(() => {
+        intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+      }, 100);
     }
-    return 'edit'; // Future day
-  }, [dayName, currentLanguage, isAfter6PMToday, translations]);
+  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay]);
 
 
   // --- To-do Modal and Item Handlers ---
@@ -821,6 +872,7 @@ export default function DayDetailPage() {
     return '';
   };
 
+  const pageLoadTime = useMemo(() => new Date(), [dayName, currentLanguage]); // Used for determining "past" intervals consistently for the render
 
   return (
     <TooltipProvider>
@@ -854,7 +906,7 @@ export default function DayDetailPage() {
                           <p className="text-muted-foreground italic">{t.noData}</p>
                       )}
                       </div>
-                  ) : ( /* 'edit' mode */
+                  ) : ( 
                       <div>
                       <Textarea
                           value={dailyNote}
@@ -883,12 +935,40 @@ export default function DayDetailPage() {
             <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle}</h2>
             <div className="grid grid-cols-1 gap-6">
               {timeIntervals.map(interval => {
+                if (isViewingCurrentDay && typeof window !== 'undefined') {
+                  const now = pageLoadTime;
+                  const currentHour = now.getHours();
+                  const currentMinute = now.getMinutes();
+                  const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
+
+                  const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+                  if (match) {
+                    const [, startTimeStr, endTimeStr] = match;
+                    const [startH,] = startTimeStr.split(':').map(Number);
+                    let [endH, endM] = endTimeStr.split(':').map(Number);
+                    if (endTimeStr === "00:00" && startH > 0 && endH === 0) endH = 24;
+                    
+                    const intervalEndTotalMinutes = endH * 60 + endM;
+                    if (currentTimeTotalMinutes >= intervalEndTotalMinutes) {
+                      return null; // Hide past interval on current day
+                    }
+                  }
+                }
+
                 const hourlySlots = generateHourlySlots(interval.label);
                 const mainTitle = interval.label.split(' (')[0];
                 const timeRangeSubtext = interval.label.includes('(') ? `(${interval.label.split(' (')[1]}` : '';
+                const isCurrentActiveInterval = isViewingCurrentDay && activeIntervalKey === interval.key;
 
                 return (
-                  <div key={interval.key} className="bg-card p-4 rounded-lg shadow-lg">
+                  <div 
+                    key={interval.key} 
+                    ref={el => { if (el) intervalRefs.current[interval.key] = el; }}
+                    className={cn(
+                        "bg-card p-4 rounded-lg shadow-lg transition-all duration-300",
+                        isCurrentActiveInterval && "ring-2 ring-primary shadow-xl scale-[1.01]"
+                    )}
+                  >
                     <h3 className="text-lg font-medium text-foreground mb-1">{mainTitle}</h3>
                     {timeRangeSubtext && <p className="text-xs text-muted-foreground mb-2">{timeRangeSubtext}</p>}
                     <div className="h-1 w-full bg-primary/30 rounded-full mb-3"></div>
