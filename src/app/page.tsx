@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
@@ -114,8 +114,16 @@ export default function WeekGlancePage() {
   const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
+  const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const t = translations[currentLanguage];
+
+  const clearTimeoutIfNecessary = useCallback(() => {
+    if (hidePreviewTimerRef.current) {
+      clearTimeout(hidePreviewTimerRef.current);
+      hidePreviewTimerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
@@ -140,8 +148,12 @@ export default function WeekGlancePage() {
     const adjustedDayIndex = (dayOfWeek + 6) % 7; 
     setCurrentDayIndex(adjustedDayIndex);
     setIsAfter6PMToday(today.getHours() >= 18);
+    
+    return () => { // Cleanup timer on unmount
+      clearTimeoutIfNecessary();
+    };
 
-  }, []);
+  }, [clearTimeoutIfNecessary]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -234,14 +246,26 @@ export default function WeekGlancePage() {
   }, []);
 
   const handleDayHoverStart = useCallback((dayData: { dayName: string; notes: string; imageHint: string }) => {
+    clearTimeoutIfNecessary();
     setHoverPreviewData({
       ...dayData,
       altText: t.thumbnailPreviewAlt(dayData.dayName),
     });
-  }, [t]);
+  }, [t, clearTimeoutIfNecessary]);
 
   const handleDayHoverEnd = useCallback(() => {
-    setHoverPreviewData(null);
+    clearTimeoutIfNecessary();
+    hidePreviewTimerRef.current = setTimeout(() => {
+      setHoverPreviewData(null);
+    }, 200);
+  }, [clearTimeoutIfNecessary]);
+
+  const handlePreviewMouseEnter = useCallback(() => {
+    clearTimeoutIfNecessary();
+  }, [clearTimeoutIfNecessary]);
+
+  const handlePreviewMouseLeave = useCallback(() => {
+    setHoverPreviewData(null); 
   }, []);
 
 
@@ -326,6 +350,8 @@ export default function WeekGlancePage() {
           notes={hoverPreviewData.notes}
           imageHint={hoverPreviewData.imageHint}
           altText={hoverPreviewData.altText}
+          onMouseEnterPreview={handlePreviewMouseEnter}
+          onMouseLeavePreview={handlePreviewMouseLeave}
         />
       )}
 
@@ -356,3 +382,4 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
