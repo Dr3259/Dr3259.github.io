@@ -40,23 +40,23 @@ export interface MeetingNoteModalTranslations {
   saveButton: string;
   updateButton: string;
   cancelButton: string;
-  deleteButton: string; // New
+  deleteButton: string;
 }
 
 interface MeetingNoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (day: string, hourSlot: string, note: MeetingNoteItem) => void;
-  onDelete?: (noteId: string) => void; // New
+  onDelete?: (noteId: string) => void;
   dayName: string;
   hourSlot: string;
   initialData?: MeetingNoteItem | null;
   translations: MeetingNoteModalTranslations;
 }
 
-const MAX_TITLE_LENGTH = 100;
+const MAX_TITLE_LENGTH = 20;
 const MAX_NOTES_LENGTH = 1000;
-const MAX_ATTENDEES_LENGTH = 200;
+const MAX_ATTENDEES_LENGTH = 20;
 const MAX_ACTION_ITEMS_LENGTH = 500;
 
 export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
@@ -144,6 +144,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 onChange={(e) => setTitle(e.target.value.substring(0, MAX_TITLE_LENGTH))}
                 placeholder={translations.titlePlaceholder}
                 className="bg-background text-base py-2.5"
+                maxLength={MAX_TITLE_LENGTH}
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {title.length}/{MAX_TITLE_LENGTH}
@@ -160,6 +161,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 onChange={(e) => setNotes(e.target.value.substring(0, MAX_NOTES_LENGTH))}
                 placeholder={translations.notesPlaceholder}
                 className="bg-background min-h-[120px] text-base"
+                maxLength={MAX_NOTES_LENGTH}
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {notes.length}/{MAX_NOTES_LENGTH}
@@ -176,6 +178,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 onChange={(e) => setAttendees(e.target.value.substring(0, MAX_ATTENDEES_LENGTH))}
                 placeholder={translations.attendeesPlaceholder}
                 className="bg-background text-base py-2.5"
+                maxLength={MAX_ATTENDEES_LENGTH}
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {attendees.length}/{MAX_ATTENDEES_LENGTH}
@@ -192,6 +195,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 onChange={(e) => setActionItems(e.target.value.substring(0, MAX_ACTION_ITEMS_LENGTH))}
                 placeholder={translations.actionItemsPlaceholder}
                 className="bg-background min-h-[80px] text-base"
+                maxLength={MAX_ACTION_ITEMS_LENGTH}
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {actionItems.length}/{MAX_ACTION_ITEMS_LENGTH}
@@ -210,14 +214,14 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
               {translations.deleteButton}
             </Button>
           )}
+           <Button onClick={handleSaveOrUpdate} className="py-2.5">
+            {initialData ? translations.updateButton : translations.saveButton}
+          </Button>
           <DialogClose asChild>
             <Button variant="outline" onClick={onClose} className="py-2.5 mt-2 sm:mt-0">
                 {translations.cancelButton}
             </Button>
           </DialogClose>
-          <Button onClick={handleSaveOrUpdate} className="py-2.5">
-            {initialData ? translations.updateButton : translations.saveButton}
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
