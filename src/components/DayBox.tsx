@@ -14,8 +14,10 @@ interface DayBoxProps {
   hasNotes?: boolean;
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
-  ariaLabelSelectDay: string;
-  ariaLabelHasNotes?: string;
+  isCurrentDay: boolean;
+  todayLabel: string;
+  selectDayLabel: string;
+  hasNotesLabel?: string;
   ratingUiLabels: {
     excellent: string;
     average: string;
@@ -38,28 +40,36 @@ export const DayBox: FC<DayBoxProps> = ({
   hasNotes,
   rating,
   onRatingChange,
-  ariaLabelSelectDay,
-  ariaLabelHasNotes,
+  isCurrentDay,
+  todayLabel,
+  selectDayLabel,
+  hasNotesLabel,
   ratingUiLabels,
 }) => {
+  const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
+
   return (
     <Card
       className={cn(
-        "w-36 h-40 sm:w-40 sm:h-44 flex flex-col cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 rounded-xl border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        isSelected ? "border-primary shadow-lg scale-105 bg-primary/10" : "border-transparent hover:border-accent/70 bg-card"
+        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 rounded-xl border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        isSelected 
+          ? "border-primary shadow-lg scale-105 bg-primary/10" 
+          : "border-transparent hover:border-accent/70 bg-card",
+        isCurrentDay && !isSelected && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400",
+        isCurrentDay && isSelected && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" // Ensure ring is visible even when selected
       )}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick()}}
       aria-pressed={isSelected}
-      aria-label={ariaLabelSelectDay}
+      aria-label={ariaLabel}
     >
       <CardHeader className="p-2 pb-1 text-center">
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label={ariaLabelHasNotes}/>}
+        {hasNotes && <FileText className="w-5 h-5 text-muted-foreground" aria-label={hasNotesLabel}/>}
       </CardContent>
       <CardFooter className="p-2 pt-1 mt-auto w-full">
         <div className="flex justify-around w-full">

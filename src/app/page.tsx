@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
-import { LogIn, Github, Languages, Sun, Moon } from "lucide-react"; // Added Sun and Moon
+import { LogIn, Github, Languages, Sun, Moon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -64,6 +64,7 @@ const translations = {
     githubAria: 'GitHub',
     googleAria: '谷歌',
     toggleThemeAria: '切换主题',
+    todayPrefix: '今天',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -87,6 +88,7 @@ const translations = {
     githubAria: 'GitHub',
     googleAria: 'Google',
     toggleThemeAria: 'Toggle theme',
+    todayPrefix: 'Today',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -99,6 +101,7 @@ export default function WeekGlancePage() {
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
   const [theme, setTheme] = useState<Theme>('light');
+  const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
 
   const t = translations[currentLanguage];
 
@@ -121,6 +124,13 @@ export default function WeekGlancePage() {
       initialTheme = 'dark';
     }
     setTheme(initialTheme);
+
+    // Determine current day index
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+    // Adjust to match t.daysOfWeek array (Monday = 0, Sunday = 6)
+    const adjustedDayIndex = (dayOfWeek + 6) % 7;
+    setCurrentDayIndex(adjustedDayIndex);
 
   }, []);
 
@@ -230,7 +240,7 @@ export default function WeekGlancePage() {
       </header>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
-        {t.daysOfWeek.map((day) => (
+        {t.daysOfWeek.map((day, index) => (
           <DayBox
             key={day}
             dayName={day}
@@ -239,12 +249,14 @@ export default function WeekGlancePage() {
             hasNotes={!!notes[day]?.trim()}
             rating={ratings[day] || null}
             onRatingChange={(newRating) => handleRatingChange(day, newRating)}
-            ariaLabelSelectDay={t.selectDayAria(day)}
-            ariaLabelHasNotes={t.hasNotesAria}
+            isCurrentDay={currentDayIndex !== null && index === currentDayIndex}
+            todayLabel={t.todayPrefix}
+            selectDayLabel={t.selectDayAria(day)}
+            hasNotesLabel={t.hasNotesAria}
             ratingUiLabels={t.ratingLabels}
           />
         ))}
-         <Card className="w-36 h-40 sm:w-40 sm:h-44 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+         <Card className="w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
             <CardHeader className="p-2 pb-1 text-center">
                <CardTitle className="text-lg sm:text-xl font-medium text-foreground">
                  {t.weeklySummaryTitle}
@@ -289,5 +301,3 @@ export default function WeekGlancePage() {
     </main>
   );
 }
-
-    
