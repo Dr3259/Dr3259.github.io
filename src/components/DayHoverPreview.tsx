@@ -3,11 +3,11 @@
 
 import type { FC } from 'react';
 import Image from 'next/image';
-import { Card, CardContent } from "@/components/ui/card"; // Removed CardHeader, CardTitle
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DayHoverPreviewProps {
-  dayName: string; // Prop remains as it's passed by parent, altText depends on it
+  dayName: string; 
   notes: string;
   imageHint: string;
   altText: string;
@@ -17,23 +17,21 @@ export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
   notes,
   imageHint,
   altText,
-  // dayName is not directly rendered as a title in this component anymore
 }) => {
-  const imageUrl = `https://placehold.co/300x200.png`;
+  const imageUrl = `https://placehold.co/420x280.png`;
 
   return (
-    <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-80 sm:w-96 bg-card shadow-2xl border-2 border-primary/50 pointer-events-none">
-      {/* CardHeader containing the CardTitle with dayName has been removed */}
-      <CardContent className="p-4"> {/* Adjusted padding from "p-4 pt-0" to "p-4" */}
+    <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[460px] bg-card shadow-2xl border-2 border-primary/50 pointer-events-none">
+      <CardContent className="p-4">
         <div className="mb-3">
           <Image
             src={imageUrl}
             alt={altText}
-            width={300}
-            height={200}
-            className="rounded-md object-cover w-full"
+            width={420}
+            height={280}
+            className="rounded-md object-cover w-full border border-border/50"
             data-ai-hint={imageHint}
-            priority // Preload image as it's a key part of the preview
+            priority 
           />
         </div>
         {notes ? (
@@ -47,4 +45,3 @@ export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
     </Card>
   );
 };
-
