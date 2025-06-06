@@ -38,13 +38,15 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   const startHour = parseInt(startTimeStr.split(':')[0]);
   let endHour = parseInt(endTimeStr.split(':')[0]);
 
+  // If interval is 18:00-00:00, 00:00 means 24:00 for loop end
   if (endTimeStr === "00:00" && startHour !== 0 && endHour === 0) {
       endHour = 24;
   }
 
   const slots: string[] = [];
   if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
-     if (!(startHour < 24 && endHour === 0)) {
+     // This case should ideally not happen if 00:00 is correctly handled as 24 for intervals like 18:00-00:00
+     if (!(startHour < 24 && endHour === 0)) { // Allow 23:00 to 00:00 by making endHour 24
         console.warn(`Start hour ${startHour} is not before end hour ${endHour} for ${intervalLabelWithTime}`);
         return [];
      }
@@ -53,6 +55,7 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   for (let h = startHour; h < endHour; h++) {
     const currentSlotStart = `${String(h).padStart(2, '0')}:00`;
     const nextHour = h + 1;
+    // For the slot 23:00, nextHour will be 24, so slot will be "23:00 - 24:00"
     const currentSlotEnd = `${String(nextHour).padStart(2, '0')}:00`;
     slots.push(`${currentSlotStart} - ${currentSlotEnd}`);
   }
@@ -75,7 +78,7 @@ const translations = {
     morning: '上午 (09:00 - 12:00)',
     noon: '中午 (12:00 - 14:00)',
     afternoon: '下午 (14:00 - 18:00)',
-    evening: '晚上 (18:00 - 24:00)',
+    evening: '晚上 (18:00 - 24:00)', // Note: 24:00 is used for internal logic
     activitiesPlaceholder: (intervalName: string) => `记录${intervalName.split(' ')[0]}的活动...`,
     addTodo: '添加待办事项',
     addMeetingNote: '添加会议记录',
@@ -195,7 +198,7 @@ const translations = {
     morning: 'Morning (09:00 - 12:00)',
     noon: 'Noon (12:00 - 14:00)',
     afternoon: 'Afternoon (14:00 - 18:00)',
-    evening: 'Evening (18:00 - 24:00)',
+    evening: 'Evening (18:00 - 24:00)', // Note: 24:00 is used for internal logic
     activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName.split(' (')[0]}...`,
     addTodo: 'Add To-do',
     addMeetingNote: 'Add Meeting Note',
@@ -497,19 +500,29 @@ export default function DayDetailPage() {
   const isViewingCurrentDay = useMemo(() => {
     if (typeof window === 'undefined') return false;
     const todayDate = new Date();
-    const systemDayIndex = (todayDate.getDay() + 6) % 7;
+    const systemDayIndex = (todayDate.getDay() + 6) % 7; // Monday is 0, Sunday is 6
     const currentLangDays = translations[currentLanguage].daysOfWeek;
     const viewingDayIndex = currentLangDays.findIndex(d => d === dayName);
     return viewingDayIndex === systemDayIndex;
-  }, [dayName, currentLanguage, translations]);
+  }, [dayName, currentLanguage]);
 
   const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
     if (!isViewingCurrentDay) { // Past or Future day
-        return (translations[currentLanguage].daysOfWeek.findIndex(d => d === dayName) < ((new Date().getDay() + 6) % 7)) ? 'read' : 'edit';
+        const todaySystemIndex = (new Date().getDay() + 6) % 7;
+        const viewingDaySystemIndex = translations[currentLanguage].daysOfWeek.findIndex(d => d === dayName);
+        return (viewingDaySystemIndex < todaySystemIndex) ? 'read' : 'edit';
     }
     // Current day
     return isAfter6PMToday ? 'edit' : 'pending';
-  }, [dayName, currentLanguage, isAfter6PMToday, translations, isViewingCurrentDay]);
+  }, [dayName, currentLanguage, isAfter6PMToday, isViewingCurrentDay]);
+
+
+  const pageLoadTime = useMemo(() => {
+    if (typeof window !== 'undefined') {
+        return new Date();
+    }
+    return new Date(0); // Default for SSR or if window is not defined yet
+  }, [dayName, currentLanguage]); // Re-evaluate if dayName or language changes, effectively when navigating to a new day's page
 
 
   useEffect(() => {
@@ -518,7 +531,7 @@ export default function DayDetailPage() {
       return;
     }
 
-    const now = new Date();
+    const now = new Date(); // Live current time for highlighting
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
@@ -534,23 +547,31 @@ export default function DayDetailPage() {
       const [, startTimeStr, endTimeStr] = match;
       const [startH, startM] = startTimeStr.split(':').map(Number);
       let [endH, endM] = endTimeStr.split(':').map(Number);
-      if (endTimeStr === "00:00" && startH > 0 && endH === 0) endH = 24;
+      if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
+
 
       const intervalStartTotalMinutes = startH * 60 + startM;
       const intervalEndTotalMinutes = endH * 60 + endM;
+      
+      // Check if the entire interval is in the past based on pageLoadTime
+      const pageLoadHourForIntervalCheck = pageLoadTime.getHours();
+      const pageLoadMinuteForIntervalCheck = pageLoadTime.getMinutes();
+      const pageLoadTotalMinutesForIntervalCheck = pageLoadHourForIntervalCheck * 60 + pageLoadMinuteForIntervalCheck;
 
-      if (currentTimeTotalMinutes >= intervalEndTotalMinutes) {
-        continue; // Interval is past
+      if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck) {
+        continue; // This entire interval was past at page load, so it's not rendered
       }
+
 
       if (!firstVisibleIntervalKeyForScroll) {
         firstVisibleIntervalKeyForScroll = interval.key;
       }
-
+      
+      // Determine active interval using live current time ('now')
       if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
         newActiveKey = interval.key;
-        currentIntervalKeyForScroll = interval.key;
-        break; 
+        currentIntervalKeyForScroll = interval.key; // This interval is active right now
+        // break; // Don't break, continue to set firstVisible for scrolling if active is filtered out by pageLoadTime
       }
     }
     
@@ -561,9 +582,9 @@ export default function DayDetailPage() {
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
       setTimeout(() => {
         intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
-      }, 100);
+      }, 100); // Small delay to ensure rendering completion
     }
-  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay]);
+  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime]);
 
 
   // --- To-do Modal and Item Handlers ---
@@ -872,7 +893,6 @@ export default function DayDetailPage() {
     return '';
   };
 
-  const pageLoadTime = useMemo(() => new Date(), [dayName, currentLanguage]); // Used for determining "past" intervals consistently for the render
 
   return (
     <TooltipProvider>
@@ -936,21 +956,20 @@ export default function DayDetailPage() {
             <div className="grid grid-cols-1 gap-6">
               {timeIntervals.map(interval => {
                 if (isViewingCurrentDay && typeof window !== 'undefined') {
-                  const now = pageLoadTime;
-                  const currentHour = now.getHours();
-                  const currentMinute = now.getMinutes();
-                  const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
+                  const pageLoadHour = pageLoadTime.getHours();
+                  const pageLoadMinute = pageLoadTime.getMinutes();
+                  const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
 
                   const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
                   if (match) {
                     const [, startTimeStr, endTimeStr] = match;
                     const [startH,] = startTimeStr.split(':').map(Number);
                     let [endH, endM] = endTimeStr.split(':').map(Number);
-                    if (endTimeStr === "00:00" && startH > 0 && endH === 0) endH = 24;
+                    if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
                     
                     const intervalEndTotalMinutes = endH * 60 + endM;
-                    if (currentTimeTotalMinutes >= intervalEndTotalMinutes) {
-                      return null; // Hide past interval on current day
+                    if (intervalEndTotalMinutes <= pageLoadTotalMinutes) {
+                      return null; // Hide entire past major interval on current day
                     }
                   }
                 }
@@ -976,10 +995,31 @@ export default function DayDetailPage() {
                     {hourlySlots.length > 0 ? (
                       <div className="space-y-3 mt-4">
                         {hourlySlots.map((slot, slotIndex) => {
+                          if (isViewingCurrentDay && typeof window !== 'undefined') {
+                            const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                            if (slotTimeMatch) {
+                              const slotEndTimeStr = slotTimeMatch[2]; // e.g., "06:00" or "24:00"
+                              const slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
+                              const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
+                              
+                              const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
+                              
+                              const pageLoadHour = pageLoadTime.getHours();
+                              const pageLoadMinute = pageLoadTime.getMinutes();
+                              const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
+
+                              if (slotEndTotalMinutes <= pageLoadTotalMinutes) {
+                                return null; // Hide past hourly slot on current day
+                              }
+                            }
+                          }
+
                           const todosForSlot = getTodosForSlot(dayName, slot);
                           const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
                           const shareLinksForSlot = getShareLinksForSlot(dayName, slot);
                           const reflectionsForSlot = getReflectionsForSlot(dayName, slot);
+                          const hasAnyContent = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
+                          
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
                               <div className="flex justify-between items-center mb-2">
@@ -1217,16 +1257,27 @@ export default function DayDetailPage() {
                                       ))}
                                     </ul>
                                   ) : (
-                                    <p className="text-xs text-muted-foreground italic">
+                                     <p className="text-xs text-muted-foreground italic">
                                       {t.noReflectionsForHour}
                                     </p>
                                   )}
                                 </div>
+
+                                {!hasAnyContent && (
+                                     <p className="text-xs text-muted-foreground italic mt-2 text-center">
+                                      {/* This message will show if ALL sub-sections are empty. 
+                                          The individual "no items" messages above handle specific sections.
+                                          Alternatively, one could choose to show nothing here or a generic placeholder.
+                                      */}
+                                    </p>
+                                )}
                             </div>
                           );
                         })}
                       </div>
                     ) : (
+                      // This case occurs if generateHourlySlots returns an empty array,
+                      // which might happen if the interval parsing failed.
                       <div className="p-3 border rounded-md bg-background/50 mt-4">
                         <p className="text-sm text-muted-foreground italic">{t.activitiesPlaceholder(interval.label)}</p>
                       </div>
