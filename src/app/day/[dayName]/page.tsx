@@ -95,7 +95,7 @@ export default function DayDetailPage() {
 
         <div>
           <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {timeIntervals.map(interval => (
               <div key={interval.key} className="bg-card p-4 rounded-lg shadow-lg">
                 <h3 className="text-lg font-medium text-foreground mb-1">{interval.label.split(' (')[0]}</h3>
