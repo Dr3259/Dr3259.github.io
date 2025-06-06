@@ -19,7 +19,8 @@ const translations = {
     midnight: '凌晨 (00:00 - 05:00)',
     earlyMorning: '清晨 (05:00 - 09:00)',
     morning: '上午 (09:00 - 12:00)',
-    afternoon: '下午 (12:00 - 18:00)',
+    noon: '中午 (12:00 - 14:00)',
+    afternoon: '下午 (14:00 - 18:00)',
     evening: '晚上 (18:00 - 24:00)',
     activitiesPlaceholder: (intervalName: string) => `记录${intervalName.split(' ')[0]}的活动...`
   },
@@ -33,7 +34,8 @@ const translations = {
     midnight: 'Midnight (00:00 - 05:00)',
     earlyMorning: 'Early Morning (05:00 - 09:00)',
     morning: 'Morning (09:00 - 12:00)',
-    afternoon: 'Afternoon (12:00 - 18:00)',
+    noon: 'Noon (12:00 - 14:00)',
+    afternoon: 'Afternoon (14:00 - 18:00)',
     evening: 'Evening (18:00 - 24:00)',
     activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName.split(' (')[0]}...`
   }
@@ -55,6 +57,7 @@ export default function DayDetailPage() {
     { key: 'midnight', label: t.midnight },
     { key: 'earlyMorning', label: t.earlyMorning },
     { key: 'morning', label: t.morning },
+    { key: 'noon', label: t.noon },
     { key: 'afternoon', label: t.afternoon },
     { key: 'evening', label: t.evening }
   ];
