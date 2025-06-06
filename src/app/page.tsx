@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DayBox } from '@/components/DayBox';
 import { Button } from "@/components/ui/button";
-import { LogIn, Github, Languages } from "lucide-react";
+import { LogIn, Github, Languages, Sun, Moon } from "lucide-react"; // Added Sun and Moon
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -39,6 +39,7 @@ const GoogleIcon = () => (
 const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
 const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary';
+const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 
 const translations = {
   'zh-CN': {
@@ -62,6 +63,7 @@ const translations = {
     bilibiliAria: '哔哩哔哩',
     githubAria: 'GitHub',
     googleAria: '谷歌',
+    toggleThemeAria: '切换主题',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -84,10 +86,11 @@ const translations = {
     bilibiliAria: 'Bilibili',
     githubAria: 'GitHub',
     googleAria: 'Google',
+    toggleThemeAria: 'Toggle theme',
   }
 };
 type LanguageKey = keyof typeof translations;
-
+type Theme = 'light' | 'dark';
 
 export default function WeekGlancePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
@@ -95,16 +98,42 @@ export default function WeekGlancePage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
+  const [theme, setTheme] = useState<Theme>('light');
 
   const t = translations[currentLanguage];
 
   useEffect(() => {
+    // Determine and set initial language
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
     setCurrentLanguage(browserLang);
     if (typeof document !== 'undefined') {
         document.documentElement.lang = browserLang;
     }
+
+    // Determine and set initial theme
+    const storedTheme = localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null;
+    const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    let initialTheme: Theme = 'light';
+    if (storedTheme) {
+      initialTheme = storedTheme;
+    } else if (systemPrefersDark) {
+      initialTheme = 'dark';
+    }
+    setTheme(initialTheme);
+
   }, []);
+
+  useEffect(() => {
+    // Apply theme to HTML tag and save to localStorage whenever theme changes
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
+  }, [theme]);
+  
 
   useEffect(() => {
     try {
@@ -145,6 +174,10 @@ export default function WeekGlancePage() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
   const handleDaySelect = useCallback((day: string) => {
     setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
   }, []);
@@ -182,18 +215,21 @@ export default function WeekGlancePage() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={toggleLanguage}>
+          <Button variant="outline" size="sm" onClick={toggleLanguage} aria-label={currentLanguage === 'zh-CN' ? 'Switch to English' : '切换到中文'}>
             <Languages className="mr-2 h-4 w-4" />
             {t.languageButtonText}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" aria-label={t.loginButtonText}>
             <LogIn className="mr-2 h-4 w-4" />
             {t.loginButtonText}
+          </Button>
+          <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
         </div>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
         {t.daysOfWeek.map((day) => (
           <DayBox
             key={day}
@@ -253,3 +289,5 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
+    
