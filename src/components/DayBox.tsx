@@ -106,7 +106,7 @@ export const DayBox: FC<DayBoxProps> = ({
           : [
               "cursor-pointer bg-card",
               isHovered ? "border-accent/70 shadow-xl scale-105" : "border-transparent",
-              isCurrentDay && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
+              isCurrentDay && !isDisabled && "ring-2 ring-offset-2 ring-offset-background ring-amber-500 dark:ring-amber-400"
             ]
       )}
       onClick={handleCardClick}
@@ -158,3 +158,4 @@ export const DayBox: FC<DayBoxProps> = ({
     </Card>
   );
 };
+
