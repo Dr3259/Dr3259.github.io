@@ -14,7 +14,7 @@ interface DayBoxProps {
   onClick: () => void;
   notes: string;
   onNotesChange: (newNote: string) => void;
-  hasNotes?: boolean;
+  hasNotes?: boolean; // This prop might be redundant if we always check notes.trim()
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
@@ -43,7 +43,6 @@ export const DayBox: FC<DayBoxProps> = ({
   onClick,
   notes,
   onNotesChange,
-  // hasNotes, // Directly using notes.length for visual cues now
   rating,
   onRatingChange,
   isCurrentDay,
@@ -56,7 +55,6 @@ export const DayBox: FC<DayBoxProps> = ({
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
   const showNotesIndicator = !!notes.trim();
   
-  // Determine if the DayBox should be disabled (grayed out and non-interactive)
   const isDisabled = isPastDay && !showNotesIndicator && !rating && !isSelected;
 
   const handleCardClick = () => {
@@ -74,28 +72,30 @@ export const DayBox: FC<DayBoxProps> = ({
   return (
     <Card
       className={cn(
-        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 rounded-xl border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        isDisabled 
-          ? "opacity-50 cursor-not-allowed bg-card" // Styles for disabled state
-          : isSelected 
-            ? "border-primary shadow-lg scale-105 bg-primary/10 cursor-pointer" 
-            : "border-transparent hover:border-accent/70 bg-card cursor-pointer",
-        isCurrentDay && !isSelected && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400",
-        isCurrentDay && isSelected && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
+        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", // Base structural and focus styles
+        isDisabled
+          ? "opacity-50 cursor-not-allowed bg-card border-transparent" // Disabled state
+          : [ // Enabled states
+              "cursor-pointer",
+              isSelected
+                ? "border-primary shadow-lg scale-105 bg-primary/10" // Selected (and enabled)
+                : "border-transparent bg-card hover:border-accent/70 hover:shadow-xl hover:scale-105", // Not selected (and enabled)
+            ],
+        isCurrentDay && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" // Current day ring for enabled states
       )}
       onClick={handleCardClick}
       role="button"
-      tabIndex={isDisabled ? -1 : 0} // Make non-focusable if disabled
+      tabIndex={isDisabled ? -1 : 0}
       onKeyDown={handleCardKeyDown}
       aria-pressed={isSelected}
       aria-label={ariaLabel}
-      aria-disabled={isDisabled} // Accessibility for disabled state
+      aria-disabled={isDisabled}
     >
       <CardHeader className="p-2 pb-1 text-center">
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {isSelected && !isDisabled ? ( // Only show textarea if selected AND not disabled
+        {isSelected && !isDisabled ? (
            <Textarea
             value={notes}
             onChange={(e) => {
@@ -103,7 +103,7 @@ export const DayBox: FC<DayBoxProps> = ({
               onNotesChange(e.target.value);
             }}
             onClick={(e) => e.stopPropagation()} 
-            placeholder={ratingUiLabels.average} 
+            placeholder={ratingUiLabels.average} // Consider changing this placeholder to something like "Add notes..."
             className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
             aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
           />
@@ -111,36 +111,35 @@ export const DayBox: FC<DayBoxProps> = ({
           showNotesIndicator && <div className="w-2 h-2 rounded-full bg-primary" aria-label={hasNotesLabel}></div>
         )}
       </CardContent>
-      <CardFooter className="p-2 pt-1 mt-auto w-full">
-        <div className="flex justify-around w-full">
-          {RATING_ORDER.map((type) => {
-            const Icon = RATING_ICONS[type];
-            const label = ratingUiLabels[type];
-            return (
-              <button
-                key={type}
-                disabled={isDisabled} // Disable rating buttons if card is disabled
-                onClick={(e) => {
-                  e.stopPropagation(); 
-                  if (isDisabled) return; // Guard against interaction if somehow clicked
-                  onRatingChange(rating === type ? null : type);
-                }}
-                className={cn(
-                  "p-1 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  isDisabled 
-                    ? "text-muted-foreground/50 cursor-not-allowed" // Style for disabled button
-                    : "hover:bg-accent/50", 
-                  rating === type && !isDisabled ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label={label}
-                aria-pressed={rating === type}
-              >
-                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            );
-          })}
-        </div>
-      </CardFooter>
+      {!isDisabled && (
+        <CardFooter className="p-2 pt-1 mt-auto w-full">
+          <div className="flex justify-around w-full">
+            {RATING_ORDER.map((type) => {
+              const Icon = RATING_ICONS[type];
+              const label = ratingUiLabels[type];
+              return (
+                <button
+                  key={type}
+                  // No need for 'disabled={isDisabled}' here as the parent CardFooter is conditionally rendered
+                  onClick={(e) => {
+                    e.stopPropagation(); 
+                    onRatingChange(rating === type ? null : type);
+                  }}
+                  className={cn(
+                    "p-1 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                    "hover:bg-accent/50", 
+                    rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label={label}
+                  aria-pressed={rating === type}
+                >
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              );
+            })}
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 };
