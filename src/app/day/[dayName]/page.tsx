@@ -71,6 +71,7 @@ const translations = {
         modalTitle: (hourSlot: string) => `${hourSlot} - 待办事项`,
         modalDescription: '在此处添加、编辑或删除您的待办事项。',
         addItemPlaceholder: '输入新的待办事项...',
+        categoryInputPlaceholder: '输入自定义性质...',
         addButton: '添加',
         saveButton: '保存',
         noTodos: '还没有待办事项。',
@@ -81,11 +82,6 @@ const translations = {
         deadlineLabel: '完成时间:',
         importanceLabel: '重要性:',
         selectPlaceholder: '请选择...',
-        categories: {
-            work: '工作',
-            life: '生活购物',
-            study: '学习',
-        },
         deadlines: {
             hour: '一小时内',
             tomorrow: '明天',
@@ -122,6 +118,7 @@ const translations = {
         modalTitle: (hourSlot: string) => `${hourSlot} - To-do List`,
         modalDescription: 'Add, edit, or delete your to-do items here.',
         addItemPlaceholder: 'Enter a new to-do item...',
+        categoryInputPlaceholder: 'Enter custom category...',
         addButton: 'Add',
         saveButton: 'Save',
         noTodos: 'No to-do items yet.',
@@ -132,11 +129,6 @@ const translations = {
         deadlineLabel: 'Deadline:',
         importanceLabel: 'Importance:',
         selectPlaceholder: 'Select...',
-        categories: {
-            work: 'Work',
-            life: 'Life/Shopping',
-            study: 'Study',
-        },
         deadlines: {
             hour: 'Within the hour',
             tomorrow: 'Tomorrow',

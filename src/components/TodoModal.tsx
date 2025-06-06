@@ -23,14 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trash2, Briefcase, ShoppingCart, BookOpen, Hourglass, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus, Star as StarIcon } from 'lucide-react';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"; // Added TooltipContent
+import { Trash2, Hourglass, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus, Star as StarIcon } from 'lucide-react';
 
 export interface TodoItem {
   id: string;
   text: string;
   completed: boolean;
-  category: 'work' | 'life' | 'study' | null;
+  category: string | null; // Changed to string for custom input
   deadline: 'hour' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
   importance: 'important' | 'notImportant' | null;
 }
@@ -46,6 +46,7 @@ interface TodoModalProps {
     modalTitle: (hourSlot: string) => string;
     modalDescription: string;
     addItemPlaceholder: string;
+    categoryInputPlaceholder: string; // Added for custom category input
     addButton: string;
     saveButton: string;
     noTodos: string;
@@ -56,11 +57,7 @@ interface TodoModalProps {
     deadlineLabel: string;
     importanceLabel: string;
     selectPlaceholder: string;
-    categories: {
-        work: string;
-        life: string;
-        study: string;
-    };
+    // categories removed as it's now custom input
     deadlines: {
         hour: string;
         tomorrow: string;
@@ -75,11 +72,7 @@ interface TodoModalProps {
   }
 }
 
-const CategoryIcons: Record<NonNullable<TodoItem['category']>, React.ElementType> = {
-  work: Briefcase,
-  life: ShoppingCart,
-  study: BookOpen,
-};
+// CategoryIcons removed as category is now custom text
 
 const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
   hour: Hourglass,
@@ -101,7 +94,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 }) => {
   const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
   const [newItemText, setNewItemText] = useState('');
-  const [newCategory, setNewCategory] = useState<TodoItem['category']>(null);
+  const [newCategory, setNewCategory] = useState<string | null>(null); // Changed to string
   const [newDeadline, setNewDeadline] = useState<TodoItem['deadline']>(null);
   const [newImportance, setNewImportance] = useState<TodoItem['importance']>(null);
 
@@ -109,7 +102,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     if (isOpen) {
         setTodos(initialTodos);
         setNewItemText('');
-        setNewCategory(null);
+        setNewCategory(null); // Reset as null or empty string
         setNewDeadline(null);
         setNewImportance(null);
     }
@@ -121,7 +114,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
       id: Date.now().toString(),
       text: newItemText.trim(),
       completed: false,
-      category: newCategory,
+      category: newCategory ? newCategory.trim() : null, // Save trimmed category or null
       deadline: newDeadline,
       importance: newImportance,
     };
@@ -155,11 +148,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     }
   };
 
-  const getCategoryTooltip = (category: TodoItem['category']) => {
-    if (!category) return '';
-    return `${translations.categoryLabel} ${translations.categories[category]}`;
-  }
-
+  // getCategoryTooltip removed as icons are removed
   const getDeadlineTooltip = (deadline: TodoItem['deadline']) => {
     if (!deadline) return '';
     return `${translations.deadlineLabel} ${translations.deadlines[deadline]}`;
@@ -192,19 +181,13 @@ export const TodoModal: React.FC<TodoModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <Label htmlFor="todo-category" className="text-xs">{translations.categoryLabel}</Label>
-                <Select
-                  value={newCategory === null ? undefined : newCategory}
-                  onValueChange={(value) => setNewCategory(value as TodoItem['category'])}
-                >
-                  <SelectTrigger id="todo-category" className="w-full bg-background">
-                    <SelectValue placeholder={translations.selectPlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="work">{translations.categories.work}</SelectItem>
-                    <SelectItem value="life">{translations.categories.life}</SelectItem>
-                    <SelectItem value="study">{translations.categories.study}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="todo-category"
+                  value={newCategory || ''}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder={translations.categoryInputPlaceholder}
+                  className="w-full bg-background"
+                />
               </div>
               <div>
                 <Label htmlFor="todo-deadline" className="text-xs">{translations.deadlineLabel}</Label>
@@ -244,12 +227,13 @@ export const TodoModal: React.FC<TodoModalProps> = ({
           </div>
 
           <ScrollArea className="h-[200px] w-full rounded-md border p-2 bg-background/50">
+           <TooltipProvider> {/* Added TooltipProvider here */}
             {todos.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">{translations.noTodos}</p>
             ) : (
               <ul className="space-y-2">
                 {todos.map(todo => {
-                  const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
+                  // CategoryIcon removed
                   const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
 
                   return (
@@ -270,16 +254,9 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                         </label>
                       </div>
                       <div className="flex items-center space-x-1.5 ml-2 shrink-0">
-                        {CategoryIcon && (
-                           <Tooltip>
-                            <TooltipTrigger asChild>
-                              <CategoryIcon className="h-4 w-4 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{getCategoryTooltip(todo.category)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+                        {/* CategoryIcon display removed */}
+                        {/* Optionally, display todo.category text here if desired */}
+                        {/* For example: {todo.category && <span className="text-xs text-muted-foreground mr-1">({todo.category})</span>} */}
                         {DeadlineIcon && (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -315,6 +292,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 })}
               </ul>
             )}
+            </TooltipProvider>
           </ScrollArea>
         </div>
         <DialogFooter>
@@ -327,4 +305,3 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
-
