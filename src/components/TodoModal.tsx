@@ -129,12 +129,12 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-        setTodos(initialTodos); // Always reset todos to initialTodos when modal opens/re-opens
+        setTodos(initialTodos); 
         const itemToEdit = defaultEditingTodoId ? initialTodos.find(t => t.id === defaultEditingTodoId) : null;
         if (itemToEdit) {
             handleStartEdit(itemToEdit);
         } else {
-            resetForm(); // Clear form if not editing a specific item
+            resetForm(); 
         }
     }
   }, [isOpen, initialTodos, defaultEditingTodoId, resetForm]);
@@ -196,7 +196,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleSave = () => {
     onSaveTodos(dayName, hourSlot, todos);
-    onClose(); // This will trigger reset via useEffect if defaultEditingTodoId is cleared by parent
+    onClose(); 
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -311,7 +311,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
             {todos.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">{translations.noTodos}</p>
             ) : (
-              <ul className="space-y-2.5">
+              <ul className="space-y-2.5 p-px">
                 {todos.map(todo => {
                   const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
                   const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;

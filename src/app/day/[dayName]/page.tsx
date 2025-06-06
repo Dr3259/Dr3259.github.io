@@ -593,7 +593,7 @@ export default function DayDetailPage() {
                               {/* To-Do List Display */}
                               <div className="p-2 border rounded-md bg-background/50 group/todolist mb-3">
                                   {todosForSlot.length > 0 ? (
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-2 p-px">
                                       {todosForSlot.map((todo) => {
                                         const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
                                         const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
@@ -670,7 +670,7 @@ export default function DayDetailPage() {
                                 <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist">
                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.meetingNotesSectionTitle}</h4>
                                   {meetingNotesForSlot.length > 0 ? (
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-2 p-px">
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                             <span className="text-xs text-foreground/90 flex-1 min-w-0" title={note.title}>
@@ -745,3 +745,4 @@ export default function DayDetailPage() {
     </TooltipProvider>
   );
 }
+
