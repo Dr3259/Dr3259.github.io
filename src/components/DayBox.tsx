@@ -105,10 +105,9 @@ export const DayBox: FC<DayBoxProps> = ({
               "cursor-pointer",
               showBlueHighlight
                 ? "border-primary shadow-lg scale-105 bg-primary/10" // Blue highlight: Selected AND Hovered
-                : [ // Not blue highlighted (either unselected, or selected but not hovered)
+                : [ // Not blue highlighted (either unselected, OR selected but not hovered)
                     "border-transparent bg-card", // Default appearance
                     !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105", // General hover for non-selected
-                    isSelected && !isHovered && "hover:border-primary/50", // Subtle hover for selected but not hovered
                   ],
               // Amber ring for current day, if not blue highlighted
               isCurrentDay && !isDisabled && !showBlueHighlight && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
@@ -136,7 +135,7 @@ export const DayBox: FC<DayBoxProps> = ({
               onNotesChange(e.target.value);
             }}
             onClick={(e) => e.stopPropagation()}
-            placeholder={ratingUiLabels.average}
+            placeholder={ratingUiLabels.average} // Note: This placeholder might be better as a generic "notes" placeholder
             className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
             aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
           />
@@ -164,7 +163,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
-                  disabled={isDisabled}
+                  disabled={isDisabled} // This check might be redundant if CardFooter is not rendered when isDisabled
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
