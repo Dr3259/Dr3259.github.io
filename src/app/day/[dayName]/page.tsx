@@ -2,11 +2,12 @@
 // src/app/day/[dayName]/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { ParsedUrlQuery } from 'querystring';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
     ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText,
     Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock,
@@ -63,9 +64,10 @@ const translations = {
   'zh-CN': {
     dayDetailsTitle: (dayName: string) => `${dayName} - 详情`,
     backToWeek: '返回周视图',
-    notesLabel: '笔记:',
-    ratingLabel: '评价:',
+    notesLabel: '本日总结:',
+    ratingLabel: '本日评价:',
     noData: '暂无数据',
+    notesPlaceholder: '记录今天的总结...',
     timeIntervalsTitle: '每日安排',
     midnight: '凌晨 (00:00 - 05:00)',
     earlyMorning: '清晨 (05:00 - 09:00)',
@@ -176,13 +178,15 @@ const translations = {
     noReflectionsForHour: '此时间段暂无个人感悟。',
     editReflection: '编辑感悟',
     deleteReflection: '删除感悟',
+    daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
     backToWeek: 'Back to Week View',
-    notesLabel: 'Notes:',
-    ratingLabel: 'Rating:',
+    notesLabel: 'Daily Summary:',
+    ratingLabel: 'Daily Rating:',
     noData: 'No data available',
+    notesPlaceholder: 'Write your summary for the day...',
     timeIntervalsTitle: 'Daily Schedule',
     midnight: 'Midnight (00:00 - 05:00)',
     earlyMorning: 'Early Morning (05:00 - 09:00)',
@@ -293,6 +297,7 @@ const translations = {
     noReflectionsForHour: 'No reflections recorded for this hour.',
     editReflection: 'Edit Reflection',
     deleteReflection: 'Delete Reflection',
+    daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
   }
 };
 
@@ -323,12 +328,16 @@ const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType
   nextMonth: CalendarPlus,
 };
 
+const MAX_DAILY_NOTE_LENGTH = 1000;
 
 export default function DayDetailPage() {
   const params = useParams();
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+
+  // Daily Notes state
+  const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({});
 
   // To-do states
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
@@ -365,6 +374,14 @@ export default function DayDetailPage() {
       setCurrentLanguage(browserLang);
     }
 
+    const storedDailyNotes = localStorage.getItem('allWeekDailyNotes');
+    if (storedDailyNotes) {
+        try {
+            setAllDailyNotes(JSON.parse(storedDailyNotes));
+        } catch (e) {
+            console.error("Failed to parse daily notes from localStorage", e);
+        }
+    }
     const storedTodos = localStorage.getItem('allWeekTodos');
     if (storedTodos) {
         try {
@@ -398,6 +415,14 @@ export default function DayDetailPage() {
         }
     }
   }, []);
+
+  const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
+    try {
+        localStorage.setItem('allWeekDailyNotes', JSON.stringify(updatedNotes));
+    } catch (e) {
+        console.error("Failed to save daily notes to localStorage", e);
+    }
+  };
 
   const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
     try {
@@ -438,9 +463,8 @@ export default function DayDetailPage() {
   const tShareLinkModal = translations[currentLanguage].shareLinkModal;
   const tReflectionModal = translations[currentLanguage].reflectionModal;
 
-
-  const notes = ""; // General notes for the day, not related to specific items
-  const rating = "";
+  const dailyNote = allDailyNotes[dayName] || "";
+  const rating = ""; // Placeholder for daily rating, if implemented later
 
   const timeIntervals = [
     { key: 'midnight', label: t.midnight },
@@ -450,6 +474,35 @@ export default function DayDetailPage() {
     { key: 'afternoon', label: t.afternoon },
     { key: 'evening', label: t.evening }
   ];
+
+  const handleDailyNoteChange = (newNote: string) => {
+    setAllDailyNotes(prev => {
+        const updated = {...prev, [dayName]: newNote.substring(0, MAX_DAILY_NOTE_LENGTH) };
+        saveAllDailyNotesToLocalStorage(updated);
+        return updated;
+    });
+  };
+
+  const dailyNoteDisplayMode = useMemo(() => {
+    if (typeof window === 'undefined') return 'edit'; // Default for SSR or pre-hydration
+
+    const todayDate = new Date();
+    const systemDayIndex = (todayDate.getDay() + 6) % 7; // 0 for Mon, 6 for Sun
+    
+    const currentLangDays = translations[currentLanguage].daysOfWeek;
+    const viewingDayIndex = currentLangDays.findIndex(d => d === dayName);
+
+    if (viewingDayIndex === -1) {
+        console.warn(`Could not determine index for dayName: ${dayName} with lang ${currentLanguage}. Defaulting to edit mode.`);
+        return 'edit';
+    }
+
+    if (viewingDayIndex < systemDayIndex) {
+        return 'read'; // Past day
+    }
+    return 'edit'; // Current or future day
+  }, [dayName, currentLanguage]);
+
 
   // --- To-do Modal and Item Handlers ---
   const handleOpenTodoModal = (hourSlot: string) => {
@@ -779,14 +832,36 @@ export default function DayDetailPage() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
-                <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
-                  <p className="text-muted-foreground">{notes || t.noData}</p>
-                </div>
+                {dailyNoteDisplayMode === 'read' ? (
+                    <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
+                    {dailyNote ? (
+                        <ScrollArea className="max-h-48">
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{dailyNote}</p>
+                        </ScrollArea>
+                    ) : (
+                        <p className="text-muted-foreground italic">{t.noData}</p>
+                    )}
+                    </div>
+                ) : (
+                    <div>
+                    <Textarea
+                        value={dailyNote}
+                        onChange={(e) => handleDailyNoteChange(e.target.value)}
+                        placeholder={t.notesPlaceholder}
+                        className="min-h-[100px] bg-background/50 text-sm"
+                        maxLength={MAX_DAILY_NOTE_LENGTH}
+                    />
+                    <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
+                        {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
+                    </div>
+                    </div>
+                )}
               </div>
 
               <div>
                 <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
                 <div className="p-3 border rounded-md bg-background/50">
+                  {/* Placeholder for rating UI - to be implemented if needed */}
                   <p className="text-muted-foreground">{rating || t.noData}</p>
                 </div>
               </div>
