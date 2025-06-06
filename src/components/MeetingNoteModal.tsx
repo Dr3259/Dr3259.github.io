@@ -83,8 +83,8 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
   }, [isOpen, initialData]);
 
   const handleSaveOrUpdate = () => {
-    if (title.trim() === '' && notes.trim() === '') { // Require at least title or notes
-        onClose(); // Or show an error
+    if (title.trim() === '' && notes.trim() === '') { 
+        onClose(); 
         return;
     }
 
@@ -118,7 +118,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
-          <div className="space-y-4">
+          <div className="space-y-4 px-1">
             <div>
               <Label htmlFor="meeting-title" className="text-xs font-medium text-muted-foreground mb-1 block">
                 {translations.titleLabel}
@@ -175,7 +175,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
         </ScrollArea>
 
         <DialogFooter className="mt-6">
-          <Button onClick={handleSaveOrUpdate} className="py-2.5">
+           <Button onClick={handleSaveOrUpdate} className="py-2.5">
             {initialData ? translations.updateButton : translations.saveButton}
           </Button>
           <DialogClose asChild>
