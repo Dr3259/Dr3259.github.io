@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText } from 'lucide-react'; // Renamed Link2 to avoid conflict
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { TodoModal, type TodoItem } from '@/components/TodoModal'; // Import TodoModal and TodoItem type
+import { TodoModal, type TodoItem } from '@/components/TodoModal'; 
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -77,6 +77,26 @@ const translations = {
         markComplete: '标记为已完成',
         markIncomplete: '标记为未完成',
         deleteTodo: '删除待办事项',
+        categoryLabel: '性质:',
+        deadlineLabel: '完成时间:',
+        importanceLabel: '重要性:',
+        selectPlaceholder: '请选择...',
+        categories: {
+            work: '工作',
+            life: '生活购物',
+            study: '学习',
+        },
+        deadlines: {
+            hour: '一小时内',
+            tomorrow: '明天',
+            thisWeek: '这周内',
+            nextWeek: '下周内',
+            nextMonth: '下月内',
+        },
+        importances: {
+            important: '重要',
+            notImportant: '不重要',
+        }
     }
   },
   'en': {
@@ -108,6 +128,26 @@ const translations = {
         markComplete: 'Mark as complete',
         markIncomplete: 'Mark as incomplete',
         deleteTodo: 'Delete to-do item',
+        categoryLabel: 'Category:',
+        deadlineLabel: 'Deadline:',
+        importanceLabel: 'Importance:',
+        selectPlaceholder: 'Select...',
+        categories: {
+            work: 'Work',
+            life: 'Life/Shopping',
+            study: 'Study',
+        },
+        deadlines: {
+            hour: 'Within the hour',
+            tomorrow: 'Tomorrow',
+            thisWeek: 'This Week',
+            nextWeek: 'Next Week',
+            nextMonth: 'Next Month',
+        },
+        importances: {
+            important: 'Important',
+            notImportant: 'Not Important',
+        }
     }
   }
 };

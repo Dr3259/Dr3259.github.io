@@ -15,12 +15,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Trash2 } from 'lucide-react';
 
 export interface TodoItem {
   id: string;
   text: string;
   completed: boolean;
+  category: 'work' | 'life' | 'study' | null;
+  deadline: 'hour' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
+  importance: 'important' | 'notImportant' | null;
 }
 
 interface TodoModalProps {
@@ -40,6 +51,26 @@ interface TodoModalProps {
     markComplete: string;
     markIncomplete: string;
     deleteTodo: string;
+    categoryLabel: string;
+    deadlineLabel: string;
+    importanceLabel: string;
+    selectPlaceholder: string;
+    categories: {
+        work: string;
+        life: string;
+        study: string;
+    };
+    deadlines: {
+        hour: string;
+        tomorrow: string;
+        thisWeek: string;
+        nextWeek: string;
+        nextMonth: string;
+    };
+    importances: {
+        important: string;
+        notImportant: string;
+    };
   }
 }
 
@@ -54,11 +85,17 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 }) => {
   const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
   const [newItemText, setNewItemText] = useState('');
+  const [newCategory, setNewCategory] = useState<TodoItem['category']>(null);
+  const [newDeadline, setNewDeadline] = useState<TodoItem['deadline']>(null);
+  const [newImportance, setNewImportance] = useState<TodoItem['importance']>(null);
 
   useEffect(() => {
     if (isOpen) {
-        setTodos(initialTodos); // Reset/load todos when modal opens or initialTodos change
-        setNewItemText(''); // Reset input field
+        setTodos(initialTodos); 
+        setNewItemText(''); 
+        setNewCategory(null);
+        setNewDeadline(null);
+        setNewImportance(null);
     }
   }, [isOpen, initialTodos]);
 
@@ -68,9 +105,15 @@ export const TodoModal: React.FC<TodoModalProps> = ({
       id: Date.now().toString(), 
       text: newItemText.trim(),
       completed: false,
+      category: newCategory,
+      deadline: newDeadline,
+      importance: newImportance,
     };
     setTodos(prevTodos => [...prevTodos, newTodo]);
     setNewItemText('');
+    setNewCategory(null);
+    setNewDeadline(null);
+    setNewImportance(null);
   };
 
   const toggleTodoCompletion = (id: string) => {
@@ -98,7 +141,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-card">
+      <DialogContent className="sm:max-w-md bg-card"> {/* Adjusted max-width for more content */}
         <DialogHeader>
           <DialogTitle>{translations.modalTitle(hourSlot)}</DialogTitle>
           <DialogDescription>
@@ -106,22 +149,68 @@ export const TodoModal: React.FC<TodoModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex items-center space-x-2">
+          <div className="space-y-2">
             <Input
-              id="todo-item"
+              id="todo-item-text"
               value={newItemText}
               onChange={(e) => setNewItemText(e.target.value)}
               placeholder={translations.addItemPlaceholder}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleAddItem();
-                  e.preventDefault(); 
-                }
-              }}
               className="bg-background"
             />
-            <Button onClick={handleAddItem}>{translations.addButton}</Button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <Label htmlFor="todo-category" className="text-xs">{translations.categoryLabel}</Label>
+                <Select
+                  value={newCategory === null ? undefined : newCategory}
+                  onValueChange={(value) => setNewCategory(value as TodoItem['category'])}
+                >
+                  <SelectTrigger id="todo-category" className="w-full bg-background">
+                    <SelectValue placeholder={translations.selectPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="work">{translations.categories.work}</SelectItem>
+                    <SelectItem value="life">{translations.categories.life}</SelectItem>
+                    <SelectItem value="study">{translations.categories.study}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="todo-deadline" className="text-xs">{translations.deadlineLabel}</Label>
+                <Select
+                  value={newDeadline === null ? undefined : newDeadline}
+                  onValueChange={(value) => setNewDeadline(value as TodoItem['deadline'])}
+                >
+                  <SelectTrigger id="todo-deadline" className="w-full bg-background">
+                    <SelectValue placeholder={translations.selectPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hour">{translations.deadlines.hour}</SelectItem>
+                    <SelectItem value="tomorrow">{translations.deadlines.tomorrow}</SelectItem>
+                    <SelectItem value="thisWeek">{translations.deadlines.thisWeek}</SelectItem>
+                    <SelectItem value="nextWeek">{translations.deadlines.nextWeek}</SelectItem>
+                    <SelectItem value="nextMonth">{translations.deadlines.nextMonth}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="todo-importance" className="text-xs">{translations.importanceLabel}</Label>
+                <Select
+                  value={newImportance === null ? undefined : newImportance}
+                  onValueChange={(value) => setNewImportance(value as TodoItem['importance'])}
+                >
+                  <SelectTrigger id="todo-importance" className="w-full bg-background">
+                    <SelectValue placeholder={translations.selectPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="important">{translations.importances.important}</SelectItem>
+                    <SelectItem value="notImportant">{translations.importances.notImportant}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={handleAddItem} className="w-full mt-2">{translations.addButton}</Button>
           </div>
+
           <ScrollArea className="h-[200px] w-full rounded-md border p-2 bg-background/50">
             {todos.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">{translations.noTodos}</p>
