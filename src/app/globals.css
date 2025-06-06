@@ -8,31 +8,42 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --background: 208 100% 97%; /* #F0F8FF Very Light Blue */
+    --foreground: 210 20% 30%; /* Darker grayish blue for text */
+
+    --card: 208 100% 99%; /* Slightly whiter than background */
+    --card-foreground: 210 20% 30%; /* Same as main foreground */
+
+    --popover: 208 100% 99%;
+    --popover-foreground: 210 20% 30%;
+
+    --primary: 197 71% 60%; /* #87CEEB Light Sky Blue */
+    --primary-foreground: 197 100% 15%; /* Dark Blue for text on primary elements */
+
+    --secondary: 197 70% 85%; /* Lighter Sky Blue */
+    --secondary-foreground: 197 90% 25%; /* Darker Sky Blue */
+
+    --muted: 208 60% 90%; /* Lighter, desaturated version of background or primary */
+    --muted-foreground: 210 20% 55%; /* Lighter gray for muted text */
+
+    --accent: 240 67% 94%; /* #E6E6FA Soft Lavender */
+    --accent-foreground: 240 50% 25%; /* Darker lavender/purple text on soft lavender accent */
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+
+    --border: 197 50% 85%; /* Light Sky Blue, desaturated and lighter for borders */
+    --input: 197 50% 90%; /* Even lighter for input backgrounds */
+    --ring: 197 71% 55%; /* Slightly darker primary for focus rings */
+    
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Increased radius for a softer look */
+
+    /* Sidebar specific colors - can remain as is or be themed similarly if a sidebar is added later */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -42,31 +53,43 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    /* Define dark theme variables if needed in the future, for now keeping them standard */
+    --background: 210 20% 10%; /* Dark Blue-Gray */
+    --foreground: 210 20% 90%; /* Light Gray-Blue */
+
+    --card: 210 20% 12%;
+    --card-foreground: 210 20% 90%;
+
+    --popover: 210 20% 12%;
+    --popover-foreground: 210 20% 90%;
+
+    --primary: 197 71% 60%; /* Light Sky Blue (can remain same or be adjusted for dark mode) */
+    --primary-foreground: 197 100% 15%;
+
+    --secondary: 197 70% 30%; /* Darker Sky Blue variant */
+    --secondary-foreground: 197 90% 85%;
+
+    --muted: 210 20% 20%;
+    --muted-foreground: 210 20% 60%;
+
+    --accent: 240 67% 30%; /* Darker Lavender */
+    --accent-foreground: 240 60% 85%;
+    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+
+    --border: 197 50% 25%;
+    --input: 197 50% 30%;
+    --ring: 197 71% 55%;
+    
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
