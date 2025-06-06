@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { LogIn, Github } from "lucide-react";
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const LOCAL_STORAGE_KEY = 'weekGlanceNotes';
+const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
+const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
+
+type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
 // Simple SVG icons for platforms not in Lucide
 const WeChatIcon = () => (
@@ -18,7 +21,7 @@ const WeChatIcon = () => (
 
 const AlibabaIcon = () => (
   <svg viewBox="0 0 1024 1024" fill="currentColor" className="w-6 h-6">
-    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-85.3 109.9c-11.2 14.4-27.8 22.5-45.3 22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
+    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3-5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2 16.6l-85.3 109.9c-11.2 14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
   </svg>
 );
 
@@ -39,21 +42,44 @@ const GoogleIcon = () => (
 export default function WeekGlancePage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [ratings, setRatings] = useState<Record<string, RatingType>>({});
 
   useEffect(() => {
     try {
-      const storedNotes = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const storedNotes = localStorage.getItem(LOCAL_STORAGE_KEY_NOTES);
       if (storedNotes) {
         setNotes(JSON.parse(storedNotes));
       }
     } catch (error) {
       console.error("Failed to parse notes from localStorage:", error);
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      localStorage.removeItem(LOCAL_STORAGE_KEY_NOTES);
+    }
+
+    try {
+      const storedRatings = localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS);
+      if (storedRatings) {
+        setRatings(JSON.parse(storedRatings));
+      }
+    } catch (error) {
+      console.error("Failed to parse ratings from localStorage:", error);
+      localStorage.removeItem(LOCAL_STORAGE_KEY_RATINGS);
     }
   }, []);
 
   const handleDaySelect = useCallback((day: string) => {
     setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
+  }, []);
+
+  const handleRatingChange = useCallback((day: string, newRating: RatingType) => {
+    setRatings(prevRatings => {
+      const updatedRatings = { ...prevRatings, [day]: newRating };
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings));
+      } catch (error) {
+        console.error("Failed to save ratings to localStorage:", error);
+      }
+      return updatedRatings;
+    });
   }, []);
 
   return (
@@ -73,7 +99,7 @@ export default function WeekGlancePage() {
         </Button>
       </header>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 w-full max-w-4xl place-items-center mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-4xl place-items-center mb-10">
         {DAYS_OF_WEEK.map((day) => (
           <DayBox
             key={day}
@@ -81,6 +107,8 @@ export default function WeekGlancePage() {
             isSelected={selectedDay === day}
             onClick={() => handleDaySelect(day)}
             hasNotes={!!notes[day]?.trim()}
+            rating={ratings[day] || null}
+            onRatingChange={(newRating) => handleRatingChange(day, newRating)}
           />
         ))}
       </div>
@@ -112,4 +140,3 @@ export default function WeekGlancePage() {
     </main>
   );
 }
-
