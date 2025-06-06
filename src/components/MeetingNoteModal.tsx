@@ -117,7 +117,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
+        <ScrollArea className="max-h-[60vh]">
           <div className="space-y-4">
             <div>
               <Label htmlFor="meeting-title" className="text-xs font-medium text-muted-foreground mb-1 block">
@@ -175,12 +175,12 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
         </ScrollArea>
 
         <DialogFooter className="mt-6">
-          <DialogClose asChild>
-            <Button variant="outline" onClick={onClose} className="py-2.5">{translations.cancelButton}</Button>
-          </DialogClose>
           <Button onClick={handleSaveOrUpdate} className="py-2.5">
             {initialData ? translations.updateButton : translations.saveButton}
           </Button>
+          <DialogClose asChild>
+            <Button variant="outline" onClick={onClose} className="py-2.5">{translations.cancelButton}</Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
