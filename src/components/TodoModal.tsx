@@ -301,13 +301,45 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
                   return (
                     <li key={todo.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 group">
-                      <div className="flex items-center space-x-3 flex-grow min-w-0">
+                      <div className="flex items-center space-x-2 flex-grow min-w-0">
                          <Checkbox
                           id={`todo-${todo.id}`}
                           checked={todo.completed}
                           onCheckedChange={() => toggleTodoCompletion(todo.id)}
                           aria-label={todo.completed ? translations.markIncomplete : translations.markComplete}
                         />
+                        <div className="flex items-center space-x-1 shrink-0">
+                          {CategoryIcon && todo.category && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <CategoryIcon className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{getCategoryTooltip(todo.category)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {DeadlineIcon && todo.deadline && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <DeadlineIcon className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{getDeadlineTooltip(todo.deadline)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {todo.importance === 'important' && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <StarIcon className="h-4 w-4 text-amber-500 fill-amber-500" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{getImportanceTooltip(todo.importance)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                         <label
                           htmlFor={`todo-${todo.id}`}
                           className={`text-sm cursor-pointer truncate ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
@@ -316,37 +348,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           {todo.text}
                         </label>
                       </div>
-                      <div className="flex items-center space-x-1.5 ml-2 shrink-0">
-                        {CategoryIcon && todo.category && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <CategoryIcon className="h-4 w-4 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{getCategoryTooltip(todo.category)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {DeadlineIcon && todo.deadline && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <DeadlineIcon className="h-4 w-4 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{getDeadlineTooltip(todo.deadline)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {todo.importance === 'important' && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <StarIcon className="h-4 w-4 text-amber-500 fill-amber-500" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{getImportanceTooltip(todo.importance)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+                      <div className="flex items-center space-x-1 ml-2 shrink-0">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -398,5 +400,3 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
-
-    
