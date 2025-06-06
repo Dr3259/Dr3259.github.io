@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText } from 'lucide-react'; // Renamed Link2 to avoid conflict
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -332,18 +333,36 @@ export default function DayDetailPage() {
                                 </Tooltip>
                               </div>
                             </div>
-                            <div className="p-2 border rounded-md min-h-[60px] bg-background/50">
-                              <p className="text-xs text-muted-foreground italic">
-                                {getTodosForSlot(dayName, slot).length > 0
-                                  ? `${getTodosForSlot(dayName, slot).length} to-do item(s)`
-                                  : t.noItemsForHour}
-                              </p>
-                            </div>
+                            <div className="p-2 border rounded-md bg-background/50">
+                                {(() => {
+                                  const todosForSlot = getTodosForSlot(dayName, slot);
+                                  if (todosForSlot.length > 0) {
+                                    return (
+                                      <ul className="space-y-1">
+                                        {todosForSlot.map((todo) => (
+                                          <li key={todo.id} className="flex items-center space-x-2 text-xs">
+                                            <Checkbox id={`slot-todo-${dayName}-${slot}-${todo.id}`} checked={todo.completed} disabled className="cursor-default border-primary/50" />
+                                            <label htmlFor={`slot-todo-${dayName}-${slot}-${todo.id}`} className={`${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground/90'}`}>
+                                              {todo.text}
+                                            </label>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    );
+                                  } else {
+                                    return (
+                                      <p className="text-xs text-muted-foreground italic">
+                                        {t.noItemsForHour}
+                                      </p>
+                                    );
+                                  }
+                                })()}
+                              </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="p-3 border rounded-md min-h-[80px] bg-background/50 mt-4">
+                      <div className="p-3 border rounded-md bg-background/50 mt-4">
                         <p className="text-sm text-muted-foreground italic">{t.activitiesPlaceholder(interval.label)}</p>
                       </div>
                     )}
@@ -368,5 +387,3 @@ export default function DayDetailPage() {
     </TooltipProvider>
   );
 }
-
-    
