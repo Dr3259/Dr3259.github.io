@@ -2,6 +2,7 @@
 // src/app/day/[dayName]/page.tsx
 "use client";
 
+import React from 'react'; // Added import for React
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
