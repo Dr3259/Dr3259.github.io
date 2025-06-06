@@ -14,7 +14,7 @@ interface DayBoxProps {
   onClick: () => void;
   notes: string;
   onNotesChange: (newNote: string) => void;
-  hasNotes?: boolean; // This prop might be redundant if we always check notes.trim()
+  hasNotes?: boolean; 
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
@@ -72,16 +72,16 @@ export const DayBox: FC<DayBoxProps> = ({
   return (
     <Card
       className={cn(
-        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", // Base structural and focus styles
+        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", 
         isDisabled
-          ? "opacity-50 cursor-not-allowed bg-card border-transparent" // Disabled state
-          : [ // Enabled states
+          ? "opacity-50 cursor-not-allowed bg-card border-transparent" 
+          : [ 
               "cursor-pointer",
               isSelected
-                ? "border-primary shadow-lg scale-105 bg-primary/10" // Selected (and enabled)
-                : "border-transparent bg-card hover:border-accent/70 hover:shadow-xl hover:scale-105", // Not selected (and enabled)
+                ? "border-primary shadow-lg scale-105 bg-primary/10" 
+                : "border-transparent bg-card hover:border-accent/70 hover:shadow-xl hover:scale-105", 
             ],
-        isCurrentDay && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" // Current day ring for enabled states
+        isCurrentDay && !isSelected && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400" 
       )}
       onClick={handleCardClick}
       role="button"
@@ -103,7 +103,7 @@ export const DayBox: FC<DayBoxProps> = ({
               onNotesChange(e.target.value);
             }}
             onClick={(e) => e.stopPropagation()} 
-            placeholder={ratingUiLabels.average} // Consider changing this placeholder to something like "Add notes..."
+            placeholder={ratingUiLabels.average} 
             className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
             aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
           />
@@ -120,7 +120,6 @@ export const DayBox: FC<DayBoxProps> = ({
               return (
                 <button
                   key={type}
-                  // No need for 'disabled={isDisabled}' here as the parent CardFooter is conditionally rendered
                   onClick={(e) => {
                     e.stopPropagation(); 
                     onRatingChange(rating === type ? null : type);
