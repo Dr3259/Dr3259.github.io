@@ -135,7 +135,6 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     if (newItemText.trim() === '') return;
 
     if (editingTodoId) {
-      // Update existing item
       setTodos(prevTodos =>
         prevTodos.map(todo =>
           todo.id === editingTodoId
@@ -150,7 +149,6 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         )
       );
     } else {
-      // Add new item
       const newTodo: TodoItem = {
         id: Date.now().toString(),
         text: newItemText.trim(),
@@ -182,7 +180,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleDeleteTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
-    if (editingTodoId === id) { // If deleting the item being edited, reset form
+    if (editingTodoId === id) { 
         resetForm();
     }
   };
@@ -345,7 +343,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           className={`text-sm cursor-pointer ${todo.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
                           title={todo.text}
                         >
-                          {todo.text}
+                          {todo.text.length > 20 ? todo.text.substring(0, 20) + '...' : todo.text}
                         </label>
                       </div>
                       <div className="flex items-center space-x-1 ml-2 shrink-0">
