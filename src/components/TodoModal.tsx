@@ -228,7 +228,10 @@ export const TodoModal: React.FC<TodoModalProps> = ({
               <Input
                 id="todo-item-text"
                 value={newItemText}
-                onChange={(e) => setNewItemText(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setNewItemText(value.substring(0, 50));
+                }}
                 placeholder={translations.addItemPlaceholder}
                 className="bg-background pr-14 py-2.5 text-base"
                 maxLength={50}
@@ -406,5 +409,3 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
-
-    
