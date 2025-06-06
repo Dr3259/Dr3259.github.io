@@ -22,7 +22,7 @@ export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
   const imageUrl = `https://placehold.co/300x200.png`;
 
   return (
-    <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-80 sm:w-96 bg-card shadow-2xl border-2 border-primary/50">
+    <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-80 sm:w-96 bg-card shadow-2xl border-2 border-primary/50 pointer-events-none">
       {/* CardHeader containing the CardTitle with dayName has been removed */}
       <CardContent className="p-4"> {/* Adjusted padding from "p-4 pt-0" to "p-4" */}
         <div className="mb-3">
@@ -47,3 +47,4 @@ export const DayHoverPreview: FC<DayHoverPreviewProps> = ({
     </Card>
   );
 };
+
