@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
+import { MeetingNoteModal, type MeetingNoteItem, type MeetingNoteModalTranslations } from '@/components/MeetingNoteModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
@@ -117,7 +118,27 @@ const translations = {
             important: '重要',
             notImportant: '不重要',
         }
-    }
+    },
+    meetingNotesSectionTitle: '会议记录',
+    noMeetingNotesForHour: '此时间段暂无会议记录。',
+    editMeetingNote: '编辑会议记录',
+    deleteMeetingNote: '删除会议记录',
+    meetingNoteModal: {
+        modalTitleNew: '新会议记录',
+        modalTitleEdit: (title: string) => `编辑: ${title || '会议记录'}`,
+        modalDescription: '在此处记录您的会议详情。',
+        titleLabel: '标题:',
+        titlePlaceholder: '输入会议标题...',
+        notesLabel: '笔记内容:',
+        notesPlaceholder: '输入会议笔记...',
+        attendeesLabel: '参与者 (可选):',
+        attendeesPlaceholder: '例如: 张三, 李四',
+        actionItemsLabel: '行动项 (可选):',
+        actionItemsPlaceholder: '例如: 跟进市场部',
+        saveButton: '保存记录',
+        updateButton: '更新记录',
+        cancelButton: '取消',
+    } as MeetingNoteModalTranslations,
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -181,7 +202,27 @@ const translations = {
             important: 'Important',
             notImportant: 'Not Important',
         }
-    }
+    },
+    meetingNotesSectionTitle: 'Meeting Notes',
+    noMeetingNotesForHour: 'No meeting notes recorded for this hour.',
+    editMeetingNote: 'Edit Meeting Note',
+    deleteMeetingNote: 'Delete Meeting Note',
+    meetingNoteModal: {
+        modalTitleNew: 'New Meeting Note',
+        modalTitleEdit: (title: string) => `Edit: ${title || 'Note'}`,
+        modalDescription: 'Record details for your meeting.',
+        titleLabel: 'Title:',
+        titlePlaceholder: 'Enter meeting title...',
+        notesLabel: 'Notes:',
+        notesPlaceholder: 'Enter your meeting notes here...',
+        attendeesLabel: 'Attendees (optional):',
+        attendeesPlaceholder: 'e.g., John Doe, Jane Smith',
+        actionItemsLabel: 'Action Items (optional):',
+        actionItemsPlaceholder: 'e.g., Follow up with marketing team',
+        saveButton: 'Save Note',
+        updateButton: 'Update Note',
+        cancelButton: 'Cancel',
+    } as MeetingNoteModalTranslations,
   }
 };
 
@@ -218,11 +259,19 @@ export default function DayDetailPage() {
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+  // To-do states
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
   const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
   const [editingTodoItem, setEditingTodoItem] = useState<TodoItem | null>(null);
   const [editingTodoSlotDetails, setEditingTodoSlotDetails] = useState<SlotDetails | null>(null);
+
+  // Meeting Note states
+  const [isMeetingNoteModalOpen, setIsMeetingNoteModalOpen] = useState(false);
+  const [selectedSlotForMeetingNote, setSelectedSlotForMeetingNote] = useState<SlotDetails | null>(null);
+  const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
+  const [editingMeetingNoteItem, setEditingMeetingNoteItem] = useState<MeetingNoteItem | null>(null);
+  const [editingMeetingNoteSlotDetails, setEditingMeetingNoteSlotDetails] = useState<SlotDetails | null>(null);
 
 
   useEffect(() => {
@@ -230,13 +279,21 @@ export default function DayDetailPage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    // In a real app, you would load 'allTodos' from localStorage or a backend here
+    
     const storedTodos = localStorage.getItem('allWeekTodos');
     if (storedTodos) {
         try {
             setAllTodos(JSON.parse(storedTodos));
         } catch (e) {
             console.error("Failed to parse todos from localStorage", e);
+        }
+    }
+    const storedMeetingNotes = localStorage.getItem('allWeekMeetingNotes');
+    if (storedMeetingNotes) {
+        try {
+            setAllMeetingNotes(JSON.parse(storedMeetingNotes));
+        } catch (e) {
+            console.error("Failed to parse meeting notes from localStorage", e);
         }
     }
   }, []);
@@ -248,11 +305,20 @@ export default function DayDetailPage() {
         console.error("Failed to save todos to localStorage", e);
     }
   };
+  
+  const saveAllMeetingNotesToLocalStorage = (updatedNotes: Record<string, Record<string, MeetingNoteItem[]>>) => {
+    try {
+        localStorage.setItem('allWeekMeetingNotes', JSON.stringify(updatedNotes));
+    } catch (e) {
+        console.error("Failed to save meeting notes to localStorage", e);
+    }
+  };
 
   const t = translations[currentLanguage];
   const tTodoModal = translations[currentLanguage].todoModal;
+  const tMeetingNoteModal = translations[currentLanguage].meetingNoteModal;
 
-  const notes = "";
+  const notes = ""; // General notes for the day, not related to specific items
   const rating = "";
 
   const timeIntervals = [
@@ -264,9 +330,10 @@ export default function DayDetailPage() {
     { key: 'evening', label: t.evening }
   ];
 
+  // --- To-do Modal and Item Handlers ---
   const handleOpenTodoModal = (hourSlot: string) => {
     setSelectedSlotForTodo({ dayName, hourSlot });
-    setEditingTodoItem(null); // Ensure we are not in "specific item edit" mode
+    setEditingTodoItem(null); 
     setEditingTodoSlotDetails(null);
     setIsTodoModalOpen(true);
   };
@@ -331,7 +398,7 @@ export default function DayDetailPage() {
   const handleOpenEditModalInPage = (targetDay: string, targetHourSlot: string, todoToEdit: TodoItem) => {
     setEditingTodoItem(todoToEdit);
     setEditingTodoSlotDetails({ dayName: targetDay, hourSlot: targetHourSlot });
-    setSelectedSlotForTodo({ dayName: targetDay, hourSlot: targetHourSlot }); // Modal needs this context
+    setSelectedSlotForTodo({ dayName: targetDay, hourSlot: targetHourSlot });
     setIsTodoModalOpen(true);
   };
 
@@ -339,6 +406,73 @@ export default function DayDetailPage() {
     return allTodos[targetDayName]?.[targetHourSlot] || [];
   };
 
+  // --- Meeting Note Modal and Item Handlers ---
+  const handleOpenMeetingNoteModal = (hourSlot: string, noteToEdit?: MeetingNoteItem) => {
+    setSelectedSlotForMeetingNote({ dayName, hourSlot });
+    setEditingMeetingNoteItem(noteToEdit || null);
+    setEditingMeetingNoteSlotDetails(noteToEdit ? { dayName, hourSlot } : null);
+    setIsMeetingNoteModalOpen(true);
+  };
+
+  const handleCloseMeetingNoteModal = () => {
+    setIsMeetingNoteModalOpen(false);
+    setSelectedSlotForMeetingNote(null);
+    setEditingMeetingNoteItem(null);
+    setEditingMeetingNoteSlotDetails(null);
+  };
+
+  const handleSaveMeetingNoteFromModal = (day: string, hourSlot: string, savedNote: MeetingNoteItem) => {
+    setAllMeetingNotes(prevAllNotes => {
+      const dayNotes = prevAllNotes[day] || {};
+      const slotNotes = dayNotes[hourSlot] || [];
+      
+      const existingNoteIndex = slotNotes.findIndex(n => n.id === savedNote.id);
+      let updatedSlotNotes;
+      if (existingNoteIndex > -1) {
+        updatedSlotNotes = slotNotes.map((n, index) => index === existingNoteIndex ? savedNote : n);
+      } else {
+        updatedSlotNotes = [...slotNotes, savedNote];
+      }
+
+      const newAllNotes = {
+        ...prevAllNotes,
+        [day]: {
+          ...dayNotes,
+          [hourSlot]: updatedSlotNotes,
+        },
+      };
+      saveAllMeetingNotesToLocalStorage(newAllNotes);
+      return newAllNotes;
+    });
+  };
+
+  const handleDeleteMeetingNoteInPage = (targetDay: string, targetHourSlot: string, noteId: string) => {
+    setAllMeetingNotes(prevAllNotes => {
+      const dayNotes = prevAllNotes[targetDay] || {};
+      const slotNotes = dayNotes[targetHourSlot] || [];
+      const updatedSlotNotes = slotNotes.filter(note => note.id !== noteId);
+      const newAllNotes = {
+        ...prevAllNotes,
+        [targetDay]: {
+          ...dayNotes,
+          [targetHourSlot]: updatedSlotNotes,
+        },
+      };
+      saveAllMeetingNotesToLocalStorage(newAllNotes);
+      return newAllNotes;
+    });
+  };
+
+  const handleOpenEditMeetingNoteModalInPage = (targetDay: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
+    handleOpenMeetingNoteModal(targetHourSlot, noteToEdit);
+  };
+  
+  const getMeetingNotesForSlot = (targetDayName: string, targetHourSlot: string): MeetingNoteItem[] => {
+    return allMeetingNotes[targetDayName]?.[targetHourSlot] || [];
+  };
+
+
+  // --- Tooltip Text Helpers ---
   const getCategoryTooltipText = (category: CategoryType | null) => {
     if (!category || !tTodoModal.categories[category]) return '';
     return `${tTodoModal.categoryLabel} ${tTodoModal.categories[category]}`;
@@ -408,6 +542,7 @@ export default function DayDetailPage() {
                       <div className="space-y-3 mt-4">
                         {hourlySlots.map((slot, slotIndex) => {
                           const todosForSlot = getTodosForSlot(dayName, slot);
+                          const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
                               <div className="flex justify-between items-center mb-2">
@@ -425,7 +560,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenMeetingNoteModal(slot)}>
                                         <ClipboardList className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -455,7 +590,8 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                 </div>
                               </div>
-                              <div className="p-2 border rounded-md bg-background/50 group/todolist">
+                              {/* To-Do List Display */}
+                              <div className="p-2 border rounded-md bg-background/50 group/todolist mb-3">
                                   {todosForSlot.length > 0 ? (
                                     <ul className="space-y-2">
                                       {todosForSlot.map((todo) => {
@@ -530,6 +666,43 @@ export default function DayDetailPage() {
                                     </p>
                                   )}
                                 </div>
+                                {/* Meeting Notes Display */}
+                                <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist">
+                                 <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.meetingNotesSectionTitle}</h4>
+                                  {meetingNotesForSlot.length > 0 ? (
+                                    <ul className="space-y-2">
+                                      {meetingNotesForSlot.map((note) => (
+                                          <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
+                                            <span className="text-xs text-foreground/90 flex-1 min-w-0" title={note.title}>
+                                              {note.title.length > 30 ? note.title.substring(0, 30) + '...' : note.title || t.noData}
+                                            </span>
+                                            <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditMeetingNoteModalInPage(dayName, slot, note)}>
+                                                    <FileEdit className="h-3.5 w-3.5" />
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{t.editMeetingNote}</p></TooltipContent>
+                                              </Tooltip>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeetingNoteInPage(dayName, slot, note.id)}>
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{t.deleteMeetingNote}</p></TooltipContent>
+                                              </Tooltip>
+                                            </div>
+                                          </li>
+                                        ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      {t.noMeetingNotesForHour}
+                                    </p>
+                                  )}
+                                </div>
                             </div>
                           );
                         })}
@@ -558,7 +731,17 @@ export default function DayDetailPage() {
           defaultEditingTodoId={editingTodoItem && editingTodoSlotDetails?.dayName === selectedSlotForTodo.dayName && editingTodoSlotDetails?.hourSlot === selectedSlotForTodo.hourSlot ? editingTodoItem.id : undefined}
         />
       )}
+      {isMeetingNoteModalOpen && selectedSlotForMeetingNote && (
+        <MeetingNoteModal
+            isOpen={isMeetingNoteModalOpen}
+            onClose={handleCloseMeetingNoteModal}
+            onSave={handleSaveMeetingNoteFromModal}
+            dayName={selectedSlotForMeetingNote.dayName}
+            hourSlot={selectedSlotForMeetingNote.hourSlot}
+            initialData={editingMeetingNoteItem && editingMeetingNoteSlotDetails?.dayName === selectedSlotForMeetingNote.dayName && editingMeetingNoteSlotDetails?.hourSlot === selectedSlotForMeetingNote.hourSlot ? editingMeetingNoteItem : null}
+            translations={tMeetingNoteModal}
+        />
+      )}
     </TooltipProvider>
   );
 }
-
