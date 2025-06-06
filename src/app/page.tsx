@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ const translations = {
     loginButtonText: '登录',
     daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
     communityPrompt: '加入我们的社区，帮助我们成长！',
-    selectDayAria: (day: string) => `选择 ${day}`,
+    selectDayAria: (day: string) => `查看 ${day} 详情`,
     hasNotesAria: '有笔记',
     ratingLabels: {
       excellent: '好极了',
@@ -75,7 +76,7 @@ const translations = {
     loginButtonText: 'Login',
     daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     communityPrompt: 'Join our community and help us grow!',
-    selectDayAria: (day: string) => `Select ${day}`,
+    selectDayAria: (day: string) => `View details for ${day}`,
     hasNotesAria: 'Has notes',
     ratingLabels: {
       excellent: 'Excellent',
@@ -105,8 +106,8 @@ interface HoverPreviewData {
 }
 
 export default function WeekGlancePage() {
+  const router = useRouter();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
@@ -213,20 +214,9 @@ export default function WeekGlancePage() {
   const handleDaySelect = useCallback((day: string) => {
     setHoverPreviewData(null); 
     isPreviewSuppressedByClickRef.current = true;
-    setSelectedDay(prevSelectedDay => prevSelectedDay === day ? null : day);
-  }, []);
+    router.push(`/day/${encodeURIComponent(day)}`);
+  }, [router]);
 
-  const handleNotesChange = useCallback((day: string, newNote: string) => {
-    setNotes(prevNotes => {
-      const updatedNotes = { ...prevNotes, [day]: newNote };
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY_NOTES, JSON.stringify(updatedNotes));
-      } catch (error) {
-        console.error("无法将笔记保存到localStorage:", error);
-      }
-      return updatedNotes;
-    });
-  }, []);
 
   const handleRatingChange = useCallback((day: string, newRating: RatingType) => {
     setRatings(prevRatings => {
@@ -273,18 +263,13 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseLeave = useCallback(() => {
-    // We only hide if the mouse truly leaves the preview.
-    // If it moves to a DayBox, that DayBox's hover will take over.
-    // The timer in handleDayHoverEnd is the primary mechanism for hiding 
-    // when moving from DayBox to empty space.
-    // This direct hide is for when mouse leaves preview to empty space.
     setHoverPreviewData(null); 
   }, []);
 
   const handlePreviewClick = useCallback(() => {
     setHoverPreviewData(null);
-    isPreviewSuppressedByClickRef.current = true; // Suppress immediate re-show
-    clearTimeoutIfNecessary(); // Ensure any pending hide timer from DayBox hover end is cleared
+    isPreviewSuppressedByClickRef.current = true;
+    clearTimeoutIfNecessary();
   }, [clearTimeoutIfNecessary]);
 
 
@@ -324,10 +309,8 @@ export default function WeekGlancePage() {
             <DayBox
               key={day}
               dayName={day}
-              isSelected={selectedDay === day}
               onClick={() => handleDaySelect(day)}
               notes={notes[day] || ''}
-              onNotesChange={(newNote) => handleNotesChange(day, newNote)}
               hasNotes={!!notes[day]?.trim()}
               rating={ratings[day] || null}
               onRatingChange={(newRating) => handleRatingChange(day, newRating)}
@@ -402,4 +385,3 @@ export default function WeekGlancePage() {
     </main>
   );
 }
-

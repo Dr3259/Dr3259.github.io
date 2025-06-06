@@ -4,7 +4,6 @@
 import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ThumbsUp, ThumbsDown, Meh } from "lucide-react";
 
@@ -12,10 +11,8 @@ type RatingValue = 'excellent' | 'terrible' | 'average';
 
 interface DayBoxProps {
   dayName: string;
-  isSelected: boolean;
   onClick: () => void;
-  notes: string;
-  onNotesChange: (newNote: string) => void;
+  notes: string; // Still needed for hover preview
   hasNotes?: boolean;
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
@@ -46,10 +43,9 @@ const RATING_ORDER: RatingValue[] = ['excellent', 'average', 'terrible'];
 
 export const DayBox: FC<DayBoxProps> = ({
   dayName,
-  isSelected,
   onClick,
-  notes,
-  onNotesChange,
+  notes, // notes prop is kept for onHoverStart
+  hasNotes: showNotesIndicator, // Renamed for clarity
   rating,
   onRatingChange,
   isCurrentDay,
@@ -67,9 +63,8 @@ export const DayBox: FC<DayBoxProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
-  const showNotesIndicator = !!notes.trim();
+  const isDisabled = isPastDay && !showNotesIndicator && !rating;
 
-  const isDisabled = isPastDay && !showNotesIndicator && !rating && !isSelected;
 
   const handleCardClick = () => {
     if (isDisabled) return;
@@ -96,12 +91,11 @@ export const DayBox: FC<DayBoxProps> = ({
       onHoverEnd();
     }
   };
-
-  const showBlueHighlight = isSelected && isHovered && !isDisabled;
-
+  
   const showRatingIcons = 
     !isDisabled && 
-    (isPastDay || (isCurrentDay && isAfter6PMToday));
+    (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
+    !isFutureDay;
 
   return (
     <Card
@@ -110,14 +104,9 @@ export const DayBox: FC<DayBoxProps> = ({
         isDisabled
           ? "opacity-50 cursor-not-allowed bg-card border-transparent"
           : [
-              "cursor-pointer",
-              showBlueHighlight
-                ? "border-primary shadow-lg scale-105 bg-primary/10"
-                : [ 
-                    "border-transparent bg-card", 
-                    !isSelected && "hover:border-accent/70 hover:shadow-xl hover:scale-105",
-                  ],
-              isCurrentDay && !isDisabled && !showBlueHighlight && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
+              "cursor-pointer bg-card",
+              isHovered ? "border-accent/70 shadow-xl scale-105" : "border-transparent",
+              isCurrentDay && !isDisabled && "ring-2 ring-offset-1 ring-offset-background ring-amber-500 dark:ring-amber-400"
             ]
       )}
       onClick={handleCardClick}
@@ -126,7 +115,6 @@ export const DayBox: FC<DayBoxProps> = ({
       role="button"
       tabIndex={isDisabled ? -1 : 0}
       onKeyDown={handleCardKeyDown}
-      aria-pressed={isSelected}
       aria-label={ariaLabel}
       aria-disabled={isDisabled}
     >
@@ -134,20 +122,8 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {isSelected && !isDisabled ? (
-           <Textarea
-            value={notes}
-            onChange={(e) => {
-              e.stopPropagation();
-              onNotesChange(e.target.value);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            placeholder={ratingUiLabels.average}
-            className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1 h-full"
-            aria-label={`${dayName} ${hasNotesLabel || 'notes'}`}
-          />
-        ) : (
-          showNotesIndicator && <div className="w-2 h-2 rounded-full bg-primary" aria-label={hasNotesLabel}></div>
+        {showNotesIndicator && !isDisabled && (
+          <div className="w-2 h-2 rounded-full bg-primary" aria-label={hasNotesLabel}></div>
         )}
       </CardContent>
       {showRatingIcons && (
@@ -160,7 +136,7 @@ export const DayBox: FC<DayBoxProps> = ({
                 <button
                   key={type}
                   onClick={(e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // Prevent card click when rating
                     onRatingChange(rating === type ? null : type);
                   }}
                   className={cn(
@@ -170,7 +146,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
-                  disabled={isDisabled}
+                  disabled={isDisabled} 
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
