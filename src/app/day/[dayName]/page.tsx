@@ -16,12 +16,12 @@ const translations = {
     ratingLabel: '评价:',
     noData: '暂无数据',
     timeIntervalsTitle: '每日安排',
-    凌晨: '凌晨', // Added
-    earlyMorning: '清晨',
-    morning: '上午',
-    afternoon: '下午',
-    evening: '晚上',
-    activitiesPlaceholder: (intervalName: string) => `记录${intervalName}的活动...`
+    midnight: '凌晨 (00:00 - 05:00)',
+    earlyMorning: '清晨 (05:00 - 09:00)',
+    morning: '上午 (09:00 - 12:00)',
+    afternoon: '下午 (12:00 - 18:00)',
+    evening: '晚上 (18:00 - 24:00)',
+    activitiesPlaceholder: (intervalName: string) => `记录${intervalName.split(' ')[0]}的活动...` // Extract base name for placeholder
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -30,12 +30,12 @@ const translations = {
     ratingLabel: 'Rating:',
     noData: 'No data available',
     timeIntervalsTitle: 'Daily Schedule',
-    midnight: 'Midnight', // Added
-    earlyMorning: 'Early Morning',
-    morning: 'Morning',
-    afternoon: 'Afternoon',
-    evening: 'Evening',
-    activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName}...`
+    midnight: 'Midnight (00:00 - 05:00)',
+    earlyMorning: 'Early Morning (05:00 - 09:00)',
+    morning: 'Morning (09:00 - 12:00)',
+    afternoon: 'Afternoon (12:00 - 18:00)',
+    evening: 'Evening (18:00 - 24:00)',
+    activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName.split(' (')[0]}...` // Extract base name for placeholder
   }
 };
 
@@ -52,7 +52,7 @@ export default function DayDetailPage() {
   const rating = ""; 
 
   const timeIntervals = [
-    { key: 'midnight', label: currentLanguage === 'zh-CN' ? t.凌晨 : t.midnight }, // Added
+    { key: 'midnight', label: t.midnight },
     { key: 'earlyMorning', label: t.earlyMorning },
     { key: 'morning', label: t.morning },
     { key: 'afternoon', label: t.afternoon },
@@ -98,7 +98,8 @@ export default function DayDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {timeIntervals.map(interval => (
               <div key={interval.key} className="bg-card p-4 rounded-lg shadow-lg">
-                <h3 className="text-lg font-medium text-foreground mb-3">{interval.label}</h3>
+                <h3 className="text-lg font-medium text-foreground mb-1">{interval.label.split(' (')[0]}</h3>
+                <p className="text-xs text-muted-foreground mb-3">{interval.label.includes('(') ? `(${interval.label.split(' (')[1]}` : ''}</p>
                 <div className="p-3 border rounded-md min-h-[80px] bg-background/50">
                   <p className="text-sm text-muted-foreground italic">{t.activitiesPlaceholder(interval.label)}</p>
                 </div>
@@ -110,4 +111,3 @@ export default function DayDetailPage() {
     </div>
   );
 }
-
