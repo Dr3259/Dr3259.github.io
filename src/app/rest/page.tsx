@@ -3,10 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from "@/components/ui/card"; // CardContent is not used but keep for now
+import { Card } from "@/components/ui/card";
 import { ArrowLeft, Hash, Puzzle, Blocks, Grid3x3, Bomb } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Added missing import
+import { cn } from '@/lib/utils';
 
 const translations = {
   'zh-CN': {
@@ -35,7 +36,7 @@ interface GameCardProps {
   title: string;
   icon: React.ElementType;
   isSmall?: boolean;
-  onClick?: () => void; 
+  onClick?: () => void;
   ariaLabel?: string;
 }
 
@@ -61,6 +62,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, icon: Icon, isSmall, onClick
 
 export default function RestPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
+  const router = useRouter(); // Initialize router
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -71,10 +73,8 @@ export default function RestPage() {
 
   const t = translations[currentLanguage];
 
-  // Placeholder onClick handlers for future game navigation
-  const handleGameClick = (gameName: string) => {
-    console.log(`Navigate to ${gameName}`);
-    // Example: router.push(`/play/${gameName.toLowerCase()}`);
+  const handleGameClick = (gamePath: string) => {
+    router.push(gamePath);
   };
 
   return (
@@ -95,23 +95,20 @@ export default function RestPage() {
         
         <div className="grid grid-cols-3 gap-4 sm:gap-5 w-full max-w-lg">
           {/* Row 1 */}
-          <GameCard title={t.game2048} icon={Hash} onClick={() => handleGameClick('2048')} ariaLabel={t.game2048} />
-          <GameCard title={t.gameKlotski} icon={Puzzle} onClick={() => handleGameClick('Klotski')} ariaLabel={t.gameKlotski} />
-          <GameCard title={t.gameTetris} icon={Blocks} onClick={() => handleGameClick('Tetris')} ariaLabel={t.gameTetris} />
+          <GameCard title={t.game2048} icon={Hash} onClick={() => handleGameClick('/play/2048')} ariaLabel={t.game2048} />
+          <GameCard title={t.gameKlotski} icon={Puzzle} onClick={() => handleGameClick('/play/klotski')} ariaLabel={t.gameKlotski} />
+          <GameCard title={t.gameTetris} icon={Blocks} onClick={() => handleGameClick('/play/tetris')} ariaLabel={t.gameTetris} />
           
           {/* Row 2 */}
-          <GameCard title={t.gameSudoku} icon={Grid3x3} onClick={() => handleGameClick('Sudoku')} ariaLabel={t.gameSudoku} />
+          <GameCard title={t.gameSudoku} icon={Grid3x3} onClick={() => handleGameClick('/play/sudoku')} ariaLabel={t.gameSudoku} />
           
           <div className="col-span-1 flex items-center justify-center sm:items-start sm:justify-start">
-            {/* The smaller box for Minesweeper, centered in its grid cell */}
-            <GameCard title={t.gameMinesweeper} icon={Bomb} isSmall={true} onClick={() => handleGameClick('Minesweeper')} ariaLabel={t.gameMinesweeper} />
+            <GameCard title={t.gameMinesweeper} icon={Bomb} isSmall={true} onClick={() => handleGameClick('/play/minesweeper')} ariaLabel={t.gameMinesweeper} />
           </div>
           
-          {/* Empty cell for the 6th position in a 3x2 grid, ensures alignment */}
           <div className="col-span-1 hidden sm:block"></div> 
         </div>
       </main>
     </div>
   );
 }
-
