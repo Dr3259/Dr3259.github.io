@@ -105,6 +105,9 @@ interface HoverPreviewData {
   altText: string;
 }
 
+const SHOW_PREVIEW_DELAY = 2000; // 2 seconds
+const HIDE_PREVIEW_DELAY = 200; // 0.2 seconds
+
 export default function WeekGlancePage() {
   const router = useRouter();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
@@ -116,12 +119,17 @@ export default function WeekGlancePage() {
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
   
+  const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
 
   const t = translations[currentLanguage];
 
   const clearTimeoutIfNecessary = useCallback(() => {
+    if (showPreviewTimerRef.current) {
+      clearTimeout(showPreviewTimerRef.current);
+      showPreviewTimerRef.current = null;
+    }
     if (hidePreviewTimerRef.current) {
       clearTimeout(hidePreviewTimerRef.current);
       hidePreviewTimerRef.current = null;
@@ -212,10 +220,11 @@ export default function WeekGlancePage() {
   };
 
   const handleDaySelect = useCallback((day: string) => {
+    clearTimeoutIfNecessary();
     setHoverPreviewData(null); 
     isPreviewSuppressedByClickRef.current = true;
     router.push(`/day/${encodeURIComponent(day)}`);
-  }, [router]);
+  }, [router, clearTimeoutIfNecessary]);
 
 
   const handleRatingChange = useCallback((day: string, newRating: RatingType) => {
@@ -244,32 +253,37 @@ export default function WeekGlancePage() {
     if (isPreviewSuppressedByClickRef.current) {
       return;
     }
-    setHoverPreviewData({
-      ...dayData,
-      altText: t.thumbnailPreviewAlt(dayData.dayName),
-    });
+    showPreviewTimerRef.current = setTimeout(() => {
+        setHoverPreviewData({
+          ...dayData,
+          altText: t.thumbnailPreviewAlt(dayData.dayName),
+        });
+    }, SHOW_PREVIEW_DELAY);
   }, [t, clearTimeoutIfNecessary]);
 
   const handleDayHoverEnd = useCallback(() => {
     isPreviewSuppressedByClickRef.current = false; 
-    clearTimeoutIfNecessary();
+    clearTimeoutIfNecessary(); // Clears both show and hide timers
     hidePreviewTimerRef.current = setTimeout(() => {
       setHoverPreviewData(null);
-    }, 200);
+    }, HIDE_PREVIEW_DELAY);
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseEnter = useCallback(() => {
-    clearTimeoutIfNecessary();
+    clearTimeoutIfNecessary(); // Clear hide timer if mouse re-enters preview
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseLeave = useCallback(() => {
-    setHoverPreviewData(null); 
-  }, []);
+    clearTimeoutIfNecessary(); // Clear show timer if any
+    hidePreviewTimerRef.current = setTimeout(() => {
+        setHoverPreviewData(null); 
+    }, HIDE_PREVIEW_DELAY);
+  }, [clearTimeoutIfNecessary]);
 
   const handlePreviewClick = useCallback(() => {
+    clearTimeoutIfNecessary();
     setHoverPreviewData(null);
     isPreviewSuppressedByClickRef.current = true;
-    clearTimeoutIfNecessary();
   }, [clearTimeoutIfNecessary]);
 
 
@@ -385,3 +399,4 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
