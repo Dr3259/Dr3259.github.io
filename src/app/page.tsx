@@ -381,18 +381,22 @@ export default function WeekGlancePage() {
             <a href="#" aria-label={t.wechatAria} className="text-muted-foreground hover:text-primary transition-colors">
               <WeChatIcon />
             </a>
+            {/* 
             <a href="#" aria-label={t.alibabaAria} className="text-muted-foreground hover:text-primary transition-colors">
               <AlibabaIcon />
             </a>
             <a href="#" aria-label={t.bilibiliAria} className="text-muted-foreground hover:text-primary transition-colors">
               <BilibiliIcon />
             </a>
+            */}
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
             </a>
+            {/*
             <a href="#" aria-label={t.googleAria} className="text-muted-foreground hover:text-primary transition-colors">
               <GoogleIcon />
             </a>
+            */}
           </div>
         </div>
       </footer>
