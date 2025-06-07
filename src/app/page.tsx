@@ -6,13 +6,11 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon } from "lucide-react"; // Removed Gift, Github
+import { Languages, Sun, Moon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
-
-// Removed WeChatIcon as it's no longer used
 
 const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
@@ -37,7 +35,6 @@ const translations = {
     toggleThemeAria: '切换主题',
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
-    // Footer translations
     githubAria: 'GitHub',
     twitterAria: 'X (原推特)',
     emailAria: '电子邮件',
@@ -61,7 +58,6 @@ const translations = {
     toggleThemeAria: 'Toggle theme',
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
-    // Footer translations
     githubAria: 'GitHub',
     twitterAria: 'X (formerly Twitter)',
     emailAria: 'Email',
@@ -357,48 +353,52 @@ export default function WeekGlancePage() {
       )}
 
       <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
-        <div className="border-t border-border pt-6 text-center">
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-3">
-            <a 
-              href="https://github.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              aria-label={t.githubAria} 
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              GitHub
-            </a>
-            <a 
-              href="#"  // Placeholder Link
-              aria-label={t.twitterAria} 
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              X
-            </a>
-            <a 
-              href="#" // Placeholder Link
-              aria-label={t.emailAria} 
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Email
-            </a>
+        <div className="border-t border-border pt-8">
+          <div className="text-center md:flex md:items-center md:justify-between">
+            <div className="md:order-1">
+              {currentYear && (
+                <p className="text-sm text-muted-foreground">
+                  {t.copyrightText(currentYear, t.pageTitle)}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                <a 
+                  href="LICENSE" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-primary transition-colors"
+                  aria-label={t.mitLicenseLinkText}
+                >
+                  {t.mitLicenseLinkText}
+                </a>
+              </p>
+            </div>
+            <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
+              <a 
+                href="https://github.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                aria-label={t.githubAria} 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                GitHub
+              </a>
+              <a 
+                href="#"
+                aria-label={t.twitterAria} 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                X
+              </a>
+              <a 
+                href="#"
+                aria-label={t.emailAria} 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Email
+              </a>
+            </div>
           </div>
-          {currentYear && (
-            <p className="text-sm text-muted-foreground">
-              {t.copyrightText(currentYear, t.pageTitle)}
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground mt-1">
-            <a 
-              href="LICENSE" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="hover:text-primary transition-colors"
-              aria-label={t.mitLicenseLinkText}
-            >
-              {t.mitLicenseLinkText}
-            </a>
-          </p>
         </div>
       </footer>
     </main>
