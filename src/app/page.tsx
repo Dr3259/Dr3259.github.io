@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle } from "lucide-react";
+import { Languages, Sun, Moon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -33,8 +33,6 @@ const translations = {
     weeklySummaryTitle: '本周总结',
     weeklySummaryPlaceholder: '写下你的本周总结...',
     toggleThemeAria: '切换主题',
-    takeBreakButtonText: '休息一下',
-    takeBreakAria: '休息一下',
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
     githubAria: 'GitHub',
@@ -59,8 +57,6 @@ const translations = {
     weeklySummaryTitle: 'Weekly Summary',
     weeklySummaryPlaceholder: 'Write your weekly summary here...',
     toggleThemeAria: 'Toggle theme',
-    takeBreakButtonText: 'Rest',
-    takeBreakAria: 'Take a break',
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
     githubAria: 'GitHub',
@@ -275,10 +271,6 @@ export default function WeekGlancePage() {
     isPreviewSuppressedByClickRef.current = true;
   }, [clearTimeoutIfNecessary]);
 
-  const handleRestButtonClick = () => {
-    router.push('/rest');
-  };
-
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -299,10 +291,6 @@ export default function WeekGlancePage() {
 
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </Button>
-          <Button variant="outline" size="sm" aria-label={t.takeBreakAria} onClick={handleRestButtonClick}>
-            <PauseCircle className="mr-2 h-4 w-4" />
-            {t.takeBreakButtonText}
           </Button>
         </div>
       </header>
