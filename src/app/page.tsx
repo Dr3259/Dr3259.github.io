@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -41,6 +41,8 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
     mitLicenseLinkAria: '查看 MIT 许可证详情',
+    restButtonText: '休息一下',
+    restButtonAria: '进入休息页面',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -65,6 +67,8 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
+    restButtonText: 'Take a Break',
+    restButtonAria: 'Go to rest page',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -271,6 +275,10 @@ export default function WeekGlancePage() {
     isPreviewSuppressedByClickRef.current = true;
   }, [clearTimeoutIfNecessary]);
 
+  const handleRestButtonClick = () => {
+    router.push('/rest');
+  };
+
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -291,6 +299,10 @@ export default function WeekGlancePage() {
 
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
+            <PauseCircle className="mr-2 h-4 w-4" />
+            {t.restButtonText}
           </Button>
         </div>
       </header>
