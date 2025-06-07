@@ -12,6 +12,7 @@ const translations = {
     pageTitle: '2048 游戏',
     backButton: '返回休息区',
     score: '分数',
+    highScore: '最高分',
     newGameButton: '新游戏',
     gameOverTitle: '游戏结束!',
     tryAgainButton: '再试一次?',
@@ -20,6 +21,7 @@ const translations = {
     pageTitle: '2048 Game',
     backButton: 'Back to Rest Area',
     score: 'Score',
+    highScore: 'High Score',
     newGameButton: 'New Game',
     gameOverTitle: 'Game Over!',
     tryAgainButton: 'Try Again?',
@@ -29,6 +31,7 @@ const translations = {
 type LanguageKey = keyof typeof translations;
 
 const GRID_SIZE = 4;
+const LOCAL_STORAGE_KEY_HIGH_SCORE = '2048HighScore';
 
 // Tile styles based on value
 const TILE_STYLES: Record<number, string> = {
@@ -173,6 +176,7 @@ export default function Game2048Page() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [board, setBoard] = useState<number[][]>(createEmptyBoard());
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -193,10 +197,37 @@ export default function Game2048Page() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
+    
+    // Load high score from localStorage
+    if (typeof window !== 'undefined') {
+        const storedHighScore = localStorage.getItem(LOCAL_STORAGE_KEY_HIGH_SCORE);
+        if (storedHighScore) {
+            setHighScore(parseInt(storedHighScore, 10));
+        }
+    }
+
     initializeGame();
     setIsMounted(true);
   }, [initializeGame]);
 
+  // Update high score if current score is higher
+  useEffect(() => {
+    if (score > highScore) {
+      setHighScore(score);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(LOCAL_STORAGE_KEY_HIGH_SCORE, score.toString());
+      }
+    }
+  }, [score, highScore]);
+  
+  const checkAndUpdateHighScore = (currentScore: number) => {
+    if (currentScore > highScore) {
+      setHighScore(currentScore);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(LOCAL_STORAGE_KEY_HIGH_SCORE, currentScore.toString());
+      }
+    }
+  };
 
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
     if (gameOver) return;
@@ -232,20 +263,25 @@ export default function Game2048Page() {
     if (result && result.moved) {
       const boardWithNewTile = addRandomTile(result.newBoard);
       setBoard(boardWithNewTile);
-      setScore(prevScore => prevScore + result.scoreAdded);
+      const newScore = score + result.scoreAdded;
+      setScore(newScore);
+      checkAndUpdateHighScore(newScore);
+
       if (!canMove(boardWithNewTile)) {
         setGameOver(true);
+        checkAndUpdateHighScore(newScore); // Final check on game over
       }
     } else if (result && !result.moved) {
       // Check for game over even if no tiles moved, in case the board is full
        if (!canMove(board)) {
         setGameOver(true);
+        checkAndUpdateHighScore(score); // Final check on game over
       }
     }
-  }, [board, gameOver]);
+  }, [board, gameOver, score, highScore]); // Added highScore to dependency array
 
   useEffect(() => {
-    if (!isMounted) return; // Don't attach event listener until game is initialized
+    if (!isMounted) return; 
     window.addEventListener('keydown', handleKeyPress);
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
@@ -282,9 +318,15 @@ export default function Game2048Page() {
         </h1>
 
         <div className="flex justify-between items-center w-full mb-6 px-2">
-          <div className="text-lg">
-            <span className="font-semibold">{t.score}: </span>
-            <span>{score}</span>
+          <div className="text-lg space-x-4">
+            <span>
+                <span className="font-semibold">{t.score}: </span>
+                <span>{score}</span>
+            </span>
+            <span>
+                <span className="font-semibold">{t.highScore}: </span>
+                <span>{highScore}</span>
+            </span>
           </div>
           <Button onClick={initializeGame} variant="default" size="sm">
             {t.newGameButton}
@@ -319,7 +361,8 @@ export default function Game2048Page() {
           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10">
             <div className="bg-card p-8 rounded-lg shadow-xl text-center">
               <h2 className="text-3xl font-bold text-destructive mb-4">{t.gameOverTitle}</h2>
-              <p className="text-xl mb-6">{t.score}: {score}</p>
+              <p className="text-xl mb-2">{t.score}: {score}</p>
+              <p className="text-lg mb-6">{t.highScore}: {highScore}</p>
               <Button onClick={initializeGame} variant="default" size="lg">
                 {t.tryAgainButton}
               </Button>
@@ -330,5 +373,6 @@ export default function Game2048Page() {
     </div>
   );
 }
+    
 
     
