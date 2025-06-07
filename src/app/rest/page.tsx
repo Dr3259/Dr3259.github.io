@@ -3,24 +3,60 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-// useRouter was removed as it's not used
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Hash, Puzzle, Blocks, Grid3x3, Bomb } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
     backButton: '返回主页',
-    // title and message removed
-    // entertainmentBreakTitle and game names were already removed
+    miniGamesTitle: '小游戏驿站',
+    game2048: '2048',
+    gameKlotski: '华容道',
+    gameTetris: '俄罗斯方块',
+    gameSudoku: '数独',
+    gameMinesweeper: '扫雷',
   },
   'en': {
     backButton: 'Back to Home',
-    // title and message removed
-    // entertainmentBreakTitle and game names were already removed
+    miniGamesTitle: 'Mini Game Station',
+    game2048: '2048',
+    gameKlotski: 'Klotski',
+    gameTetris: 'Tetris',
+    gameSudoku: 'Sudoku',
+    gameMinesweeper: 'Minesweeper',
   }
 };
 
 type LanguageKey = keyof typeof translations;
+
+interface GameCardProps {
+  title: string;
+  icon: React.ElementType;
+  isSmall?: boolean;
+  onClick?: () => void; // For future navigation
+  ariaLabel?: string;
+}
+
+const GameCard: React.FC<GameCardProps> = ({ title, icon: Icon, isSmall, onClick, ariaLabel }) => {
+  return (
+    <Card
+      className={cn(
+        "flex flex-col items-center justify-center text-center p-3 sm:p-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-accent/30 cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-105",
+        isSmall ? "h-28 w-28 sm:h-32 sm:w-32" : "h-36 w-full sm:h-40",
+      )}
+      onClick={onClick}
+      role="button"
+      aria-label={ariaLabel || title}
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.();}}
+    >
+      <Icon className={cn("mb-2 text-primary", isSmall ? "w-10 h-10 sm:w-12 sm:h-12" : "w-12 h-12 sm:w-16 sm:h-16")} />
+      <p className={cn("font-medium text-foreground", isSmall ? "text-xs sm:text-sm" : "text-sm sm:text-base")}>{title}</p>
+    </Card>
+  );
+};
+
 
 export default function RestPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
@@ -34,9 +70,15 @@ export default function RestPage() {
 
   const t = translations[currentLanguage];
 
+  // Placeholder onClick handlers for future game navigation
+  const handleGameClick = (gameName: string) => {
+    console.log(`Navigate to ${gameName}`);
+    // Example: router.push(`/play/${gameName.toLowerCase()}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-      <header className="w-full max-w-lg mb-8 sm:mb-12 self-center">
+      <header className="w-full max-w-xl mb-8 sm:mb-12 self-center">
         <Link href="/" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -45,21 +87,27 @@ export default function RestPage() {
         </Link>
       </header>
 
-      <main className="w-full max-w-lg flex flex-col self-center flex-grow">
-        {/* Placeholder boxes as per the image */}
-        <div className="grid grid-cols-3 gap-6 w-full">
+      <main className="w-full max-w-xl flex flex-col self-center flex-grow items-center">
+        <h2 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-6 sm:mb-8">
+          {t.miniGamesTitle}
+        </h2>
+        
+        <div className="grid grid-cols-3 gap-4 sm:gap-5 w-full max-w-lg">
           {/* Row 1 */}
-          <div className="col-span-1 h-32 border border-border rounded-xl bg-card"></div>
-          <div className="col-span-1 h-32 border border-border rounded-xl bg-card"></div>
-          <div className="col-span-1 h-32 border border-border rounded-xl bg-card"></div>
+          <GameCard title={t.game2048} icon={Hash} onClick={() => handleGameClick('2048')} ariaLabel={t.game2048} />
+          <GameCard title={t.gameKlotski} icon={Puzzle} onClick={() => handleGameClick('Klotski')} ariaLabel={t.gameKlotski} />
+          <GameCard title={t.gameTetris} icon={Blocks} onClick={() => handleGameClick('Tetris')} ariaLabel={t.gameTetris} />
           
           {/* Row 2 */}
-          <div className="col-span-1 h-32 border border-border rounded-xl bg-card"></div>
-          <div className="col-span-1 flex items-start justify-start"> {/* Cell for the smaller box */}
-            <div className="h-24 w-24 border border-border rounded-xl bg-card"></div>
+          <GameCard title={t.gameSudoku} icon={Grid3x3} onClick={() => handleGameClick('Sudoku')} ariaLabel={t.gameSudoku} />
+          
+          <div className="col-span-1 flex items-center justify-center sm:items-start sm:justify-start">
+            {/* The smaller box for Minesweeper, centered in its grid cell */}
+            <GameCard title={t.gameMinesweeper} icon={Bomb} isSmall={true} onClick={() => handleGameClick('Minesweeper')} ariaLabel={t.gameMinesweeper} />
           </div>
-          {/* Empty cell for the 6th position in a 3x2 grid */}
-          <div className="col-span-1"></div> 
+          
+          {/* Empty cell for the 6th position in a 3x2 grid, ensures alignment */}
+          <div className="col-span-1 hidden sm:block"></div> 
         </div>
       </main>
     </div>
