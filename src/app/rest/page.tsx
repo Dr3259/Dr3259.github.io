@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Coffee, RotateCcw, Puzzle, Gamepad2, Brain, Sigma } from 'lucide-react';
+import { Coffee, RotateCcw, Puzzle, Gamepad2, Brain, Sigma, ArrowLeft } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
@@ -46,42 +46,45 @@ export default function RestPage() {
   const t = translations[currentLanguage];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-6 text-center">
-      <Coffee className="w-24 h-24 text-primary mb-8 animate-pulse" />
-      <h1 className="text-4xl font-headline font-semibold text-primary mb-4">
-        {t.title}
-      </h1>
-      <p className="text-lg text-muted-foreground mb-10 max-w-md">
-        {t.message}
-      </p>
+    <div className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
+      <header className="w-full max-w-md mb-8 sm:mb-12">
+        <Link href="/" passHref>
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t.backButton}
+          </Button>
+        </Link>
+      </header>
 
-      <section className="w-full max-w-md mb-10 p-6 rounded-lg bg-card shadow-lg border border-border">
-        <h2 className="text-2xl font-semibold text-primary mb-6">
-          {t.entertainmentBreakTitle}
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" size="lg" onClick={() => router.push('/play/2048')} className="h-auto py-4">
-            <Sigma className="mr-2 h-5 w-5" /> {t.game2048}
-          </Button>
-          <Button variant="outline" size="lg" onClick={() => router.push('/play/sudoku')} className="h-auto py-4">
-            <Brain className="mr-2 h-5 w-5" /> {t.gameSudoku}
-          </Button>
-          <Button variant="outline" size="lg" onClick={() => router.push('/play/tetris')} className="h-auto py-4">
-            <Puzzle className="mr-2 h-5 w-5" /> {t.gameTetris}
-          </Button>
-          <Button variant="outline" size="lg" onClick={() => router.push('/play/number-klotski')} className="h-auto py-4">
-            <Gamepad2 className="mr-2 h-5 w-5" /> {t.gameNumberKlotski}
-          </Button>
-        </div>
-      </section>
+      <main className="w-full max-w-md flex flex-col items-center text-center">
+        <Coffee className="w-24 h-24 text-primary mb-8 animate-pulse" />
+        <h1 className="text-4xl font-headline font-semibold text-primary mb-4">
+          {t.title}
+        </h1>
+        <p className="text-lg text-muted-foreground mb-10 max-w-md">
+          {t.message}
+        </p>
 
-      <Link href="/" passHref>
-        <Button variant="outline" size="lg">
-          <RotateCcw className="mr-2 h-5 w-5" />
-          {t.backButton}
-        </Button>
-      </Link>
+        <section className="w-full max-w-md mb-10 p-6 rounded-lg bg-card shadow-lg border border-border">
+          <h2 className="text-2xl font-semibold text-primary mb-6">
+            {t.entertainmentBreakTitle}
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Button variant="outline" size="lg" onClick={() => router.push('/play/2048')} className="h-auto py-4">
+              <Sigma className="mr-2 h-5 w-5" /> {t.game2048}
+            </Button>
+            <Button variant="outline" size="lg" onClick={() => router.push('/play/sudoku')} className="h-auto py-4">
+              <Brain className="mr-2 h-5 w-5" /> {t.gameSudoku}
+            </Button>
+            <Button variant="outline" size="lg" onClick={() => router.push('/play/tetris')} className="h-auto py-4">
+              <Puzzle className="mr-2 h-5 w-5" /> {t.gameTetris}
+            </Button>
+            <Button variant="outline" size="lg" onClick={() => router.push('/play/number-klotski')} className="h-auto py-4">
+              <Gamepad2 className="mr-2 h-5 w-5" /> {t.gameNumberKlotski}
+            </Button>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
-
