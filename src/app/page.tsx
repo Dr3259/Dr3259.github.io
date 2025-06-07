@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { LogIn, Github, Languages, Sun, Moon, Gift } from "lucide-react";
+import { Languages, Sun, Moon, Gift, Github } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -16,25 +16,6 @@ type RatingType = 'excellent' | 'terrible' | 'average' | null;
 const WeChatIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
     <path d="M12 2C6.486 2 2 6.03 2 10.552c0 2.45.966 4.692 2.768 6.45L4 22l5.05-2.02c1.35.496 2.805.772 4.283.772h.002c.023 0 .044 0 .067.002.022-.002.044-.002.066-.002h.005c5.514 0 10-4.03 10-8.552C22 6.03 17.514 2 12 2zm-1.248 12.652c0 .942-.768 1.71-1.71 1.71s-1.71-.768-1.71-1.71c0-.94.768-1.708 1.71-1.708s1.71.768 1.71 1.708zm4.902 0c0 .942-.768 1.71-1.71 1.71s-1.71-.768-1.71-1.71c0-.94.768-1.708 1.71-1.708s1.71.768 1.71 1.708z" />
-  </svg>
-);
-
-const AlibabaIcon = () => (
-  <svg viewBox="0 0 1024 1024" fill="currentColor" className="w-6 h-6">
-    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm207.9 660.8c-10.7 0-21.4-2.8-30.8-8.5l-65.7-39.4c-8.9-5.4-19.6-8.2-30.5-8.2h-93.5c-30.3 0-55.4 22.8-59.9 52.8-1.2 7.7-7.8 13.5-15.6 13.5H292.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h129.5c30.3 0 55.4-22.8 59.9-52.8 1.2-7.7 7.8-13.5 15.6-13.5h93.5c39.9 0 74.8-24.3 90.2-60.7 2.3-5.5 1.5-11.8-2.2-16.6l-85.3-109.9c-11.2-14.4-27.8-22.5-45.3-22.5H351.4c-39.9 0-74.8 24.3-90.2 60.7-2.3 5.5-1.5 11.8 2.2 16.6l65.7 84.7c8.9 11.5 22.8 18.2 37.5 18.2h125.6c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H426.6c-40 0-74.8-24.3-90.2-60.7-2.3 5.5-1.5-11.8 2.2-16.6l85.3-109.9c11.2-14.4 27.8-22.5 45.3-22.5h206.5c39.9 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2-16.6l-65.7 84.7c-8.9 11.5-22.8 18.2-37.5 18.2H562.1c-13.6 0-24.6-11-24.6-24.6s11-24.6 24.6-24.6h125.6c40 0 74.8 24.3 90.2 60.7 2.3 5.5 1.5 11.8-2.2-16.6l-85.3 109.9c-11.2-14.4-27.8-22.5-45.3-22.5H531.3c-13.6 0-24.6 11-24.6 24.6s11 24.6 24.6 24.6h189.4c10.7 0 21.4-2.8 30.8-8.5l65.7-39.4c8.9-5.4 19.6-8.2 30.5-8.2H781c13.6 0 24.6 11 24.6 24.6s-11 24.6-24.6 24.6H720.7z" />
-  </svg>
-);
-
-const BilibiliIcon = () => (
-  <svg viewBox="0 0 1024 1024" fill="currentColor" className="w-6 h-6">
-    <path d="M763.2 128H260.8C188.8 128 128 188.8 128 260.8v502.4C128 835.2 188.8 896 260.8 896h502.4c72 0 132.8-60.8 132.8-132.8V260.8c0-72-60.8-132.8-132.8-132.8zM384 640V384l256 128-256 128z" />
-    <path d="M666.4 303.2c-12-11.2-30.4-11.2-41.6 0L512 408.8l-112.8-105.6c-11.2-11.2-30.4-11.2-41.6 0-11.2 11.2-11.2 30.4 0 41.6l112.8 105.6-112.8 105.6c-11.2 11.2-11.2 30.4 0 41.6 5.6 5.6 12.8 8.8 20.8 8.8s15.2-3.2 20.8-8.8L512 597.6l112.8 105.6c5.6 5.6 12.8 8.8 20.8 8.8s15.2-3.2 20.8-8.8c11.2-11.2 11.2-30.4 0-41.6L553.6 556l112.8-105.6c11.2-12 11.2-30.4 0-41.6.8-.8.8-1.6 0-1.6z" />
-  </svg>
-);
-
-const GoogleIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-    <path d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.19,4.73C14.03,4.73 15.69,5.36 16.95,6.57L19.05,4.49C17.22,2.77 14.96,1.96 12.19,1.96C6.81,1.96 2.62,6.31 2.62,12S6.62,22.04 12.19,22.04C17.65,22.04 21.73,18.35 21.73,12.33C21.73,11.77 21.56,11.45 21.35,11.1Z" />
   </svg>
 );
 
@@ -61,10 +42,7 @@ const translations = {
     weeklySummaryTitle: '本周总结',
     weeklySummaryPlaceholder: '写下你的本周总结...',
     wechatAria: '微信',
-    alibabaAria: '阿里巴巴',
-    bilibiliAria: '哔哩哔哩',
     githubAria: 'GitHub',
-    googleAria: '谷歌',
     toggleThemeAria: '切换主题',
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
@@ -88,10 +66,7 @@ const translations = {
     weeklySummaryTitle: 'Weekly Summary',
     weeklySummaryPlaceholder: 'Write your weekly summary here...',
     wechatAria: 'WeChat',
-    alibabaAria: 'Alibaba',
-    bilibiliAria: 'Bilibili',
     githubAria: 'GitHub',
-    googleAria: 'Google',
     toggleThemeAria: 'Toggle theme',
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
@@ -109,8 +84,8 @@ interface HoverPreviewData {
   altText: string;
 }
 
-const SHOW_PREVIEW_DELAY = 2000; // 2 seconds
-const HIDE_PREVIEW_DELAY = 200; // 0.2 seconds
+const SHOW_PREVIEW_DELAY = 2000; 
+const HIDE_PREVIEW_DELAY = 200; 
 
 export default function WeekGlancePage() {
   const router = useRouter();
@@ -267,18 +242,18 @@ export default function WeekGlancePage() {
 
   const handleDayHoverEnd = useCallback(() => {
     isPreviewSuppressedByClickRef.current = false; 
-    clearTimeoutIfNecessary(); // Clears both show and hide timers
+    clearTimeoutIfNecessary(); 
     hidePreviewTimerRef.current = setTimeout(() => {
       setHoverPreviewData(null);
     }, HIDE_PREVIEW_DELAY);
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseEnter = useCallback(() => {
-    clearTimeoutIfNecessary(); // Clear hide timer if mouse re-enters preview
+    clearTimeoutIfNecessary(); 
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseLeave = useCallback(() => {
-    clearTimeoutIfNecessary(); // Clear show timer if any
+    clearTimeoutIfNecessary(); 
     hidePreviewTimerRef.current = setTimeout(() => {
         setHoverPreviewData(null); 
     }, HIDE_PREVIEW_DELAY);
@@ -385,10 +360,10 @@ export default function WeekGlancePage() {
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
             </a>
-            <span className="text-xs text-muted-foreground">{t.mitLicenseText}</span>
             <a href="#" aria-label={t.donationText} className="text-muted-foreground hover:text-primary transition-colors">
               <Gift className="w-6 h-6" />
             </a>
+            <span className="text-xs text-muted-foreground">{t.mitLicenseText}</span>
           </div>
         </div>
       </footer>
