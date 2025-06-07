@@ -33,7 +33,6 @@ const EMPTY_TILE = 0;
 
 // --- Game Logic ---
 
-// Fisher-Yates shuffle for a 1D array
 const shuffleArray = (array: number[]): number[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -43,7 +42,6 @@ const shuffleArray = (array: number[]): number[] => {
   return shuffled;
 };
 
-// Converts 1D array to 2D board
 const arrayToBoard = (array: number[], size: number): number[][] => {
   const board: number[][] = [];
   for (let i = 0; i < size; i++) {
@@ -51,66 +49,6 @@ const arrayToBoard = (array: number[], size: number): number[][] => {
   }
   return board;
 };
-
-// Generates an initial shuffled board.
-// For an N*N puzzle, a common way to ensure solvability is to check the number of inversions.
-// An inversion is any pair of tiles (a, b) such that a appears before b in the flat list of tiles,
-// but a > b. The empty square is not counted.
-// - If grid width is odd, the puzzle is solvable if the number of inversions is even.
-// - If grid width is even, the puzzle is solvable if (number of inversions + row of empty square, counted from bottom, 1-indexed) is odd.
-// This function attempts to create a solvable board by shuffling until a solvable one is found.
-const createSolvableInitialBoard = (size: number): number[][] => {
-  const numbers = Array.from({ length: size * size -1 }, (_, i) => i + 1);
-  numbers.push(EMPTY_TILE);
-
-  let shuffledNumbers;
-  let boardCandidate: number[][];
-  let isSolvableBoard = false;
-
-  // Loop until a solvable board is generated (important for larger grids, less so for 3x3 but good practice)
-  // For 3x3, most shuffles are solvable if we aim for empty tile in last position.
-  // The check here is simplified: we will rely on the standard goal where empty tile is last.
-  // A more robust check for general N*N would count inversions properly.
-  // For 3x3, we check if inversion count is even (as grid width is odd).
-  do {
-    shuffledNumbers = shuffleArray([...numbers]); // Create a new shuffle each time
-    boardCandidate = arrayToBoard(shuffledNumbers, size);
-
-    // Calculate inversions (ignoring the empty tile)
-    const flatBoardNoEmpty = shuffledNumbers.filter(n => n !== EMPTY_TILE);
-    let inversions = 0;
-    for (let i = 0; i < flatBoardNoEmpty.length; i++) {
-      for (let j = i + 1; j < flatBoardNoEmpty.length; j++) {
-        if (flatBoardNoEmpty[i] > flatBoardNoEmpty[j]) {
-          inversions++;
-        }
-      }
-    }
-    
-    // For a 3x3 grid (odd width), the number of inversions must be even.
-    if (size % 2 !== 0) { // Odd grid width
-        isSolvableBoard = inversions % 2 === 0;
-    } else { // Even grid width (e.g. 4x4) - more complex rule involving blank row
-        // For simplicity, we'll assume this simplified shuffle is enough for 3x3.
-        // A full solvability check for even grids is more involved.
-        // For 3x3, this part is not hit, but kept for structure.
-        const emptyTilePos = findEmptyTile(boardCandidate, size);
-        if(emptyTilePos){
-            const emptyRowFromBottom = size - emptyTilePos.r; // 1-indexed from bottom
-            isSolvableBoard = (inversions + emptyRowFromBottom) % 2 !== 0;
-        } else {
-            isSolvableBoard = false; // Should not happen if EMPTY_TILE is in numbers
-        }
-    }
-    // For 3x3, this simpler check is often sufficient.
-    // If after many tries we don't get a solvable, it means the solvability logic has issues or bad luck.
-    // We can add a counter to break the loop if needed. For now, let's assume it finds one quickly for 3x3.
-  } while (!isSolvableBoard);
-
-
-  return arrayToBoard(shuffledNumbers, size);
-};
-
 
 const findEmptyTile = (board: number[][], size: number): { r: number; c: number } | null => {
   for (let r = 0; r < size; r++) {
@@ -123,12 +61,53 @@ const findEmptyTile = (board: number[][], size: number): { r: number; c: number 
   return null;
 };
 
+const createSolvableInitialBoard = (size: number): number[][] => {
+  const numbers = Array.from({ length: size * size - 1 }, (_, i) => i + 1);
+  numbers.push(EMPTY_TILE);
+
+  let shuffledNumbers;
+  let boardCandidate: number[][];
+  let isSolvableBoard = false;
+  let attempts = 0;
+
+  do {
+    shuffledNumbers = shuffleArray([...numbers]);
+    const flatBoardNoEmptyValue = shuffledNumbers.filter(n => n !== EMPTY_TILE);
+    let inversions = 0;
+    for (let i = 0; i < flatBoardNoEmptyValue.length; i++) {
+      for (let j = i + 1; j < flatBoardNoEmptyValue.length; j++) {
+        if (flatBoardNoEmptyValue[i] > flatBoardNoEmptyValue[j]) {
+          inversions++;
+        }
+      }
+    }
+    
+    if (size % 2 !== 0) { 
+        isSolvableBoard = inversions % 2 === 0;
+    } else { 
+        boardCandidate = arrayToBoard(shuffledNumbers, size); 
+        const emptyTilePos = findEmptyTile(boardCandidate, size);
+        if(emptyTilePos){
+            const emptyRowFromBottom = size - emptyTilePos.r; 
+            isSolvableBoard = (inversions + emptyRowFromBottom) % 2 !== 0;
+        } else {
+            isSolvableBoard = false; 
+        }
+    }
+    attempts++;
+    if (attempts > 100 && !isSolvableBoard) {
+        console.warn("Klotski: Could not generate a solvable board after 100 attempts. Using last attempt, which might be unsolvable.");
+        isSolvableBoard = true; // Break loop to avoid infinite loop
+    }
+  } while (!isSolvableBoard);
+
+  return arrayToBoard(shuffledNumbers!, size); 
+};
+
 const checkIsSolved = (board: number[][], size: number): boolean => {
   const solvedFlat = Array.from({ length: size * size - 1 }, (_, i) => i + 1);
-  solvedFlat.push(EMPTY_TILE); // Solved state has empty tile at the end
-  
+  solvedFlat.push(EMPTY_TILE);
   const currentFlat = board.flat();
-  
   for (let i = 0; i < solvedFlat.length; i++) {
     if (currentFlat[i] !== solvedFlat[i]) {
       return false;
@@ -137,10 +116,41 @@ const checkIsSolved = (board: number[][], size: number): boolean => {
   return true;
 };
 
+// Helper to generate a board that is solvable AND not already solved
+const generateUnsolvedSolvableBoard = (): number[][] => {
+  let newBoard;
+  let attempts = 0;
+  const maxAttempts = 25; // Prevent potential infinite loop in very rare cases
+  do {
+    newBoard = createSolvableInitialBoard(GRID_SIZE);
+    attempts++;
+  } while (checkIsSolved(newBoard, GRID_SIZE) && attempts < maxAttempts);
+
+  if (checkIsSolved(newBoard, GRID_SIZE) && attempts >= maxAttempts) {
+    // Fallback: if still solved, create a simple, manually unsolved but solvable board
+    console.warn("Klotski: Generated a solved board repeatedly. Using a manual fallback.");
+    const solvedBase = Array.from({ length: GRID_SIZE * GRID_SIZE - 1 }, (_, i) => i + 1).concat(EMPTY_TILE);
+    const fallbackBoardArray = arrayToBoard(solvedBase, GRID_SIZE);
+    // Make one valid move from solved state: swap last number with empty tile
+    if (GRID_SIZE > 1) {
+        const lastNum = GRID_SIZE * GRID_SIZE - 1;
+        const emptyR = GRID_SIZE - 1;
+        const emptyC = GRID_SIZE - 1;
+        const lastNumR = GRID_SIZE - 1;
+        const lastNumC = GRID_SIZE - 2;
+        
+        fallbackBoardArray[emptyR][emptyC] = lastNum; // Place last number where empty was
+        fallbackBoardArray[lastNumR][lastNumC] = EMPTY_TILE; // Place empty where last number was
+    }
+    return fallbackBoardArray;
+  }
+  return newBoard;
+};
+
 
 export default function KlotskiPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [board, setBoard] = useState<number[][]>(() => createSolvableInitialBoard(GRID_SIZE));
+  const [board, setBoard] = useState<number[][]>(() => generateUnsolvedSolvableBoard());
   const [moves, setMoves] = useState(0);
   const [isGameWon, setIsGameWon] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -148,23 +158,33 @@ export default function KlotskiPage() {
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   const initializeNewGame = useCallback(() => {
-    setBoard(createSolvableInitialBoard(GRID_SIZE));
+    setBoard(generateUnsolvedSolvableBoard());
     setMoves(0);
-    setIsGameWon(false);
+    setIsGameWon(false); // Crucially ensure game is not won on reset
   }, []);
 
+  // Effect for setting language and mounted state
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    // Initialize board on mount, but state initializer already does it
-    // This ensures resetGame can be called and also sets mounted state
-    setIsMounted(true); 
-    if (checkIsSolved(board, GRID_SIZE)) { // Check if initial shuffle is already solved
-        setIsGameWon(true);
+    setIsMounted(true);
+  }, []);
+
+  // Effect for checking win condition
+  useEffect(() => {
+    if (!isMounted) return; // Only check after component is fully mounted
+
+    if (checkIsSolved(board, GRID_SIZE)) {
+      // Check if the board is not empty or in an uninitialized state before declaring a win
+      // This is somewhat handled by generateUnsolvedSolvableBoard, but as a safe guard
+      if (board.flat().some(tile => tile !== EMPTY_TILE || board.flat().length === GRID_SIZE * GRID_SIZE )) {
+          setIsGameWon(true);
+      }
     }
-  }, [board]); // Add board to deps for checking if initial is solved
+  }, [board, isMounted]);
+
 
   const handleTileClick = useCallback((rClicked: number, cClicked: number) => {
     if (isGameWon || !isMounted || board[rClicked][cClicked] === EMPTY_TILE) return;
@@ -174,26 +194,20 @@ export default function KlotskiPage() {
 
     const { r: rEmpty, c: cEmpty } = emptyTilePos;
 
-    // Check if the clicked tile is adjacent to the empty tile
     const isAdjacent = 
       (Math.abs(rClicked - rEmpty) === 1 && cClicked === cEmpty) ||
       (Math.abs(cClicked - cEmpty) === 1 && rClicked === rEmpty);
 
     if (isAdjacent) {
       const newBoard = board.map(row => [...row]);
-      // Swap tiles
       [newBoard[rClicked][cClicked], newBoard[rEmpty][cEmpty]] = 
         [newBoard[rEmpty][cEmpty], newBoard[rClicked][cClicked]];
       
-      setBoard(newBoard);
-      const newMoves = moves + 1;
-      setMoves(newMoves);
-
-      if (checkIsSolved(newBoard, GRID_SIZE)) {
-        setIsGameWon(true);
-      }
+      setBoard(newBoard); // This will trigger the useEffect for win check
+      setMoves(prevMoves => prevMoves + 1);
+      // Win check is now handled by useEffect [board, isMounted]
     }
-  }, [board, moves, isGameWon, isMounted]);
+  }, [board, isGameWon, isMounted]); // Removed `moves` from dependencies as it's not directly used in logic, only incremented
 
 
   if (!isMounted) {
@@ -275,4 +289,3 @@ export default function KlotskiPage() {
     </div>
   );
 }
-
