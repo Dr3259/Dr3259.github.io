@@ -2,10 +2,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Ensure cn is imported
+import { cn } from '@/lib/utils';
 
 const translations = {
   'zh-CN': {
@@ -173,6 +173,7 @@ const canMove = (board: number[][]): boolean => {
 
 
 export default function Game2048Page() {
+  const router = useRouter(); // Initialize router
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [board, setBoard] = useState<number[][]>(createEmptyBoard());
   const [score, setScore] = useState(0);
@@ -278,7 +279,7 @@ export default function Game2048Page() {
         checkAndUpdateHighScore(score); // Final check on game over
       }
     }
-  }, [board, gameOver, score, highScore]); // Added highScore to dependency array
+  }, [board, gameOver, score, highScore]); 
 
   useEffect(() => {
     if (!isMounted) return; 
@@ -304,12 +305,10 @@ export default function Game2048Page() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
       <header className="w-full max-w-md mb-6 sm:mb-8">
-        <Link href="/rest" passHref>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backButton}
-          </Button>
-        </Link>
+        <Button variant="outline" size="sm" onClick={() => router.push('/rest')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t.backButton}
+        </Button>
       </header>
 
       <main className="w-full max-w-md flex flex-col items-center">
@@ -373,6 +372,7 @@ export default function Game2048Page() {
     </div>
   );
 }
+    
     
 
     

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
@@ -22,6 +22,7 @@ const translations = {
 type LanguageKey = keyof typeof translations;
 
 export default function SudokuPage() {
+  const router = useRouter(); // Initialize router
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
 
   useEffect(() => {
@@ -36,12 +37,10 @@ export default function SudokuPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
       <header className="w-full max-w-md mb-6 sm:mb-8">
-        <Link href="/rest" passHref>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backButton}
-          </Button>
-        </Link>
+        <Button variant="outline" size="sm" onClick={() => router.push('/rest')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t.backButton}
+        </Button>
       </header>
 
       <main className="w-full max-w-md flex flex-col items-center">
@@ -55,3 +54,5 @@ export default function SudokuPage() {
     </div>
   );
 }
+
+    

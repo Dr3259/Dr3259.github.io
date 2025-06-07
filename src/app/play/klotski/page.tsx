@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -149,6 +149,7 @@ const generateUnsolvedSolvableBoard = (): number[][] => {
 
 
 export default function KlotskiPage() {
+  const router = useRouter(); // Initialize router
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [board, setBoard] = useState<number[][]>(() => generateUnsolvedSolvableBoard());
   const [moves, setMoves] = useState(0);
@@ -160,7 +161,7 @@ export default function KlotskiPage() {
   const initializeNewGame = useCallback(() => {
     setBoard(generateUnsolvedSolvableBoard());
     setMoves(0);
-    setIsGameWon(false); // Crucially ensure game is not won on reset
+    setIsGameWon(false); 
   }, []);
 
   // Effect for setting language and mounted state
@@ -174,11 +175,9 @@ export default function KlotskiPage() {
 
   // Effect for checking win condition
   useEffect(() => {
-    if (!isMounted) return; // Only check after component is fully mounted
+    if (!isMounted) return;
 
     if (checkIsSolved(board, GRID_SIZE)) {
-      // Check if the board is not empty or in an uninitialized state before declaring a win
-      // This is somewhat handled by generateUnsolvedSolvableBoard, but as a safe guard
       if (board.flat().some(tile => tile !== EMPTY_TILE || board.flat().length === GRID_SIZE * GRID_SIZE )) {
           setIsGameWon(true);
       }
@@ -203,11 +202,10 @@ export default function KlotskiPage() {
       [newBoard[rClicked][cClicked], newBoard[rEmpty][cEmpty]] = 
         [newBoard[rEmpty][cEmpty], newBoard[rClicked][cClicked]];
       
-      setBoard(newBoard); // This will trigger the useEffect for win check
+      setBoard(newBoard); 
       setMoves(prevMoves => prevMoves + 1);
-      // Win check is now handled by useEffect [board, isMounted]
     }
-  }, [board, isGameWon, isMounted]); // Removed `moves` from dependencies as it's not directly used in logic, only incremented
+  }, [board, isGameWon, isMounted]); 
 
 
   if (!isMounted) {
@@ -221,12 +219,10 @@ export default function KlotskiPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
       <header className="w-full max-w-xs sm:max-w-sm md:max-w-md mb-6 sm:mb-8">
-        <Link href="/rest" passHref>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backButton}
-          </Button>
-        </Link>
+        <Button variant="outline" size="sm" onClick={() => router.push('/rest')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t.backButton}
+        </Button>
       </header>
 
       <main className="w-full max-w-xs sm:max-w-sm md:max-w-md flex flex-col items-center">
@@ -289,3 +285,5 @@ export default function KlotskiPage() {
     </div>
   );
 }
+
+    
