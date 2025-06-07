@@ -498,18 +498,22 @@ export default function DayDetailPage() {
   };
 
   const dayProperties = useMemo(() => {
-    if (!dayName || dayName === "无效日期") {
+    // Ensure dayName is a string and valid before proceeding
+    const currentDayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "";
+    if (!currentDayName || currentDayName === "无效日期") {
       return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
     }
+
     for (const langKey of Object.keys(translations) as LanguageKey[]) {
       const daysOfWeekForLang = translations[langKey].daysOfWeek;
-      const index = daysOfWeekForLang.findIndex(d => d === dayName);
+      const index = daysOfWeekForLang.findIndex(d => d === currentDayName);
       if (index !== -1) {
         return { numericalIndex: index, sourceLanguage: langKey, isValid: true };
       }
     }
+    // Fallback if dayName is not found in any language's list
     return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
-  }, [dayName, currentLanguage]);
+  }, [params.dayName, currentLanguage]);
 
 
   const isViewingCurrentDay = useMemo(() => {
@@ -520,7 +524,7 @@ export default function DayDetailPage() {
   }, [dayProperties]);
 
   const isFutureDay = useMemo(() => {
-    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid) return false;
+    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid) return false; // Default to false to avoid hiding on server or if invalid
     const today = new Date();
     const systemDayIndex = (today.getDay() + 6) % 7;
     return dayProperties.numericalIndex > systemDayIndex;
