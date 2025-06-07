@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { LogIn, Github, Languages, Sun, Moon } from "lucide-react";
+import { LogIn, Github, Languages, Sun, Moon, Gift } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -68,6 +68,8 @@ const translations = {
     toggleThemeAria: '切换主题',
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
+    mitLicenseText: 'MIT 协议',
+    donationText: '打赏支持',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -93,6 +95,8 @@ const translations = {
     toggleThemeAria: 'Toggle theme',
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
+    mitLicenseText: 'MIT Licensed',
+    donationText: 'Donate & Support',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -303,12 +307,7 @@ export default function WeekGlancePage() {
             <Languages className="mr-2 h-4 w-4" />
             {t.languageButtonText}
           </Button>
-          {/* 
-          <Button variant="outline" size="sm" aria-label={t.loginButtonText}>
-            <LogIn className="mr-2 h-4 w-4" />
-            {t.loginButtonText}
-          </Button>
-          */}
+          
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
@@ -383,22 +382,13 @@ export default function WeekGlancePage() {
             <a href="#" aria-label={t.wechatAria} className="text-muted-foreground hover:text-primary transition-colors">
               <WeChatIcon />
             </a>
-            {/* 
-            <a href="#" aria-label={t.alibabaAria} className="text-muted-foreground hover:text-primary transition-colors">
-              <AlibabaIcon />
-            </a>
-            <a href="#" aria-label={t.bilibiliAria} className="text-muted-foreground hover:text-primary transition-colors">
-              <BilibiliIcon />
-            </a>
-            */}
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-6 h-6" />
             </a>
-            {/*
-            <a href="#" aria-label={t.googleAria} className="text-muted-foreground hover:text-primary transition-colors">
-              <GoogleIcon />
+            <span className="text-xs text-muted-foreground">{t.mitLicenseText}</span>
+            <a href="#" aria-label={t.donationText} className="text-muted-foreground hover:text-primary transition-colors">
+              <Gift className="w-6 h-6" />
             </a>
-            */}
           </div>
         </div>
       </footer>
