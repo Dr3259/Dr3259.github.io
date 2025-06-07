@@ -39,7 +39,8 @@ const translations = {
     twitterAria: 'X (原推特)',
     emailAria: '电子邮件',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
-    mitLicenseLinkText: '查看许可证 (MIT)',
+    mitLicenseLinkText: 'MIT 许可证',
+    mitLicenseLinkAria: '查看 MIT 许可证详情',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -62,7 +63,8 @@ const translations = {
     twitterAria: 'X (formerly Twitter)',
     emailAria: 'Email',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
-    mitLicenseLinkText: 'View License (MIT)',
+    mitLicenseLinkText: 'MIT License',
+    mitLicenseLinkAria: 'View MIT License details',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -71,12 +73,12 @@ type Theme = 'light' | 'dark';
 interface HoverPreviewData {
   dayName: string;
   notes: string;
-  imageHint: string; 
+  imageHint: string;
   altText: string;
 }
 
-const SHOW_PREVIEW_DELAY = 2000; 
-const HIDE_PREVIEW_DELAY = 200; 
+const SHOW_PREVIEW_DELAY = 2000;
+const HIDE_PREVIEW_DELAY = 200;
 
 export default function WeekGlancePage() {
   const router = useRouter();
@@ -89,7 +91,7 @@ export default function WeekGlancePage() {
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
-  
+
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
@@ -115,11 +117,11 @@ export default function WeekGlancePage() {
             document.documentElement.lang = browserLang;
         }
     }
-    
+
 
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null : null;
     const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     let initialTheme: Theme = 'light';
     if (storedTheme) {
       initialTheme = storedTheme;
@@ -129,13 +131,13 @@ export default function WeekGlancePage() {
     setTheme(initialTheme);
 
     const today = new Date();
-    const dayOfWeek = today.getDay(); 
-    const adjustedDayIndex = (dayOfWeek + 6) % 7; 
+    const dayOfWeek = today.getDay();
+    const adjustedDayIndex = (dayOfWeek + 6) % 7;
     setCurrentDayIndex(adjustedDayIndex);
     setIsAfter6PMToday(today.getHours() >= 18);
     setCurrentYear(today.getFullYear());
-    
-    return () => { 
+
+    return () => {
       clearTimeoutIfNecessary();
     };
 
@@ -151,7 +153,7 @@ export default function WeekGlancePage() {
         localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
     }
   }, [theme]);
-  
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -200,7 +202,7 @@ export default function WeekGlancePage() {
 
   const handleDaySelect = useCallback((day: string) => {
     clearTimeoutIfNecessary();
-    setHoverPreviewData(null); 
+    setHoverPreviewData(null);
     isPreviewSuppressedByClickRef.current = true;
     router.push(`/day/${encodeURIComponent(day)}`);
   }, [router, clearTimeoutIfNecessary]);
@@ -245,21 +247,21 @@ export default function WeekGlancePage() {
   }, [t, clearTimeoutIfNecessary]);
 
   const handleDayHoverEnd = useCallback(() => {
-    isPreviewSuppressedByClickRef.current = false; 
-    clearTimeoutIfNecessary(); 
+    isPreviewSuppressedByClickRef.current = false;
+    clearTimeoutIfNecessary();
     hidePreviewTimerRef.current = setTimeout(() => {
       setHoverPreviewData(null);
     }, HIDE_PREVIEW_DELAY);
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseEnter = useCallback(() => {
-    clearTimeoutIfNecessary(); 
+    clearTimeoutIfNecessary();
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviewMouseLeave = useCallback(() => {
-    clearTimeoutIfNecessary(); 
+    clearTimeoutIfNecessary();
     hidePreviewTimerRef.current = setTimeout(() => {
-        setHoverPreviewData(null); 
+        setHoverPreviewData(null);
     }, HIDE_PREVIEW_DELAY);
   }, [clearTimeoutIfNecessary]);
 
@@ -286,7 +288,7 @@ export default function WeekGlancePage() {
             <Languages className="mr-2 h-4 w-4" />
             {t.languageButtonText}
           </Button>
-          
+
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
@@ -298,7 +300,7 @@ export default function WeekGlancePage() {
           const isCurrentDay = currentDayIndex !== null && index === currentDayIndex;
           const isPastDay = currentDayIndex !== null && index < currentDayIndex;
           const isFutureDay = currentDayIndex !== null && index > currentDayIndex;
-          
+
           return (
             <DayBox
               key={day}
@@ -318,7 +320,7 @@ export default function WeekGlancePage() {
               ratingUiLabels={t.ratingLabels}
               onHoverStart={handleDayHoverStart}
               onHoverEnd={handleDayHoverEnd}
-              imageHint="activity memory" 
+              imageHint="activity memory"
             />
           );
         })}
@@ -359,40 +361,39 @@ export default function WeekGlancePage() {
               {currentYear && (
                 <p className="text-sm text-muted-foreground">
                   {t.copyrightText(currentYear, t.pageTitle)}
+                  <span className="mx-1">·</span>
+                  <a
+                    href="LICENSE"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary transition-colors"
+                    aria-label={t.mitLicenseLinkAria}
+                  >
+                    {t.mitLicenseLinkText}
+                  </a>
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                <a 
-                  href="LICENSE" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:text-primary transition-colors"
-                  aria-label={t.mitLicenseLinkText}
-                >
-                  {t.mitLicenseLinkText}
-                </a>
-              </p>
             </div>
             <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
-              <a 
-                href="https://github.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                aria-label={t.githubAria} 
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t.githubAria}
                 className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 GitHub
               </a>
-              <a 
+              <a
                 href="#"
-                aria-label={t.twitterAria} 
+                aria-label={t.twitterAria}
                 className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 X
               </a>
-              <a 
+              <a
                 href="#"
-                aria-label={t.emailAria} 
+                aria-label={t.emailAria}
                 className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 Email
