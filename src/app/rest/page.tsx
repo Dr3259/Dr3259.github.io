@@ -55,7 +55,7 @@ export default function RestPage() {
         {t.message}
       </p>
 
-      <section className="w-full max-w-md mb-10">
+      <section className="w-full max-w-md mb-10 p-6 rounded-lg bg-card shadow-lg border border-border">
         <h2 className="text-2xl font-semibold text-primary mb-6">
           {t.entertainmentBreakTitle}
         </h2>
@@ -84,3 +84,4 @@ export default function RestPage() {
     </div>
   );
 }
+
