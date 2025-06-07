@@ -39,7 +39,7 @@ const translations = {
     twitterAria: 'X (原推特)',
     emailAria: '电子邮件',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
-    mitLicenseLinkText: 'MIT 许可证',
+    mitLicenseLinkText: '本站依据 MIT 许可证发行',
     mitLicenseLinkAria: '查看 MIT 许可证详情',
   },
   'en': {
@@ -63,7 +63,7 @@ const translations = {
     twitterAria: 'X (formerly Twitter)',
     emailAria: 'Email',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
-    mitLicenseLinkText: 'MIT License',
+    mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
   }
 };
@@ -363,7 +363,7 @@ export default function WeekGlancePage() {
                   {t.copyrightText(currentYear, t.pageTitle)}
                   <span className="mx-1">·</span>
                   <a
-                    href="LICENSE"
+                    href="/LICENSE"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-primary transition-colors"
