@@ -502,17 +502,32 @@ export default function DayDetailPage() {
     const todayDate = new Date();
     const systemDayIndex = (todayDate.getDay() + 6) % 7; // Monday is 0, Sunday is 6
     const currentLangDays = translations[currentLanguage].daysOfWeek;
+    if (!currentLangDays) return false;
     const viewingDayIndex = currentLangDays.findIndex(d => d === dayName);
     return viewingDayIndex === systemDayIndex;
   }, [dayName, currentLanguage]);
 
+  const isFutureDay = useMemo(() => {
+    if (typeof window === 'undefined' || !dayName ) return false;
+    const daysOfWeekForLang = translations[currentLanguage]?.daysOfWeek;
+    if (!daysOfWeekForLang) return false; 
+    
+    const today = new Date();
+    const systemDayIndex = (today.getDay() + 6) % 7; 
+    const viewingDayIndex = daysOfWeekForLang.findIndex(d => d === dayName);
+
+    if (viewingDayIndex === -1) return false; 
+    return viewingDayIndex > systemDayIndex;
+  }, [dayName, currentLanguage]);
+
   const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
-    if (!isViewingCurrentDay) { // Past or Future day
+    if (!isViewingCurrentDay) { 
         const todaySystemIndex = (new Date().getDay() + 6) % 7;
-        const viewingDaySystemIndex = translations[currentLanguage].daysOfWeek.findIndex(d => d === dayName);
+        const daysOfWeekForLang = translations[currentLanguage]?.daysOfWeek;
+        if (!daysOfWeekForLang) return 'edit'; // Fallback
+        const viewingDaySystemIndex = daysOfWeekForLang.findIndex(d => d === dayName);
         return (viewingDaySystemIndex < todaySystemIndex) ? 'read' : 'edit';
     }
-    // Current day
     return isAfter6PMToday ? 'edit' : 'pending';
   }, [dayName, currentLanguage, isAfter6PMToday, isViewingCurrentDay]);
 
@@ -521,8 +536,8 @@ export default function DayDetailPage() {
     if (typeof window !== 'undefined') {
         return new Date();
     }
-    return new Date(0); // Default for SSR or if window is not defined yet
-  }, [dayName, currentLanguage]); // Re-evaluate if dayName or language changes, effectively when navigating to a new day's page
+    return new Date(0); 
+  }, [dayName, currentLanguage]); 
 
 
   useEffect(() => {
@@ -531,7 +546,7 @@ export default function DayDetailPage() {
       return;
     }
 
-    const now = new Date(); // Live current time for highlighting
+    const now = new Date(); 
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
@@ -566,7 +581,7 @@ export default function DayDetailPage() {
       const pageLoadTotalMinutesForIntervalCheck = pageLoadHourForIntervalCheck * 60 + pageLoadMinuteForIntervalCheck;
 
       if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck && !hasContentInInterval) {
-        continue; // This entire interval was past at page load AND has no content, so it's not rendered
+        continue; 
       }
 
 
@@ -912,7 +927,7 @@ export default function DayDetailPage() {
         </header>
 
         <main className="w-full max-w-4xl">
-          {dailyNoteDisplayMode !== 'pending' && (
+          {dailyNoteDisplayMode !== 'pending' && !isFutureDay && (
             <>
               <h1 className="text-3xl font-headline font-semibold text-primary mb-6">
                 {t.dayDetailsTitle(dayName)}
