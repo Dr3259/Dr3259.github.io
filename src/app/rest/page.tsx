@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Coffee, RotateCcw, Puzzle, Gamepad2, Brain, Sigma, ArrowLeft } from 'lucide-react';
+import { RotateCcw, Puzzle, Gamepad2, Brain, Sigma, ArrowLeft } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
@@ -57,7 +57,7 @@ export default function RestPage() {
       </header>
 
       <main className="w-full max-w-md flex flex-col items-center text-center">
-        <Coffee className="w-24 h-24 text-primary mb-8 animate-pulse" />
+        
         <h1 className="text-4xl font-headline font-semibold text-primary mb-4">
           {t.title}
         </h1>
