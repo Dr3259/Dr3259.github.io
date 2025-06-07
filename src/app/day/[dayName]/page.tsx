@@ -1110,81 +1110,79 @@ export default function DayDetailPage() {
                               </div>
 
                               {todosForSlot.length > 0 && (
-                                <div className="p-2 border rounded-md bg-background/50 group/todolist mb-3">
-                                    <ul className="space-y-2 p-px">
-                                      {todosForSlot.map((todo) => {
-                                        const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
-                                        const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
-                                        return (
-                                          <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                            <div className="flex items-center space-x-2 flex-grow min-w-0">
-                                              <Checkbox
-                                                id={`daypage-todo-${dayName}-${slot}-${todo.id}`}
-                                                checked={todo.completed}
-                                                onCheckedChange={() => handleToggleTodoCompletionInPage(dayName, slot, todo.id)}
-                                                aria-label={todo.completed ? t.markIncomplete : t.markComplete}
-                                                className="border-primary/50 shrink-0"
-                                              />
-                                              <div className="flex items-center space-x-1 shrink-0">
-                                                {CategoryIcon && todo.category && (
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
-                                                    <TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent>
-                                                  </Tooltip>
-                                                )}
-                                                {DeadlineIcon && todo.deadline && (
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
-                                                    <TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent>
-                                                  </Tooltip>
-                                                )}
-                                                {todo.importance === 'important' && (
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger>
-                                                    <TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent>
-                                                  </Tooltip>
-                                                )}
-                                              </div>
-                                              <label
-                                                htmlFor={`daypage-todo-${dayName}-${slot}-${todo.id}`}
-                                                className={cn(
-                                                  "text-xs cursor-pointer flex-1 min-w-0 truncate",
-                                                  todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'
-                                                )}
-                                                title={todo.text}
-                                              >
-                                                {todo.text}
-                                              </label>
-                                            </div>
-                                            <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
+                                <ul className="space-y-2 p-px mb-3 group/todolist">
+                                  {todosForSlot.map((todo) => {
+                                    const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
+                                    const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
+                                    return (
+                                      <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
+                                        <div className="flex items-center space-x-2 flex-grow min-w-0">
+                                          <Checkbox
+                                            id={`daypage-todo-${dayName}-${slot}-${todo.id}`}
+                                            checked={todo.completed}
+                                            onCheckedChange={() => handleToggleTodoCompletionInPage(dayName, slot, todo.id)}
+                                            aria-label={todo.completed ? t.markIncomplete : t.markComplete}
+                                            className="border-primary/50 shrink-0"
+                                          />
+                                          <div className="flex items-center space-x-1 shrink-0">
+                                            {CategoryIcon && todo.category && (
                                               <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dayName, slot, todo)}>
-                                                    <FileEdit className="h-3.5 w-3.5" />
-                                                  </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{t.editItem}</p></TooltipContent>
+                                                <TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
+                                                <TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent>
                                               </Tooltip>
+                                            )}
+                                            {DeadlineIcon && todo.deadline && (
                                               <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dayName, slot, todo.id)}>
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                  </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{t.deleteItem}</p></TooltipContent>
+                                                <TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
+                                                <TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent>
                                               </Tooltip>
-                                            </div>
-                                          </li>
-                                        );
-                                      })}
-                                    </ul>
-                                </div>
+                                            )}
+                                            {todo.importance === 'important' && (
+                                              <Tooltip>
+                                                <TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger>
+                                                <TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent>
+                                              </Tooltip>
+                                            )}
+                                          </div>
+                                          <label
+                                            htmlFor={`daypage-todo-${dayName}-${slot}-${todo.id}`}
+                                            className={cn(
+                                              "text-xs cursor-pointer flex-1 min-w-0 truncate",
+                                              todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'
+                                            )}
+                                            title={todo.text}
+                                          >
+                                            {todo.text}
+                                          </label>
+                                        </div>
+                                        <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dayName, slot, todo)}>
+                                                <FileEdit className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{t.editItem}</p></TooltipContent>
+                                          </Tooltip>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dayName, slot, todo.id)}>
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{t.deleteItem}</p></TooltipContent>
+                                          </Tooltip>
+                                        </div>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
                               )}
 
                               {meetingNotesForSlot.length > 0 && (
-                                <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist mb-3">
-                                 <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.meetingNotesSectionTitle}</h4>
-                                    <ul className="space-y-2 p-px">
+                                <>
+                                 <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1 group/meetingnotelist">{t.meetingNotesSectionTitle}</h4>
+                                    <ul className="space-y-2 p-px mb-3">
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                             <span className="text-xs text-foreground/90 flex-1 min-w-0 truncate" title={note.title}>
@@ -1211,13 +1209,13 @@ export default function DayDetailPage() {
                                           </li>
                                         ))}
                                     </ul>
-                                </div>
+                                </>
                               )}
 
                               {shareLinksForSlot.length > 0 && (
-                                <div className="p-2 border rounded-md bg-background/50 group/linklist mb-3">
-                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.linksSectionTitle}</h4>
-                                    <ul className="space-y-2 p-px">
+                                <>
+                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1 group/linklist">{t.linksSectionTitle}</h4>
+                                    <ul className="space-y-2 p-px mb-3">
                                       {shareLinksForSlot.map((link) => (
                                         <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                           <a
@@ -1250,12 +1248,12 @@ export default function DayDetailPage() {
                                         </li>
                                       ))}
                                     </ul>
-                                </div>
+                                </>
                               )}
 
                               {reflectionsForSlot.length > 0 && (
-                                <div className="p-2 border rounded-md bg-background/50 group/reflectionlist">
-                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.reflectionsSectionTitle}</h4>
+                                <>
+                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1 group/reflectionlist">{t.reflectionsSectionTitle}</h4>
                                     <ul className="space-y-2 p-px">
                                       {reflectionsForSlot.map((reflection) => (
                                         <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
@@ -1285,7 +1283,7 @@ export default function DayDetailPage() {
                                         </li>
                                       ))}
                                     </ul>
-                                </div>
+                                </>
                               )}
                             </div>
                           );
