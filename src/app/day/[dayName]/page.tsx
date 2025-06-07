@@ -341,7 +341,7 @@ export default function DayDetailPage() {
   const params = useParams();
   const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
 
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); // Default to 'en', will be updated by useEffect
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
 
   // Daily Notes state
@@ -384,7 +384,7 @@ export default function DayDetailPage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    
+
     const today = new Date();
     setIsAfter6PMToday(today.getHours() >= 18);
 
@@ -497,47 +497,55 @@ export default function DayDetailPage() {
     });
   };
 
+  const dayProperties = useMemo(() => {
+    if (!dayName || dayName === "无效日期") {
+      return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
+    }
+    for (const langKey of Object.keys(translations) as LanguageKey[]) {
+      const daysOfWeekForLang = translations[langKey].daysOfWeek;
+      const index = daysOfWeekForLang.findIndex(d => d === dayName);
+      if (index !== -1) {
+        return { numericalIndex: index, sourceLanguage: langKey, isValid: true };
+      }
+    }
+    return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
+  }, [dayName, currentLanguage]);
+
+
   const isViewingCurrentDay = useMemo(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid) return false;
     const todayDate = new Date();
     const systemDayIndex = (todayDate.getDay() + 6) % 7; // Monday is 0, Sunday is 6
-    const currentLangDays = translations[currentLanguage].daysOfWeek;
-    if (!currentLangDays) return false;
-    const viewingDayIndex = currentLangDays.findIndex(d => d === dayName);
-    return viewingDayIndex === systemDayIndex;
-  }, [dayName, currentLanguage]);
+    return dayProperties.numericalIndex === systemDayIndex;
+  }, [dayProperties]);
 
   const isFutureDay = useMemo(() => {
-    if (typeof window === 'undefined' || !dayName ) return false;
-    const daysOfWeekForLang = translations[currentLanguage]?.daysOfWeek;
-    if (!daysOfWeekForLang) return false; 
-    
+    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid) return false;
     const today = new Date();
-    const systemDayIndex = (today.getDay() + 6) % 7; 
-    const viewingDayIndex = daysOfWeekForLang.findIndex(d => d === dayName);
+    const systemDayIndex = (today.getDay() + 6) % 7;
+    return dayProperties.numericalIndex > systemDayIndex;
+  }, [dayProperties]);
 
-    if (viewingDayIndex === -1) return false; 
-    return viewingDayIndex > systemDayIndex;
-  }, [dayName, currentLanguage]);
 
   const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
-    if (!isViewingCurrentDay) { 
-        const todaySystemIndex = (new Date().getDay() + 6) % 7;
-        const daysOfWeekForLang = translations[currentLanguage]?.daysOfWeek;
-        if (!daysOfWeekForLang) return 'edit'; // Fallback
-        const viewingDaySystemIndex = daysOfWeekForLang.findIndex(d => d === dayName);
-        return (viewingDaySystemIndex < todaySystemIndex) ? 'read' : 'edit';
+    if (!dayProperties || !dayProperties.isValid) return 'edit'; // Fallback for invalid day
+
+    if (!isViewingCurrentDay) {
+        const today = new Date();
+        const todaySystemIndex = (today.getDay() + 6) % 7;
+        return (dayProperties.numericalIndex < todaySystemIndex) ? 'read' : 'edit';
     }
+    // It is the current day
     return isAfter6PMToday ? 'edit' : 'pending';
-  }, [dayName, currentLanguage, isAfter6PMToday, isViewingCurrentDay]);
+  }, [dayProperties, isViewingCurrentDay, isAfter6PMToday]);
 
 
   const pageLoadTime = useMemo(() => {
     if (typeof window !== 'undefined') {
         return new Date();
     }
-    return new Date(0); 
-  }, [dayName, currentLanguage]); 
+    return new Date(0);
+  }, [dayName, currentLanguage]);
 
 
   useEffect(() => {
@@ -546,7 +554,7 @@ export default function DayDetailPage() {
       return;
     }
 
-    const now = new Date(); 
+    const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
@@ -557,7 +565,7 @@ export default function DayDetailPage() {
 
     for (const interval of timeIntervals) {
       const hourlySlots = generateHourlySlots(interval.label);
-      const hasContentInInterval = hourlySlots.some(slot => 
+      const hasContentInInterval = hourlySlots.some(slot =>
           (allTodos[dayName]?.[slot]?.length || 0) > 0 ||
           (allMeetingNotes[dayName]?.[slot]?.length || 0) > 0 ||
           (allShareLinks[dayName]?.[slot]?.length || 0) > 0 ||
@@ -575,26 +583,26 @@ export default function DayDetailPage() {
 
       const intervalStartTotalMinutes = startH * 60 + startM;
       const intervalEndTotalMinutes = endH * 60 + endM;
-      
+
       const pageLoadHourForIntervalCheck = pageLoadTime.getHours();
       const pageLoadMinuteForIntervalCheck = pageLoadTime.getMinutes();
       const pageLoadTotalMinutesForIntervalCheck = pageLoadHourForIntervalCheck * 60 + pageLoadMinuteForIntervalCheck;
 
       if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck && !hasContentInInterval) {
-        continue; 
+        continue;
       }
 
 
       if (!firstVisibleIntervalKeyForScroll) {
         firstVisibleIntervalKeyForScroll = interval.key;
       }
-      
+
       if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
         newActiveKey = interval.key;
-        currentIntervalKeyForScroll = interval.key; 
+        currentIntervalKeyForScroll = interval.key;
       }
     }
-    
+
     setActiveIntervalKey(newActiveKey);
 
     const targetKeyForScroll = currentIntervalKeyForScroll || firstVisibleIntervalKeyForScroll;
@@ -602,9 +610,9 @@ export default function DayDetailPage() {
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
       setTimeout(() => {
         intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
-      }, 100); 
+      }, 100);
     }
-  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections]);
+  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, dayProperties]);
 
 
   // --- To-do Modal and Item Handlers ---
@@ -946,7 +954,7 @@ export default function DayDetailPage() {
                             <p className="text-muted-foreground italic">{t.noData}</p>
                         )}
                         </div>
-                    ) : ( 
+                    ) : (
                         <div>
                         <Textarea
                             value={dailyNote}
@@ -977,7 +985,7 @@ export default function DayDetailPage() {
             <div className="grid grid-cols-1 gap-6">
               {timeIntervals.map(interval => {
                 const hourlySlotsForInterval = generateHourlySlots(interval.label);
-                const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot => 
+                const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot =>
                   (getTodosForSlot(dayName, slot).length > 0) ||
                   (getMeetingNotesForSlot(dayName, slot).length > 0) ||
                   (getShareLinksForSlot(dayName, slot).length > 0) ||
@@ -995,10 +1003,10 @@ export default function DayDetailPage() {
                     const [startH,] = startTimeStr.split(':').map(Number);
                     let [endH, endM] = endTimeStr.split(':').map(Number);
                     if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
-                    
+
                     const intervalEndTotalMinutes = endH * 60 + endM;
                     if (intervalEndTotalMinutes <= pageLoadTotalMinutes && !hasContentInAnySlotOfInterval) {
-                      return null; 
+                      return null;
                     }
                   }
                 }
@@ -1009,8 +1017,8 @@ export default function DayDetailPage() {
                 const isCurrentActiveInterval = isViewingCurrentDay && activeIntervalKey === interval.key;
 
                 return (
-                  <div 
-                    key={interval.key} 
+                  <div
+                    key={interval.key}
                     ref={el => { if (el) intervalRefs.current[interval.key] = el; }}
                     className={cn(
                         "bg-card p-4 rounded-lg shadow-lg transition-all duration-300",
@@ -1033,22 +1041,22 @@ export default function DayDetailPage() {
                           if (isViewingCurrentDay && typeof window !== 'undefined') {
                             const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                             if (slotTimeMatch) {
-                              const slotEndTimeStr = slotTimeMatch[2]; 
+                              const slotEndTimeStr = slotTimeMatch[2];
                               const slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
                               const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
-                              
+
                               const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
-                              
+
                               const pageLoadHour = pageLoadTime.getHours();
                               const pageLoadMinute = pageLoadTime.getMinutes();
                               const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
 
                               if (slotEndTotalMinutes <= pageLoadTotalMinutes && !hasAnyContentForThisSlot) {
-                                return null; 
+                                return null;
                               }
                             }
                           }
-                          
+
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
                               <div className="flex justify-between items-center mb-2">
@@ -1103,7 +1111,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                 </div>
                               </div>
-                              
+
                               {todosForSlot.length > 0 && (
                                 <div className="p-2 border rounded-md bg-background/50 group/todolist mb-3">
                                     <ul className="space-y-2 p-px">
@@ -1175,7 +1183,7 @@ export default function DayDetailPage() {
                                     </ul>
                                 </div>
                               )}
-                              
+
                               {meetingNotesForSlot.length > 0 && (
                                 <div className="p-2 border rounded-md bg-background/50 group/meetingnotelist mb-3">
                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.meetingNotesSectionTitle}</h4>
@@ -1247,7 +1255,7 @@ export default function DayDetailPage() {
                                     </ul>
                                 </div>
                               )}
-                              
+
                               {reflectionsForSlot.length > 0 && (
                                 <div className="p-2 border rounded-md bg-background/50 group/reflectionlist">
                                   <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1">{t.reflectionsSectionTitle}</h4>
