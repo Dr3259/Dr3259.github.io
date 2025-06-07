@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown, Meh } from "lucide-react";
+import { Smile, Meh, Frown } from "lucide-react"; // Changed from ThumbsUp, ThumbsDown
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -34,9 +34,9 @@ interface DayBoxProps {
 }
 
 const RATING_ICONS: Record<RatingValue, LucideIcon> = {
-  excellent: ThumbsUp,
+  excellent: Smile, // Changed
   average: Meh,
-  terrible: ThumbsDown,
+  terrible: Frown, // Changed
 };
 
 const RATING_ORDER: RatingValue[] = ['excellent', 'average', 'terrible'];
