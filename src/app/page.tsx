@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, Puzzle, Gamepad2, Brain, Sigma } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -43,6 +43,11 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
     mitLicenseLinkAria: '查看 MIT 许可证详情',
+    entertainmentBreakTitle: '休闲小憩',
+    game2048: '2048',
+    gameSudoku: '数独',
+    gameTetris: '俄罗斯方块',
+    gameNumberKlotski: '数字华容道',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -69,6 +74,11 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
+    entertainmentBreakTitle: 'Entertainment Break',
+    game2048: '2048',
+    gameSudoku: 'Sudoku',
+    gameTetris: 'Tetris',
+    gameNumberKlotski: 'Number Klotski',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -366,6 +376,26 @@ export default function WeekGlancePage() {
         />
       )}
 
+      <section className="w-full max-w-4xl mb-12 sm:mb-16">
+        <h2 className="text-2xl font-semibold text-primary mb-6 text-center sm:text-left">
+          {t.entertainmentBreakTitle}
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Button variant="outline" size="lg" onClick={() => router.push('/play/2048')} className="h-auto py-4">
+            <Sigma className="mr-2 h-5 w-5" /> {t.game2048}
+          </Button>
+          <Button variant="outline" size="lg" onClick={() => router.push('/play/sudoku')} className="h-auto py-4">
+            <Brain className="mr-2 h-5 w-5" /> {t.gameSudoku}
+          </Button>
+          <Button variant="outline" size="lg" onClick={() => router.push('/play/tetris')} className="h-auto py-4">
+            <Puzzle className="mr-2 h-5 w-5" /> {t.gameTetris}
+          </Button>
+          <Button variant="outline" size="lg" onClick={() => router.push('/play/number-klotski')} className="h-auto py-4">
+            <Gamepad2 className="mr-2 h-5 w-5" /> {t.gameNumberKlotski}
+          </Button>
+        </div>
+      </section>
+
       <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
         <div className="border-t border-border pt-8">
           <div className="text-center md:flex md:items-center md:justify-between">
@@ -417,3 +447,4 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
