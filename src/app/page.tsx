@@ -303,10 +303,12 @@ export default function WeekGlancePage() {
             <Languages className="mr-2 h-4 w-4" />
             {t.languageButtonText}
           </Button>
+          {/* 
           <Button variant="outline" size="sm" aria-label={t.loginButtonText}>
             <LogIn className="mr-2 h-4 w-4" />
             {t.loginButtonText}
           </Button>
+          */}
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
