@@ -4,8 +4,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // CardContent is not used but keep for now
 import { ArrowLeft, Hash, Puzzle, Blocks, Grid3x3, Bomb } from 'lucide-react';
+import { cn } from '@/lib/utils'; // Added missing import
 
 const translations = {
   'zh-CN': {
@@ -34,7 +35,7 @@ interface GameCardProps {
   title: string;
   icon: React.ElementType;
   isSmall?: boolean;
-  onClick?: () => void; // For future navigation
+  onClick?: () => void; 
   ariaLabel?: string;
 }
 
@@ -113,3 +114,4 @@ export default function RestPage() {
     </div>
   );
 }
+
