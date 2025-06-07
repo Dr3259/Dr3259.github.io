@@ -28,7 +28,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   const match = intervalLabelWithTime.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
   if (!match) {
-    console.warn(`Could not parse time from: ${intervalLabelWithTime}`);
     return [];
   }
 
@@ -47,7 +46,6 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
      // This case should ideally not happen if 00:00 is correctly handled as 24 for intervals like 18:00-00:00
      if (!(startHour < 24 && endHour === 0)) { // Allow 23:00 to 00:00 by making endHour 24
-        console.warn(`Start hour ${startHour} is not before end hour ${endHour} for ${intervalLabelWithTime}`);
         return [];
      }
   }
@@ -378,6 +376,9 @@ export default function DayDetailPage() {
   const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
 
+  // Stable page load time, captured once on client mount
+  const pageLoadTime = useMemo(() => new Date(), []);
+
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -542,14 +543,6 @@ export default function DayDetailPage() {
     // It is the current day
     return isAfter6PMToday ? 'edit' : 'pending';
   }, [dayProperties, isViewingCurrentDay, isAfter6PMToday]);
-
-
-  const pageLoadTime = useMemo(() => {
-    if (typeof window !== 'undefined') {
-        return new Date();
-    }
-    return new Date(0);
-  }, [dayName, currentLanguage]);
 
 
   useEffect(() => {
