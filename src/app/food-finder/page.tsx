@@ -21,6 +21,7 @@ const translations = {
     tryAgainButton: '重试',
     restaurantListTitle: '附近的餐厅',
     currentLocationLabel: '当前位置:',
+    addressRequiresService: '(获取详细地址通常需要外部地图服务)',
     // Placeholder restaurant data (will be replaced by real data in a full implementation)
     placeholderRestaurants: [
       { id: '1', name: '美味面馆', address: '人民路123号', cuisine: '中式', distance: '约200米' },
@@ -41,6 +42,7 @@ const translations = {
     tryAgainButton: 'Try Again',
     restaurantListTitle: 'Nearby Restaurants',
     currentLocationLabel: 'Current Location:',
+    addressRequiresService: '(Detailed address typically requires an external map service)',
     // Placeholder restaurant data (will be replaced by real data in a full implementation)
     placeholderRestaurants: [
       { id: '1', name: 'Tasty Noodle House', address: '123 People Rd', cuisine: 'Chinese', distance: '~200m' },
@@ -168,9 +170,14 @@ export default function FoodFinderPage() {
         )}
 
         {location && !isLoadingLocation && hasInitiatedSearch && (
-          <p className="text-sm text-muted-foreground mb-4 text-center">
-            {t.currentLocationLabel} Lat: {location.latitude.toFixed(4)}, Lon: {location.longitude.toFixed(4)}
-          </p>
+          <div className="text-center mb-4">
+            <p className="text-sm text-muted-foreground">
+              {t.currentLocationLabel} Lat: {location.latitude.toFixed(4)}, Lon: {location.longitude.toFixed(4)}
+            </p>
+            <p className="text-xs text-muted-foreground/80 italic mt-1">
+              {t.addressRequiresService}
+            </p>
+          </div>
         )}
 
         {error && hasInitiatedSearch && !isLoadingLocation && (
@@ -227,3 +234,4 @@ export default function FoodFinderPage() {
     </div>
   );
 }
+
