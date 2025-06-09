@@ -20,6 +20,7 @@ const translations = {
     noRestaurantsFound: '附近未找到餐厅，或获取数据时出错。',
     tryAgainButton: '重试',
     restaurantListTitle: '附近的餐厅',
+    currentLocationLabel: '当前位置:',
     // Placeholder restaurant data (will be replaced by real data in a full implementation)
     placeholderRestaurants: [
       { id: '1', name: '美味面馆', address: '人民路123号', cuisine: '中式', distance: '约200米' },
@@ -39,6 +40,7 @@ const translations = {
     noRestaurantsFound: 'No restaurants found nearby, or there was an error fetching data.',
     tryAgainButton: 'Try Again',
     restaurantListTitle: 'Nearby Restaurants',
+    currentLocationLabel: 'Current Location:',
     // Placeholder restaurant data (will be replaced by real data in a full implementation)
     placeholderRestaurants: [
       { id: '1', name: 'Tasty Noodle House', address: '123 People Rd', cuisine: 'Chinese', distance: '~200m' },
@@ -163,6 +165,12 @@ export default function FoodFinderPage() {
               {isLoadingLocation ? t.fetchingLocation : t.fetchingRestaurants}
             </p>
           </div>
+        )}
+
+        {location && !isLoadingLocation && hasInitiatedSearch && (
+          <p className="text-sm text-muted-foreground mb-4 text-center">
+            {t.currentLocationLabel} Lat: {location.latitude.toFixed(4)}, Lon: {location.longitude.toFixed(4)}
+          </p>
         )}
 
         {error && hasInitiatedSearch && !isLoadingLocation && (
