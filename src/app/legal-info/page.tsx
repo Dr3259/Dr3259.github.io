@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpenText } from 'lucide-react'; // Using BookOpenText as placeholder icon
+import { ArrowLeft, BookOpenText, Scale } from 'lucide-react'; // Added Scale import
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const translations = {
