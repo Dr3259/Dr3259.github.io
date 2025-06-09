@@ -240,7 +240,7 @@ export default function WeekGlancePage() {
     notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections
   }), [notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
-  // IMPORTANT LIMITATION:
+  // IMPORTANT LIMITATION (Comment from previous interaction, kept for context):
   // This function checks for content based on the *day of the week name* (e.g., "Monday")
   // rather than a specific date (e.g., "2024-07-01"). This is due to the current
   // localStorage structure where data (especially from DayDetailPage) is keyed by day names.
@@ -351,17 +351,33 @@ export default function WeekGlancePage() {
 
   const handlePreviousWeek = () => {
     const currentWeekStart = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
+
+    if (firstEverWeekWithDataStart && isSameDay(currentWeekStart, firstEverWeekWithDataStart)) {
+      return; // Already at the earliest known week with content
+    }
+
     const potentialPrevWeekStart = subWeeks(currentWeekStart, 1);
-    
+
     if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStart, firstEverWeekWithDataStart)) {
-      setDisplayedDate(new Date(firstEverWeekWithDataStart)); // Go to the first week with data
-    } else {
+      // This case should ideally not be hit if the button is disabled correctly,
+      // but as a safeguard, navigate to the first known week if somehow attempted.
+      setDisplayedDate(new Date(firstEverWeekWithDataStart));
+      return;
+    }
+    
+    // Check if the target *immediate* previous week has content.
+    if (weekHasContent(potentialPrevWeekStart, allLoadedDataMemo)) {
       setDisplayedDate(potentialPrevWeekStart);
+    } else {
+      // If the immediate previous week has no content, do not change the displayed date.
+      // The user would need to use the calendar to jump to an earlier, content-filled week if available.
+      return;
     }
   };
 
+
   const handleNextWeek = () => {
-    if (isViewingActualCurrentWeek) return; // Already handled by button visibility
+    if (isViewingActualCurrentWeek) return; 
     setDisplayedDate(prev => addDays(prev, 7));
   };
 
@@ -369,9 +385,9 @@ export default function WeekGlancePage() {
 
   const handleDateSelectForJump = (date: Date | undefined) => {
     if (date) {
-      if (weekHasContent(date, allLoadedDataMemo)) {
-        setDisplayedDate(date);
-      } // If week has no content, selection is already disabled by calendar, but double check.
+      // The calendar's disabledMatcher already ensures only weeks with content are selectable.
+      // So, if a date is selected, we can assume its week has content.
+      setDisplayedDate(date);
       setIsCalendarOpen(false);
     }
   };
@@ -387,15 +403,21 @@ export default function WeekGlancePage() {
   };
 
   const isPreviousWeekDisabled = useMemo(() => {
-    if (!allDataLoaded || !firstEverWeekWithDataStart) return false; // Default to enabled if still loading or no "first week" determined
+    if (!allDataLoaded || !firstEverWeekWithDataStart) return false; 
     const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
     return isSameDay(currentDisplayedWeekStartDate, firstEverWeekWithDataStart);
   }, [allDataLoaded, displayedDate, firstEverWeekWithDataStart, dateLocale]);
 
   const calendarDisabledMatcher = useCallback((date: Date) => {
-    if (!allDataLoaded) return true; // Disable all if data not ready
+    if (!allDataLoaded) return true; 
+    // A date is disabled if its entire week does not have content OR
+    // if it's before the firstEverWeekWithDataStart (even if day-name keying might falsely suggest content).
+    const weekOfDateStart = startOfWeek(date, { weekStartsOn: 1, locale: dateLocale });
+    if (firstEverWeekWithDataStart && isBefore(weekOfDateStart, firstEverWeekWithDataStart) && !isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
+        return true;
+    }
     return !weekHasContent(date, allLoadedDataMemo);
-  }, [allDataLoaded, weekHasContent, allLoadedDataMemo]);
+  }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale]);
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -439,11 +461,13 @@ export default function WeekGlancePage() {
                         initialFocus
                         locale={dateLocale}
                         weekStartsOn={1}
+                        fromDate={firstEverWeekWithDataStart || undefined} // Only allow selection from the first week with data
+                        toDate={systemToday} // Only allow selection up to today
                     />
                 </PopoverContent>
             </Popover>
             {!isViewingActualCurrentWeek && (
-              <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek}>
+              <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek} disabled={isSameDay(currentDisplayedWeekEnd, endOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale }))}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
@@ -543,3 +567,4 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
