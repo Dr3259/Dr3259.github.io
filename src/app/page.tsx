@@ -11,8 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO, subWeeks, isBefore } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
+
+// Types from DayDetailPage - needed for checking content
+type CategoryType = 'work' | 'study' | 'shopping' | 'organizing' | 'relaxing' | 'cooking' | 'childcare' | 'dating';
+interface TodoItem {
+  id: string; text: string; completed: boolean; category: CategoryType | null;
+  deadline: 'hour' | 'today' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
+  importance: 'important' | 'notImportant' | null;
+}
+interface MeetingNoteItem { id: string; title: string; notes: string; attendees: string; actionItems: string; }
+interface ShareLinkItem { id: string; url: string; title: string; }
+interface ReflectionItem { id: string; text: string; }
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -20,6 +31,14 @@ const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
 const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary';
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
+
+// Keys used by DayDetailPage for its data
+const LOCAL_STORAGE_KEY_ALL_DAILY_NOTES = 'allWeekDailyNotes';
+const LOCAL_STORAGE_KEY_ALL_TODOS = 'allWeekTodos';
+const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes';
+const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks';
+const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections';
+
 
 const translations = {
   'zh-CN': {
@@ -52,7 +71,7 @@ const translations = {
     currentWeek: '本周',
     jumpToWeek: '跳转到周',
     backToCurrentWeek: '返回本周',
-    weekDisplayFormat: "yyyy年M月d日", // For start of week in 'MMM d'
+    weekDisplayFormat: "yyyy年M月d日",
     weekRangeSeparator: ' - ',
     selectDate: '选择日期',
   },
@@ -86,7 +105,7 @@ const translations = {
     currentWeek: 'Current Week',
     jumpToWeek: 'Jump to Week',
     backToCurrentWeek: 'Back to Current Week',
-    weekDisplayFormat: "MMM d, yyyy", // For start of week
+    weekDisplayFormat: "MMM d, yyyy",
     weekRangeSeparator: ' - ',
     selectDate: 'Select a date',
   }
@@ -101,19 +120,40 @@ interface HoverPreviewData {
   altText: string;
 }
 
+interface AllLoadedData {
+  notes: Record<string, string>;
+  ratings: Record<string, RatingType>;
+  allDailyNotes: Record<string, string>;
+  allTodos: Record<string, Record<string, TodoItem[]>>;
+  allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
+  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
+  allReflections: Record<string, Record<string, ReflectionItem[]>>;
+}
+
+
 const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
+const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
 
 export default function WeekGlancePage() {
   const router = useRouter();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
+  
+  // States for data from localStorage (main page + DayDetailPage types)
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
+  const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({});
+  const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
+  const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
+  const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
+  const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
+  const [allDataLoaded, setAllDataLoaded] = useState(false);
+  const [firstEverWeekWithDataStart, setFirstEverWeekWithDataStart] = useState<Date | null>(null);
+
   const [theme, setTheme] = useState<Theme>('light');
-  
-  const [systemToday, setSystemToday] = useState(new Date()); // Tracks the actual current date
-  const [displayedDate, setDisplayedDate] = useState(new Date()); // Tracks the date for the week being displayed
+  const [systemToday, setSystemToday] = useState(new Date());
+  const [displayedDate, setDisplayedDate] = useState(new Date());
   
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
@@ -127,16 +167,10 @@ export default function WeekGlancePage() {
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
 
-  const getDayNameFromDateFns = (date: Date): string => {
-    return format(date, 'EEEE', { locale: dateLocale });
-  };
-  
-  const getDayKeyForStorage = (date: Date): string => {
-      // t.daysOfWeek is 0=Monday, 1=Tuesday ... 6=Sunday
-      // date.getDay() is 0=Sunday, 1=Monday ... 6=Saturday
-      const dayIndex = (date.getDay() + 6) % 7; // Convert Sunday=0..Saturday=6 to Monday=0..Sunday=6
-      return t.daysOfWeek[dayIndex];
-  };
+  const getDayKeyForStorage = useCallback((date: Date): string => {
+    const dayIndex = (date.getDay() + 6) % 7;
+    return translations[currentLanguage].daysOfWeek[dayIndex];
+  }, [currentLanguage]);
 
   const currentDisplayedWeekStart = useMemo(() => startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale }), [displayedDate, dateLocale]);
   const currentDisplayedWeekEnd = useMemo(() => endOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale }), [displayedDate, dateLocale]);
@@ -152,103 +186,115 @@ export default function WeekGlancePage() {
 
 
   const clearTimeoutIfNecessary = useCallback(() => {
-    if (showPreviewTimerRef.current) {
-      clearTimeout(showPreviewTimerRef.current);
-      showPreviewTimerRef.current = null;
-    }
-    if (hidePreviewTimerRef.current) {
-      clearTimeout(hidePreviewTimerRef.current);
-      hidePreviewTimerRef.current = null;
-    }
+    if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
+    if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
+    showPreviewTimerRef.current = null;
+    hidePreviewTimerRef.current = null;
   }, []);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
         const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
         setCurrentLanguage(browserLang);
-        if (typeof document !== 'undefined') {
-            document.documentElement.lang = browserLang;
-        }
+        if (typeof document !== 'undefined') document.documentElement.lang = browserLang;
     }
 
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null : null;
-    const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    let initialTheme: Theme = 'light';
-    if (storedTheme) {
-      initialTheme = storedTheme;
-    } else if (systemPrefersDark) {
-      initialTheme = 'dark';
-    }
-    setTheme(initialTheme);
+    const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    setTheme(storedTheme || (systemPrefersDark ? 'dark' : 'light'));
 
     const today = new Date();
     setSystemToday(today);
     setIsAfter6PMToday(today.getHours() >= 18);
     setCurrentYear(today.getFullYear());
 
-    return () => {
-      clearTimeoutIfNecessary();
+    // Load all data from localStorage
+    const loadData = () => {
+        try {
+            setNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_NOTES) || '{}'));
+            setRatings(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS) || '{}'));
+            setWeeklySummary(localStorage.getItem(LOCAL_STORAGE_KEY_SUMMARY) || '');
+            setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
+            setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
+            setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
+            setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
+            setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
+        } catch (e) {
+            console.error("Error loading data from localStorage", e);
+        } finally {
+            setAllDataLoaded(true);
+        }
     };
+    loadData();
 
+    return () => clearTimeoutIfNecessary();
   }, [clearTimeoutIfNecessary]);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    if (typeof window !== 'undefined') {
-        localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
-    }
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
   }, [theme]);
 
+  const allLoadedDataMemo = useMemo((): AllLoadedData => ({
+    notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections
+  }), [notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-        try {
-          const storedNotes = localStorage.getItem(LOCAL_STORAGE_KEY_NOTES);
-          if (storedNotes) {
-            setNotes(JSON.parse(storedNotes));
-          }
-        } catch (error) {
-          console.error("Failed to parse notes from localStorage:", error);
-          localStorage.removeItem(LOCAL_STORAGE_KEY_NOTES);
-        }
+  const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
+    const dayKey = getDayKeyForStorage(date);
+    
+    if (data.notes[dayKey]?.trim()) return true;
+    if (data.ratings[dayKey]) return true; // Ratings are content
+    if (data.allDailyNotes[dayKey]?.trim()) return true;
 
-        try {
-          const storedRatings = localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS);
-          if (storedRatings) {
-            setRatings(JSON.parse(storedRatings));
-          }
-        } catch (error) {
-          console.error("Failed to parse ratings from localStorage:", error);
-          localStorage.removeItem(LOCAL_STORAGE_KEY_RATINGS);
-        }
+    const checkSlotItems = (items: Record<string, any[]> | undefined) => 
+        items && Object.values(items).some(slotItems => slotItems.length > 0);
 
-        try {
-          const storedSummary = localStorage.getItem(LOCAL_STORAGE_KEY_SUMMARY);
-          if (storedSummary) {
-            setWeeklySummary(storedSummary);
-          }
-        } catch (error) {
-          console.error("Failed to load summary from localStorage:", error);
+    if (checkSlotItems(data.allTodos[dayKey])) return true;
+    if (checkSlotItems(data.allMeetingNotes[dayKey])) return true;
+    if (checkSlotItems(data.allShareLinks[dayKey])) return true;
+    if (checkSlotItems(data.allReflections[dayKey])) return true;
+
+    return false;
+  }, [getDayKeyForStorage]);
+
+  const weekHasContent = useCallback((weekDate: Date, data: AllLoadedData): boolean => {
+    const weekToCheckStart = startOfWeek(weekDate, { weekStartsOn: 1, locale: dateLocale });
+    for (let i = 0; i < 7; i++) {
+        if (dayHasContent(addDays(weekToCheckStart, i), data)) {
+            return true;
         }
     }
-  }, []);
+    return false;
+  }, [dayHasContent, dateLocale]);
+
+  useEffect(() => {
+    if (!allDataLoaded) return;
+
+    let searchDate = startOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale });
+    let earliestWeekFound: Date | null = null;
+
+    for (let i = 0; i < MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT; i++) {
+        if (weekHasContent(searchDate, allLoadedDataMemo)) {
+            earliestWeekFound = new Date(searchDate); // Keep updating, the last one found during backward search is the earliest
+        }
+        if (i < MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT - 1) { // Avoid over-subtracting on last iteration
+             searchDate = subWeeks(searchDate, 1);
+        } else { // If we're at the search limit, break
+            break;
+        }
+    }
+    setFirstEverWeekWithDataStart(earliestWeekFound);
+  }, [allDataLoaded, systemToday, dateLocale, weekHasContent, allLoadedDataMemo]);
+
 
   const toggleLanguage = () => {
     const newLang = currentLanguage === 'zh-CN' ? 'en' : 'zh-CN';
     setCurrentLanguage(newLang);
-    if (typeof document !== 'undefined') {
-        document.documentElement.lang = newLang;
-    }
+    if (typeof document !== 'undefined') document.documentElement.lang = newLang;
   };
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const handleDaySelect = useCallback((dayNameForUrl: string) => {
     clearTimeoutIfNecessary();
@@ -257,130 +303,108 @@ export default function WeekGlancePage() {
     router.push(`/day/${encodeURIComponent(dayNameForUrl)}`);
   }, [router, clearTimeoutIfNecessary]);
 
-
   const handleRatingChange = useCallback((dayKey: string, newRating: RatingType) => {
-    setRatings(prevRatings => {
-      const updatedRatings = { ...prevRatings, [dayKey]: newRating };
-      if (typeof window !== 'undefined') {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings));
-        } catch (error) {
-            console.error("Failed to save ratings to localStorage:", error);
-        }
-      }
-      return updatedRatings;
+    setRatings(prev => {
+      const updated = { ...prev, [dayKey]: newRating };
+      if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updated));
+      return updated;
     });
   }, []);
 
   const handleSummaryChange = useCallback((summary: string) => {
     setWeeklySummary(summary);
-    if (typeof window !== 'undefined') {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY_SUMMARY, summary);
-        } catch (error) {
-            console.error("Failed to save summary to localStorage:", error);
-        }
-    }
+    if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_SUMMARY, summary);
   }, []);
 
   const handleDayHoverStart = useCallback((dayData: { dayName: string; notes: string; imageHint: string }) => {
     clearTimeoutIfNecessary();
-    if (isPreviewSuppressedByClickRef.current) {
-      return;
-    }
-    showPreviewTimerRef.current = setTimeout(() => {
-        setHoverPreviewData({
-          ...dayData,
-          altText: t.thumbnailPreviewAlt(dayData.dayName),
-        });
-    }, SHOW_PREVIEW_DELAY);
+    if (isPreviewSuppressedByClickRef.current) return;
+    showPreviewTimerRef.current = setTimeout(() => setHoverPreviewData({ ...dayData, altText: t.thumbnailPreviewAlt(dayData.dayName) }), SHOW_PREVIEW_DELAY);
   }, [t, clearTimeoutIfNecessary]);
 
   const handleDayHoverEnd = useCallback(() => {
     isPreviewSuppressedByClickRef.current = false;
     clearTimeoutIfNecessary();
-    hidePreviewTimerRef.current = setTimeout(() => {
-      setHoverPreviewData(null);
-    }, HIDE_PREVIEW_DELAY);
+    hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY);
   }, [clearTimeoutIfNecessary]);
 
-  const handlePreviewMouseEnter = useCallback(() => {
-    clearTimeoutIfNecessary();
-  }, [clearTimeoutIfNecessary]);
-
+  const handlePreviewMouseEnter = useCallback(() => clearTimeoutIfNecessary(), [clearTimeoutIfNecessary]);
   const handlePreviewMouseLeave = useCallback(() => {
     clearTimeoutIfNecessary();
-    hidePreviewTimerRef.current = setTimeout(() => {
-        setHoverPreviewData(null);
-    }, HIDE_PREVIEW_DELAY);
+    hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY);
   }, [clearTimeoutIfNecessary]);
-
   const handlePreviewClick = useCallback(() => {
     clearTimeoutIfNecessary();
     setHoverPreviewData(null);
     isPreviewSuppressedByClickRef.current = true;
   }, [clearTimeoutIfNecessary]);
 
-  const handleRestButtonClick = () => {
-    router.push('/rest');
-  };
+  const handleRestButtonClick = () => router.push('/rest');
 
   const handlePreviousWeek = () => {
-    setDisplayedDate(prev => subDays(prev, 7));
+    const currentWeekStart = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
+    const potentialPrevWeekStart = subWeeks(currentWeekStart, 1);
+    
+    if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStart, firstEverWeekWithDataStart)) {
+      setDisplayedDate(new Date(firstEverWeekWithDataStart)); // Go to the first week with data
+    } else {
+      setDisplayedDate(potentialPrevWeekStart);
+    }
   };
 
   const handleNextWeek = () => {
+    if (isViewingActualCurrentWeek) return; // Already handled by button visibility
     setDisplayedDate(prev => addDays(prev, 7));
   };
 
-  const handleGoToCurrentWeek = () => {
-    setDisplayedDate(new Date());
-  };
+  const handleGoToCurrentWeek = () => setDisplayedDate(new Date());
 
   const handleDateSelectForJump = (date: Date | undefined) => {
     if (date) {
-      setDisplayedDate(date);
-      setIsCalendarOpen(false); // Close Popover
+      if (weekHasContent(date, allLoadedDataMemo)) {
+        setDisplayedDate(date);
+      } // If week has no content, selection is already disabled by calendar, but double check.
+      setIsCalendarOpen(false);
     }
   };
   
   const formatWeekRangeForDisplay = (start: Date, end: Date): string => {
     const startFormatted = format(start, t.weekDisplayFormat, { locale: dateLocale });
     const endFormatted = format(end, t.weekDisplayFormat, { locale: dateLocale });
-    if (start.getFullYear() !== end.getFullYear()) {
-        return `${startFormatted}${t.weekRangeSeparator}${endFormatted}`;
-    }
-    if (start.getMonth() !== end.getMonth()) {
-         const monthDayFormat = currentLanguage === 'zh-CN' ? 'M月d日' : 'MMM d';
-         return `${format(start, monthDayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${format(end, t.weekDisplayFormat, { locale: dateLocale })}`;
-    }
+    if (start.getFullYear() !== end.getFullYear()) return `${startFormatted}${t.weekRangeSeparator}${endFormatted}`;
+    const monthDayFormat = currentLanguage === 'zh-CN' ? 'M月d日' : 'MMM d';
+    if (start.getMonth() !== end.getMonth()) return `${format(start, monthDayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${endFormatted}`;
     const dayFormat = currentLanguage === 'zh-CN' ? 'd日' : 'd';
-    return `${format(start, dayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${format(end, t.weekDisplayFormat, { locale: dateLocale })}`;
+    return `${format(start, dayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${endFormatted}`;
   };
 
+  const isPreviousWeekDisabled = useMemo(() => {
+    if (!allDataLoaded || !firstEverWeekWithDataStart) return false; // Default to enabled if still loading or no "first week" determined
+    const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
+    return isSameDay(currentDisplayedWeekStartDate, firstEverWeekWithDataStart);
+  }, [allDataLoaded, displayedDate, firstEverWeekWithDataStart, dateLocale]);
+
+  const calendarDisabledMatcher = useCallback((date: Date) => {
+    if (!allDataLoaded) return true; // Disable all if data not ready
+    return !weekHasContent(date, allLoadedDataMemo);
+  }, [allDataLoaded, weekHasContent, allLoadedDataMemo]);
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
       <header className="mb-8 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
-            {t.pageTitle}
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            {t.pageSubtitle}
-          </p>
+          <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={toggleLanguage} aria-label={currentLanguage === 'zh-CN' ? 'Switch to English' : '切换到中文'}>
-            <Languages className="mr-2 h-4 w-4" />
-            {t.languageButtonText}
+            <Languages className="mr-2 h-4 w-4" />{t.languageButtonText}
           </Button>
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
           <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
-            <PauseCircle className="mr-2 h-4 w-4" />
-            {t.restButtonText}
+            <PauseCircle className="mr-2 h-4 w-4" />{t.restButtonText}
           </Button>
         </div>
       </header>
@@ -388,16 +412,14 @@ export default function WeekGlancePage() {
       <div className="w-full max-w-4xl mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 p-3 bg-card/50 rounded-lg shadow">
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviousWeek} aria-label={t.previousWeek}>
+            <Button variant="outline" size="sm" onClick={handlePreviousWeek} aria-label={t.previousWeek} disabled={isPreviousWeekDisabled}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="w-[200px] sm:w-[240px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
                         <CalendarDays className="mr-2 h-4 w-4" />
-                        <span className="truncate">
-                           {formatWeekRangeForDisplay(currentDisplayedWeekStart, currentDisplayedWeekEnd)}
-                        </span>
+                        <span className="truncate">{formatWeekRangeForDisplay(currentDisplayedWeekStart, currentDisplayedWeekEnd)}</span>
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -405,6 +427,7 @@ export default function WeekGlancePage() {
                         mode="single"
                         selected={displayedDate}
                         onSelect={handleDateSelectForJump}
+                        disabled={calendarDisabledMatcher}
                         initialFocus
                         locale={dateLocale}
                         weekStartsOn={1}
@@ -419,29 +442,26 @@ export default function WeekGlancePage() {
           </div>
           {!isViewingActualCurrentWeek && (
             <Button variant="outline" size="sm" onClick={handleGoToCurrentWeek} aria-label={t.backToCurrentWeek} className="mt-2 sm:mt-0">
-              <Undo className="mr-2 h-4 w-4" />
-              {t.backToCurrentWeek}
+              <Undo className="mr-2 h-4 w-4" />{t.backToCurrentWeek}
             </Button>
           )}
         </div>
       </div>
 
-
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
-        {daysToDisplay.map((dateInWeek, index) => {
-          const dayNameForDisplay = getDayNameFromDateFns(dateInWeek);
+        {daysToDisplay.map((dateInWeek) => {
+          const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
           const dayKeyForStorage = getDayKeyForStorage(dateInWeek);
-
           const isCurrentActualDay = isSameDay(dateInWeek, systemToday);
-          const isPastActualDay = dateInWeek < systemToday && !isCurrentActualDay;
-          const isFutureActualDay = dateInWeek > systemToday && !isCurrentActualDay;
+          const isPastActualDay = isBefore(dateInWeek, systemToday) && !isCurrentActualDay;
+          const isFutureActualDay = !isBefore(dateInWeek, systemToday) && !isCurrentActualDay;
           
           const noteForThisDayBox = notes[dayKeyForStorage] || '';
           const ratingForThisDayBox = ratings[dayKeyForStorage] || null;
 
           return (
             <DayBox
-              key={dateInWeek.toISOString()} // Use a unique key for the date
+              key={dateInWeek.toISOString()}
               dayName={dayNameForDisplay}
               onClick={() => handleDaySelect(dayNameForDisplay)}
               notes={noteForThisDayBox} 
@@ -451,22 +471,20 @@ export default function WeekGlancePage() {
               isCurrentDay={isCurrentActualDay}
               isPastDay={isPastActualDay}
               isFutureDay={isFutureActualDay}
-              isAfter6PMToday={isAfter6PMToday} // This refers to *actual* today's 6PM status
+              isAfter6PMToday={isAfter6PMToday}
               todayLabel={t.todayPrefix}
               selectDayLabel={t.selectDayAria(dayNameForDisplay)}
               hasNotesLabel={t.hasNotesAria}
               ratingUiLabels={t.ratingLabels}
               onHoverStart={handleDayHoverStart}
               onHoverEnd={handleDayHoverEnd}
-              imageHint="activity memory" // Generic hint as notes are not week-specific yet
+              imageHint="activity memory"
             />
           );
         })}
          <Card className="w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
             <CardHeader className="p-2 pb-1 text-center">
-               <CardTitle className="text-lg sm:text-xl font-medium text-foreground">
-                 {t.weeklySummaryTitle}
-               </CardTitle>
+               <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
             </CardHeader>
             <CardContent className="p-2 flex-grow flex flex-col">
               <Textarea
@@ -500,42 +518,16 @@ export default function WeekGlancePage() {
                 <p className="text-sm text-muted-foreground">
                   {t.copyrightText(currentYear, t.pageTitle)}
                   <span className="mx-1">·</span>
-                  <a
-                    href="/LICENSE"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary transition-colors"
-                    aria-label={t.mitLicenseLinkAria}
-                  >
+                  <a href="/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label={t.mitLicenseLinkAria}>
                     {t.mitLicenseLinkText}
                   </a>
                 </p>
               )}
             </div>
             <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t.githubAria}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                GitHub
-              </a>
-              <a
-                href="#"
-                aria-label={t.twitterAria}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                X
-              </a>
-              <a
-                href="#"
-                aria-label={t.emailAria}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                Email
-              </a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
+              <a href="#" aria-label={t.twitterAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">X</a>
+              <a href="#" aria-label={t.emailAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">Email</a>
             </div>
           </div>
         </div>
@@ -543,4 +535,3 @@ export default function WeekGlancePage() {
     </main>
   );
 }
-
