@@ -149,7 +149,7 @@ const getWeekOfMonth = (date: Date, options: { locale: Locale, weekStartsOn: 0 |
 
 export default function WeekGlancePage() {
   const router = useRouter();
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN'); 
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN'); // Default, will be updated by useEffect
   
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
@@ -163,12 +163,12 @@ export default function WeekGlancePage() {
   const [firstEverWeekWithDataStart, setFirstEverWeekWithDataStart] = useState<Date | null>(null);
 
   const [theme, setTheme] = useState<Theme>('light'); 
-  const [systemToday, setSystemToday] = useState<Date | null>(null);
-  const [displayedDate, setDisplayedDate] = useState<Date | null>(null);
+  const [systemToday, setSystemToday] = useState<Date | null>(null); // Initialize to null
+  const [displayedDate, setDisplayedDate] = useState<Date | null>(null); // Initialize to null
   
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false); 
-  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false); // Initialize
+  const [currentYear, setCurrentYear] = useState<number | null>(null); // Initialize
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -193,9 +193,14 @@ export default function WeekGlancePage() {
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
 
   const getDayKeyForStorage = useCallback((date: Date): string => {
-    const dayIndex = (date.getDay() + 6) % 7;
-    return translations[currentLanguage].daysOfWeek[dayIndex];
+    const dayIndex = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
+    // Need to ensure translations[currentLanguage] is available.
+    // Since currentLanguage is set in useEffect, translations[currentLanguage] might be undefined initially.
+    // Fallback to a default language or handle this case.
+    const langToUseForDayKey = translations[currentLanguage] ? currentLanguage : 'en'; // Default to 'en' if currentLanguage not yet set
+    return translations[langToUseForDayKey].daysOfWeek[dayIndex];
   }, [currentLanguage]);
+
 
   useEffect(() => {
     setIsClientMounted(true); 
@@ -308,7 +313,7 @@ export default function WeekGlancePage() {
     if (checkSlotItems(data.allReflections[dayKey])) return true;
 
     return false;
-  }, [getDayKeyForStorage]);
+  }, [getDayKeyForStorage]); // Removed currentLanguage from deps as getDayKeyForStorage handles it
 
   const weekHasContent = useCallback((weekDate: Date, data: AllLoadedData): boolean => {
     const weekToCheckStart = startOfWeek(weekDate, { weekStartsOn: 1, locale: dateLocale });
@@ -392,23 +397,21 @@ export default function WeekGlancePage() {
   const handleRestButtonClick = () => router.push('/rest');
 
   const handlePreviousWeek = () => {
-    if (!displayedDate || !allDataLoaded) return; // Ensure data is loaded before proceeding
+    if (!displayedDate || !allDataLoaded) return;
     const currentWeekStart = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
     const potentialPrevWeekStart = subWeeks(currentWeekStart, 1);
-  
-    // If we are already at the earliest known week with data, do nothing further for "previous".
+
     if (firstEverWeekWithDataStart && isSameDay(currentWeekStart, firstEverWeekWithDataStart)) {
       return;
     }
   
-    // If navigating to a week before the first known content week (but not the first week itself),
-    // jump to that first known content week.
     if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStart, firstEverWeekWithDataStart)) {
-      setDisplayedDate(new Date(firstEverWeekWithDataStart));
-      return;
+       if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)) {
+         setDisplayedDate(new Date(firstEverWeekWithDataStart));
+       }
+       return;
     }
     
-    // Check if the target previous week has content. If not, don't move.
     if (!weekHasContent(potentialPrevWeekStart, allLoadedDataMemo)) {
       return;
     }
@@ -450,7 +453,7 @@ export default function WeekGlancePage() {
         return true;
     }
     if (firstEverWeekWithDataStart && isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
-        return false;
+        return false; // The first week itself should be selectable if it has content
     }
 
     return !weekHasContent(date, allLoadedDataMemo);
