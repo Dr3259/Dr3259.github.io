@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { GameCard } from '@/components/GameCard';
-import { ArrowLeft, Gamepad2, Utensils } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
@@ -15,8 +15,10 @@ const translations = {
     pageDescription: '选择一项活动来放松一下。',
     gameStationButton: '小游戏驿站',
     foodFinderButton: '去哪吃',
+    legalInfoButton: '法律普及',
     gameStationAriaLabel: '进入小游戏驿站',
     foodFinderAriaLabel: '进入去哪吃模块',
+    legalInfoAriaLabel: '进入法律普及模块',
   },
   'en': {
     backButton: 'Back to Home',
@@ -24,8 +26,10 @@ const translations = {
     pageDescription: 'Choose an activity to relax.',
     gameStationButton: 'Mini Game Station',
     foodFinderButton: 'Where to Eat',
+    legalInfoButton: 'Legal Info',
     gameStationAriaLabel: 'Enter Mini Game Station',
     foodFinderAriaLabel: 'Enter Where to Eat module',
+    legalInfoAriaLabel: 'Enter Legal Info module',
   }
 };
 
@@ -76,9 +80,15 @@ export default function RestHubPage() {
             onClick={() => router.push('/food-finder')} 
             ariaLabel={t.foodFinderAriaLabel}
           />
+          <GameCard 
+            title={t.legalInfoButton} 
+            icon={Scale} 
+            onClick={() => router.push('/legal-info')} 
+            ariaLabel={t.legalInfoAriaLabel}
+            className="sm:col-span-2" // Make it span full width on sm screens if it's the third odd item
+          />
         </div>
       </main>
     </div>
   );
 }
-
