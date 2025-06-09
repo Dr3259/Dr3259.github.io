@@ -411,9 +411,11 @@ export default function WeekGlancePage() {
                     />
                 </PopoverContent>
             </Popover>
-            <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            {!isViewingActualCurrentWeek && (
+              <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
           {!isViewingActualCurrentWeek && (
             <Button variant="outline" size="sm" onClick={handleGoToCurrentWeek} aria-label={t.backToCurrentWeek} className="mt-2 sm:mt-0">
