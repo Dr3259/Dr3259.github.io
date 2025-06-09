@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, Utensils } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -74,6 +74,8 @@ const translations = {
     yearMonthFormat: "yyyy年M月",
     weekLabelFormat: (weekNumber: number) => `第 ${weekNumber} 周`,
     selectDate: '选择日期',
+    foodFinderCardTitle: '去哪吃',
+    foodFinderCardAria: '打开去哪吃模块',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -108,6 +110,8 @@ const translations = {
     yearMonthFormat: "MMMM yyyy",
     weekLabelFormat: (weekNumber: number) => `Week ${weekNumber}`,
     selectDate: 'Select a date',
+    foodFinderCardTitle: 'Where to Eat',
+    foodFinderCardAria: 'Open Where to Eat module',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -135,55 +139,44 @@ const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
 const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
 
-// Helper function to get the week number within the month for display.
-// "Week 1" of a month is the first week whose starting day (e.g., Monday) falls *within* that month.
 const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: number }): number => {
-  const monthOfLabel = weekStartDate.getMonth(); // The month we are labeling (e.g., if weekStartDate is Aug 26, monthOfLabel is August)
+  const monthOfLabel = weekStartDate.getMonth();
   const yearOfLabel = weekStartDate.getFullYear();
 
   let weekOrdinal = 0;
-  // Start iterating from the first day of the month that `weekStartDate` belongs to.
   let iterDate = startOfMonth(weekStartDate); 
 
-  // Iterate through the days of the month to find Mondays (or the specified week start day)
   while (iterDate.getMonth() === monthOfLabel && iterDate.getFullYear() === yearOfLabel) {
     const currentIterMonday = startOfWeek(iterDate, options);
     
-    // Only count weeks whose Monday (or week start day) is *also* in the month we are labeling.
     if (currentIterMonday.getMonth() === monthOfLabel && currentIterMonday.getFullYear() === yearOfLabel) {
-      // If this Monday is the same day we started counting from (i.e., it's truly the start of a new week for this month)
       if (isSameDay(currentIterMonday, iterDate)) {
           weekOrdinal++;
       }
-      // If this identified Monday is the actual start of the week we're trying to label, return its ordinal.
       if (isSameDay(currentIterMonday, weekStartDate)) {
         return weekOrdinal;
       }
     }
     iterDate = addDays(iterDate, 1);
-    // Safety break, should not be needed if logic is correct
     if (weekOrdinal > 5 && isAfter(iterDate, addDays(weekStartDate, 7))) break; 
   }
   
-  // If weekStartDate is in monthOfLabel, but loop didn't find it (e.g. weekStartDate itself IS the first iterDate, and it's a Monday)
-  // and ordinal is 0, it should be 1.
   if (weekStartDate.getMonth() === monthOfLabel && weekOrdinal === 0) return 1;
 
-  return weekOrdinal > 0 ? weekOrdinal : 1; // Fallback, should ideally always be > 0 if weekStartDate is valid.
+  return weekOrdinal > 0 ? weekOrdinal : 1; 
 };
 
 
 export default function WeekGlancePage() {
   const router = useRouter();
   
-  // Initialize states that might differ between server/client to null or server-friendly defaults
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN'); 
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false); 
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
-  const [isClientMounted, setIsClientMounted] = useState(false); // Crucial for hydration
+  const [isClientMounted, setIsClientMounted] = useState(false);
   
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
@@ -217,7 +210,6 @@ export default function WeekGlancePage() {
     }
   }, []);
 
-  // Effect for client-side initializations (Theme, Language, Dates, localStorage data)
   useEffect(() => {
     setIsClientMounted(true); 
 
@@ -252,19 +244,16 @@ export default function WeekGlancePage() {
         }
     };
     loadData();
-
-    // Cleanup for timers used by hover preview logic
+    
     return () => {
       if (showPreviewTimerRef.current) {
         clearTimeout(showPreviewTimerRef.current);
-        showPreviewTimerRef.current = null;
       }
       if (hidePreviewTimerRef.current) {
         clearTimeout(hidePreviewTimerRef.current);
-        hidePreviewTimerRef.current = null;
       }
     };
-  }, []); // Empty dependency array: runs once on client mount
+  }, []); 
 
 
   const getDayKeyForStorage = useCallback((date: Date): string => {
@@ -275,7 +264,7 @@ export default function WeekGlancePage() {
 
 
   useEffect(() => {
-    if (isClientMounted) { // Only apply theme after client mount
+    if (isClientMounted) {
       if (theme === 'dark') document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
       if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
@@ -286,12 +275,6 @@ export default function WeekGlancePage() {
     notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections
   }), [notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
   
-  // IMPORTANT: This function's accuracy for *past historical dates* is limited by the
-  // fact that day-specific data (from DayDetailPage) is stored using day names (e.g., "Monday")
-  // as keys, not full dates. So, if content exists for *any* "Monday", this function might
-  // return true for a "Monday" in the distant past, even if no specific entry was made for that exact date.
-  // This means `firstEverWeekWithDataStart` might be earlier than true first use if old day-name-keyed data exists.
-  // A full fix requires changing the data storage model in DayDetailPage to use date-specific keys.
   const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
     const dayKey = getDayKeyForStorage(date); 
     
@@ -417,31 +400,32 @@ export default function WeekGlancePage() {
   const handlePreviousWeek = () => {
     if (!displayedDate || !allDataLoaded) return;
 
-    // If firstEverWeekWithDataStart is not yet determined, or if we are already at/before it, prevent navigation.
-    if (!firstEverWeekWithDataStart || isBefore(currentDisplayedWeekStart, firstEverWeekWithDataStart) || isSameDay(currentDisplayedWeekStart, firstEverWeekWithDataStart)) {
-        if (firstEverWeekWithDataStart && !isSameDay(currentDisplayedWeekStart, firstEverWeekWithDataStart) && weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)) {
-            // If current is before firstEver (shouldn't happen often), snap to firstEver.
-            setDisplayedDate(new Date(firstEverWeekWithDataStart));
+    const currentWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
+
+    if (firstEverWeekWithDataStart) {
+        if (isBefore(currentWeekStartDate, firstEverWeekWithDataStart) || isSameDay(currentWeekStartDate, firstEverWeekWithDataStart)) {
+            if (!isSameDay(currentWeekStartDate, firstEverWeekWithDataStart) && weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)) {
+                setDisplayedDate(new Date(firstEverWeekWithDataStart));
+            }
+            return; 
         }
-        return; // Otherwise, do nothing more.
+    } else {
+      // If firstEverWeekWithDataStart is null (no content found ever), don't allow going back.
+      return;
     }
     
-    const potentialPrevWeekStartDate = subWeeks(currentDisplayedWeekStart, 1);
+    const potentialPrevWeekStartDate = subWeeks(currentWeekStartDate, 1);
 
-    // If the target previous week is strictly before the earliest known content week,
-    // navigate TO the firstKnownWeekWithDataStart.
     if (isBefore(potentialPrevWeekStartDate, firstEverWeekWithDataStart)) {
         if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)) {
            setDisplayedDate(new Date(firstEverWeekWithDataStart));
         }
         return;
     }
-
-    // Otherwise, navigate to the potential previous week only if it has content.
+    
     if (weekHasContent(potentialPrevWeekStartDate, allLoadedDataMemo)) {
       setDisplayedDate(potentialPrevWeekStartDate);
     }
-    // If it does not have content (and it's not before firstEver), do nothing (skip empty weeks).
   };
 
 
@@ -459,11 +443,9 @@ export default function WeekGlancePage() {
 
   const handleDateSelectForJump = (date: Date | undefined) => {
     if (date) {
-      // Defensive check: ensure selected date is not in the future if systemToday is set.
-      // The Calendar's `toDate` prop should ideally prevent this.
       if (systemToday && isAfter(date, systemToday)) {
-        setIsCalendarOpen(false); // Close calendar
-        return; // Do not set to a future date
+        setIsCalendarOpen(false); 
+        return; 
       }
       setDisplayedDate(date);
       setIsCalendarOpen(false);
@@ -484,15 +466,11 @@ export default function WeekGlancePage() {
         return true;
     }
     if (firstEverWeekWithDataStart && isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
-        // For the very first week with data, it's only disabled if it *truly* has no content (which it should by definition of firstEverWeek)
         return !weekHasContent(date, allLoadedDataMemo);
     }
-
-    // For other weeks, disable if it has no content.
     return !weekHasContent(date, allLoadedDataMemo);
   }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale]);
 
-  // Initial loading state to prevent rendering before client-side values are ready (helps hydration)
   if (!isClientMounted || !systemToday || !displayedDate) {
     return (
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -619,6 +597,19 @@ export default function WeekGlancePage() {
                 aria-label={t.weeklySummaryTitle}
               />
             </CardContent>
+          </Card>
+          <Card
+            className="w-36 h-44 sm:w-40 sm:h-48 flex flex-col items-center justify-center rounded-xl border-2 border-transparent hover:border-primary/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 cursor-pointer"
+            onClick={() => router.push('/food-finder')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/food-finder'); }}
+            role="button"
+            tabIndex={0}
+            aria-label={t.foodFinderCardAria || t.foodFinderCardTitle}
+          >
+            <CardHeader className="p-2 pb-1 text-center items-center">
+              <Utensils className="w-10 h-10 sm:w-12 sm:h-12 text-primary mb-2" />
+              <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.foodFinderCardTitle}</CardTitle>
+            </CardHeader>
           </Card>
       </div>
 
