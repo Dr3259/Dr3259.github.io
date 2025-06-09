@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { GameCard } from '@/components/GameCard';
-import { ArrowLeft, Gamepad2, Utensils, Scale } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain } from 'lucide-react'; // Added Brain
 
 const translations = {
   'zh-CN': {
@@ -16,9 +16,11 @@ const translations = {
     gameStationButton: '小游戏驿站',
     foodFinderButton: '去哪吃',
     legalInfoButton: '法律普及',
+    personalityTestButton: '人格测试', // New translation
     gameStationAriaLabel: '进入小游戏驿站',
     foodFinderAriaLabel: '进入去哪吃模块',
     legalInfoAriaLabel: '进入法律普及模块',
+    personalityTestAriaLabel: '进入人格测试模块', // New translation
   },
   'en': {
     backButton: 'Back to Home',
@@ -27,9 +29,11 @@ const translations = {
     gameStationButton: 'Mini Game Station',
     foodFinderButton: 'Where to Eat',
     legalInfoButton: 'Legal Info',
+    personalityTestButton: 'Personality Test', // New translation
     gameStationAriaLabel: 'Enter Mini Game Station',
     foodFinderAriaLabel: 'Enter Where to Eat module',
     legalInfoAriaLabel: 'Enter Legal Info module',
+    personalityTestAriaLabel: 'Enter Personality Test module', // New translation
   }
 };
 
@@ -85,7 +89,12 @@ export default function RestHubPage() {
             icon={Scale} 
             onClick={() => router.push('/legal-info')} 
             ariaLabel={t.legalInfoAriaLabel}
-            className="sm:col-span-2" // Make it span full width on sm screens if it's the third odd item
+          />
+          <GameCard 
+            title={t.personalityTestButton} 
+            icon={Brain} // Using Brain icon
+            onClick={() => router.push('/personality-test')} 
+            ariaLabel={t.personalityTestAriaLabel}
           />
         </div>
       </main>
