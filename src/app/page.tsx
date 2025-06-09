@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter, differenceInDays } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 
 // Types from DayDetailPage - needed for checking content
@@ -74,8 +74,6 @@ const translations = {
     yearMonthFormat: "yyyy年M月",
     weekLabelFormat: (weekNumber: number) => `第 ${weekNumber} 周`,
     selectDate: '选择日期',
-    foodFinderCardTitle: '去哪吃',
-    foodFinderCardAria: '打开去哪吃模块',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -110,8 +108,6 @@ const translations = {
     yearMonthFormat: "MMMM yyyy",
     weekLabelFormat: (weekNumber: number) => `Week ${weekNumber}`,
     selectDate: 'Select a date',
-    foodFinderCardTitle: 'Where to Eat',
-    foodFinderCardAria: 'Open Where to Eat module',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -144,26 +140,37 @@ const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, w
   const yearOfLabel = weekStartDate.getFullYear();
 
   let weekOrdinal = 0;
-  let iterDate = startOfMonth(weekStartDate); 
+  let iterDate = startOfMonth(new Date(yearOfLabel, monthOfLabel, 1));
 
   while (iterDate.getMonth() === monthOfLabel && iterDate.getFullYear() === yearOfLabel) {
     const currentIterMonday = startOfWeek(iterDate, options);
     
+    // Only count weeks whose Monday (start of the week) is in the target month
     if (currentIterMonday.getMonth() === monthOfLabel && currentIterMonday.getFullYear() === yearOfLabel) {
-      if (isSameDay(currentIterMonday, iterDate)) {
-          weekOrdinal++;
-      }
-      if (isSameDay(currentIterMonday, weekStartDate)) {
-        return weekOrdinal;
-      }
+        // Check if this is the *first* day of this specific Monday-starting week within the month
+        if (isSameDay(currentIterMonday, iterDate) || iterDate.getDay() === options.weekStartsOn) {
+             weekOrdinal++;
+        }
+        // If the currentIterMonday is the weekStartDate we're looking for, return its calculated ordinal
+        if (isSameDay(currentIterMonday, weekStartDate)) {
+            return weekOrdinal;
+        }
     }
+    
     iterDate = addDays(iterDate, 1);
-    if (weekOrdinal > 5 && isAfter(iterDate, addDays(weekStartDate, 7))) break; 
+    // Safety break for very unusual calendar structures, though unlikely with standard month lengths
+    if (weekOrdinal > 5 && differenceInDays(iterDate, weekStartDate) > 7) break; 
   }
   
+  // Fallback for edge cases, e.g. if weekStartDate is somehow not found (shouldn't happen)
+  // or if weekStartDate's Monday is in the previous month but it still "belongs" to current month's display.
+  // The primary logic above aims to count based on Mondays *within* the month.
+  // If weekOrdinal is 0, it implies the first Monday of weekStartDate's month hasn't been hit yet in a way that satisfies conditions.
+  // This often means weekStartDate's Monday is in the *previous* month.
+  // A simple approach: if weekStartDate is in monthOfLabel, and no ordinal calculated, it's likely the "first" conceptual week.
   if (weekStartDate.getMonth() === monthOfLabel && weekOrdinal === 0) return 1;
 
-  return weekOrdinal > 0 ? weekOrdinal : 1; 
+  return weekOrdinal > 0 ? weekOrdinal : 1; // Default to 1 if calculation is ambiguous
 };
 
 
@@ -248,9 +255,11 @@ export default function WeekGlancePage() {
     return () => {
       if (showPreviewTimerRef.current) {
         clearTimeout(showPreviewTimerRef.current);
+        showPreviewTimerRef.current = null;
       }
       if (hidePreviewTimerRef.current) {
         clearTimeout(hidePreviewTimerRef.current);
+        hidePreviewTimerRef.current = null;
       }
     };
   }, []); 
@@ -403,35 +412,48 @@ export default function WeekGlancePage() {
     const currentWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
 
     if (firstEverWeekWithDataStart) {
-        if (isBefore(currentWeekStartDate, firstEverWeekWithDataStart) || isSameDay(currentWeekStartDate, firstEverWeekWithDataStart)) {
-            if (!isSameDay(currentWeekStartDate, firstEverWeekWithDataStart) && weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)) {
-                setDisplayedDate(new Date(firstEverWeekWithDataStart));
+        if (isSameDay(currentWeekStartDate, firstEverWeekWithDataStart)) {
+            return; // Already at the earliest recorded week
+        }
+        if (isBefore(currentWeekStartDate, firstEverWeekWithDataStart) ) {
+             // Should not happen if button is correctly disabled, but as a safeguard:
+            if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)){
+                 setDisplayedDate(new Date(firstEverWeekWithDataStart));
             }
-            return; 
+            return;
         }
     } else {
-      // If firstEverWeekWithDataStart is null (no content found ever), don't allow going back.
+      // No content found ever, cannot go back.
       return;
     }
     
     const potentialPrevWeekStartDate = subWeeks(currentWeekStartDate, 1);
 
-    if (isBefore(potentialPrevWeekStartDate, firstEverWeekWithDataStart)) {
-        if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)) {
+    // If potential previous week is before the first recorded week, jump to the first recorded week.
+    if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStartDate, firstEverWeekWithDataStart)) {
+        if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)){
            setDisplayedDate(new Date(firstEverWeekWithDataStart));
-        }
+        } // else, do nothing, stay on current week because firstEver is empty (should not happen)
         return;
     }
     
+    // Only navigate if the potential previous week has content
     if (weekHasContent(potentialPrevWeekStartDate, allLoadedDataMemo)) {
       setDisplayedDate(potentialPrevWeekStartDate);
     }
+    // If it doesn't have content, do nothing (stay on current week).
   };
 
 
   const handleNextWeek = () => {
-    if (isViewingActualCurrentWeek || !displayedDate) return; 
-    setDisplayedDate(prev => prev ? addDays(prev, 7) : new Date()); 
+    if (isViewingActualCurrentWeek || !displayedDate || !systemToday) return; 
+    const nextWeekCandidate = addDays(displayedDate, 7);
+    // Ensure we don't go past the current system week
+    if (isAfter(startOfWeek(nextWeekCandidate, { weekStartsOn: 1, locale: dateLocale }), startOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale }))) {
+        setDisplayedDate(new Date(systemToday)); // Go to current week if next is beyond
+    } else {
+        setDisplayedDate(nextWeekCandidate);
+    }
   };
 
   const handleGoToCurrentWeek = () => {
@@ -444,6 +466,7 @@ export default function WeekGlancePage() {
   const handleDateSelectForJump = (date: Date | undefined) => {
     if (date) {
       if (systemToday && isAfter(date, systemToday)) {
+        // Prevent selecting future dates explicitly, though toDate on Calendar should handle this
         setIsCalendarOpen(false); 
         return; 
       }
@@ -453,23 +476,57 @@ export default function WeekGlancePage() {
   };
   
   const isPreviousWeekDisabled = useMemo(() => {
-    if (!allDataLoaded || !firstEverWeekWithDataStart || !displayedDate) return false; 
-    const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
-    return isSameDay(currentDisplayedWeekStartDate, firstEverWeekWithDataStart);
-  }, [allDataLoaded, displayedDate, firstEverWeekWithDataStart, dateLocale]);
+    if (!allDataLoaded || !displayedDate) return true; // Disable if data not loaded or no display date
+    if (!firstEverWeekWithDataStart) return true; // Disable if no historical data found at all
 
-  const calendarDisabledMatcher = useCallback((date: Date) => {
-    if (!allDataLoaded) return true; 
-    const weekOfDateStart = startOfWeek(date, { weekStartsOn: 1, locale: dateLocale });
+    const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
     
-    if (firstEverWeekWithDataStart && isBefore(weekOfDateStart, firstEverWeekWithDataStart)) {
+    // Check if current week is the first recorded week
+    if (isSameDay(currentDisplayedWeekStartDate, firstEverWeekWithDataStart)) {
         return true;
     }
-    if (firstEverWeekWithDataStart && isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
-        return !weekHasContent(date, allLoadedDataMemo);
+
+    // Check if there's any content in any week before the current one, down to firstEverWeek
+    let tempDate = subWeeks(currentDisplayedWeekStartDate, 1);
+    while(isAfter(tempDate, firstEverWeekWithDataStart) || isSameDay(tempDate, firstEverWeekWithDataStart)) {
+        if(weekHasContent(tempDate, allLoadedDataMemo)) {
+            return false; // Found a previous week with content
+        }
+        if(isSameDay(tempDate, firstEverWeekWithDataStart)) break; // Stop if we checked firstEverWeek
+        tempDate = subWeeks(tempDate, 1);
+        if (isBefore(tempDate, firstEverWeekWithDataStart) && !isSameDay(tempDate, firstEverWeekWithDataStart)) break; // Safety break
     }
+    
+    return true; // No previous weeks with content found up to firstEverWeekWithDataStart
+  }, [allDataLoaded, displayedDate, firstEverWeekWithDataStart, dateLocale, weekHasContent, allLoadedDataMemo]);
+
+  const isNextWeekDisabled = useMemo(() => {
+    if (!displayedDate || !systemToday) return true;
+    return isSameWeek(displayedDate, systemToday, { weekStartsOn: 1, locale: dateLocale });
+  }, [displayedDate, systemToday, dateLocale]);
+
+
+  const calendarDisabledMatcher = useCallback((date: Date) => {
+    if (!allDataLoaded || !systemToday) return true; 
+    
+    // Disable dates after today
+    if (isAfter(date, systemToday) && !isSameDay(date, systemToday)) {
+        return true;
+    }
+
+    // Disable dates before the first week with data
+    if (firstEverWeekWithDataStart && isBefore(startOfWeek(date, { weekStartsOn: 1, locale: dateLocale }), firstEverWeekWithDataStart)) {
+        return true;
+    }
+    
+    // If a specific first week is known, and the date is in that week, allow if that week has content
+    if (firstEverWeekWithDataStart && isSameWeek(date, firstEverWeekWithDataStart, {weekStartsOn: 1, locale: dateLocale})) {
+        return !weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo);
+    }
+
+    // For other dates, disable if the week they belong to has no content
     return !weekHasContent(date, allLoadedDataMemo);
-  }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale]);
+  }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale, systemToday]);
 
   if (!isClientMounted || !systemToday || !displayedDate) {
     return (
@@ -534,11 +591,9 @@ export default function WeekGlancePage() {
                     />
                 </PopoverContent>
             </Popover>
-            {!isViewingActualCurrentWeek && (
-              <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek} disabled={systemToday ? isSameDay(currentDisplayedWeekEnd, endOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale })) : true }>
+             <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek} disabled={isNextWeekDisabled}>
                 <ChevronRight className="h-4 w-4" />
-              </Button>
-            )}
+            </Button>
           </div>
           {!isViewingActualCurrentWeek && (
             <Button variant="outline" size="sm" onClick={handleGoToCurrentWeek} aria-label={t.backToCurrentWeek} className="mt-2 sm:mt-0">
@@ -597,19 +652,6 @@ export default function WeekGlancePage() {
                 aria-label={t.weeklySummaryTitle}
               />
             </CardContent>
-          </Card>
-          <Card
-            className="w-36 h-44 sm:w-40 sm:h-48 flex flex-col items-center justify-center rounded-xl border-2 border-transparent hover:border-primary/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 cursor-pointer"
-            onClick={() => router.push('/food-finder')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/food-finder'); }}
-            role="button"
-            tabIndex={0}
-            aria-label={t.foodFinderCardAria || t.foodFinderCardTitle}
-          >
-            <CardHeader className="p-2 pb-1 text-center items-center">
-              <Utensils className="w-10 h-10 sm:w-12 sm:h-12 text-primary mb-2" />
-              <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.foodFinderCardTitle}</CardTitle>
-            </CardHeader>
           </Card>
       </div>
 
