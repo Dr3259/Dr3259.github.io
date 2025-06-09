@@ -240,6 +240,17 @@ export default function WeekGlancePage() {
     notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections
   }), [notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
+  // IMPORTANT LIMITATION:
+  // This function checks for content based on the *day of the week name* (e.g., "Monday")
+  // rather than a specific date (e.g., "2024-07-01"). This is due to the current
+  // localStorage structure where data (especially from DayDetailPage) is keyed by day names.
+  // As a result, if there's content for *any* "Monday", this function will report true
+  // for *all* Mondays being checked, regardless of the actual date of that Monday.
+  // This impacts the accuracy of `firstEverWeekWithDataStart` and `calendarDisabledMatcher`
+  // for determining truly "empty" historical weeks if the user has used the app across
+  // multiple weeks for the same day names.
+  // A full fix requires changing the data storage model to be date-specific, which
+  // would also involve changes to `src/app/day/[dayName]/page.tsx`.
   const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
     const dayKey = getDayKeyForStorage(date);
     
@@ -276,13 +287,10 @@ export default function WeekGlancePage() {
 
     for (let i = 0; i < MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT; i++) {
         if (weekHasContent(searchDate, allLoadedDataMemo)) {
-            earliestWeekFound = new Date(searchDate); // Keep updating, the last one found during backward search is the earliest
+            earliestWeekFound = new Date(searchDate); 
         }
-        if (i < MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT - 1) { // Avoid over-subtracting on last iteration
-             searchDate = subWeeks(searchDate, 1);
-        } else { // If we're at the search limit, break
-            break;
-        }
+        if (i === MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT - 1) break;
+        searchDate = subWeeks(searchDate, 1);
     }
     setFirstEverWeekWithDataStart(earliestWeekFound);
   }, [allDataLoaded, systemToday, dateLocale, weekHasContent, allLoadedDataMemo]);
