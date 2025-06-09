@@ -1,14 +1,18 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -43,6 +47,14 @@ const translations = {
     mitLicenseLinkAria: '查看 MIT 许可证详情',
     restButtonText: '休息一下',
     restButtonAria: '进入休息页面',
+    previousWeek: '上一周',
+    nextWeek: '下一周',
+    currentWeek: '本周',
+    jumpToWeek: '跳转到周',
+    backToCurrentWeek: '返回本周',
+    weekDisplayFormat: "yyyy年M月d日", // For start of week in 'MMM d'
+    weekRangeSeparator: ' - ',
+    selectDate: '选择日期',
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -69,6 +81,14 @@ const translations = {
     mitLicenseLinkAria: 'View MIT License details',
     restButtonText: 'Take a Break',
     restButtonAria: 'Go to rest page',
+    previousWeek: 'Previous Week',
+    nextWeek: 'Next Week',
+    currentWeek: 'Current Week',
+    jumpToWeek: 'Jump to Week',
+    backToCurrentWeek: 'Back to Current Week',
+    weekDisplayFormat: "MMM d, yyyy", // For start of week
+    weekRangeSeparator: ' - ',
+    selectDate: 'Select a date',
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -91,7 +111,10 @@ export default function WeekGlancePage() {
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
   const [theme, setTheme] = useState<Theme>('light');
-  const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
+  
+  const [systemToday, setSystemToday] = useState(new Date()); // Tracks the actual current date
+  const [displayedDate, setDisplayedDate] = useState(new Date()); // Tracks the date for the week being displayed
+  
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
@@ -99,8 +122,34 @@ export default function WeekGlancePage() {
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const t = translations[currentLanguage];
+  const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
+
+  const getDayNameFromDateFns = (date: Date): string => {
+    return format(date, 'EEEE', { locale: dateLocale });
+  };
+  
+  const getDayKeyForStorage = (date: Date): string => {
+      // t.daysOfWeek is 0=Monday, 1=Tuesday ... 6=Sunday
+      // date.getDay() is 0=Sunday, 1=Monday ... 6=Saturday
+      const dayIndex = (date.getDay() + 6) % 7; // Convert Sunday=0..Saturday=6 to Monday=0..Sunday=6
+      return t.daysOfWeek[dayIndex];
+  };
+
+  const currentDisplayedWeekStart = useMemo(() => startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale }), [displayedDate, dateLocale]);
+  const currentDisplayedWeekEnd = useMemo(() => endOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale }), [displayedDate, dateLocale]);
+
+  const daysToDisplay = useMemo(() => {
+    const start = currentDisplayedWeekStart;
+    return Array.from({ length: 7 }).map((_, i) => addDays(start, i));
+  }, [currentDisplayedWeekStart]);
+
+  const isViewingActualCurrentWeek = useMemo(() => {
+    return isSameWeek(displayedDate, systemToday, { weekStartsOn: 1, locale: dateLocale });
+  }, [displayedDate, systemToday, dateLocale]);
+
 
   const clearTimeoutIfNecessary = useCallback(() => {
     if (showPreviewTimerRef.current) {
@@ -122,7 +171,6 @@ export default function WeekGlancePage() {
         }
     }
 
-
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null : null;
     const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -135,9 +183,7 @@ export default function WeekGlancePage() {
     setTheme(initialTheme);
 
     const today = new Date();
-    const dayOfWeek = today.getDay();
-    const adjustedDayIndex = (dayOfWeek + 6) % 7;
-    setCurrentDayIndex(adjustedDayIndex);
+    setSystemToday(today);
     setIsAfter6PMToday(today.getHours() >= 18);
     setCurrentYear(today.getFullYear());
 
@@ -167,7 +213,7 @@ export default function WeekGlancePage() {
             setNotes(JSON.parse(storedNotes));
           }
         } catch (error) {
-          console.error("无法从localStorage解析笔记:", error);
+          console.error("Failed to parse notes from localStorage:", error);
           localStorage.removeItem(LOCAL_STORAGE_KEY_NOTES);
         }
 
@@ -177,7 +223,7 @@ export default function WeekGlancePage() {
             setRatings(JSON.parse(storedRatings));
           }
         } catch (error) {
-          console.error("无法从localStorage解析评分:", error);
+          console.error("Failed to parse ratings from localStorage:", error);
           localStorage.removeItem(LOCAL_STORAGE_KEY_RATINGS);
         }
 
@@ -187,7 +233,7 @@ export default function WeekGlancePage() {
             setWeeklySummary(storedSummary);
           }
         } catch (error) {
-          console.error("无法从localStorage加载总结:", error);
+          console.error("Failed to load summary from localStorage:", error);
         }
     }
   }, []);
@@ -204,22 +250,22 @@ export default function WeekGlancePage() {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
-  const handleDaySelect = useCallback((day: string) => {
+  const handleDaySelect = useCallback((dayNameForUrl: string) => {
     clearTimeoutIfNecessary();
     setHoverPreviewData(null);
     isPreviewSuppressedByClickRef.current = true;
-    router.push(`/day/${encodeURIComponent(day)}`);
+    router.push(`/day/${encodeURIComponent(dayNameForUrl)}`);
   }, [router, clearTimeoutIfNecessary]);
 
 
-  const handleRatingChange = useCallback((day: string, newRating: RatingType) => {
+  const handleRatingChange = useCallback((dayKey: string, newRating: RatingType) => {
     setRatings(prevRatings => {
-      const updatedRatings = { ...prevRatings, [day]: newRating };
+      const updatedRatings = { ...prevRatings, [dayKey]: newRating };
       if (typeof window !== 'undefined') {
         try {
             localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings));
         } catch (error) {
-            console.error("无法将评分保存到localStorage:", error);
+            console.error("Failed to save ratings to localStorage:", error);
         }
       }
       return updatedRatings;
@@ -232,7 +278,7 @@ export default function WeekGlancePage() {
         try {
             localStorage.setItem(LOCAL_STORAGE_KEY_SUMMARY, summary);
         } catch (error) {
-            console.error("无法将总结保存到localStorage:", error);
+            console.error("Failed to save summary to localStorage:", error);
         }
     }
   }, []);
@@ -279,10 +325,43 @@ export default function WeekGlancePage() {
     router.push('/rest');
   };
 
+  const handlePreviousWeek = () => {
+    setDisplayedDate(prev => subDays(prev, 7));
+  };
+
+  const handleNextWeek = () => {
+    setDisplayedDate(prev => addDays(prev, 7));
+  };
+
+  const handleGoToCurrentWeek = () => {
+    setDisplayedDate(new Date());
+  };
+
+  const handleDateSelectForJump = (date: Date | undefined) => {
+    if (date) {
+      setDisplayedDate(date);
+      setIsCalendarOpen(false); // Close Popover
+    }
+  };
+  
+  const formatWeekRangeForDisplay = (start: Date, end: Date): string => {
+    const startFormatted = format(start, t.weekDisplayFormat, { locale: dateLocale });
+    const endFormatted = format(end, t.weekDisplayFormat, { locale: dateLocale });
+    if (start.getFullYear() !== end.getFullYear()) {
+        return `${startFormatted}${t.weekRangeSeparator}${endFormatted}`;
+    }
+    if (start.getMonth() !== end.getMonth()) {
+         const monthDayFormat = currentLanguage === 'zh-CN' ? 'M月d日' : 'MMM d';
+         return `${format(start, monthDayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${format(end, t.weekDisplayFormat, { locale: dateLocale })}`;
+    }
+    const dayFormat = currentLanguage === 'zh-CN' ? 'd日' : 'd';
+    return `${format(start, dayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${format(end, t.weekDisplayFormat, { locale: dateLocale })}`;
+  };
+
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-      <header className="mb-12 sm:mb-16 w-full max-w-4xl flex justify-between items-center">
+      <header className="mb-8 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
         <div>
           <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
             {t.pageTitle}
@@ -296,7 +375,6 @@ export default function WeekGlancePage() {
             <Languages className="mr-2 h-4 w-4" />
             {t.languageButtonText}
           </Button>
-
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
@@ -307,32 +385,78 @@ export default function WeekGlancePage() {
         </div>
       </header>
 
+      <div className="w-full max-w-4xl mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 p-3 bg-card/50 rounded-lg shadow">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="outline" size="sm" onClick={handlePreviousWeek} aria-label={t.previousWeek}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-[200px] sm:w-[240px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        <span className="truncate">
+                           {formatWeekRangeForDisplay(currentDisplayedWeekStart, currentDisplayedWeekEnd)}
+                        </span>
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={displayedDate}
+                        onSelect={handleDateSelectForJump}
+                        initialFocus
+                        locale={dateLocale}
+                        weekStartsOn={1}
+                    />
+                </PopoverContent>
+            </Popover>
+            <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          {!isViewingActualCurrentWeek && (
+            <Button variant="outline" size="sm" onClick={handleGoToCurrentWeek} aria-label={t.backToCurrentWeek} className="mt-2 sm:mt-0">
+              <Undo className="mr-2 h-4 w-4" />
+              {t.backToCurrentWeek}
+            </Button>
+          )}
+        </div>
+      </div>
+
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
-        {t.daysOfWeek.map((day, index) => {
-          const isCurrentDay = currentDayIndex !== null && index === currentDayIndex;
-          const isPastDay = currentDayIndex !== null && index < currentDayIndex;
-          const isFutureDay = currentDayIndex !== null && index > currentDayIndex;
+        {daysToDisplay.map((dateInWeek, index) => {
+          const dayNameForDisplay = getDayNameFromDateFns(dateInWeek);
+          const dayKeyForStorage = getDayKeyForStorage(dateInWeek);
+
+          const isCurrentActualDay = isSameDay(dateInWeek, systemToday);
+          const isPastActualDay = dateInWeek < systemToday && !isCurrentActualDay;
+          const isFutureActualDay = dateInWeek > systemToday && !isCurrentActualDay;
+          
+          const noteForThisDayBox = notes[dayKeyForStorage] || '';
+          const ratingForThisDayBox = ratings[dayKeyForStorage] || null;
 
           return (
             <DayBox
-              key={day}
-              dayName={day}
-              onClick={() => handleDaySelect(day)}
-              notes={notes[day] || ''}
-              hasNotes={!!notes[day]?.trim()}
-              rating={ratings[day] || null}
-              onRatingChange={(newRating) => handleRatingChange(day, newRating)}
-              isCurrentDay={isCurrentDay}
-              isPastDay={isPastDay}
-              isFutureDay={isFutureDay}
-              isAfter6PMToday={isAfter6PMToday}
+              key={dateInWeek.toISOString()} // Use a unique key for the date
+              dayName={dayNameForDisplay}
+              onClick={() => handleDaySelect(dayNameForDisplay)}
+              notes={noteForThisDayBox} 
+              hasNotes={!!noteForThisDayBox?.trim()}
+              rating={ratingForThisDayBox}
+              onRatingChange={(newRating) => handleRatingChange(dayKeyForStorage, newRating)}
+              isCurrentDay={isCurrentActualDay}
+              isPastDay={isPastActualDay}
+              isFutureDay={isFutureActualDay}
+              isAfter6PMToday={isAfter6PMToday} // This refers to *actual* today's 6PM status
               todayLabel={t.todayPrefix}
-              selectDayLabel={t.selectDayAria(day)}
+              selectDayLabel={t.selectDayAria(dayNameForDisplay)}
               hasNotesLabel={t.hasNotesAria}
               ratingUiLabels={t.ratingLabels}
               onHoverStart={handleDayHoverStart}
               onHoverEnd={handleDayHoverEnd}
-              imageHint="activity memory"
+              imageHint="activity memory" // Generic hint as notes are not week-specific yet
             />
           );
         })}
