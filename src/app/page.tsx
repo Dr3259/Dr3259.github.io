@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO, subWeeks, isBefore, getISOWeek } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO, subWeeks, isBefore, startOfMonth, differenceInDays, type Locale } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 
 // Types from DayDetailPage - needed for checking content
@@ -135,6 +135,20 @@ const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
 const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
 
+// Helper function to get the week number within the month
+const getWeekOfMonth = (date: Date, options: { locale: Locale, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 }): number => {
+  const firstDayOfMonth = startOfMonth(date);
+  // The startOfWeek for the week that *contains* the first day of the month.
+  // This week is considered "Week 1" for the month.
+  const startOfFirstCalendarWeekOfMonth = startOfWeek(firstDayOfMonth, options);
+  
+  const startOfCurrentCalendarWeek = startOfWeek(date, options);
+
+  const daysDifference = differenceInDays(startOfCurrentCalendarWeek, startOfFirstCalendarWeekOfMonth);
+  return Math.floor(daysDifference / 7) + 1;
+};
+
+
 export default function WeekGlancePage() {
   const router = useRouter();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
@@ -168,7 +182,13 @@ export default function WeekGlancePage() {
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
 
   const getDayKeyForStorage = useCallback((date: Date): string => {
-    const dayIndex = (date.getDay() + 6) % 7;
+    const dayIndex = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
+    // Ensure to use the *current page language* for the key,
+    // as DayDetailPage stores based on its current language, which might be different
+    // if the user changes language after storing data.
+    // For simplicity here, we use the main page's current language for key generation.
+    // A more robust solution would involve storing data with a language-neutral key or
+    // normalizing keys upon load/save if DayDetailPage's language can vary.
     return translations[currentLanguage].daysOfWeek[dayIndex];
   }, [currentLanguage]);
 
@@ -240,22 +260,29 @@ export default function WeekGlancePage() {
     notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections
   }), [notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
-  // IMPORTANT LIMITATION (Comment from previous interaction, kept for context):
+  // IMPORTANT LIMITATION:
   // This function checks for content based on the *day of the week name* (e.g., "Monday")
   // rather than a specific date (e.g., "2024-07-01"). This is due to the current
-  // localStorage structure where data (especially from DayDetailPage) is keyed by day names.
-  // As a result, if there's content for *any* "Monday", this function will report true
-  // for *all* Mondays being checked, regardless of the actual date of that Monday.
+  // localStorage structure where data (especially from DayDetailPage which is keyed by day names)
+  // is primarily keyed by day names across all languages.
+  // As a result, if there's content for *any* "Monday" (from any week the user used the app),
+  // this function will report true for *all* Mondays being checked, regardless of the actual date.
   // This impacts the accuracy of `firstEverWeekWithDataStart` and `calendarDisabledMatcher`
   // for determining truly "empty" historical weeks if the user has used the app across
-  // multiple weeks for the same day names.
-  // A full fix requires changing the data storage model to be date-specific, which
-  // would also involve changes to `src/app/day/[dayName]/page.tsx`.
+  // multiple weeks for the same day names. A full fix requires changing the data storage model
+  // to be date-specific for all data types, which would also involve significant changes to
+  // `src/app/day/[dayName]/page.tsx` and how `localStorage` keys are generated and read there.
+  // The current implementation of getDayKeyForStorage on this page uses the current language's
+  // day names, which means if the language is changed, it might not find data stored previously
+  // under a different language's day name.
   const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
-    const dayKey = getDayKeyForStorage(date);
+    const dayKey = getDayKeyForStorage(date); // This key is like "Monday", "星期一"
     
+    // Check main page specific data
     if (data.notes[dayKey]?.trim()) return true;
-    if (data.ratings[dayKey]) return true; // Ratings are content
+    if (data.ratings[dayKey]) return true; 
+
+    // Check DayDetailPage specific data
     if (data.allDailyNotes[dayKey]?.trim()) return true;
 
     const checkSlotItems = (items: Record<string, any[]> | undefined) => 
@@ -351,23 +378,29 @@ export default function WeekGlancePage() {
 
   const handlePreviousWeek = () => {
     const currentWeekStart = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
-
-    if (firstEverWeekWithDataStart && isSameDay(currentWeekStart, firstEverWeekWithDataStart)) {
-      return; 
-    }
-
     const potentialPrevWeekStart = subWeeks(currentWeekStart, 1);
 
-    if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStart, firstEverWeekWithDataStart)) {
-      setDisplayedDate(new Date(firstEverWeekWithDataStart));
-      return;
+    // If there's no known first week with data, or if the potential previous week is before it,
+    // we might not want to navigate or only navigate if that week has content.
+    if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStart, firstEverWeekWithDataStart) && !isSameDay(potentialPrevWeekStart, firstEverWeekWithDataStart) ) {
+        // If we'd go before the earliest known content week, only do so if that earliest week IS the target.
+        if (isSameDay(currentWeekStart, firstEverWeekWithDataStart)) {
+            return; // Already at the earliest, don't move
+        }
+        // Otherwise, snap to the earliest known content week
+        setDisplayedDate(new Date(firstEverWeekWithDataStart));
+        return;
     }
     
-    if (weekHasContent(potentialPrevWeekStart, allLoadedDataMemo)) {
-      setDisplayedDate(potentialPrevWeekStart);
-    } else {
+    // Check if the target previous week has content. If not, don't move.
+    if (!weekHasContent(potentialPrevWeekStart, allLoadedDataMemo) && !(firstEverWeekWithDataStart && isSameDay(potentialPrevWeekStart, firstEverWeekWithDataStart))) {
+      // Allow moving to firstEverWeek even if it appears empty by current day-name check,
+      // because our backward scan might have identified it based on some content.
+      // This condition is complex due to the day-name keying issue.
       return;
     }
+
+    setDisplayedDate(potentialPrevWeekStart);
   };
 
 
@@ -394,9 +427,18 @@ export default function WeekGlancePage() {
   const calendarDisabledMatcher = useCallback((date: Date) => {
     if (!allDataLoaded) return true; 
     const weekOfDateStart = startOfWeek(date, { weekStartsOn: 1, locale: dateLocale });
+    
+    // Disable dates before the first ever week with data
     if (firstEverWeekWithDataStart && isBefore(weekOfDateStart, firstEverWeekWithDataStart) && !isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
         return true;
     }
+    // Disable dates belonging to weeks that have no content (as per current day-name based check)
+    // but allow selection of the firstEverWeekWithDataStart itself, even if weekHasContent returns false
+    // for it due to language mismatches in getDayKeyForStorage.
+    if (firstEverWeekWithDataStart && isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
+        return false;
+    }
+
     return !weekHasContent(date, allLoadedDataMemo);
   }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale]);
 
@@ -428,10 +470,10 @@ export default function WeekGlancePage() {
             </Button>
              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-[220px] sm:w-[260px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
+                    <Button variant="outline" size="sm" className="w-[240px] sm:w-[280px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
                         <CalendarDays className="mr-2 h-4 w-4" />
                         <span className="truncate">
-                           {`${format(currentDisplayedWeekStart, t.yearMonthFormat, { locale: dateLocale })}, ${t.weekLabelFormat(getISOWeek(currentDisplayedWeekStart))}`}
+                           {`${format(currentDisplayedWeekStart, t.yearMonthFormat, { locale: dateLocale })}, ${t.weekLabelFormat(getWeekOfMonth(currentDisplayedWeekStart, { locale: dateLocale, weekStartsOn: 1 }))}`}
                         </span>
                     </Button>
                 </PopoverTrigger>
