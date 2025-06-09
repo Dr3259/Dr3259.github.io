@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO, subWeeks, isBefore } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, parseISO, subWeeks, isBefore, getISOWeek } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 
 // Types from DayDetailPage - needed for checking content
@@ -71,8 +71,8 @@ const translations = {
     currentWeek: '本周',
     jumpToWeek: '跳转到周',
     backToCurrentWeek: '返回本周',
-    weekDisplayFormat: "yyyy年M月d日",
-    weekRangeSeparator: ' - ',
+    yearMonthFormat: "yyyy年M月",
+    weekLabelFormat: (weekNumber: number) => `第 ${weekNumber} 周`,
     selectDate: '选择日期',
   },
   'en': {
@@ -105,8 +105,8 @@ const translations = {
     currentWeek: 'Current Week',
     jumpToWeek: 'Jump to Week',
     backToCurrentWeek: 'Back to Current Week',
-    weekDisplayFormat: "MMM d, yyyy",
-    weekRangeSeparator: ' - ',
+    yearMonthFormat: "MMMM yyyy",
+    weekLabelFormat: (weekNumber: number) => `Week ${weekNumber}`,
     selectDate: 'Select a date',
   }
 };
@@ -353,24 +353,19 @@ export default function WeekGlancePage() {
     const currentWeekStart = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
 
     if (firstEverWeekWithDataStart && isSameDay(currentWeekStart, firstEverWeekWithDataStart)) {
-      return; // Already at the earliest known week with content
+      return; 
     }
 
     const potentialPrevWeekStart = subWeeks(currentWeekStart, 1);
 
     if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStart, firstEverWeekWithDataStart)) {
-      // This case should ideally not be hit if the button is disabled correctly,
-      // but as a safeguard, navigate to the first known week if somehow attempted.
       setDisplayedDate(new Date(firstEverWeekWithDataStart));
       return;
     }
     
-    // Check if the target *immediate* previous week has content.
     if (weekHasContent(potentialPrevWeekStart, allLoadedDataMemo)) {
       setDisplayedDate(potentialPrevWeekStart);
     } else {
-      // If the immediate previous week has no content, do not change the displayed date.
-      // The user would need to use the calendar to jump to an earlier, content-filled week if available.
       return;
     }
   };
@@ -385,23 +380,11 @@ export default function WeekGlancePage() {
 
   const handleDateSelectForJump = (date: Date | undefined) => {
     if (date) {
-      // The calendar's disabledMatcher already ensures only weeks with content are selectable.
-      // So, if a date is selected, we can assume its week has content.
       setDisplayedDate(date);
       setIsCalendarOpen(false);
     }
   };
   
-  const formatWeekRangeForDisplay = (start: Date, end: Date): string => {
-    const startFormatted = format(start, t.weekDisplayFormat, { locale: dateLocale });
-    const endFormatted = format(end, t.weekDisplayFormat, { locale: dateLocale });
-    if (start.getFullYear() !== end.getFullYear()) return `${startFormatted}${t.weekRangeSeparator}${endFormatted}`;
-    const monthDayFormat = currentLanguage === 'zh-CN' ? 'M月d日' : 'MMM d';
-    if (start.getMonth() !== end.getMonth()) return `${format(start, monthDayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${endFormatted}`;
-    const dayFormat = currentLanguage === 'zh-CN' ? 'd日' : 'd';
-    return `${format(start, dayFormat, { locale: dateLocale })}${t.weekRangeSeparator}${endFormatted}`;
-  };
-
   const isPreviousWeekDisabled = useMemo(() => {
     if (!allDataLoaded || !firstEverWeekWithDataStart) return false; 
     const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
@@ -410,8 +393,6 @@ export default function WeekGlancePage() {
 
   const calendarDisabledMatcher = useCallback((date: Date) => {
     if (!allDataLoaded) return true; 
-    // A date is disabled if its entire week does not have content OR
-    // if it's before the firstEverWeekWithDataStart (even if day-name keying might falsely suggest content).
     const weekOfDateStart = startOfWeek(date, { weekStartsOn: 1, locale: dateLocale });
     if (firstEverWeekWithDataStart && isBefore(weekOfDateStart, firstEverWeekWithDataStart) && !isSameDay(weekOfDateStart, firstEverWeekWithDataStart)) {
         return true;
@@ -447,9 +428,11 @@ export default function WeekGlancePage() {
             </Button>
              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-[200px] sm:w-[240px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
+                    <Button variant="outline" size="sm" className="w-[220px] sm:w-[260px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
                         <CalendarDays className="mr-2 h-4 w-4" />
-                        <span className="truncate">{formatWeekRangeForDisplay(currentDisplayedWeekStart, currentDisplayedWeekEnd)}</span>
+                        <span className="truncate">
+                           {`${format(currentDisplayedWeekStart, t.yearMonthFormat, { locale: dateLocale })}, ${t.weekLabelFormat(getISOWeek(currentDisplayedWeekStart))}`}
+                        </span>
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -461,8 +444,8 @@ export default function WeekGlancePage() {
                         initialFocus
                         locale={dateLocale}
                         weekStartsOn={1}
-                        fromDate={firstEverWeekWithDataStart || undefined} // Only allow selection from the first week with data
-                        toDate={systemToday} // Only allow selection up to today
+                        fromDate={firstEverWeekWithDataStart || undefined} 
+                        toDate={systemToday} 
                     />
                 </PopoverContent>
             </Popover>
