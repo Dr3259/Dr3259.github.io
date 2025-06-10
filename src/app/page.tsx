@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, Utensils } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare } from "lucide-react"; // Added MessageSquare
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -59,7 +59,7 @@ const translations = {
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
     githubAria: 'GitHub',
-    twitterAria: 'X (原推特)',
+    wechatAria: '微信', // Changed from twitterAria
     emailAria: '电子邮件',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
@@ -93,7 +93,7 @@ const translations = {
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
     githubAria: 'GitHub',
-    twitterAria: 'X (formerly Twitter)',
+    wechatAria: 'WeChat', // Changed from twitterAria
     emailAria: 'Email',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
@@ -683,7 +683,9 @@ export default function WeekGlancePage() {
             </div>
             <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
-              <a href="#" aria-label={t.twitterAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">X</a>
+              <a href="#" aria-label={t.wechatAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                <MessageSquare className="h-4 w-4" />
+              </a>
               <a href="#" aria-label={t.emailAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">Email</a>
             </div>
           </div>
