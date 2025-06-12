@@ -101,7 +101,7 @@ export const DayBox: FC<DayBoxProps> = ({
 
   // Show dot indicator only for past or current days with content.
   // Future days, even with pre-filled content, should not show the dot.
-  const showContentDot = dayHasAnyData && !isFutureDay && !isDisabled;
+  const showContentDot = dayHasAnyData && !isFutureDay && !isDisabled && (isPastDay || isCurrentDay);
 
   return (
     <Card
@@ -131,7 +131,7 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : (
-          <Sun className="w-8 h-8 text-yellow-400 opacity-70" /> // Display Sun icon if no content dot
+          <Sun className="w-10 h-10 text-yellow-400 opacity-70" />
         )}
       </CardContent>
       {showRatingIcons && (
