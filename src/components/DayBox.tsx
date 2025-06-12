@@ -131,7 +131,10 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : (
-          <Sun className="w-10 h-10 text-yellow-400 opacity-70" />
+          <Sun className={cn(
+            "w-10 h-10",
+            isDisabled ? "text-muted-foreground opacity-60" : "text-yellow-400 opacity-70"
+          )} />
         )}
       </CardContent>
       {showRatingIcons && (
