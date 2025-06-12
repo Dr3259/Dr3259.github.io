@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, FileEdit } from "lucide-react"; // Replaced Sun with FileEdit
+import { Smile, Meh, Frown, FileEdit } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -99,7 +99,7 @@ export const DayBox: FC<DayBoxProps> = ({
 
   // Show content dot only for past or current days that have data and are not disabled.
   // Future days, even with pre-filled data, won't show the dot.
-  const showContentDot = dayHasAnyData && !isFutureDay && !isDisabled && (isPastDay || isCurrentDay);
+  const showContentDot = dayHasAnyData && (isPastDay || isCurrentDay) && !isDisabled && !isFutureDay;
 
   return (
     <Card
@@ -131,7 +131,7 @@ export const DayBox: FC<DayBoxProps> = ({
         ) : (
           <FileEdit className={cn(
             "w-12 h-12",
-            isDisabled ? "text-muted-foreground opacity-60" : "text-muted-foreground opacity-70"
+            isDisabled ? "text-muted-foreground opacity-60" : "text-primary/80" // Changed here
           )} />
         )}
       </CardContent>
