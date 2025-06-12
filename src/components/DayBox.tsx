@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, CalendarDays, Sun } from "lucide-react"; // Changed FileEdit to CalendarPlus, Added CalendarDays, Sun
+import { Smile, Meh, Frown, CalendarPlus, Archive, Sun } from "lucide-react"; // Changed CalendarDays to Archive
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -66,12 +66,12 @@ export const DayBox: FC<DayBoxProps> = ({
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
 
   const handleCardClick = () => {
-    onClick();
+    // Already handled by conditional assignment below
   };
 
   const handleCardKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      onClick();
+      // Already handled by conditional assignment below
     }
   };
 
@@ -108,8 +108,8 @@ export const DayBox: FC<DayBoxProps> = ({
               isCurrentDay && !isDisabled && "ring-2 ring-offset-2 ring-offset-background ring-amber-500 dark:ring-amber-400"
             ]
       )}
-      onClick={isDisabled ? undefined : handleCardClick}
-      onKeyDown={isDisabled ? undefined : handleCardKeyDown}
+      onClick={isDisabled ? undefined : onClick}
+      onKeyDown={isDisabled ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       onMouseEnter={handleCardMouseEnter}
       onMouseLeave={handleCardMouseLeave}
       role={isDisabled ? undefined : "button"}
@@ -124,17 +124,17 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : isDisabled ? (
-          <CalendarDays // Changed from CalendarOff to CalendarDays for disabled state
+          <Archive 
             className={cn(
               "w-12 h-12",
               "text-muted-foreground opacity-60" 
             )}
           />
         ) : (
-          <CalendarPlus // Was FileEdit, then Sun, now CalendarPlus for editable empty states
+          <CalendarPlus 
             className={cn(
               "w-12 h-12",
-              "text-primary/80" // Primary color for editable states
+              "text-primary/80" 
             )}
           />
         )}
