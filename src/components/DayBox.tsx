@@ -63,8 +63,8 @@ export const DayBox: FC<DayBoxProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
-  // A past day is only disabled if it truly has no content recorded anywhere.
-  const isDisabled = isPastDay && !dayHasAnyData;
+  // A past day is only disabled (grayed out and unclickable) if it has no content recorded anywhere.
+  const isDisabled = (isPastDay && !dayHasAnyData);
 
 
   const handleCardClick = () => {
