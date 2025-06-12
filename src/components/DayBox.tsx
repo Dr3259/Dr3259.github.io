@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, Archive, Sun } from "lucide-react"; // Changed CalendarDays to Archive
+import { Smile, Meh, Frown, CalendarPlus, File, Sun } from "lucide-react"; // Changed Archive to File
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -65,16 +65,6 @@ export const DayBox: FC<DayBoxProps> = ({
   const isDisabled = isPastDay && !dayHasAnyData;
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
 
-  const handleCardClick = () => {
-    // Already handled by conditional assignment below
-  };
-
-  const handleCardKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      // Already handled by conditional assignment below
-    }
-  };
-
   const handleCardMouseEnter = () => {
     setIsHovered(true);
     if (isPastDay && !isDisabled) {
@@ -124,7 +114,7 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : isDisabled ? (
-          <Archive 
+          <File 
             className={cn(
               "w-12 h-12",
               "text-muted-foreground opacity-60" 
