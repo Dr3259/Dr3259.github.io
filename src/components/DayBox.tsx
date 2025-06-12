@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, File, CalendarOff, CalendarDays, Archive } from "lucide-react";
+import { Smile, Meh, Frown, CalendarPlus, File, CalendarOff, CalendarDays, Archive, Ban } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -86,6 +86,19 @@ export const DayBox: FC<DayBoxProps> = ({
 
   const showContentDot = dayHasAnyData && !isDisabled;
 
+  let IconToShow: LucideIcon | null = null;
+  let iconClassName = "";
+
+  if (showContentDot) {
+    // Keep the small dot for "has content"
+  } else if (isDisabled) {
+    IconToShow = Ban; // Changed from File
+    iconClassName = "w-10 h-10 text-muted-foreground opacity-50";
+  } else {
+    IconToShow = CalendarPlus;
+    iconClassName = "w-12 h-12 text-primary/80";
+  }
+
   return (
     <Card
       className={cn(
@@ -113,21 +126,9 @@ export const DayBox: FC<DayBoxProps> = ({
       <CardContent className="p-2 flex-grow flex items-center justify-center">
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
-        ) : isDisabled ? (
-          <File 
-            className={cn(
-              "w-10 h-10", // Changed from w-12 h-12
-              "text-muted-foreground opacity-50" // Changed from opacity-60
-            )}
-          />
-        ) : (
-          <CalendarPlus 
-            className={cn(
-              "w-12 h-12",
-              "text-primary/80" 
-            )}
-          />
-        )}
+        ) : IconToShow ? (
+          <IconToShow className={iconClassName} />
+        ) : null}
       </CardContent>
       {showRatingIcons && (
         <CardFooter className="p-2 pt-1 mt-auto w-full">
