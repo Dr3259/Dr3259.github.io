@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, File, CalendarOff, CalendarDays, Archive, Ban } from "lucide-react";
+import { Smile, Meh, Frown, CalendarPlus, File, Ban, CalendarDays } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -90,11 +90,11 @@ export const DayBox: FC<DayBoxProps> = ({
   let iconClassName = "";
 
   if (showContentDot) {
-    // Keep the small dot for "has content"
-  } else if (isDisabled) {
-    IconToShow = Ban; // Changed from File
-    iconClassName = "w-10 h-10 text-muted-foreground opacity-50";
-  } else {
+    // Small dot shown, no central icon
+  } else if (isDisabled) { // Past day, no content, unmodifiable
+    IconToShow = CalendarDays; 
+    iconClassName = "w-10 h-10 text-muted-foreground opacity-40";
+  } else { // Current or future day, no content, editable
     IconToShow = CalendarPlus;
     iconClassName = "w-12 h-12 text-primary/80";
   }
