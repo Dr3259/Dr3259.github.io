@@ -600,16 +600,27 @@ export default function DayDetailPage() {
       }
     }
 
-    setActiveIntervalKey(newActiveKey);
+    if (newActiveKey !== activeIntervalKey) {
+        setActiveIntervalKey(newActiveKey);
+    }
+    
 
     const targetKeyForScroll = currentIntervalKeyForScroll || firstVisibleIntervalKeyForScroll;
+    let scrollTimerId: NodeJS.Timeout | null = null;
 
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
-      setTimeout(() => {
+      scrollTimerId = setTimeout(() => {
         intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
       }, 100);
     }
-  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, dayProperties]);
+    
+    return () => {
+        if (scrollTimerId) {
+            clearTimeout(scrollTimerId);
+        }
+    };
+
+  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, dayProperties, activeIntervalKey]);
 
 
   // --- To-do Modal and Item Handlers ---
