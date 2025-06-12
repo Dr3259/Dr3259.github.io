@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, FileEdit } from "lucide-react";
+import { Smile, Meh, Frown, CalendarPlus } from "lucide-react"; // Changed FileEdit to CalendarPlus
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -65,7 +65,6 @@ export const DayBox: FC<DayBoxProps> = ({
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
   const isDisabled = (isPastDay && !dayHasAnyData);
 
-
   const handleCardClick = () => {
     if (isDisabled) return;
     onClick();
@@ -97,8 +96,6 @@ export const DayBox: FC<DayBoxProps> = ({
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
-  // Show content dot if the day has any data and the box is not disabled.
-  // This applies to past, current, and future days with content.
   const showContentDot = dayHasAnyData && !isDisabled;
 
   return (
@@ -129,7 +126,7 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : (
-          <FileEdit className={cn(
+          <CalendarPlus className={cn( // Changed from FileEdit
             "w-12 h-12",
             isDisabled ? "text-muted-foreground opacity-60" : "text-primary/80"
           )} />
@@ -167,4 +164,3 @@ export const DayBox: FC<DayBoxProps> = ({
     </Card>
   );
 };
-
