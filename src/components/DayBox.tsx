@@ -5,15 +5,15 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus } from "lucide-react"; // Changed FileEdit to CalendarPlus
+import { Smile, Meh, Frown, CalendarPlus } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
 interface DayBoxProps {
   dayName: string;
   onClick: () => void;
-  notes: string; 
-  dayHasAnyData: boolean; 
+  notes: string;
+  dayHasAnyData: boolean;
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
@@ -22,7 +22,7 @@ interface DayBoxProps {
   isAfter6PMToday: boolean;
   todayLabel: string;
   selectDayLabel: string;
-  contentIndicatorLabel?: string; 
+  contentIndicatorLabel?: string;
   ratingUiLabels: {
     excellent: string;
     average: string;
@@ -62,8 +62,8 @@ export const DayBox: FC<DayBoxProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  const isDisabled = isPastDay && !dayHasAnyData;
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
-  const isDisabled = (isPastDay && !dayHasAnyData);
 
   const handleCardClick = () => {
     if (isDisabled) return;
@@ -90,9 +90,9 @@ export const DayBox: FC<DayBoxProps> = ({
       onHoverEnd();
     }
   };
-  
-  const showRatingIcons = 
-    !isDisabled && 
+
+  const showRatingIcons =
+    !isDisabled &&
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
@@ -110,12 +110,12 @@ export const DayBox: FC<DayBoxProps> = ({
               isCurrentDay && !isDisabled && "ring-2 ring-offset-2 ring-offset-background ring-amber-500 dark:ring-amber-400"
             ]
       )}
-      onClick={handleCardClick}
+      onClick={isDisabled ? undefined : handleCardClick}
       onMouseEnter={handleCardMouseEnter}
       onMouseLeave={handleCardMouseLeave}
       role="button"
       tabIndex={isDisabled ? -1 : 0}
-      onKeyDown={handleCardKeyDown}
+      onKeyDown={isDisabled ? undefined : handleCardKeyDown}
       aria-label={ariaLabel}
       aria-disabled={isDisabled}
     >
@@ -126,10 +126,12 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : (
-          <CalendarPlus className={cn( // Changed from FileEdit
-            "w-12 h-12",
-            isDisabled ? "text-muted-foreground opacity-60" : "text-primary/80"
-          )} />
+          <CalendarPlus
+            className={cn(
+              "w-12 h-12",
+              isDisabled ? "text-muted-foreground opacity-60" : "text-primary/80"
+            )}
+          />
         )}
       </CardContent>
       {showRatingIcons && (
@@ -142,7 +144,7 @@ export const DayBox: FC<DayBoxProps> = ({
                 <button
                   key={type}
                   onClick={(e) => {
-                    e.stopPropagation(); 
+                    e.stopPropagation();
                     onRatingChange(rating === type ? null : type);
                   }}
                   className={cn(
@@ -152,7 +154,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
-                  disabled={isDisabled} 
+                  disabled={isDisabled}
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
