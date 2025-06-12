@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, FileEdit, CalendarOff } from "lucide-react"; // Added CalendarOff
+import { Smile, Meh, Frown, CalendarPlus, CalendarDays, Sun } from "lucide-react"; // Changed FileEdit to CalendarPlus, Added CalendarDays, Sun
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -66,14 +66,10 @@ export const DayBox: FC<DayBoxProps> = ({
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
 
   const handleCardClick = () => {
-    // onClick is now conditionally passed, so this check might be redundant but safe
-    if (isDisabled) return; 
     onClick();
   };
 
   const handleCardKeyDown = (e: React.KeyboardEvent) => {
-     // onKeyDown is now conditionally passed
-    if (isDisabled) return;
     if (e.key === 'Enter' || e.key === ' ') {
       onClick();
     }
@@ -98,11 +94,6 @@ export const DayBox: FC<DayBoxProps> = ({
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
-  // The dot shows if there's any data AND the box is NOT a disabled past-day-without-content.
-  // This covers:
-  // - Past day with content
-  // - Current day with content
-  // - Future day with content (pre-planned)
   const showContentDot = dayHasAnyData && !isDisabled;
 
   return (
@@ -121,7 +112,7 @@ export const DayBox: FC<DayBoxProps> = ({
       onKeyDown={isDisabled ? undefined : handleCardKeyDown}
       onMouseEnter={handleCardMouseEnter}
       onMouseLeave={handleCardMouseLeave}
-      role="button"
+      role={isDisabled ? undefined : "button"}
       tabIndex={isDisabled ? -1 : 0}
       aria-label={ariaLabel}
       aria-disabled={isDisabled}
@@ -133,17 +124,17 @@ export const DayBox: FC<DayBoxProps> = ({
         {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : isDisabled ? (
-          <CalendarOff
+          <CalendarDays // Changed from CalendarOff to CalendarDays for disabled state
             className={cn(
               "w-12 h-12",
               "text-muted-foreground opacity-60" 
             )}
           />
         ) : (
-          <CalendarPlus
+          <CalendarPlus // Was FileEdit, then Sun, now CalendarPlus for editable empty states
             className={cn(
               "w-12 h-12",
-              "text-primary/80" 
+              "text-primary/80" // Primary color for editable states
             )}
           />
         )}
