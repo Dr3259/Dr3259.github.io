@@ -5,15 +5,15 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, Sun } from "lucide-react"; // Added Sun icon
+import { Smile, Meh, Frown, Sun } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
 interface DayBoxProps {
   dayName: string;
   onClick: () => void;
-  notes: string; // For hover preview content
-  dayHasAnyData: boolean; // True if any content exists for this day (summary, rating, or detail page items)
+  notes: string; 
+  dayHasAnyData: boolean; 
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
@@ -22,7 +22,7 @@ interface DayBoxProps {
   isAfter6PMToday: boolean;
   todayLabel: string;
   selectDayLabel: string;
-  contentIndicatorLabel?: string; // Label for the content dot
+  contentIndicatorLabel?: string; 
   ratingUiLabels: {
     excellent: string;
     average: string;
@@ -63,7 +63,6 @@ export const DayBox: FC<DayBoxProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
-  // A past day is only disabled (grayed out and unclickable) if it has no content recorded anywhere.
   const isDisabled = (isPastDay && !dayHasAnyData);
 
 
@@ -81,7 +80,6 @@ export const DayBox: FC<DayBoxProps> = ({
 
   const handleCardMouseEnter = () => {
     setIsHovered(true);
-    // Show hover preview for past days that are not disabled (meaning they have some content)
     if (isPastDay && !isDisabled) {
       onHoverStart({ dayName, notes, imageHint });
     }
@@ -99,8 +97,6 @@ export const DayBox: FC<DayBoxProps> = ({
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
-  // Show dot indicator only for past or current days with content.
-  // Future days, even with pre-filled content, should not show the dot.
   const showContentDot = dayHasAnyData && !isFutureDay && !isDisabled && (isPastDay || isCurrentDay);
 
   return (
@@ -132,8 +128,8 @@ export const DayBox: FC<DayBoxProps> = ({
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         ) : (
           <Sun className={cn(
-            "w-10 h-10",
-            isDisabled ? "text-muted-foreground opacity-60" : "text-yellow-400 opacity-70"
+            "w-12 h-12", // Increased size
+            isDisabled ? "text-muted-foreground opacity-60" : "text-yellow-400 opacity-80" // Adjusted opacity
           )} />
         )}
       </CardContent>
@@ -147,7 +143,7 @@ export const DayBox: FC<DayBoxProps> = ({
                 <button
                   key={type}
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent card click when rating
+                    e.stopPropagation(); 
                     onRatingChange(rating === type ? null : type);
                   }}
                   className={cn(
