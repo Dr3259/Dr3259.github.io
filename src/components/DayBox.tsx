@@ -5,15 +5,15 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown } from "lucide-react"; // Changed from ThumbsUp, ThumbsDown
+import { Smile, Meh, Frown } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
 interface DayBoxProps {
   dayName: string;
   onClick: () => void;
-  notes: string; // Still needed for hover preview
-  hasNotes?: boolean;
+  notes: string; // For hover preview content
+  dayHasAnyData: boolean; // True if any content exists for this day (summary, rating, or detail page items)
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
   isCurrentDay: boolean;
@@ -22,7 +22,7 @@ interface DayBoxProps {
   isAfter6PMToday: boolean;
   todayLabel: string;
   selectDayLabel: string;
-  hasNotesLabel?: string;
+  contentIndicatorLabel?: string; // Label for the content dot
   ratingUiLabels: {
     excellent: string;
     average: string;
@@ -34,9 +34,9 @@ interface DayBoxProps {
 }
 
 const RATING_ICONS: Record<RatingValue, LucideIcon> = {
-  excellent: Smile, // Changed
+  excellent: Smile,
   average: Meh,
-  terrible: Frown, // Changed
+  terrible: Frown,
 };
 
 const RATING_ORDER: RatingValue[] = ['excellent', 'average', 'terrible'];
@@ -44,8 +44,8 @@ const RATING_ORDER: RatingValue[] = ['excellent', 'average', 'terrible'];
 export const DayBox: FC<DayBoxProps> = ({
   dayName,
   onClick,
-  notes, // notes prop is kept for onHoverStart
-  hasNotes: showNotesIndicator, // Renamed for clarity
+  notes,
+  dayHasAnyData,
   rating,
   onRatingChange,
   isCurrentDay,
@@ -54,7 +54,7 @@ export const DayBox: FC<DayBoxProps> = ({
   isAfter6PMToday,
   todayLabel,
   selectDayLabel,
-  hasNotesLabel,
+  contentIndicatorLabel,
   ratingUiLabels,
   onHoverStart,
   onHoverEnd,
@@ -63,7 +63,8 @@ export const DayBox: FC<DayBoxProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
-  const isDisabled = isPastDay && !showNotesIndicator && !rating;
+  // A past day is only disabled if it truly has no content recorded anywhere.
+  const isDisabled = isPastDay && !dayHasAnyData;
 
 
   const handleCardClick = () => {
@@ -80,6 +81,7 @@ export const DayBox: FC<DayBoxProps> = ({
 
   const handleCardMouseEnter = () => {
     setIsHovered(true);
+    // Show hover preview for past days that are not disabled (meaning they have some content)
     if (isPastDay && !isDisabled) {
       onHoverStart({ dayName, notes, imageHint });
     }
@@ -122,8 +124,9 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {showNotesIndicator && !isDisabled && (
-          <div className="w-2 h-2 rounded-full bg-primary" aria-label={hasNotesLabel}></div>
+        {/* Show dot indicator if there's any content and the box is not disabled */}
+        {dayHasAnyData && !isDisabled && (
+          <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         )}
       </CardContent>
       {showRatingIcons && (

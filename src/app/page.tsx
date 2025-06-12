@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare } from "lucide-react"; // Added MessageSquare
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -47,7 +47,7 @@ const translations = {
     languageButtonText: 'English',
     daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
     selectDayAria: (day: string) => `查看 ${day} 详情`,
-    hasNotesAria: '有笔记',
+    hasNotesAria: '有内容记录', // Changed to be more generic
     ratingLabels: {
       excellent: '好极了',
       average: '一般般',
@@ -59,7 +59,7 @@ const translations = {
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
     githubAria: 'GitHub',
-    wechatAria: '微信', // Changed from twitterAria
+    wechatAria: '微信',
     emailAria: '电子邮件',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
@@ -81,7 +81,7 @@ const translations = {
     languageButtonText: '中文',
     daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     selectDayAria: (day: string) => `View details for ${day}`,
-    hasNotesAria: 'Has notes',
+    hasNotesAria: 'Has recorded content', // Changed to be more generic
     ratingLabels: {
       excellent: 'Excellent',
       average: 'Average',
@@ -93,7 +93,7 @@ const translations = {
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
     githubAria: 'GitHub',
-    wechatAria: 'WeChat', // Changed from twitterAria
+    wechatAria: 'WeChat',
     emailAria: 'Email',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
@@ -615,6 +615,7 @@ export default function WeekGlancePage() {
           
           const noteForThisDayBox = notes[dayKeyForStorage] || '';
           const ratingForThisDayBox = ratings[dayKeyForStorage] || null;
+          const hasAnyDataForThisDay = dayHasContent(dateInWeek, allLoadedDataMemo);
 
           return (
             <DayBox
@@ -622,7 +623,7 @@ export default function WeekGlancePage() {
               dayName={dayNameForDisplay}
               onClick={() => handleDaySelect(dayNameForDisplay)}
               notes={noteForThisDayBox} 
-              hasNotes={!!noteForThisDayBox?.trim()}
+              dayHasAnyData={hasAnyDataForThisDay}
               rating={ratingForThisDayBox}
               onRatingChange={(newRating) => handleRatingChange(dayKeyForStorage, newRating)}
               isCurrentDay={isCurrentActualDay}
@@ -631,7 +632,7 @@ export default function WeekGlancePage() {
               isAfter6PMToday={isAfter6PMToday} 
               todayLabel={t.todayPrefix}
               selectDayLabel={t.selectDayAria(dayNameForDisplay)}
-              hasNotesLabel={t.hasNotesAria}
+              contentIndicatorLabel={t.hasNotesAria} // Use updated generic label
               ratingUiLabels={t.ratingLabels}
               onHoverStart={handleDayHoverStart}
               onHoverEnd={handleDayHoverEnd}
