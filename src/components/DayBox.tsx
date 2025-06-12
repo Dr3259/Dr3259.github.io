@@ -99,6 +99,9 @@ export const DayBox: FC<DayBoxProps> = ({
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
+  // Show dot indicator only for past or current days with content.
+  const showContentDot = dayHasAnyData && !isFutureDay && !isDisabled;
+
   return (
     <Card
       className={cn(
@@ -124,8 +127,7 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {/* Show dot indicator if there's any content and the box is not disabled */}
-        {dayHasAnyData && !isDisabled && (
+        {showContentDot && (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
         )}
       </CardContent>
@@ -161,4 +163,3 @@ export const DayBox: FC<DayBoxProps> = ({
     </Card>
   );
 };
-
