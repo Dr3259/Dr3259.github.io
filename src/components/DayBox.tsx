@@ -97,9 +97,9 @@ export const DayBox: FC<DayBoxProps> = ({
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
-  // Show content dot only for past or current days that have data and are not disabled.
-  // Future days, even with pre-filled data, won't show the dot.
-  const showContentDot = dayHasAnyData && (isPastDay || isCurrentDay) && !isDisabled && !isFutureDay;
+  // Show content dot if the day has any data and the box is not disabled.
+  // This applies to past, current, and future days with content.
+  const showContentDot = dayHasAnyData && !isDisabled;
 
   return (
     <Card
@@ -131,7 +131,7 @@ export const DayBox: FC<DayBoxProps> = ({
         ) : (
           <FileEdit className={cn(
             "w-12 h-12",
-            isDisabled ? "text-muted-foreground opacity-60" : "text-primary/80" // Changed here
+            isDisabled ? "text-muted-foreground opacity-60" : "text-primary/80"
           )} />
         )}
       </CardContent>
@@ -167,3 +167,4 @@ export const DayBox: FC<DayBoxProps> = ({
     </Card>
   );
 };
+
