@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown } from "lucide-react";
+import { Smile, Meh, Frown, Sun } from "lucide-react"; // Added Sun icon
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -100,6 +100,7 @@ export const DayBox: FC<DayBoxProps> = ({
     !isFutureDay;
 
   // Show dot indicator only for past or current days with content.
+  // Future days, even with pre-filled content, should not show the dot.
   const showContentDot = dayHasAnyData && !isFutureDay && !isDisabled;
 
   return (
@@ -127,8 +128,10 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {showContentDot && (
+        {showContentDot ? (
           <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
+        ) : (
+          <Sun className="w-8 h-8 text-yellow-400 opacity-70" /> // Display Sun icon if no content dot
         )}
       </CardContent>
       {showRatingIcons && (
