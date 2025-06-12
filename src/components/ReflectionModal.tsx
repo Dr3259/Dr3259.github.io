@@ -36,9 +36,9 @@ export interface ReflectionModalTranslations {
 interface ReflectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (day: string, hourSlot: string, reflection: ReflectionItem) => void;
+  onSave: (dateKey: string, hourSlot: string, reflection: ReflectionItem) => void; // Changed dayName to dateKey
   onDelete?: (reflectionId: string) => void;
-  dayName: string;
+  dateKey: string; // YYYY-MM-DD
   hourSlot: string;
   initialData?: ReflectionItem | null;
   translations: ReflectionModalTranslations;
@@ -51,7 +51,7 @@ export const ReflectionModal: React.FC<ReflectionModalProps> = ({
   onClose,
   onSave,
   onDelete,
-  dayName,
+  dateKey, // Changed from dayName
   hourSlot,
   initialData,
   translations,
@@ -70,7 +70,7 @@ export const ReflectionModal: React.FC<ReflectionModalProps> = ({
 
   const handleSaveOrUpdate = () => {
     if (text.trim() === '') {
-        onClose(); // Don't save if empty, just close
+        onClose(); 
         return;
     }
 
@@ -78,7 +78,7 @@ export const ReflectionModal: React.FC<ReflectionModalProps> = ({
       id: initialData?.id || Date.now().toString(),
       text: text.trim(),
     };
-    onSave(dayName, hourSlot, reflectionData);
+    onSave(dateKey, hourSlot, reflectionData); // Pass dateKey
     onClose();
   };
 

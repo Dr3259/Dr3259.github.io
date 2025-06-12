@@ -43,8 +43,8 @@ export interface TodoItem {
 interface TodoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSaveTodos: (day: string, hourSlot: string, todos: TodoItem[]) => void;
-  dayName: string;
+  onSaveTodos: (dateKey: string, hourSlot: string, todos: TodoItem[]) => void; // Changed from dayName to dateKey
+  dateKey: string; // YYYY-MM-DD
   hourSlot: string;
   initialTodos?: TodoItem[];
   translations: {
@@ -106,7 +106,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   isOpen,
   onClose,
   onSaveTodos,
-  dayName,
+  dateKey, // Changed from dayName
   hourSlot,
   initialTodos = [],
   translations,
@@ -195,7 +195,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   };
 
   const handleSave = () => {
-    onSaveTodos(dayName, hourSlot, todos);
+    onSaveTodos(dateKey, hourSlot, todos); // Pass dateKey
     onClose(); 
   };
 

@@ -3,8 +3,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { ParsedUrlQuery } from 'querystring';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +21,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { format, parseISO } from 'date-fns'; // Added for date handling
 
 
 // Helper function to extract time range and generate hourly slots
@@ -37,15 +37,13 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   const startHour = parseInt(startTimeStr.split(':')[0]);
   let endHour = parseInt(endTimeStr.split(':')[0]);
 
-  // If interval is 18:00-00:00, 00:00 means 24:00 for loop end
   if (endTimeStr === "00:00" && startHour !== 0 && endHour === 0) {
       endHour = 24;
   }
 
   const slots: string[] = [];
   if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
-     // This case should ideally not happen if 00:00 is correctly handled as 24 for intervals like 18:00-00:00
-     if (!(startHour < 24 && endHour === 0)) { // Allow 23:00 to 00:00 by making endHour 24
+     if (!(startHour < 24 && endHour === 0)) { 
         return [];
      }
   }
@@ -53,7 +51,6 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   for (let h = startHour; h < endHour; h++) {
     const currentSlotStart = `${String(h).padStart(2, '0')}:00`;
     const nextHour = h + 1;
-    // For the slot 23:00, nextHour will be 24, so slot will be "23:00 - 24:00"
     const currentSlotEnd = `${String(nextHour).padStart(2, '0')}:00`;
     slots.push(`${currentSlotStart} - ${currentSlotEnd}`);
   }
@@ -76,7 +73,7 @@ const translations = {
     morning: '上午 (09:00 - 12:00)',
     noon: '中午 (12:00 - 14:00)',
     afternoon: '下午 (14:00 - 18:00)',
-    evening: '晚上 (18:00 - 24:00)', // Note: 24:00 is used for internal logic
+    evening: '晚上 (18:00 - 24:00)',
     activitiesPlaceholder: (intervalName: string) => `记录${intervalName.split(' ')[0]}的活动...`,
     addTodo: '添加待办事项',
     addMeetingNote: '添加会议记录',
@@ -196,7 +193,7 @@ const translations = {
     morning: 'Morning (09:00 - 12:00)',
     noon: 'Noon (12:00 - 14:00)',
     afternoon: 'Afternoon (14:00 - 18:00)',
-    evening: 'Evening (18:00 - 24:00)', // Note: 24:00 is used for internal logic
+    evening: 'Evening (18:00 - 24:00)',
     activitiesPlaceholder: (intervalName: string) => `Log activities for ${intervalName.split(' (')[0]}...`,
     addTodo: 'Add To-do',
     addMeetingNote: 'Add Meeting Note',
@@ -306,8 +303,15 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
+// Data storage keys (consistent with main page)
+const LOCAL_STORAGE_KEY_ALL_DAILY_NOTES = 'allWeekDailyNotes_v2';
+const LOCAL_STORAGE_KEY_ALL_TODOS = 'allWeekTodos_v2';
+const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes_v2';
+const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks_v2';
+const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
+
 interface SlotDetails {
-  dayName: string;
+  dateKey: string; // YYYY-MM-DD
   hourSlot: string;
 }
 
@@ -337,46 +341,41 @@ type DailyNoteDisplayMode = 'read' | 'edit' | 'pending';
 
 export default function DayDetailPage() {
   const params = useParams();
-  const dayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
+  const searchParams = useSearchParams();
+  const dayNameForDisplay = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
+  const dateKey = searchParams.get('date') || ''; // YYYY-MM-DD
 
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); // Default to 'en', will be updated by useEffect
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
 
-  // Daily Notes state
-  const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({});
+  const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({}); // Keyed by YYYY-MM-DD
+  const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({}); // Outer key: YYYY-MM-DD
+  const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
+  const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
+  const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
 
-  // To-do states
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
-  const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
   const [editingTodoItem, setEditingTodoItem] = useState<TodoItem | null>(null);
   const [editingTodoSlotDetails, setEditingTodoSlotDetails] = useState<SlotDetails | null>(null);
 
-  // Meeting Note states
   const [isMeetingNoteModalOpen, setIsMeetingNoteModalOpen] = useState(false);
   const [selectedSlotForMeetingNote, setSelectedSlotForMeetingNote] = useState<SlotDetails | null>(null);
-  const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
   const [editingMeetingNoteItem, setEditingMeetingNoteItem] = useState<MeetingNoteItem | null>(null);
   const [editingMeetingNoteSlotDetails, setEditingMeetingNoteSlotDetails] = useState<SlotDetails | null>(null);
 
-  // Share Link states
   const [isShareLinkModalOpen, setIsShareLinkModalOpen] = useState(false);
   const [selectedSlotForShareLink, setSelectedSlotForShareLink] = useState<SlotDetails | null>(null);
-  const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
   const [editingShareLinkItem, setEditingShareLinkItem] = useState<ShareLinkItem | null>(null);
   const [editingShareLinkSlotDetails, setEditingShareLinkSlotDetails] = useState<SlotDetails | null>(null);
 
-  // Reflection states
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
   const [selectedSlotForReflection, setSelectedSlotForReflection] = useState<SlotDetails | null>(null);
-  const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
   const [editingReflectionItem, setEditingReflectionItem] = useState<ReflectionItem | null>(null);
   const [editingReflectionSlotDetails, setEditingReflectionSlotDetails] = useState<SlotDetails | null>(null);
 
   const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
-
-  // Stable page load time, captured once on client mount
   const pageLoadTime = useMemo(() => new Date(), []);
 
 
@@ -389,86 +388,39 @@ export default function DayDetailPage() {
     const today = new Date();
     setIsAfter6PMToday(today.getHours() >= 18);
 
-    const storedDailyNotes = localStorage.getItem('allWeekDailyNotes');
-    if (storedDailyNotes) {
+    const loadData = () => {
         try {
-            setAllDailyNotes(JSON.parse(storedDailyNotes));
+            setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
+            setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
+            setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
+            setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
+            setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
         } catch (e) {
-            console.error("Failed to parse daily notes from localStorage", e);
+            console.error("Failed to parse data from localStorage", e);
         }
-    }
-    const storedTodos = localStorage.getItem('allWeekTodos');
-    if (storedTodos) {
-        try {
-            setAllTodos(JSON.parse(storedTodos));
-        } catch (e) {
-            console.error("Failed to parse todos from localStorage", e);
-        }
-    }
-    const storedMeetingNotes = localStorage.getItem('allWeekMeetingNotes');
-    if (storedMeetingNotes) {
-        try {
-            setAllMeetingNotes(JSON.parse(storedMeetingNotes));
-        } catch (e) {
-            console.error("Failed to parse meeting notes from localStorage", e);
-        }
-    }
-    const storedShareLinks = localStorage.getItem('allWeekShareLinks');
-    if (storedShareLinks) {
-        try {
-            setAllShareLinks(JSON.parse(storedShareLinks));
-        } catch (e) {
-            console.error("Failed to parse share links from localStorage", e);
-        }
-    }
-    const storedReflections = localStorage.getItem('allWeekReflections');
-    if (storedReflections) {
-        try {
-            setAllReflections(JSON.parse(storedReflections));
-        } catch (e) {
-            console.error("Failed to parse reflections from localStorage", e);
-        }
-    }
+    };
+    loadData();
   }, []);
 
   const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
-    try {
-        localStorage.setItem('allWeekDailyNotes', JSON.stringify(updatedNotes));
-    } catch (e) {
-        console.error("Failed to save daily notes to localStorage", e);
-    }
+    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, JSON.stringify(updatedNotes)); } 
+    catch (e) { console.error("Failed to save daily notes", e); }
   };
-
   const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
-    try {
-        localStorage.setItem('allWeekTodos', JSON.stringify(updatedTodos));
-    } catch (e) {
-        console.error("Failed to save todos to localStorage", e);
-    }
+    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(updatedTodos)); }
+    catch (e) { console.error("Failed to save todos", e); }
   };
-
   const saveAllMeetingNotesToLocalStorage = (updatedNotes: Record<string, Record<string, MeetingNoteItem[]>>) => {
-    try {
-        localStorage.setItem('allWeekMeetingNotes', JSON.stringify(updatedNotes));
-    } catch (e) {
-        console.error("Failed to save meeting notes to localStorage", e);
-    }
+    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES, JSON.stringify(updatedNotes)); }
+    catch (e) { console.error("Failed to save meeting notes", e); }
   };
-
   const saveAllShareLinksToLocalStorage = (updatedLinks: Record<string, Record<string, ShareLinkItem[]>>) => {
-    try {
-        localStorage.setItem('allWeekShareLinks', JSON.stringify(updatedLinks));
-    } catch (e) {
-        console.error("Failed to save share links to localStorage", e);
-    }
+    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(updatedLinks)); }
+    catch (e) { console.error("Failed to save share links", e); }
   };
-
   const saveAllReflectionsToLocalStorage = (updatedReflections: Record<string, Record<string, ReflectionItem[]>>) => {
-    try {
-        localStorage.setItem('allWeekReflections', JSON.stringify(updatedReflections));
-    } catch (e) {
-        console.error("Failed to save reflections to localStorage", e);
-    }
+    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS, JSON.stringify(updatedReflections)); }
+    catch (e) { console.error("Failed to save reflections", e); }
   };
 
 
@@ -478,77 +430,70 @@ export default function DayDetailPage() {
   const tShareLinkModal = translations[currentLanguage].shareLinkModal;
   const tReflectionModal = translations[currentLanguage].reflectionModal;
 
-  const dailyNote = allDailyNotes[dayName] || "";
-  const rating = ""; // Placeholder for daily rating, if implemented later
+  const dailyNote = dateKey ? allDailyNotes[dateKey] || "" : "";
+  const rating = ""; // Placeholder
 
   const timeIntervals = useMemo(() => [
-    { key: 'midnight', label: t.midnight },
-    { key: 'earlyMorning', label: t.earlyMorning },
-    { key: 'morning', label: t.morning },
-    { key: 'noon', label: t.noon },
-    { key: 'afternoon', label: t.afternoon },
-    { key: 'evening', label: t.evening }
+    { key: 'midnight', label: t.midnight }, { key: 'earlyMorning', label: t.earlyMorning },
+    { key: 'morning', label: t.morning }, { key: 'noon', label: t.noon },
+    { key: 'afternoon', label: t.afternoon }, { key: 'evening', label: t.evening }
   ], [t]);
 
   const handleDailyNoteChange = (newNote: string) => {
+    if (!dateKey) return;
     setAllDailyNotes(prev => {
-        const updated = {...prev, [dayName]: newNote.substring(0, MAX_DAILY_NOTE_LENGTH) };
+        const updated = {...prev, [dateKey]: newNote.substring(0, MAX_DAILY_NOTE_LENGTH) };
         saveAllDailyNotesToLocalStorage(updated);
         return updated;
     });
   };
 
   const dayProperties = useMemo(() => {
-    // Ensure dayName is a string and valid before proceeding
-    const currentDayName = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "";
-    if (!currentDayName || currentDayName === "无效日期") {
-      return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
+    if (!dateKey) return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
+    try {
+        const parsedDate = parseISO(dateKey); // YYYY-MM-DD should be parsable
+        const dayIndex = (parsedDate.getDay() + 6) % 7; // Monday is 0
+        return { numericalIndex: dayIndex, sourceLanguage: currentLanguage, isValid: true, dateObject: parsedDate };
+    } catch (e) {
+        console.error("Invalid dateKey format:", dateKey);
+        return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
     }
-
-    for (const langKey of Object.keys(translations) as LanguageKey[]) {
-      const daysOfWeekForLang = translations[langKey].daysOfWeek;
-      const index = daysOfWeekForLang.findIndex(d => d === currentDayName);
-      if (index !== -1) {
-        return { numericalIndex: index, sourceLanguage: langKey, isValid: true };
-      }
-    }
-    // Fallback if dayName is not found in any language's list
-    return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
-  }, [params.dayName, currentLanguage]);
+  }, [dateKey, currentLanguage]);
 
 
   const isViewingCurrentDay = useMemo(() => {
-    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid) return false;
+    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
     const todayDate = new Date();
-    const systemDayIndex = (todayDate.getDay() + 6) % 7; // Monday is 0, Sunday is 6
-    return dayProperties.numericalIndex === systemDayIndex;
+    return format(dayProperties.dateObject, 'yyyy-MM-dd') === format(todayDate, 'yyyy-MM-dd');
   }, [dayProperties]);
 
   const isFutureDay = useMemo(() => {
-    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid) return false; // Default to false to avoid hiding on server or if invalid
+    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
     const today = new Date();
-    const systemDayIndex = (today.getDay() + 6) % 7;
-    return dayProperties.numericalIndex > systemDayIndex;
+    today.setHours(0,0,0,0); // Compare dates only
+    return dayProperties.dateObject > today;
   }, [dayProperties]);
 
 
   const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
-    if (!dayProperties || !dayProperties.isValid) return 'edit'; // Fallback for invalid day
+    if (!dayProperties || !dayProperties.isValid) return 'edit'; 
 
     if (!isViewingCurrentDay) {
         const today = new Date();
-        const todaySystemIndex = (today.getDay() + 6) % 7;
-        return (dayProperties.numericalIndex < todaySystemIndex) ? 'read' : 'edit';
+        today.setHours(0,0,0,0);
+        // Ensure dateObject is valid before comparison
+        if (!dayProperties.dateObject) return 'edit'; // Should not happen if isValid is true
+        return (dayProperties.dateObject < today) ? 'read' : 'edit';
     }
-    // It is the current day
     return isAfter6PMToday ? 'edit' : 'pending';
   }, [dayProperties, isViewingCurrentDay, isAfter6PMToday]);
 
 
   useEffect(() => {
-    if (!isViewingCurrentDay || typeof window === 'undefined') {
+    let scrollTimerId: NodeJS.Timeout | null = null;
+    if (!isViewingCurrentDay || typeof window === 'undefined' || !dateKey) {
       setActiveIntervalKey(null);
-      return;
+      return () => { if (scrollTimerId) clearTimeout(scrollTimerId); };
     }
 
     const now = new Date();
@@ -563,10 +508,10 @@ export default function DayDetailPage() {
     for (const interval of timeIntervals) {
       const hourlySlots = generateHourlySlots(interval.label);
       const hasContentInInterval = hourlySlots.some(slot =>
-          (allTodos[dayName]?.[slot]?.length || 0) > 0 ||
-          (allMeetingNotes[dayName]?.[slot]?.length || 0) > 0 ||
-          (allShareLinks[dayName]?.[slot]?.length || 0) > 0 ||
-          (allReflections[dayName]?.[slot]?.length || 0) > 0
+          (allTodos[dateKey]?.[slot]?.length || 0) > 0 ||
+          (allMeetingNotes[dateKey]?.[slot]?.length || 0) > 0 ||
+          (allShareLinks[dateKey]?.[slot]?.length || 0) > 0 ||
+          (allReflections[dateKey]?.[slot]?.length || 0) > 0
       );
 
       const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
@@ -589,7 +534,6 @@ export default function DayDetailPage() {
         continue;
       }
 
-
       if (!firstVisibleIntervalKeyForScroll) {
         firstVisibleIntervalKeyForScroll = interval.key;
       }
@@ -604,331 +548,198 @@ export default function DayDetailPage() {
         setActiveIntervalKey(newActiveKey);
     }
     
-
     const targetKeyForScroll = currentIntervalKeyForScroll || firstVisibleIntervalKeyForScroll;
-    let scrollTimerId: NodeJS.Timeout | null = null;
-
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
       scrollTimerId = setTimeout(() => {
         intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
       }, 100);
     }
     
-    return () => {
-        if (scrollTimerId) {
-            clearTimeout(scrollTimerId);
-        }
-    };
-
-  }, [dayName, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, dayProperties, activeIntervalKey]);
+    return () => { if (scrollTimerId) clearTimeout(scrollTimerId); };
+  }, [dateKey, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, activeIntervalKey]);
 
 
-  // --- To-do Modal and Item Handlers ---
   const handleOpenTodoModal = (hourSlot: string) => {
-    setSelectedSlotForTodo({ dayName, hourSlot });
+    if (!dateKey) return;
+    setSelectedSlotForTodo({ dateKey, hourSlot });
     setEditingTodoItem(null);
     setEditingTodoSlotDetails(null);
     setIsTodoModalOpen(true);
   };
-
   const handleCloseTodoModal = () => {
-    setIsTodoModalOpen(false);
-    setSelectedSlotForTodo(null);
-    setEditingTodoItem(null);
-    setEditingTodoSlotDetails(null);
+    setIsTodoModalOpen(false); setSelectedSlotForTodo(null); setEditingTodoItem(null); setEditingTodoSlotDetails(null);
   };
-
-  const handleSaveTodosFromModal = (day: string, hourSlot: string, updatedTodosInSlot: TodoItem[]) => {
-    setAllTodos(prevAllTodos => {
-      const newAllTodos = {
-        ...prevAllTodos,
-        [day]: {
-          ...(prevAllTodos[day] || {}),
-          [hourSlot]: updatedTodosInSlot,
-        },
-      };
-      saveAllTodosToLocalStorage(newAllTodos);
-      return newAllTodos;
+  const handleSaveTodosFromModal = (currentDateKey: string, hourSlot: string, updatedTodosInSlot: TodoItem[]) => {
+    setAllTodos(prev => {
+      const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedTodosInSlot } };
+      saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
-
-  const handleToggleTodoCompletionInPage = (targetDay: string, targetHourSlot: string, todoId: string) => {
-    setAllTodos(prevAllTodos => {
-      const daySlots = prevAllTodos[targetDay] || {};
-      const slotTodos = daySlots[targetHourSlot] || [];
-      const updatedSlotTodos = slotTodos.map(todo =>
-        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
-      );
-      const newAllTodos = {
-        ...prevAllTodos,
-        [targetDay]: {
-          ...daySlots,
-          [targetHourSlot]: updatedSlotTodos,
-        },
-      };
-      saveAllTodosToLocalStorage(newAllTodos);
-      return newAllTodos;
+  const handleToggleTodoCompletionInPage = (targetDateKey: string, targetHourSlot: string, todoId: string) => {
+    setAllTodos(prev => {
+      const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
+      const updatedSlot = slotTodos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t);
+      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
+      saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
-
-  const handleDeleteTodoInPage = (targetDay: string, targetHourSlot: string, todoId: string) => {
-    setAllTodos(prevAllTodos => {
-      const daySlots = prevAllTodos[targetDay] || {};
-      const slotTodos = daySlots[targetHourSlot] || [];
-      const updatedSlotTodos = slotTodos.filter(todo => todo.id !== todoId);
-      const newAllTodos = {
-        ...prevAllTodos,
-        [targetDay]: {
-          ...daySlots,
-          [targetHourSlot]: updatedSlotTodos,
-        },
-      };
-      saveAllTodosToLocalStorage(newAllTodos);
-      return newAllTodos;
+  const handleDeleteTodoInPage = (targetDateKey: string, targetHourSlot: string, todoId: string) => {
+    setAllTodos(prev => {
+      const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
+      const updatedSlot = slotTodos.filter(t => t.id !== todoId);
+      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
+      saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
-
-  const handleOpenEditModalInPage = (targetDay: string, targetHourSlot: string, todoToEdit: TodoItem) => {
+  const handleOpenEditModalInPage = (targetDateKey: string, targetHourSlot: string, todoToEdit: TodoItem) => {
     setEditingTodoItem(todoToEdit);
-    setEditingTodoSlotDetails({ dayName: targetDay, hourSlot: targetHourSlot });
-    setSelectedSlotForTodo({ dayName: targetDay, hourSlot: targetHourSlot });
+    setEditingTodoSlotDetails({ dateKey: targetDateKey, hourSlot: targetHourSlot });
+    setSelectedSlotForTodo({ dateKey: targetDateKey, hourSlot: targetHourSlot });
     setIsTodoModalOpen(true);
   };
-
-  const getTodosForSlot = (targetDayName: string, targetHourSlot: string): TodoItem[] => {
-    return allTodos[targetDayName]?.[targetHourSlot] || [];
+  const getTodosForSlot = (targetDateKey: string, targetHourSlot: string): TodoItem[] => {
+    return allTodos[targetDateKey]?.[targetHourSlot] || [];
   };
 
-  // --- Meeting Note Modal and Item Handlers ---
   const handleOpenMeetingNoteModal = (hourSlot: string, noteToEdit?: MeetingNoteItem) => {
-    setSelectedSlotForMeetingNote({ dayName, hourSlot });
+    if (!dateKey) return;
+    setSelectedSlotForMeetingNote({ dateKey, hourSlot });
     setEditingMeetingNoteItem(noteToEdit || null);
-    setEditingMeetingNoteSlotDetails(noteToEdit ? { dayName, hourSlot } : null);
+    setEditingMeetingNoteSlotDetails(noteToEdit ? { dateKey, hourSlot } : null);
     setIsMeetingNoteModalOpen(true);
   };
-
   const handleCloseMeetingNoteModal = () => {
-    setIsMeetingNoteModalOpen(false);
-    setSelectedSlotForMeetingNote(null);
-    setEditingMeetingNoteItem(null);
-    setEditingMeetingNoteSlotDetails(null);
+    setIsMeetingNoteModalOpen(false); setSelectedSlotForMeetingNote(null); setEditingMeetingNoteItem(null); setEditingMeetingNoteSlotDetails(null);
   };
-
-  const handleSaveMeetingNoteFromModal = (day: string, hourSlot: string, savedNote: MeetingNoteItem) => {
-    setAllMeetingNotes(prevAllNotes => {
-      const dayNotes = prevAllNotes[day] || {};
-      const slotNotes = dayNotes[hourSlot] || [];
-
-      const existingNoteIndex = slotNotes.findIndex(n => n.id === savedNote.id);
-      let updatedSlotNotes;
-      if (existingNoteIndex > -1) {
-        updatedSlotNotes = slotNotes.map((n, index) => index === existingNoteIndex ? savedNote : n);
-      } else {
-        updatedSlotNotes = [...slotNotes, savedNote];
-      }
-
-      const newAllNotes = {
-        ...prevAllNotes,
-        [day]: {
-          ...dayNotes,
-          [hourSlot]: updatedSlotNotes,
-        },
-      };
-      saveAllMeetingNotesToLocalStorage(newAllNotes);
-      return newAllNotes;
+  const handleSaveMeetingNoteFromModal = (currentDateKey: string, hourSlot: string, savedNote: MeetingNoteItem) => {
+    setAllMeetingNotes(prev => {
+      const slotNotes = prev[currentDateKey]?.[hourSlot] || [];
+      const idx = slotNotes.findIndex(n => n.id === savedNote.id);
+      const updatedSlot = idx > -1 ? slotNotes.map((n, i) => i === idx ? savedNote : n) : [...slotNotes, savedNote];
+      const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedSlot } };
+      saveAllMeetingNotesToLocalStorage(newAll); return newAll;
     });
   };
-
-  const handleDeleteMeetingNoteInPage = (targetDay: string, targetHourSlot: string, noteId: string) => {
-    setAllMeetingNotes(prevAllNotes => {
-      const dayNotes = prevAllNotes[targetDay] || {};
-      const slotNotes = dayNotes[targetHourSlot] || [];
-      const updatedSlotNotes = slotNotes.filter(note => note.id !== noteId);
-      const newAllNotes = {
-        ...prevAllNotes,
-        [targetDay]: {
-          ...dayNotes,
-          [targetHourSlot]: updatedSlotNotes,
-        },
-      };
-      saveAllMeetingNotesToLocalStorage(newAllNotes);
-      return newAllNotes;
+  const handleDeleteMeetingNoteInPage = (targetDateKey: string, targetHourSlot: string, noteId: string) => {
+    setAllMeetingNotes(prev => {
+      const slotNotes = prev[targetDateKey]?.[targetHourSlot] || [];
+      const updatedSlot = slotNotes.filter(n => n.id !== noteId);
+      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+      saveAllMeetingNotesToLocalStorage(newAll); return newAll;
     });
   };
-
   const handleDeleteNoteFromModal = (noteId: string) => {
-    if (selectedSlotForMeetingNote) {
-        handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dayName, selectedSlotForMeetingNote.hourSlot, noteId);
-    }
+    if (selectedSlotForMeetingNote) handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId);
   };
-
-  const handleOpenEditMeetingNoteModalInPage = (targetDay: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
+  const handleOpenEditMeetingNoteModalInPage = (targetDateKey: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
     handleOpenMeetingNoteModal(targetHourSlot, noteToEdit);
   };
-
-  const getMeetingNotesForSlot = (targetDayName: string, targetHourSlot: string): MeetingNoteItem[] => {
-    return allMeetingNotes[targetDayName]?.[targetHourSlot] || [];
+  const getMeetingNotesForSlot = (targetDateKey: string, targetHourSlot: string): MeetingNoteItem[] => {
+    return allMeetingNotes[targetDateKey]?.[targetHourSlot] || [];
   };
 
-  // --- Share Link Modal and Item Handlers ---
   const handleOpenShareLinkModal = (hourSlot: string, linkToEdit?: ShareLinkItem) => {
-    setSelectedSlotForShareLink({ dayName, hourSlot });
+    if (!dateKey) return;
+    setSelectedSlotForShareLink({ dateKey, hourSlot });
     setEditingShareLinkItem(linkToEdit || null);
-    setEditingShareLinkSlotDetails(linkToEdit ? { dayName, hourSlot } : null);
+    setEditingShareLinkSlotDetails(linkToEdit ? { dateKey, hourSlot } : null);
     setIsShareLinkModalOpen(true);
   };
-
   const handleCloseShareLinkModal = () => {
-    setIsShareLinkModalOpen(false);
-    setSelectedSlotForShareLink(null);
-    setEditingShareLinkItem(null);
-    setEditingShareLinkSlotDetails(null);
+    setIsShareLinkModalOpen(false); setSelectedSlotForShareLink(null); setEditingShareLinkItem(null); setEditingShareLinkSlotDetails(null);
   };
-
-  const handleSaveShareLinkFromModal = (day: string, hourSlot: string, savedLink: ShareLinkItem) => {
-    setAllShareLinks(prevAllLinks => {
-      const dayLinks = prevAllLinks[day] || {};
-      const slotLinks = dayLinks[hourSlot] || [];
-
-      const existingLinkIndex = slotLinks.findIndex(l => l.id === savedLink.id);
-      let updatedSlotLinks;
-      if (existingLinkIndex > -1) {
-        updatedSlotLinks = slotLinks.map((l, index) => index === existingLinkIndex ? savedLink : l);
-      } else {
-        updatedSlotLinks = [...slotLinks, savedLink];
-      }
-
-      const newAllLinks = {
-        ...prevAllLinks,
-        [day]: {
-          ...dayLinks,
-          [hourSlot]: updatedSlotLinks,
-        },
-      };
-      saveAllShareLinksToLocalStorage(newAllLinks);
-      return newAllLinks;
+  const handleSaveShareLinkFromModal = (currentDateKey: string, hourSlot: string, savedLink: ShareLinkItem) => {
+    setAllShareLinks(prev => {
+        const slotLinks = prev[currentDateKey]?.[hourSlot] || [];
+        const idx = slotLinks.findIndex(l => l.id === savedLink.id);
+        const updatedSlot = idx > -1 ? slotLinks.map((l, i) => i === idx ? savedLink : l) : [...slotLinks, savedLink];
+        const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedSlot } };
+        saveAllShareLinksToLocalStorage(newAll); return newAll;
     });
   };
-
-  const handleDeleteShareLinkInPage = (targetDay: string, targetHourSlot: string, linkId: string) => {
-    setAllShareLinks(prevAllLinks => {
-      const dayLinks = prevAllLinks[targetDay] || {};
-      const slotLinks = dayLinks[targetHourSlot] || [];
-      const updatedSlotLinks = slotLinks.filter(link => link.id !== linkId);
-      const newAllLinks = {
-        ...prevAllLinks,
-        [targetDay]: {
-          ...dayLinks,
-          [targetHourSlot]: updatedSlotLinks,
-        },
-      };
-      saveAllShareLinksToLocalStorage(newAllLinks);
-      return newAllLinks;
+  const handleDeleteShareLinkInPage = (targetDateKey: string, targetHourSlot: string, linkId: string) => {
+    setAllShareLinks(prev => {
+        const slotLinks = prev[targetDateKey]?.[targetHourSlot] || [];
+        const updatedSlot = slotLinks.filter(l => l.id !== linkId);
+        const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+        saveAllShareLinksToLocalStorage(newAll); return newAll;
     });
   };
-
   const handleDeleteLinkFromModal = (linkId: string) => {
-    if (selectedSlotForShareLink) {
-      handleDeleteShareLinkInPage(selectedSlotForShareLink.dayName, selectedSlotForShareLink.hourSlot, linkId);
-    }
+    if (selectedSlotForShareLink) handleDeleteShareLinkInPage(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId);
   };
-
-  const handleOpenEditShareLinkModalInPage = (targetDay: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
+  const handleOpenEditShareLinkModalInPage = (targetDateKey: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
     handleOpenShareLinkModal(targetHourSlot, linkToEdit);
   };
-
-  const getShareLinksForSlot = (targetDayName: string, targetHourSlot: string): ShareLinkItem[] => {
-    return allShareLinks[targetDayName]?.[targetHourSlot] || [];
+  const getShareLinksForSlot = (targetDateKey: string, targetHourSlot: string): ShareLinkItem[] => {
+    return allShareLinks[targetDateKey]?.[targetHourSlot] || [];
   };
 
-  // --- Reflection Modal and Item Handlers ---
   const handleOpenReflectionModal = (hourSlot: string, reflectionToEdit?: ReflectionItem) => {
-    setSelectedSlotForReflection({ dayName, hourSlot });
+    if (!dateKey) return;
+    setSelectedSlotForReflection({ dateKey, hourSlot });
     setEditingReflectionItem(reflectionToEdit || null);
-    setEditingReflectionSlotDetails(reflectionToEdit ? { dayName, hourSlot } : null);
+    setEditingReflectionSlotDetails(reflectionToEdit ? { dateKey, hourSlot } : null);
     setIsReflectionModalOpen(true);
   };
-
   const handleCloseReflectionModal = () => {
-    setIsReflectionModalOpen(false);
-    setSelectedSlotForReflection(null);
-    setEditingReflectionItem(null);
-    setEditingReflectionSlotDetails(null);
+    setIsReflectionModalOpen(false); setSelectedSlotForReflection(null); setEditingReflectionItem(null); setEditingReflectionSlotDetails(null);
   };
-
-  const handleSaveReflectionFromModal = (day: string, hourSlot: string, savedReflection: ReflectionItem) => {
-    setAllReflections(prevAllReflections => {
-      const dayReflections = prevAllReflections[day] || {};
-      const slotReflections = dayReflections[hourSlot] || [];
-
-      const existingReflectionIndex = slotReflections.findIndex(r => r.id === savedReflection.id);
-      let updatedSlotReflections;
-      if (existingReflectionIndex > -1) {
-        updatedSlotReflections = slotReflections.map((r, index) => index === existingReflectionIndex ? savedReflection : r);
-      } else {
-        updatedSlotReflections = [...slotReflections, savedReflection];
-      }
-
-      const newAllReflections = {
-        ...prevAllReflections,
-        [day]: {
-          ...dayReflections,
-          [hourSlot]: updatedSlotReflections,
-        },
-      };
-      saveAllReflectionsToLocalStorage(newAllReflections);
-      return newAllReflections;
+  const handleSaveReflectionFromModal = (currentDateKey: string, hourSlot: string, savedReflection: ReflectionItem) => {
+    setAllReflections(prev => {
+        const slotReflections = prev[currentDateKey]?.[hourSlot] || [];
+        const idx = slotReflections.findIndex(r => r.id === savedReflection.id);
+        const updatedSlot = idx > -1 ? slotReflections.map((r, i) => i === idx ? savedReflection : r) : [...slotReflections, savedReflection];
+        const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedSlot } };
+        saveAllReflectionsToLocalStorage(newAll); return newAll;
     });
   };
-
-  const handleDeleteReflectionInPage = (targetDay: string, targetHourSlot: string, reflectionId: string) => {
-    setAllReflections(prevAllReflections => {
-      const dayReflections = prevAllReflections[targetDay] || {};
-      const slotReflections = dayReflections[targetHourSlot] || [];
-      const updatedSlotReflections = slotReflections.filter(reflection => reflection.id !== reflectionId);
-      const newAllReflections = {
-        ...prevAllReflections,
-        [targetDay]: {
-          ...dayReflections,
-          [targetHourSlot]: updatedSlotReflections,
-        },
-      };
-      saveAllReflectionsToLocalStorage(newAllReflections);
-      return newAllReflections;
+  const handleDeleteReflectionInPage = (targetDateKey: string, targetHourSlot: string, reflectionId: string) => {
+     setAllReflections(prev => {
+        const slotReflections = prev[targetDateKey]?.[targetHourSlot] || [];
+        const updatedSlot = slotReflections.filter(r => r.id !== reflectionId);
+        const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+        saveAllReflectionsToLocalStorage(newAll); return newAll;
     });
   };
-
   const handleDeleteReflectionFromModal = (reflectionId: string) => {
-    if (selectedSlotForReflection) {
-      handleDeleteReflectionInPage(selectedSlotForReflection.dayName, selectedSlotForReflection.hourSlot, reflectionId);
-    }
+    if (selectedSlotForReflection) handleDeleteReflectionInPage(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId);
   };
-
-  const handleOpenEditReflectionModalInPage = (targetDay: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
+  const handleOpenEditReflectionModalInPage = (targetDateKey: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
     handleOpenReflectionModal(targetHourSlot, reflectionToEdit);
   };
-
-  const getReflectionsForSlot = (targetDayName: string, targetHourSlot: string): ReflectionItem[] => {
-    return allReflections[targetDayName]?.[targetHourSlot] || [];
+  const getReflectionsForSlot = (targetDateKey: string, targetHourSlot: string): ReflectionItem[] => {
+    return allReflections[targetDateKey]?.[targetHourSlot] || [];
   };
 
 
-  // --- Tooltip Text Helpers ---
   const getCategoryTooltipText = (category: CategoryType | null) => {
     if (!category || !tTodoModal.categories[category]) return '';
     return `${tTodoModal.categoryLabel} ${tTodoModal.categories[category]}`;
   };
-
   const getDeadlineTooltipText = (deadline: TodoItem['deadline']) => {
     if (!deadline || !tTodoModal.deadlines[deadline as keyof typeof tTodoModal.deadlines]) return '';
     return `${tTodoModal.deadlineLabel} ${tTodoModal.deadlines[deadline as keyof typeof tTodoModal.deadlines]}`;
   };
-
   const getImportanceTooltipText = (importance: TodoItem['importance']) => {
     if (importance === 'important') return `${tTodoModal.importanceLabel} ${tTodoModal.importances.important}`;
     return '';
   };
 
+
+  if (!dateKey) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 sm:p-8">
+            <p>Invalid date specified. Please return to the week view.</p>
+            <Link href="/" passHref>
+                <Button variant="outline" size="sm" className="mt-4">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t.backToWeek}
+                </Button>
+            </Link>
+        </div>
+      );
+  }
 
   return (
     <TooltipProvider>
@@ -946,7 +757,7 @@ export default function DayDetailPage() {
           {dailyNoteDisplayMode !== 'pending' && !isFutureDay && (
             <>
               <h1 className="text-3xl font-headline font-semibold text-primary mb-6">
-                {t.dayDetailsTitle(dayName)}
+                {t.dayDetailsTitle(dayNameForDisplay)}
               </h1>
               <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
                 <div className="space-y-4">
@@ -994,10 +805,10 @@ export default function DayDetailPage() {
               {timeIntervals.map(interval => {
                 const hourlySlotsForInterval = generateHourlySlots(interval.label);
                 const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot =>
-                  (getTodosForSlot(dayName, slot).length > 0) ||
-                  (getMeetingNotesForSlot(dayName, slot).length > 0) ||
-                  (getShareLinksForSlot(dayName, slot).length > 0) ||
-                  (getReflectionsForSlot(dayName, slot).length > 0)
+                  (getTodosForSlot(dateKey, slot).length > 0) ||
+                  (getMeetingNotesForSlot(dateKey, slot).length > 0) ||
+                  (getShareLinksForSlot(dateKey, slot).length > 0) ||
+                  (getReflectionsForSlot(dateKey, slot).length > 0)
                 );
 
                 if (isViewingCurrentDay && typeof window !== 'undefined') {
@@ -1040,10 +851,10 @@ export default function DayDetailPage() {
                     {hourlySlots.length > 0 ? (
                       <div className="space-y-3 mt-4">
                         {hourlySlots.map((slot, slotIndex) => {
-                          const todosForSlot = getTodosForSlot(dayName, slot);
-                          const meetingNotesForSlot = getMeetingNotesForSlot(dayName, slot);
-                          const shareLinksForSlot = getShareLinksForSlot(dayName, slot);
-                          const reflectionsForSlot = getReflectionsForSlot(dayName, slot);
+                          const todosForSlot = getTodosForSlot(dateKey, slot);
+                          const meetingNotesForSlot = getMeetingNotesForSlot(dateKey, slot);
+                          const shareLinksForSlot = getShareLinksForSlot(dateKey, slot);
+                          const reflectionsForSlot = getReflectionsForSlot(dateKey, slot);
                           const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
 
                           if (isViewingCurrentDay && typeof window !== 'undefined') {
@@ -1052,13 +863,10 @@ export default function DayDetailPage() {
                               const slotEndTimeStr = slotTimeMatch[2];
                               const slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
                               const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
-
                               const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
-
                               const pageLoadHour = pageLoadTime.getHours();
                               const pageLoadMinute = pageLoadTime.getMinutes();
                               const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
-
                               if (slotEndTotalMinutes <= pageLoadTotalMinutes && !hasAnyContentForThisSlot) {
                                 return null;
                               }
@@ -1083,9 +891,7 @@ export default function DayDetailPage() {
                                         <ListChecks className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{t.addTodo}</p>
-                                    </TooltipContent>
+                                    <TooltipContent><p>{t.addTodo}</p></TooltipContent>
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1093,9 +899,7 @@ export default function DayDetailPage() {
                                         <ClipboardList className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{t.addMeetingNote}</p>
-                                    </TooltipContent>
+                                    <TooltipContent><p>{t.addMeetingNote}</p></TooltipContent>
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1103,9 +907,7 @@ export default function DayDetailPage() {
                                         <LinkIconLucide className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{t.addLink}</p>
-                                    </TooltipContent>
+                                    <TooltipContent><p>{t.addLink}</p></TooltipContent>
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1113,9 +915,7 @@ export default function DayDetailPage() {
                                         <MessageSquareText className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{t.addReflection}</p>
-                                    </TooltipContent>
+                                    <TooltipContent><p>{t.addReflection}</p></TooltipContent>
                                   </Tooltip>
                                 </div>
                               </div>
@@ -1129,60 +929,34 @@ export default function DayDetailPage() {
                                       <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                         <div className="flex items-center space-x-2 flex-grow min-w-0">
                                           <Checkbox
-                                            id={`daypage-todo-${dayName}-${slot}-${todo.id}`}
+                                            id={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
                                             checked={todo.completed}
-                                            onCheckedChange={() => handleToggleTodoCompletionInPage(dayName, slot, todo.id)}
+                                            onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, slot, todo.id)}
                                             aria-label={todo.completed ? t.markIncomplete : t.markComplete}
                                             className="border-primary/50 shrink-0"
                                           />
                                           <div className="flex items-center space-x-1 shrink-0">
                                             {CategoryIcon && todo.category && (
-                                              <Tooltip>
-                                                <TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
-                                                <TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent>
-                                              </Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent></Tooltip>
                                             )}
                                             {DeadlineIcon && todo.deadline && (
-                                              <Tooltip>
-                                                <TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
-                                                <TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent>
-                                              </Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent></Tooltip>
                                             )}
                                             {todo.importance === 'important' && (
-                                              <Tooltip>
-                                                <TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger>
-                                                <TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent>
-                                              </Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger><TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent></Tooltip>
                                             )}
                                           </div>
                                           <label
-                                            htmlFor={`daypage-todo-${dayName}-${slot}-${todo.id}`}
-                                            className={cn(
-                                              "text-xs cursor-pointer flex-1 min-w-0 truncate",
-                                              todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'
-                                            )}
+                                            htmlFor={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
+                                            className={cn("text-xs cursor-pointer flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90')}
                                             title={todo.text}
                                           >
                                             {todo.text}
                                           </label>
                                         </div>
                                         <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dayName, slot, todo)}>
-                                                <FileEdit className="h-3.5 w-3.5" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{t.editItem}</p></TooltipContent>
-                                          </Tooltip>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dayName, slot, todo.id)}>
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{t.deleteItem}</p></TooltipContent>
-                                          </Tooltip>
+                                          <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
+                                          <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
                                         </div>
                                       </li>
                                     );
@@ -1196,26 +970,10 @@ export default function DayDetailPage() {
                                     <ul className="space-y-2 p-px mb-3">
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                            <span className="text-xs text-foreground/90 flex-1 min-w-0 truncate" title={note.title}>
-                                              {note.title || t.noData}
-                                            </span>
+                                            <span className="text-xs text-foreground/90 flex-1 min-w-0 truncate" title={note.title}>{note.title || t.noData}</span>
                                             <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditMeetingNoteModalInPage(dayName, slot, note)}>
-                                                    <FileEdit className="h-3.5 w-3.5" />
-                                                  </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{t.editMeetingNote}</p></TooltipContent>
-                                              </Tooltip>
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeetingNoteInPage(dayName, slot, note.id)}>
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                  </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{t.deleteMeetingNote}</p></TooltipContent>
-                                              </Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditMeetingNoteModalInPage(dateKey, slot, note)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editMeetingNote}</p></TooltipContent></Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeetingNoteInPage(dateKey, slot, note.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteMeetingNote}</p></TooltipContent></Tooltip>
                                             </div>
                                           </li>
                                         ))}
@@ -1229,32 +987,10 @@ export default function DayDetailPage() {
                                     <ul className="space-y-2 p-px mb-3">
                                       {shareLinksForSlot.map((link) => (
                                         <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                          <a
-                                            href={link.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-xs text-primary hover:underline flex-1 min-w-0 truncate"
-                                            title={link.title || link.url}
-                                          >
-                                            {link.title || link.url}
-                                          </a>
+                                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex-1 min-w-0 truncate" title={link.title || link.url}>{link.title || link.url}</a>
                                           <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/linkitem:opacity-100 transition-opacity">
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditShareLinkModalInPage(dayName, slot, link)}>
-                                                  <FileEdit className="h-3.5 w-3.5" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent><p>{t.editLink}</p></TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteShareLinkInPage(dayName, slot, link.id)}>
-                                                  <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent><p>{t.deleteLink}</p></TooltipContent>
-                                            </Tooltip>
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditShareLinkModalInPage(dateKey, slot, link)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editLink}</p></TooltipContent></Tooltip>
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteShareLinkInPage(dateKey, slot, link.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteLink}</p></TooltipContent></Tooltip>
                                           </div>
                                         </li>
                                       ))}
@@ -1268,28 +1004,10 @@ export default function DayDetailPage() {
                                     <ul className="space-y-2 p-px">
                                       {reflectionsForSlot.map((reflection) => (
                                         <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                          <ScrollArea className="max-h-20 w-full mr-2">
-                                            <p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>
-                                              {reflection.text}
-                                            </p>
-                                          </ScrollArea>
+                                          <ScrollArea className="max-h-20 w-full mr-2"><p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p></ScrollArea>
                                           <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditReflectionModalInPage(dayName, slot, reflection)}>
-                                                  <FileEdit className="h-3.5 w-3.5" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent><p>{t.editReflection}</p></TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteReflectionInPage(dayName, slot, reflection.id)}>
-                                                  <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent><p>{t.deleteReflection}</p></TooltipContent>
-                                            </Tooltip>
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditReflectionModalInPage(dateKey, slot, reflection)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editReflection}</p></TooltipContent></Tooltip>
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteReflectionInPage(dateKey, slot, reflection.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteReflection}</p></TooltipContent></Tooltip>
                                           </div>
                                         </li>
                                       ))}
@@ -1317,11 +1035,11 @@ export default function DayDetailPage() {
           isOpen={isTodoModalOpen}
           onClose={handleCloseTodoModal}
           onSaveTodos={handleSaveTodosFromModal}
-          dayName={selectedSlotForTodo.dayName}
+          dateKey={selectedSlotForTodo.dateKey}
           hourSlot={selectedSlotForTodo.hourSlot}
-          initialTodos={getTodosForSlot(selectedSlotForTodo.dayName, selectedSlotForTodo.hourSlot)}
+          initialTodos={getTodosForSlot(selectedSlotForTodo.dateKey, selectedSlotForTodo.hourSlot)}
           translations={tTodoModal}
-          defaultEditingTodoId={editingTodoItem && editingTodoSlotDetails?.dayName === selectedSlotForTodo.dayName && editingTodoSlotDetails?.hourSlot === selectedSlotForTodo.hourSlot ? editingTodoItem.id : undefined}
+          defaultEditingTodoId={editingTodoItem && editingTodoSlotDetails?.dateKey === selectedSlotForTodo.dateKey && editingTodoSlotDetails?.hourSlot === selectedSlotForTodo.hourSlot ? editingTodoItem.id : undefined}
         />
       )}
       {isMeetingNoteModalOpen && selectedSlotForMeetingNote && (
@@ -1330,9 +1048,9 @@ export default function DayDetailPage() {
             onClose={handleCloseMeetingNoteModal}
             onSave={handleSaveMeetingNoteFromModal}
             onDelete={editingMeetingNoteItem ? handleDeleteNoteFromModal : undefined}
-            dayName={selectedSlotForMeetingNote.dayName}
+            dateKey={selectedSlotForMeetingNote.dateKey}
             hourSlot={selectedSlotForMeetingNote.hourSlot}
-            initialData={editingMeetingNoteItem && editingMeetingNoteSlotDetails?.dayName === selectedSlotForMeetingNote.dayName && editingMeetingNoteSlotDetails?.hourSlot === selectedSlotForMeetingNote.hourSlot ? editingMeetingNoteItem : null}
+            initialData={editingMeetingNoteItem && editingMeetingNoteSlotDetails?.dateKey === selectedSlotForMeetingNote.dateKey && editingMeetingNoteSlotDetails?.hourSlot === selectedSlotForMeetingNote.hourSlot ? editingMeetingNoteItem : null}
             translations={tMeetingNoteModal}
         />
       )}
@@ -1342,9 +1060,9 @@ export default function DayDetailPage() {
             onClose={handleCloseShareLinkModal}
             onSave={handleSaveShareLinkFromModal}
             onDelete={editingShareLinkItem ? handleDeleteLinkFromModal : undefined}
-            dayName={selectedSlotForShareLink.dayName}
+            dateKey={selectedSlotForShareLink.dateKey}
             hourSlot={selectedSlotForShareLink.hourSlot}
-            initialData={editingShareLinkItem && editingShareLinkSlotDetails?.dayName === selectedSlotForShareLink.dayName && editingShareLinkSlotDetails?.hourSlot === selectedSlotForShareLink.hourSlot ? editingShareLinkItem : null}
+            initialData={editingShareLinkItem && editingShareLinkSlotDetails?.dateKey === selectedSlotForShareLink.dateKey && editingShareLinkSlotDetails?.hourSlot === selectedSlotForShareLink.hourSlot ? editingShareLinkItem : null}
             translations={tShareLinkModal}
         />
       )}
@@ -1354,9 +1072,9 @@ export default function DayDetailPage() {
             onClose={handleCloseReflectionModal}
             onSave={handleSaveReflectionFromModal}
             onDelete={editingReflectionItem ? handleDeleteReflectionFromModal : undefined}
-            dayName={selectedSlotForReflection.dayName}
+            dateKey={selectedSlotForReflection.dateKey}
             hourSlot={selectedSlotForReflection.hourSlot}
-            initialData={editingReflectionItem && editingReflectionSlotDetails?.dayName === selectedSlotForReflection.dayName && editingReflectionSlotDetails?.hourSlot === selectedSlotForReflection.hourSlot ? editingReflectionItem : null}
+            initialData={editingReflectionItem && editingReflectionSlotDetails?.dateKey === selectedSlotForReflection.dateKey && editingReflectionSlotDetails?.hourSlot === selectedSlotForReflection.hourSlot ? editingReflectionItem : null}
             translations={tReflectionModal}
         />
       )}

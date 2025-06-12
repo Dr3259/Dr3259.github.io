@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area"; // May not be strictly needed for two inputs
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface ShareLinkItem {
   id: string;
@@ -39,23 +39,23 @@ export interface ShareLinkModalTranslations {
 interface ShareLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (day: string, hourSlot: string, link: ShareLinkItem) => void;
+  onSave: (dateKey: string, hourSlot: string, link: ShareLinkItem) => void; // Changed dayName to dateKey
   onDelete?: (linkId: string) => void;
-  dayName: string;
+  dateKey: string; // YYYY-MM-DD
   hourSlot: string;
   initialData?: ShareLinkItem | null;
   translations: ShareLinkModalTranslations;
 }
 
 const MAX_URL_LENGTH = 2048;
-const MAX_LINK_TITLE_LENGTH = 50; // Adjusted from previous thought for brevity
+const MAX_LINK_TITLE_LENGTH = 50;
 
 export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   isOpen,
   onClose,
   onSave,
   onDelete,
-  dayName,
+  dateKey, // Changed from dayName
   hourSlot,
   initialData,
   translations,
@@ -77,8 +77,6 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
 
   const handleSaveOrUpdate = () => {
     if (url.trim() === '') {
-      // Basic validation: URL cannot be empty.
-      // Consider adding a toast notification for error in a future step if needed.
       return;
     }
 
@@ -87,7 +85,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       url: url.trim(),
       title: title.trim(),
     };
-    onSave(dayName, hourSlot, linkData);
+    onSave(dateKey, hourSlot, linkData); // Pass dateKey
     onClose();
   };
 
@@ -116,7 +114,6 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        {/* ScrollArea might be overkill for just two fields but kept for consistency if content grows */}
         <ScrollArea className="max-h-[60vh]">
           <div className="space-y-4 p-2">
             <div>
@@ -130,7 +127,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 placeholder={translations.urlPlaceholder}
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_URL_LENGTH}
-                type="url" // Provides basic browser validation and keyboard on mobile
+                type="url"
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {url.length}/{MAX_URL_LENGTH}

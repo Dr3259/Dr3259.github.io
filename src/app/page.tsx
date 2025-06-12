@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare, FileEdit, CalendarPlus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -27,17 +27,17 @@ interface ReflectionItem { id: string; text: string; }
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
-const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes';
-const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings';
-const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary';
+const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes_v2'; // Changed key for new structure
+const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2'; // Changed key for new structure
+const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary_v2'; // Changed key for new structure
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 
-// Keys used by DayDetailPage for its data
-const LOCAL_STORAGE_KEY_ALL_DAILY_NOTES = 'allWeekDailyNotes';
-const LOCAL_STORAGE_KEY_ALL_TODOS = 'allWeekTodos';
-const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes';
-const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks';
-const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections';
+// Keys used by DayDetailPage for its data, now structured with YYYY-MM-DD keys
+const LOCAL_STORAGE_KEY_ALL_DAILY_NOTES = 'allWeekDailyNotes_v2';
+const LOCAL_STORAGE_KEY_ALL_TODOS = 'allWeekTodos_v2';
+const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes_v2';
+const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks_v2';
+const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
 
 
 const translations = {
@@ -47,7 +47,7 @@ const translations = {
     languageButtonText: 'English',
     daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
     selectDayAria: (day: string) => `查看 ${day} 详情`,
-    hasNotesAria: '有内容记录', // Changed to be more generic
+    hasNotesAria: '有内容记录',
     ratingLabels: {
       excellent: '好极了',
       average: '一般般',
@@ -81,7 +81,7 @@ const translations = {
     languageButtonText: '中文',
     daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     selectDayAria: (day: string) => `View details for ${day}`,
-    hasNotesAria: 'Has recorded content', // Changed to be more generic
+    hasNotesAria: 'Has recorded content',
     ratingLabels: {
       excellent: 'Excellent',
       average: 'Average',
@@ -121,13 +121,13 @@ interface HoverPreviewData {
 }
 
 interface AllLoadedData {
-  notes: Record<string, string>;
-  ratings: Record<string, RatingType>;
-  allDailyNotes: Record<string, string>;
-  allTodos: Record<string, Record<string, TodoItem[]>>;
-  allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
-  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
-  allReflections: Record<string, Record<string, ReflectionItem[]>>;
+  notes: Record<string, string>; // Key is YYYY-MM-DD
+  ratings: Record<string, RatingType>; // Key is YYYY-MM-DD
+  allDailyNotes: Record<string, string>; // Key is YYYY-MM-DD
+  allTodos: Record<string, Record<string, TodoItem[]>>; // Outer key is YYYY-MM-DD
+  allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>; // Outer key is YYYY-MM-DD
+  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>; // Outer key is YYYY-MM-DD
+  allReflections: Record<string, Record<string, ReflectionItem[]>>; // Outer key is YYYY-MM-DD
 }
 
 
@@ -145,32 +145,26 @@ const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, w
   while (iterDate.getMonth() === monthOfLabel && iterDate.getFullYear() === yearOfLabel) {
     const currentIterMonday = startOfWeek(iterDate, options);
     
-    // Only count weeks whose Monday (start of the week) is in the target month
     if (currentIterMonday.getMonth() === monthOfLabel && currentIterMonday.getFullYear() === yearOfLabel) {
-        // Check if this is the *first* day of this specific Monday-starting week within the month
         if (isSameDay(currentIterMonday, iterDate) || iterDate.getDay() === options.weekStartsOn) {
              weekOrdinal++;
         }
-        // If the currentIterMonday is the weekStartDate we're looking for, return its calculated ordinal
         if (isSameDay(currentIterMonday, weekStartDate)) {
             return weekOrdinal;
         }
     }
     
     iterDate = addDays(iterDate, 1);
-    // Safety break for very unusual calendar structures, though unlikely with standard month lengths
     if (weekOrdinal > 5 && differenceInDays(iterDate, weekStartDate) > 7) break; 
   }
   
-  // Fallback for edge cases, e.g. if weekStartDate is somehow not found (shouldn't happen)
-  // or if weekStartDate's Monday is in the previous month but it still "belongs" to current month's display.
-  // The primary logic above aims to count based on Mondays *within* the month.
-  // If weekOrdinal is 0, it implies the first Monday of weekStartDate's month hasn't been hit yet in a way that satisfies conditions.
-  // This often means weekStartDate's Monday is in the *previous* month.
-  // A simple approach: if weekStartDate is in monthOfLabel, and no ordinal calculated, it's likely the "first" conceptual week.
   if (weekStartDate.getMonth() === monthOfLabel && weekOrdinal === 0) return 1;
 
-  return weekOrdinal > 0 ? weekOrdinal : 1; // Default to 1 if calculation is ambiguous
+  return weekOrdinal > 0 ? weekOrdinal : 1;
+};
+
+const getDateKey = (date: Date): string => {
+  return format(date, 'yyyy-MM-dd');
 };
 
 
@@ -185,6 +179,7 @@ export default function WeekGlancePage() {
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
   const [isClientMounted, setIsClientMounted] = useState(false);
   
+  // All data states now expect YYYY-MM-DD keys
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
@@ -253,23 +248,9 @@ export default function WeekGlancePage() {
     loadData();
     
     return () => {
-      if (showPreviewTimerRef.current) {
-        clearTimeout(showPreviewTimerRef.current);
-        showPreviewTimerRef.current = null;
-      }
-      if (hidePreviewTimerRef.current) {
-        clearTimeout(hidePreviewTimerRef.current);
-        hidePreviewTimerRef.current = null;
-      }
+      clearTimeoutIfNecessary();
     };
-  }, []); 
-
-
-  const getDayKeyForStorage = useCallback((date: Date): string => {
-    const dayIndex = (date.getDay() + 6) % 7; 
-    const langToUseForDayKey = translations[currentLanguage] ? currentLanguage : 'en'; 
-    return translations[langToUseForDayKey].daysOfWeek[dayIndex];
-  }, [currentLanguage]);
+  }, [clearTimeoutIfNecessary]); 
 
 
   useEffect(() => {
@@ -285,23 +266,22 @@ export default function WeekGlancePage() {
   }), [notes, ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
   
   const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
-    const dayKey = getDayKeyForStorage(date); 
+    const dateKey = getDateKey(date);
     
-    if (data.notes[dayKey]?.trim()) return true;
-    if (data.ratings[dayKey]) return true; 
-
-    if (data.allDailyNotes[dayKey]?.trim()) return true;
+    if (data.notes[dateKey]?.trim()) return true;
+    if (data.ratings[dateKey]) return true; 
+    if (data.allDailyNotes[dateKey]?.trim()) return true;
 
     const checkSlotItems = (items: Record<string, any[]> | undefined) => 
         items && Object.values(items).some(slotItems => slotItems.length > 0);
 
-    if (checkSlotItems(data.allTodos[dayKey])) return true;
-    if (checkSlotItems(data.allMeetingNotes[dayKey])) return true;
-    if (checkSlotItems(data.allShareLinks[dayKey])) return true;
-    if (checkSlotItems(data.allReflections[dayKey])) return true;
+    if (checkSlotItems(data.allTodos[dateKey])) return true;
+    if (checkSlotItems(data.allMeetingNotes[dateKey])) return true;
+    if (checkSlotItems(data.allShareLinks[dateKey])) return true;
+    if (checkSlotItems(data.allReflections[dateKey])) return true;
 
     return false;
-  }, [getDayKeyForStorage]); 
+  }, []); 
 
   const weekHasContent = useCallback((weekDate: Date, data: AllLoadedData): boolean => {
     const weekToCheckStart = startOfWeek(weekDate, { weekStartsOn: 1, locale: dateLocale });
@@ -360,16 +340,17 @@ export default function WeekGlancePage() {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  const handleDaySelect = useCallback((dayNameForUrl: string) => {
+  const handleDaySelect = useCallback((dayNameForUrl: string, dateForDetail: Date) => {
     clearTimeoutIfNecessary();
     setHoverPreviewData(null);
     isPreviewSuppressedByClickRef.current = true;
-    router.push(`/day/${encodeURIComponent(dayNameForUrl)}`);
+    const dateKeyForDetail = getDateKey(dateForDetail);
+    router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${dateKeyForDetail}`);
   }, [router, clearTimeoutIfNecessary]);
 
-  const handleRatingChange = useCallback((dayKey: string, newRating: RatingType) => {
+  const handleRatingChange = useCallback((dateKey: string, newRating: RatingType) => {
     setRatings(prev => {
-      const updated = { ...prev, [dayKey]: newRating };
+      const updated = { ...prev, [dateKey]: newRating };
       if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updated));
       return updated;
     });
@@ -413,44 +394,38 @@ export default function WeekGlancePage() {
 
     if (firstEverWeekWithDataStart) {
         if (isSameDay(currentWeekStartDate, firstEverWeekWithDataStart)) {
-            return; // Already at the earliest recorded week
+            return; 
         }
         if (isBefore(currentWeekStartDate, firstEverWeekWithDataStart) ) {
-             // Should not happen if button is correctly disabled, but as a safeguard:
             if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)){
                  setDisplayedDate(new Date(firstEverWeekWithDataStart));
             }
             return;
         }
     } else {
-      // No content found ever, cannot go back.
       return;
     }
     
     const potentialPrevWeekStartDate = subWeeks(currentWeekStartDate, 1);
 
-    // If potential previous week is before the first recorded week, jump to the first recorded week.
     if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStartDate, firstEverWeekWithDataStart)) {
         if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)){
            setDisplayedDate(new Date(firstEverWeekWithDataStart));
-        } // else, do nothing, stay on current week because firstEver is empty (should not happen)
+        } 
         return;
     }
     
-    // Only navigate if the potential previous week has content
     if (weekHasContent(potentialPrevWeekStartDate, allLoadedDataMemo)) {
       setDisplayedDate(potentialPrevWeekStartDate);
     }
-    // If it doesn't have content, do nothing (stay on current week).
   };
 
 
   const handleNextWeek = () => {
     if (isViewingActualCurrentWeek || !displayedDate || !systemToday) return; 
     const nextWeekCandidate = addDays(displayedDate, 7);
-    // Ensure we don't go past the current system week
     if (isAfter(startOfWeek(nextWeekCandidate, { weekStartsOn: 1, locale: dateLocale }), startOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale }))) {
-        setDisplayedDate(new Date(systemToday)); // Go to current week if next is beyond
+        setDisplayedDate(new Date(systemToday));
     } else {
         setDisplayedDate(nextWeekCandidate);
     }
@@ -466,7 +441,6 @@ export default function WeekGlancePage() {
   const handleDateSelectForJump = (date: Date | undefined) => {
     if (date) {
       if (systemToday && isAfter(date, systemToday)) {
-        // Prevent selecting future dates explicitly, though toDate on Calendar should handle this
         setIsCalendarOpen(false); 
         return; 
       }
@@ -476,28 +450,26 @@ export default function WeekGlancePage() {
   };
   
   const isPreviousWeekDisabled = useMemo(() => {
-    if (!allDataLoaded || !displayedDate) return true; // Disable if data not loaded or no display date
-    if (!firstEverWeekWithDataStart) return true; // Disable if no historical data found at all
+    if (!allDataLoaded || !displayedDate) return true;
+    if (!firstEverWeekWithDataStart) return true; 
 
     const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
     
-    // Check if current week is the first recorded week
     if (isSameDay(currentDisplayedWeekStartDate, firstEverWeekWithDataStart)) {
         return true;
     }
 
-    // Check if there's any content in any week before the current one, down to firstEverWeek
     let tempDate = subWeeks(currentDisplayedWeekStartDate, 1);
     while(isAfter(tempDate, firstEverWeekWithDataStart) || isSameDay(tempDate, firstEverWeekWithDataStart)) {
         if(weekHasContent(tempDate, allLoadedDataMemo)) {
-            return false; // Found a previous week with content
+            return false;
         }
-        if(isSameDay(tempDate, firstEverWeekWithDataStart)) break; // Stop if we checked firstEverWeek
+        if(isSameDay(tempDate, firstEverWeekWithDataStart)) break; 
         tempDate = subWeeks(tempDate, 1);
-        if (isBefore(tempDate, firstEverWeekWithDataStart) && !isSameDay(tempDate, firstEverWeekWithDataStart)) break; // Safety break
+        if (isBefore(tempDate, firstEverWeekWithDataStart) && !isSameDay(tempDate, firstEverWeekWithDataStart)) break;
     }
     
-    return true; // No previous weeks with content found up to firstEverWeekWithDataStart
+    return true; 
   }, [allDataLoaded, displayedDate, firstEverWeekWithDataStart, dateLocale, weekHasContent, allLoadedDataMemo]);
 
   const isNextWeekDisabled = useMemo(() => {
@@ -509,22 +481,18 @@ export default function WeekGlancePage() {
   const calendarDisabledMatcher = useCallback((date: Date) => {
     if (!allDataLoaded || !systemToday) return true; 
     
-    // Disable dates after today
     if (isAfter(date, systemToday) && !isSameDay(date, systemToday)) {
         return true;
     }
 
-    // Disable dates before the first week with data
     if (firstEverWeekWithDataStart && isBefore(startOfWeek(date, { weekStartsOn: 1, locale: dateLocale }), firstEverWeekWithDataStart)) {
         return true;
     }
     
-    // If a specific first week is known, and the date is in that week, allow if that week has content
     if (firstEverWeekWithDataStart && isSameWeek(date, firstEverWeekWithDataStart, {weekStartsOn: 1, locale: dateLocale})) {
         return !weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo);
     }
 
-    // For other dates, disable if the week they belong to has no content
     return !weekHasContent(date, allLoadedDataMemo);
   }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale, systemToday]);
 
@@ -606,33 +574,33 @@ export default function WeekGlancePage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
         {daysToDisplay.map((dateInWeek) => {
           const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
-          const dayKeyForStorage = getDayKeyForStorage(dateInWeek);
+          const dateKeyForStorage = getDateKey(dateInWeek);
           
           const currentSystemTodayToUse = systemToday; 
           const isCurrentActualDay = currentSystemTodayToUse ? isSameDay(dateInWeek, currentSystemTodayToUse) : false;
           const isPastActualDay = currentSystemTodayToUse ? (isBefore(dateInWeek, currentSystemTodayToUse) && !isSameDay(dateInWeek, currentSystemTodayToUse)) : false;
           const isFutureActualDay = currentSystemTodayToUse ? (!isCurrentActualDay && !isPastActualDay) : false;
           
-          const noteForThisDayBox = notes[dayKeyForStorage] || '';
-          const ratingForThisDayBox = ratings[dayKeyForStorage] || null;
+          const noteForThisDayBox = notes[dateKeyForStorage] || '';
+          const ratingForThisDayBox = ratings[dateKeyForStorage] || null;
           const hasAnyDataForThisDay = dayHasContent(dateInWeek, allLoadedDataMemo);
 
           return (
             <DayBox
-              key={dateInWeek.toISOString()}
+              key={dateKeyForStorage} // Use unique dateKey as key
               dayName={dayNameForDisplay}
-              onClick={() => handleDaySelect(dayNameForDisplay)}
+              onClick={() => handleDaySelect(dayNameForDisplay, dateInWeek)}
               notes={noteForThisDayBox} 
               dayHasAnyData={hasAnyDataForThisDay}
               rating={ratingForThisDayBox}
-              onRatingChange={(newRating) => handleRatingChange(dayKeyForStorage, newRating)}
+              onRatingChange={(newRating) => handleRatingChange(dateKeyForStorage, newRating)}
               isCurrentDay={isCurrentActualDay}
               isPastDay={isPastActualDay}
               isFutureDay={isFutureActualDay}
               isAfter6PMToday={isAfter6PMToday} 
               todayLabel={t.todayPrefix}
               selectDayLabel={t.selectDayAria(dayNameForDisplay)}
-              contentIndicatorLabel={t.hasNotesAria} // Use updated generic label
+              contentIndicatorLabel={t.hasNotesAria}
               ratingUiLabels={t.ratingLabels}
               onHoverStart={handleDayHoverStart}
               onHoverEnd={handleDayHoverEnd}

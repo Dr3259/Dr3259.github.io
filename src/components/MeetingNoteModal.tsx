@@ -46,9 +46,9 @@ export interface MeetingNoteModalTranslations {
 interface MeetingNoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (day: string, hourSlot: string, note: MeetingNoteItem) => void;
+  onSave: (dateKey: string, hourSlot: string, note: MeetingNoteItem) => void; // Changed dayName to dateKey
   onDelete?: (noteId: string) => void;
-  dayName: string;
+  dateKey: string; // YYYY-MM-DD
   hourSlot: string;
   initialData?: MeetingNoteItem | null;
   translations: MeetingNoteModalTranslations;
@@ -64,7 +64,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
   onClose,
   onSave,
   onDelete,
-  dayName,
+  dateKey, // Changed from dayName
   hourSlot,
   initialData,
   translations,
@@ -103,7 +103,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
       attendees: attendees.trim(),
       actionItems: actionItems.trim(),
     };
-    onSave(dayName, hourSlot, noteData);
+    onSave(dateKey, hourSlot, noteData); // Pass dateKey
     onClose();
   };
 
@@ -111,7 +111,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
     if (initialData?.id && onDelete) {
         onDelete(initialData.id);
     }
-    onClose(); // Close the modal after invoking the delete callback
+    onClose();
   };
 
   const handleOpenChange = (open: boolean) => {
