@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, File, Sun } from "lucide-react"; // Changed Archive to File
+import { Smile, Meh, Frown, CalendarPlus, File, CalendarOff, CalendarDays, Archive } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -116,8 +116,8 @@ export const DayBox: FC<DayBoxProps> = ({
         ) : isDisabled ? (
           <File 
             className={cn(
-              "w-12 h-12",
-              "text-muted-foreground opacity-60" 
+              "w-10 h-10", // Changed from w-12 h-12
+              "text-muted-foreground opacity-50" // Changed from opacity-60
             )}
           />
         ) : (
