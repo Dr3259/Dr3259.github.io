@@ -21,7 +21,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO } from 'date-fns'; // Added for date handling
+import { format, parseISO } from 'date-fns';
 
 
 // Helper function to extract time range and generate hourly slots
@@ -346,7 +346,9 @@ export default function DayDetailPage() {
   const dateKey = searchParams.get('date') || ''; // YYYY-MM-DD
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
+  const [clientPageLoadTime, setClientPageLoadTime] = useState<Date | null>(null);
+  const [isClientAfter6PMToday, setIsClientAfter6PMToday] = useState<boolean>(false);
+
 
   const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({}); // Keyed by YYYY-MM-DD
   const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({}); // Outer key: YYYY-MM-DD
@@ -376,17 +378,17 @@ export default function DayDetailPage() {
 
   const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
-  const pageLoadTime = useMemo(() => new Date(), []);
 
 
   useEffect(() => {
+    const now = new Date();
+    setClientPageLoadTime(now);
+    setIsClientAfter6PMToday(now.getHours() >= 18);
+
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-
-    const today = new Date();
-    setIsAfter6PMToday(today.getHours() >= 18);
 
     const loadData = () => {
         try {
@@ -449,54 +451,52 @@ export default function DayDetailPage() {
   };
 
   const dayProperties = useMemo(() => {
-    if (!dateKey) return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
+    if (!dateKey) return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false, dateObject: null };
     try {
         const parsedDate = parseISO(dateKey); // YYYY-MM-DD should be parsable
         const dayIndex = (parsedDate.getDay() + 6) % 7; // Monday is 0
         return { numericalIndex: dayIndex, sourceLanguage: currentLanguage, isValid: true, dateObject: parsedDate };
     } catch (e) {
         console.error("Invalid dateKey format:", dateKey);
-        return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false };
+        return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false, dateObject: null };
     }
   }, [dateKey, currentLanguage]);
 
 
   const isViewingCurrentDay = useMemo(() => {
-    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
-    const todayDate = new Date();
-    return format(dayProperties.dateObject, 'yyyy-MM-dd') === format(todayDate, 'yyyy-MM-dd');
-  }, [dayProperties]);
+    if (!clientPageLoadTime || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
+    return format(dayProperties.dateObject, 'yyyy-MM-dd') === format(clientPageLoadTime, 'yyyy-MM-dd');
+  }, [dayProperties, clientPageLoadTime]);
 
   const isFutureDay = useMemo(() => {
-    if (typeof window === 'undefined' || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
-    const today = new Date();
-    today.setHours(0,0,0,0); // Compare dates only
+    if (!clientPageLoadTime || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
+    const today = new Date(clientPageLoadTime.getTime());
+    today.setHours(0,0,0,0); 
     return dayProperties.dateObject > today;
-  }, [dayProperties]);
+  }, [dayProperties, clientPageLoadTime]);
 
 
   const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
-    if (!dayProperties || !dayProperties.isValid) return 'edit'; 
+    if (!clientPageLoadTime) return 'pending'; // Default before client hydration
+    if (!dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return 'edit';
 
     if (!isViewingCurrentDay) {
-        const today = new Date();
+        const today = new Date(clientPageLoadTime.getTime());
         today.setHours(0,0,0,0);
-        // Ensure dateObject is valid before comparison
-        if (!dayProperties.dateObject) return 'edit'; // Should not happen if isValid is true
         return (dayProperties.dateObject < today) ? 'read' : 'edit';
     }
-    return isAfter6PMToday ? 'edit' : 'pending';
-  }, [dayProperties, isViewingCurrentDay, isAfter6PMToday]);
+    return isClientAfter6PMToday ? 'edit' : 'pending';
+  }, [dayProperties, isViewingCurrentDay, isClientAfter6PMToday, clientPageLoadTime]);
 
 
   useEffect(() => {
     let scrollTimerId: NodeJS.Timeout | null = null;
-    if (!isViewingCurrentDay || typeof window === 'undefined' || !dateKey) {
+    if (!isViewingCurrentDay || !clientPageLoadTime || !dateKey) {
       setActiveIntervalKey(null);
       return () => { if (scrollTimerId) clearTimeout(scrollTimerId); };
     }
 
-    const now = new Date();
+    const now = clientPageLoadTime; // Use the client-side determined time
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
@@ -526,9 +526,11 @@ export default function DayDetailPage() {
       const intervalStartTotalMinutes = startH * 60 + startM;
       const intervalEndTotalMinutes = endH * 60 + endM;
 
-      const pageLoadHourForIntervalCheck = pageLoadTime.getHours();
-      const pageLoadMinuteForIntervalCheck = pageLoadTime.getMinutes();
+      // Use clientPageLoadTime for this check
+      const pageLoadHourForIntervalCheck = clientPageLoadTime.getHours();
+      const pageLoadMinuteForIntervalCheck = clientPageLoadTime.getMinutes();
       const pageLoadTotalMinutesForIntervalCheck = pageLoadHourForIntervalCheck * 60 + pageLoadMinuteForIntervalCheck;
+
 
       if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck && !hasContentInInterval) {
         continue;
@@ -556,7 +558,7 @@ export default function DayDetailPage() {
     }
     
     return () => { if (scrollTimerId) clearTimeout(scrollTimerId); };
-  }, [dateKey, currentLanguage, timeIntervals, isViewingCurrentDay, pageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, activeIntervalKey]);
+  }, [dateKey, currentLanguage, timeIntervals, isViewingCurrentDay, clientPageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, activeIntervalKey]);
 
 
   const handleOpenTodoModal = (hourSlot: string) => {
@@ -727,10 +729,10 @@ export default function DayDetailPage() {
   };
 
 
-  if (!dateKey) {
+  if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 sm:p-8">
-            <p>Invalid date specified. Please return to the week view.</p>
+            {/* Can show a loader here if preferred */}
             <Link href="/" passHref>
                 <Button variant="outline" size="sm" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -812,10 +814,11 @@ export default function DayDetailPage() {
                   (getShareLinksForSlot(dateKey, slot).length > 0) ||
                   (getReflectionsForSlot(dateKey, slot).length > 0)
                 );
-
-                if (isViewingCurrentDay && typeof window !== 'undefined') {
-                  const pageLoadHour = pageLoadTime.getHours();
-                  const pageLoadMinute = pageLoadTime.getMinutes();
+                
+                let shouldHideThisInterval = false;
+                if (isViewingCurrentDay && clientPageLoadTime) {
+                  const pageLoadHour = clientPageLoadTime.getHours();
+                  const pageLoadMinute = clientPageLoadTime.getMinutes();
                   const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
 
                   const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
@@ -827,10 +830,12 @@ export default function DayDetailPage() {
 
                     const intervalEndTotalMinutes = endH * 60 + endM;
                     if (intervalEndTotalMinutes <= pageLoadTotalMinutes && !hasContentInAnySlotOfInterval) {
-                      return null;
+                      shouldHideThisInterval = true;
                     }
                   }
                 }
+                if (shouldHideThisInterval) return null;
+
 
                 const hourlySlots = generateHourlySlots(interval.label);
                 const mainTitle = interval.label.split(' (')[0];
@@ -859,21 +864,25 @@ export default function DayDetailPage() {
                           const reflectionsForSlot = getReflectionsForSlot(dateKey, slot);
                           const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
 
-                          if (isViewingCurrentDay && typeof window !== 'undefined') {
+                          let shouldHideThisSlot = false;
+                          if (isViewingCurrentDay && clientPageLoadTime) {
                             const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                             if (slotTimeMatch) {
                               const slotEndTimeStr = slotTimeMatch[2];
                               const slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
                               const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
                               const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
-                              const pageLoadHour = pageLoadTime.getHours();
-                              const pageLoadMinute = pageLoadTime.getMinutes();
+                              
+                              const pageLoadHour = clientPageLoadTime.getHours();
+                              const pageLoadMinute = clientPageLoadTime.getMinutes();
                               const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
                               if (slotEndTotalMinutes <= pageLoadTotalMinutes && !hasAnyContentForThisSlot) {
-                                return null;
+                                shouldHideThisSlot = true;
                               }
                             }
                           }
+                          if (shouldHideThisSlot) return null;
+
 
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
