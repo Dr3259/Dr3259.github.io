@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, File, Ban, CalendarDays } from "lucide-react";
+import { Smile, Meh, Frown, CalendarPlus, Ban, CalendarDays, FileText } from "lucide-react"; // Added FileText
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -84,13 +84,13 @@ export const DayBox: FC<DayBoxProps> = ({
     (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
     !isFutureDay;
 
-  const showContentDot = dayHasAnyData && !isDisabled;
+  const showContentDot = dayHasAnyData && !isDisabled; // This variable name is a bit misleading now, it means "show content indicator"
 
   let IconToShow: LucideIcon | null = null;
   let iconClassName = "";
 
   if (showContentDot) {
-    // Small dot shown, no central icon
+    // Content indicator (now FileText) will be rendered below
   } else if (isDisabled) { // Past day, no content, unmodifiable
     IconToShow = CalendarDays; 
     iconClassName = "w-10 h-10 text-muted-foreground opacity-40";
@@ -125,7 +125,7 @@ export const DayBox: FC<DayBoxProps> = ({
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
         {showContentDot ? (
-          <div className="w-2 h-2 rounded-full bg-primary" aria-label={contentIndicatorLabel}></div>
+          <FileText className="w-6 h-6 text-primary" aria-label={contentIndicatorLabel} />
         ) : IconToShow ? (
           <IconToShow className={iconClassName} />
         ) : null}
