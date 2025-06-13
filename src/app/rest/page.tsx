@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react'; // Added useCallback
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,11 @@ export default function RestHubPage() {
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
+  const handleGameStationClick = useCallback(() => router.push('/rest/games'), [router]);
+  const handleFoodFinderClick = useCallback(() => router.push('/food-finder'), [router]);
+  const handleLegalInfoClick = useCallback(() => router.push('/legal-info'), [router]);
+  const handlePersonalityTestClick = useCallback(() => router.push('/personality-test'), [router]);
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
       <header className="w-full max-w-xl mb-8 sm:mb-12 self-center">
@@ -75,25 +80,25 @@ export default function RestHubPage() {
           <GameCard 
             title={t.gameStationButton} 
             icon={Gamepad2} 
-            onClick={() => router.push('/rest/games')} 
+            onClick={handleGameStationClick} 
             ariaLabel={t.gameStationAriaLabel}
           />
           <GameCard 
             title={t.foodFinderButton} 
             icon={Utensils} 
-            onClick={() => router.push('/food-finder')} 
+            onClick={handleFoodFinderClick} 
             ariaLabel={t.foodFinderAriaLabel}
           />
           <GameCard 
             title={t.legalInfoButton} 
             icon={Scale} 
-            onClick={() => router.push('/legal-info')} 
+            onClick={handleLegalInfoClick} 
             ariaLabel={t.legalInfoAriaLabel}
           />
           <GameCard 
             title={t.personalityTestButton} 
             icon={Brain} // Using Brain icon
-            onClick={() => router.push('/personality-test')} 
+            onClick={handlePersonalityTestClick} 
             ariaLabel={t.personalityTestAriaLabel}
           />
         </div>

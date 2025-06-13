@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { FC, ElementType } from 'react';
+import React, { type FC, type ElementType } from 'react'; // Import React
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ export interface GameCardProps {
   ariaLabel?: string;
 }
 
-export const GameCard: FC<GameCardProps> = ({ title, icon: Icon, isSmall, onClick, ariaLabel }) => {
+export const GameCard: FC<GameCardProps> = React.memo(({ title, icon: Icon, isSmall, onClick, ariaLabel }) => {
   return (
     <Card
       className={cn(
@@ -30,4 +30,6 @@ export const GameCard: FC<GameCardProps> = ({ title, icon: Icon, isSmall, onClic
       <p className={cn("font-medium text-foreground", isSmall ? "text-xs sm:text-sm" : "text-sm sm:text-base")}>{title}</p>
     </Card>
   );
-};
+});
+
+GameCard.displayName = 'GameCard';
