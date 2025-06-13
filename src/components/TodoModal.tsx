@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -43,8 +43,8 @@ export interface TodoItem {
 interface TodoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSaveTodos: (dateKey: string, hourSlot: string, todos: TodoItem[]) => void; // Changed from dayName to dateKey
-  dateKey: string; // YYYY-MM-DD
+  onSaveTodos: (dateKey: string, hourSlot: string, todos: TodoItem[]) => void;
+  dateKey: string;
   hourSlot: string;
   initialTodos?: TodoItem[];
   translations: {
@@ -101,23 +101,52 @@ const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType
   nextMonth: CalendarPlus,
 };
 
+// Helper function to compare two TodoItem objects
+const compareTodoItems = (item1: TodoItem, item2: TodoItem): boolean => {
+    return item1.id === item2.id &&
+           item1.text === item2.text &&
+           item1.completed === item2.completed &&
+           item1.category === item2.category &&
+           item1.deadline === item2.deadline &&
+           item1.importance === item2.importance;
+};
+
+// Helper function to compare two arrays of TodoItem objects
+const areTodosArraysEqual = (arr1: TodoItem[], arr2: TodoItem[]): boolean => {
+    if (arr1.length !== arr2.length) return false;
+    if (arr1.length === 0 && arr2.length === 0) return true;
+
+    // Sort by ID for consistent comparison if order might change
+    const sortedArr1 = [...arr1].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedArr2 = [...arr2].sort((a, b) => a.id.localeCompare(b.id));
+
+    for (let i = 0; i < sortedArr1.length; i++) {
+        if (!compareTodoItems(sortedArr1[i], sortedArr2[i])) {
+            return false;
+        }
+    }
+    return true;
+};
+
 
 export const TodoModal: React.FC<TodoModalProps> = ({
   isOpen,
   onClose,
   onSaveTodos,
-  dateKey, // Changed from dayName
+  dateKey,
   hourSlot,
   initialTodos = [],
   translations,
   defaultEditingTodoId
 }) => {
-  const [todos, setTodos] = useState<TodoItem[]>(initialTodos);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [originalTodosOnOpen, setOriginalTodosOnOpen] = useState<TodoItem[]>([]);
   const [newItemText, setNewItemText] = useState('');
   const [newCategory, setNewCategory] = useState<CategoryType | null>(null);
   const [newDeadline, setNewDeadline] = useState<TodoItem['deadline']>(null);
   const [newImportance, setNewImportance] = useState<TodoItem['importance']>(null);
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
+
 
   const resetForm = useCallback(() => {
     setNewItemText('');
@@ -127,17 +156,30 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     setEditingTodoId(null);
   }, []);
 
+  const handleStartEdit = useCallback((todoToEdit: TodoItem) => {
+    setEditingTodoId(todoToEdit.id);
+    setNewItemText(todoToEdit.text);
+    setNewCategory(todoToEdit.category);
+    setNewDeadline(todoToEdit.deadline);
+    setNewImportance(todoToEdit.importance);
+  }, []);
+
+
   useEffect(() => {
     if (isOpen) {
-        setTodos(initialTodos); 
-        const itemToEdit = defaultEditingTodoId ? initialTodos.find(t => t.id === defaultEditingTodoId) : null;
+        // Deep copy of initialTodos to avoid reference issues and capture the state at modal open
+        const deepCopiedInitialTodos = JSON.parse(JSON.stringify(initialTodos)) as TodoItem[];
+        setTodos(deepCopiedInitialTodos); 
+        setOriginalTodosOnOpen(deepCopiedInitialTodos);
+
+        const itemToEdit = defaultEditingTodoId ? deepCopiedInitialTodos.find(t => t.id === defaultEditingTodoId) : null;
         if (itemToEdit) {
             handleStartEdit(itemToEdit);
         } else {
             resetForm(); 
         }
     }
-  }, [isOpen, initialTodos, defaultEditingTodoId, resetForm]);
+  }, [isOpen, initialTodos, defaultEditingTodoId, resetForm, handleStartEdit]);
 
 
   const handleAddOrUpdateItem = () => {
@@ -171,14 +213,6 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     resetForm();
   };
 
-  const handleStartEdit = (todoToEdit: TodoItem) => {
-    setEditingTodoId(todoToEdit.id);
-    setNewItemText(todoToEdit.text);
-    setNewCategory(todoToEdit.category);
-    setNewDeadline(todoToEdit.deadline);
-    setNewImportance(todoToEdit.importance);
-  };
-
   const toggleTodoCompletion = (id: string) => {
     setTodos(
       todos.map(todo =>
@@ -195,7 +229,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   };
 
   const handleSave = () => {
-    onSaveTodos(dateKey, hourSlot, todos); // Pass dateKey
+    onSaveTodos(dateKey, hourSlot, todos);
     onClose(); 
   };
 
@@ -204,6 +238,10 @@ export const TodoModal: React.FC<TodoModalProps> = ({
       onClose();
     }
   };
+
+  const isSaveDisabled = useMemo(() => {
+    return areTodosArraysEqual(todos, originalTodosOnOpen);
+  }, [todos, originalTodosOnOpen]);
 
   const getCategoryTooltip = (category: CategoryType | null) => {
     if (!category || !translations.categories[category]) return '';
@@ -412,7 +450,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
           <DialogClose asChild>
             <Button variant="outline" onClick={onClose} className="py-2.5">Cancel</Button>
           </DialogClose>
-          <Button onClick={handleSave} className="py-2.5">{translations.saveButton}</Button>
+          <Button onClick={handleSave} className="py-2.5" disabled={isSaveDisabled}>{translations.saveButton}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
