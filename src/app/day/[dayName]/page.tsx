@@ -21,7 +21,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter } from 'date-fns';
 
 
 // Helper function to extract time range and generate hourly slots
@@ -864,13 +864,48 @@ export default function DayDetailPage() {
                           const reflectionsForSlot = getReflectionsForSlot(dateKey, slot);
                           const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
 
+                          let isAddingDisabledForThisSlot = false;
+                          if (isViewingCurrentDay && clientPageLoadTime && dateKey && dayProperties.dateObject) {
+                            const dateKeyDate = dayProperties.dateObject;
+                            const clientDatePart = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
+                            
+                            if (dateIsAfter(clientDatePart, dateKeyDate)) {
+                              isAddingDisabledForThisSlot = true;
+                            } else if (format(clientDatePart, 'yyyy-MM-dd') === format(dateKeyDate, 'yyyy-MM-dd')) {
+                                const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                                if (slotTimeMatch) {
+                                    const slotStartTimeStr = slotTimeMatch[1];
+                                    const slotEndTimeStr = slotTimeMatch[2];
+                                    let slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
+                                    const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
+
+                                    if (slotEndHour === 0 && slotEndMinute === 0 && slotStartTimeStr.split(':')[0] !== "00") {
+                                        slotEndHour = 24;
+                                    }
+                                    const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
+
+                                    const pageLoadHour = clientPageLoadTime.getHours();
+                                    const pageLoadMinute = clientPageLoadTime.getMinutes();
+                                    const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
+
+                                    if (slotEndTotalMinutes <= pageLoadTotalMinutes) {
+                                        isAddingDisabledForThisSlot = true;
+                                    }
+                                }
+                            }
+                          }
+
+
                           let shouldHideThisSlot = false;
                           if (isViewingCurrentDay && clientPageLoadTime) {
                             const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                             if (slotTimeMatch) {
                               const slotEndTimeStr = slotTimeMatch[2];
-                              const slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
+                              let slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
                               const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
+                              if (slotEndHour === 0 && slotEndMinute === 0 && slotTimeMatch[1].split(':')[0] !== "00") {
+                                 slotEndHour = 24;
+                              }
                               const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
                               
                               const pageLoadHour = clientPageLoadTime.getHours();
@@ -899,7 +934,7 @@ export default function DayDetailPage() {
                                 <div className="flex space-x-1">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenTodoModal(slot)}>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenTodoModal(slot)} disabled={isAddingDisabledForThisSlot}>
                                         <ListChecks className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -907,7 +942,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenMeetingNoteModal(slot)}>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenMeetingNoteModal(slot)} disabled={isAddingDisabledForThisSlot}>
                                         <ClipboardList className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -915,7 +950,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenShareLinkModal(slot)}>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenShareLinkModal(slot)} disabled={isAddingDisabledForThisSlot}>
                                         <LinkIconLucide className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -923,7 +958,7 @@ export default function DayDetailPage() {
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenReflectionModal(slot)}>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenReflectionModal(slot)} disabled={isAddingDisabledForThisSlot}>
                                         <MessageSquareText className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
