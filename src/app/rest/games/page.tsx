@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -44,9 +44,9 @@ export default function GamesListPage() {
 
   const t = translations[currentLanguage];
 
-  const handleGameClick = (gamePath: string) => {
+  const handleGameClick = useCallback((gamePath: string) => {
     router.push(gamePath);
-  };
+  }, [router]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
