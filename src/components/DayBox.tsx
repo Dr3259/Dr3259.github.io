@@ -5,14 +5,14 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, Ban, CalendarDays, FileText } from "lucide-react"; // Added FileText
+import { Smile, Meh, Frown, CalendarPlus, Ban, FileText } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
 interface DayBoxProps {
   dayName: string;
   onClick: () => void;
-  notes: string;
+  notes: string; // Used for hover preview, not direct display in box
   dayHasAnyData: boolean;
   rating: RatingValue | null;
   onRatingChange: (newRating: RatingValue | null) => void;
@@ -62,11 +62,14 @@ export const DayBox: FC<DayBoxProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // A day is disabled if it's a past day AND has no content.
+  // Such days cannot have ratings changed or be navigated to (effectively).
   const isDisabled = isPastDay && !dayHasAnyData;
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
 
   const handleCardMouseEnter = () => {
     setIsHovered(true);
+    // Only trigger hover preview for past days that are NOT disabled (i.e., past days with content)
     if (isPastDay && !isDisabled) {
       onHoverStart({ dayName, notes, imageHint });
     }
@@ -80,24 +83,9 @@ export const DayBox: FC<DayBoxProps> = ({
   };
 
   const showRatingIcons =
-    !isDisabled &&
-    (isPastDay || (isCurrentDay && isAfter6PMToday)) &&
-    !isFutureDay;
-
-  const showContentDot = dayHasAnyData && !isDisabled; // This variable name is a bit misleading now, it means "show content indicator"
-
-  let IconToShow: LucideIcon | null = null;
-  let iconClassName = "";
-
-  if (showContentDot) {
-    // Content indicator (now FileText) will be rendered below
-  } else if (isDisabled) { // Past day, no content, unmodifiable
-    IconToShow = CalendarDays; 
-    iconClassName = "w-10 h-10 text-muted-foreground opacity-40";
-  } else { // Current or future day, no content, editable
-    IconToShow = CalendarPlus;
-    iconClassName = "w-12 h-12 text-primary/80";
-  }
+    !isDisabled && // Can't rate disabled (past, empty) days
+    (isPastDay || (isCurrentDay && isAfter6PMToday)) && // Can rate past days with content, or current day after 6 PM
+    !isFutureDay; // Can't rate future days
 
   return (
     <Card
@@ -124,11 +112,13 @@ export const DayBox: FC<DayBoxProps> = ({
         <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
-        {showContentDot ? (
-          <FileText className="w-6 h-6 text-primary" aria-label={contentIndicatorLabel} />
-        ) : IconToShow ? (
-          <IconToShow className={iconClassName} />
-        ) : null}
+        {isDisabled ? (
+          <Ban className="w-10 h-10 text-muted-foreground opacity-50" />
+        ) : dayHasAnyData ? (
+          <FileText className="w-10 h-10 text-primary" aria-label={contentIndicatorLabel} />
+        ) : (
+          <CalendarPlus className="w-12 h-12 text-primary/80" />
+        )}
       </CardContent>
       {showRatingIcons && (
         <CardFooter className="p-2 pt-1 mt-auto w-full">
@@ -150,7 +140,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
-                  disabled={isDisabled}
+                  disabled={isDisabled} // Should not be possible due to showRatingIcons logic, but good practice
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
