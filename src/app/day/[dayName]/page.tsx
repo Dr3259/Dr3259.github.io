@@ -67,7 +67,7 @@ const translations = {
     noData: '暂无数据',
     notesPlaceholder: '记录今天的总结...',
     summaryAvailableLater: '总结可在下午6点后填写。',
-    timeIntervalsTitle: '当日规划',
+    timeIntervalsTitle: (dayName: string) => `${dayName}规划`,
     midnight: '凌晨 (00:00 - 05:00)',
     earlyMorning: '清晨 (05:00 - 09:00)',
     morning: '上午 (09:00 - 12:00)',
@@ -187,7 +187,7 @@ const translations = {
     noData: 'No data available',
     notesPlaceholder: 'Write your summary for the day...',
     summaryAvailableLater: 'Summary can be written after 6 PM.',
-    timeIntervalsTitle: 'Daily Schedule',
+    timeIntervalsTitle: (dayName: string) => `${dayName} Schedule`,
     midnight: 'Midnight (00:00 - 05:00)',
     earlyMorning: 'Early Morning (05:00 - 09:00)',
     morning: 'Morning (09:00 - 12:00)',
@@ -800,7 +800,9 @@ export default function DayDetailPage() {
           )}
 
           <div>
-            <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle}</h2>
+            <h2 className="text-2xl font-semibold text-primary mb-4">
+              {t.timeIntervalsTitle(dayNameForDisplay)}
+            </h2>
             <div className="grid grid-cols-1 gap-6">
               {timeIntervals.map(interval => {
                 const hourlySlotsForInterval = generateHourlySlots(interval.label);
