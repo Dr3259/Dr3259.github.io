@@ -698,9 +698,9 @@ export default function DayDetailPage() {
   };
   const handleDeleteReflectionInPage = (targetDateKey: string, targetHourSlot: string, reflectionId: string) => {
      setAllReflections(prev => {
-        const slotReflections = prev[targetDateKey]?.[targetHourSlot] || [];
+        const slotReflections = prev[currentDateKey]?.[targetHourSlot] || [];
         const updatedSlot = slotReflections.filter(r => r.id !== reflectionId);
-        const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+        const newAll = { ...prev, [currentDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
         saveAllReflectionsToLocalStorage(newAll); return newAll;
     });
   };
@@ -883,6 +883,7 @@ export default function DayDetailPage() {
                           }
                           if (shouldHideThisSlot) return null;
 
+                          let sectionsRenderedInSlotCount = 0;
 
                           return (
                             <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
@@ -931,7 +932,9 @@ export default function DayDetailPage() {
                                 </div>
                               </div>
 
-                              {todosForSlot.length > 0 && (
+                              {todosForSlot.length > 0 && (() => {
+                                sectionsRenderedInSlotCount++;
+                                return (
                                 <ul className="space-y-2 p-px mb-3 group/todolist">
                                   {todosForSlot.map((todo) => {
                                     const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
@@ -973,11 +976,15 @@ export default function DayDetailPage() {
                                     );
                                   })}
                                 </ul>
-                              )}
+                                );
+                              })()}
 
-                              {meetingNotesForSlot.length > 0 && (
+                              {meetingNotesForSlot.length > 0 && (() => {
+                                const isFirstInSectionGroup = sectionsRenderedInSlotCount === 0;
+                                sectionsRenderedInSlotCount++;
+                                return (
                                 <>
-                                 <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1 group/meetingnotelist">{t.meetingNotesSectionTitle}</h4>
+                                 <h4 className={cn("text-xs font-semibold text-muted-foreground mb-2 pl-1 group/meetingnotelist", !isFirstInSectionGroup && "mt-4")}>{t.meetingNotesSectionTitle}</h4>
                                     <ul className="space-y-2 p-px mb-3">
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
@@ -990,11 +997,15 @@ export default function DayDetailPage() {
                                         ))}
                                     </ul>
                                 </>
-                              )}
+                                );
+                              })()}
 
-                              {shareLinksForSlot.length > 0 && (
+                              {shareLinksForSlot.length > 0 && (() => {
+                                const isFirstInSectionGroup = sectionsRenderedInSlotCount === 0;
+                                sectionsRenderedInSlotCount++;
+                                return (
                                 <>
-                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1 group/linklist">{t.linksSectionTitle}</h4>
+                                  <h4 className={cn("text-xs font-semibold text-muted-foreground mb-2 pl-1 group/linklist", !isFirstInSectionGroup && "mt-4")}>{t.linksSectionTitle}</h4>
                                     <ul className="space-y-2 p-px mb-3">
                                       {shareLinksForSlot.map((link) => (
                                         <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
@@ -1007,12 +1018,16 @@ export default function DayDetailPage() {
                                       ))}
                                     </ul>
                                 </>
-                              )}
+                                );
+                              })()}
 
-                              {reflectionsForSlot.length > 0 && (
+                              {reflectionsForSlot.length > 0 && (() => {
+                                const isFirstInSectionGroup = sectionsRenderedInSlotCount === 0;
+                                sectionsRenderedInSlotCount++;
+                                return (
                                 <>
-                                  <h4 className="text-xs font-semibold text-muted-foreground mb-1.5 pl-1 group/reflectionlist">{t.reflectionsSectionTitle}</h4>
-                                    <ul className="space-y-2 p-px">
+                                  <h4 className={cn("text-xs font-semibold text-muted-foreground mb-2 pl-1 group/reflectionlist", !isFirstInSectionGroup && "mt-4")}>{t.reflectionsSectionTitle}</h4>
+                                    <ul className="space-y-2 p-px"> {/* Removed mb-3 here as it's the last section */}
                                       {reflectionsForSlot.map((reflection) => (
                                         <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                           <ScrollArea className="max-h-20 w-full mr-2"><p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p></ScrollArea>
@@ -1024,7 +1039,8 @@ export default function DayDetailPage() {
                                       ))}
                                     </ul>
                                 </>
-                              )}
+                                );
+                              })()}
                             </div>
                           );
                         })}
