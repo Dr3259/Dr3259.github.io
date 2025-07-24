@@ -13,6 +13,9 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter, differenceInDays } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
+import { ShareTargetModal } from '@/components/ShareTargetModal';
+
 
 // Types from DayDetailPage - needed for checking content
 type CategoryType = 'work' | 'study' | 'shopping' | 'organizing' | 'relaxing' | 'cooking' | 'childcare' | 'dating';
@@ -31,6 +34,7 @@ const LOCAL_STORAGE_KEY_NOTES = 'weekGlanceNotes_v2'; // Changed key for new str
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2'; // Changed key for new structure
 const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary_v2'; // Changed key for new structure
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
+const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
 
 // Keys used by DayDetailPage for its data, now structured with YYYY-MM-DD keys
 const LOCAL_STORAGE_KEY_ALL_DAILY_NOTES = 'allWeekDailyNotes_v2';
@@ -74,6 +78,15 @@ const translations = {
     yearMonthFormat: "yyyy年M月",
     weekLabelFormat: (weekNumber: number) => `第 ${weekNumber} 周`,
     selectDate: '选择日期',
+    shareTarget: {
+      toastTitle: "已接收到分享内容",
+      toastDescription: "请选择一个日期来保存这个链接。",
+      modalTitle: "保存分享的链接",
+      modalDescription: "请选择一个日期，我们会将链接保存到该日期的第一个时间段（凌晨）。",
+      saveButton: "保存到选中日期",
+      cancelButton: "取消",
+      linkSavedToast: "链接已保存！"
+    }
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -108,6 +121,15 @@ const translations = {
     yearMonthFormat: "MMMM yyyy",
     weekLabelFormat: (weekNumber: number) => `Week ${weekNumber}`,
     selectDate: 'Select a date',
+    shareTarget: {
+      toastTitle: "Received Shared Content",
+      toastDescription: "Please select a date to save this link.",
+      modalTitle: "Save Shared Link",
+      modalDescription: "Select a date, and the link will be saved to the first time slot (Midnight) of that day.",
+      saveButton: "Save to Selected Date",
+      cancelButton: "Cancel",
+      linkSavedToast: "Link saved!"
+    }
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -128,6 +150,12 @@ interface AllLoadedData {
   allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>; // Outer key is YYYY-MM-DD
   allShareLinks: Record<string, Record<string, ShareLinkItem[]>>; // Outer key is YYYY-MM-DD
   allReflections: Record<string, Record<string, ReflectionItem[]>>; // Outer key is YYYY-MM-DD
+}
+
+interface ReceivedShareData {
+  title: string;
+  text: string;
+  url: string;
 }
 
 
@@ -170,6 +198,7 @@ const getDateKey = (date: Date): string => {
 
 export default function WeekGlancePage() {
   const router = useRouter();
+  const { toast } = useToast();
   
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN'); 
   const [theme, setTheme] = useState<Theme>('light'); 
@@ -193,6 +222,9 @@ export default function WeekGlancePage() {
 
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const [shareData, setShareData] = useState<ReceivedShareData | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -247,10 +279,28 @@ export default function WeekGlancePage() {
     };
     loadData();
     
+    // Check for shared data
+    const sharedDataString = localStorage.getItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
+    if (sharedDataString) {
+      try {
+        const parsedData = JSON.parse(sharedDataString);
+        setShareData(parsedData);
+        setIsShareModalOpen(true);
+        toast({
+            title: t.shareTarget.toastTitle,
+            description: t.shareTarget.toastDescription,
+        });
+        localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
+      } catch (e) {
+          console.error("Failed to parse shared data", e);
+          localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
+      }
+    }
+
     return () => {
       clearTimeoutIfNecessary();
     };
-  }, [clearTimeoutIfNecessary]); 
+  }, [clearTimeoutIfNecessary, toast, t.shareTarget.toastTitle, t.shareTarget.toastDescription]);
 
 
   useEffect(() => {
@@ -496,6 +546,48 @@ export default function WeekGlancePage() {
     return !weekHasContent(date, allLoadedDataMemo);
   }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale, systemToday]);
 
+  const handleSaveShareLink = (targetDate: Date) => {
+    if (!shareData) return;
+    const { title, text, url } = shareData;
+
+    // Use URL from share data if available, otherwise use text.
+    const linkUrl = url || text;
+    if (!linkUrl) {
+      console.warn("No URL or text found in shared data.");
+      return;
+    }
+
+    // New link item to be added
+    const newLink: ShareLinkItem = {
+      id: Date.now().toString(),
+      url: linkUrl,
+      title: title || linkUrl // Use title from share, or fallback to the URL itself
+    };
+
+    const dateKey = getDateKey(targetDate);
+    const firstTimeSlot = "Midnight (00:00 - 05:00)"; // As per design
+    const hourlySlots = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00"];
+    const targetSlot = hourlySlots[0];
+
+    // Update the state for allShareLinks
+    setAllShareLinks(prevAllLinks => {
+      const dayLinks = prevAllLinks[dateKey] || {};
+      const slotLinks = dayLinks[targetSlot] || [];
+      const updatedSlotLinks = [...slotLinks, newLink];
+      const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
+      const newAllLinks = { ...prevAllLinks, [dateKey]: updatedDayLinks };
+      
+      // Save to localStorage
+      localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
+      
+      return newAllLinks;
+    });
+
+    setIsShareModalOpen(false);
+    setShareData(null);
+    toast({ title: t.shareTarget.linkSavedToast });
+  };
+
   if (!isClientMounted || !systemToday || !displayedDate) {
     return (
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -633,6 +725,17 @@ export default function WeekGlancePage() {
           onMouseEnterPreview={handlePreviewMouseEnter}
           onMouseLeavePreview={handlePreviewMouseLeave}
           onClickPreview={handlePreviewClick}
+        />
+      )}
+
+      {isClientMounted && shareData && (
+        <ShareTargetModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          onSave={handleSaveShareLink}
+          shareData={shareData}
+          translations={t.shareTarget}
+          dateLocale={dateLocale}
         />
       )}
 

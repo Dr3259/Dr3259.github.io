@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 export const metadata: Metadata = {
   title: '周览',
   description: '一目了然地规划你的一周。',
+  manifest: '/manifest.json', // Link to the manifest file
   viewport: {
     width: 'device-width',
     initialScale: 1,
