@@ -43,8 +43,8 @@ export default function PersonalityTestPage() {
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
-      <header className="w-full max-w-2xl mb-8 sm:mb-12 self-center">
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 items-center">
+      <header className="w-full max-w-2xl mb-8 self-center">
         <Link href="/rest" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -55,11 +55,11 @@ export default function PersonalityTestPage() {
 
       <main className="w-full max-w-2xl flex flex-col items-center flex-grow">
         <div className="text-center mb-10">
-            <Brain className="w-16 h-16 sm:w-20 sm:h-20 text-primary mb-4 mx-auto" />
-            <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary mb-3">
+            <Brain className="w-16 h-16 text-primary mb-4 mx-auto" />
+            <h1 className="text-3xl font-headline font-bold text-primary mb-3">
             {t.pageTitle}
             </h1>
-            <p className="text-muted-foreground text-base sm:text-lg">
+            <p className="text-muted-foreground text-base">
             {t.welcomeMessage}
             </p>
         </div>

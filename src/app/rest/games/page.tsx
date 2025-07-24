@@ -50,7 +50,7 @@ export default function GamesListPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-      <header className="w-full max-w-xl mb-8 sm:mb-12 self-center">
+      <header className="w-full max-w-lg mb-8 sm:mb-12 self-center">
         <Link href="/rest" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -59,20 +59,17 @@ export default function GamesListPage() {
         </Link>
       </header>
 
-      <main className="w-full max-w-xl flex flex-col self-center flex-grow items-center">
+      <main className="w-full max-w-lg flex flex-col self-center flex-grow items-center">
         <h1 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-6 sm:mb-8">
           {t.pageTitle}
         </h1>
         
-        <div className="grid grid-cols-3 gap-4 sm:gap-5 w-full max-w-lg">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 w-full">
           <GameCard title={t.game2048} icon={Hash} onClick={() => handleGameClick('/play/2048')} ariaLabel={t.game2048} />
           <GameCard title={t.gameKlotski} icon={Puzzle} onClick={() => handleGameClick('/play/klotski')} ariaLabel={t.gameKlotski} />
           <GameCard title={t.gameTetris} icon={Blocks} onClick={() => handleGameClick('/play/tetris')} ariaLabel={t.gameTetris} />
           <GameCard title={t.gameSudoku} icon={Grid3x3} onClick={() => handleGameClick('/play/sudoku')} ariaLabel={t.gameSudoku} />
-          <div className="col-span-1 flex items-center justify-center sm:items-start sm:justify-start">
-            <GameCard title={t.gameMinesweeper} icon={Bomb} isSmall={true} onClick={() => handleGameClick('/play/minesweeper')} ariaLabel={t.gameMinesweeper} />
-          </div>
-          <div className="col-span-1 hidden sm:block"></div> 
+          <GameCard title={t.gameMinesweeper} icon={Bomb} onClick={() => handleGameClick('/play/minesweeper')} ariaLabel={t.gameMinesweeper} />
         </div>
       </main>
     </div>

@@ -5,7 +5,7 @@ import React, { useState, FC } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Smile, Meh, Frown, CalendarPlus, Ban, FileText } from "lucide-react";
+import { Smile, Meh, Frown, CalendarPlus, Ban, FileText, CalendarDays } from "lucide-react";
 
 type RatingValue = 'excellent' | 'terrible' | 'average';
 
@@ -90,7 +90,7 @@ export const DayBox: FC<DayBoxProps> = ({
   return (
     <Card
       className={cn(
-        "w-36 h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isDisabled
           ? "opacity-50 cursor-not-allowed bg-card border-transparent"
           : [
@@ -113,7 +113,7 @@ export const DayBox: FC<DayBoxProps> = ({
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
         {isDisabled ? (
-          <Ban className="w-10 h-10 text-muted-foreground opacity-50" />
+          <CalendarDays className="w-10 h-10 text-muted-foreground opacity-40" />
         ) : dayHasAnyData ? (
           <FileText className="w-10 h-10 text-primary" aria-label={contentIndicatorLabel} />
         ) : (

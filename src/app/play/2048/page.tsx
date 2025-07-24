@@ -294,30 +294,30 @@ export default function Game2048Page() {
   };
   
   const getTileTextStyle = (value: number) => {
-    let style = BASE_TILE_TEXT_STYLE;
-    if (value >= 128 && value < 1024) style = cn(style, "text-xl");
-    else if (value >= 1024) style = cn(style, "text-lg");
-    if (value >= 10000) style = cn(style, "text-base"); // for very large numbers
+    let style = "text-xl sm:text-2xl font-bold";
+    if (value >= 128 && value < 1024) style = cn(style, "text-lg sm:text-xl");
+    else if (value >= 1024) style = cn(style, "text-base sm:text-lg");
+    if (value >= 10000) style = cn(style, "text-sm sm:text-base"); // for very large numbers
     return style;
   }
 
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
-      <header className="w-full max-w-md mb-6 sm:mb-8">
+      <header className="w-full max-w-sm mb-6 sm:mb-8">
         <Button variant="outline" size="sm" onClick={() => router.push('/rest')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.backButton}
         </Button>
       </header>
 
-      <main className="w-full max-w-md flex flex-col items-center">
+      <main className="w-full max-w-sm flex flex-col items-center">
         <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary mb-4">
           {t.pageTitle}
         </h1>
 
         <div className="flex justify-between items-center w-full mb-6 px-2">
-          <div className="text-lg space-x-4">
+          <div className="text-base sm:text-lg space-x-2 sm:space-x-4">
             <span>
                 <span className="font-semibold">{t.score}: </span>
                 <span>{score}</span>
@@ -333,8 +333,8 @@ export default function Game2048Page() {
         </div>
 
         <div 
-          className="grid grid-cols-4 gap-2 p-2 bg-gray-400 dark:bg-gray-800 rounded-lg shadow-md mb-6"
-          style={{ width: 'min(100%, 320px)', height: 'min(100vw - 32px, 320px)' }} // Responsive square grid
+          className="grid grid-cols-4 gap-2 p-2 bg-gray-400 dark:bg-gray-800 rounded-lg shadow-md mb-6 w-full"
+          style={{ maxWidth: '400px', aspectRatio: '1 / 1' }} 
         >
           {board.map((row, rIndex) =>
             row.map((value, cIndex) => (
@@ -372,7 +372,3 @@ export default function Game2048Page() {
     </div>
   );
 }
-    
-    
-
-    

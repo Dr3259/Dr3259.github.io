@@ -133,15 +133,15 @@ export default function FoodFinderPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
-      <header className="w-full max-w-2xl mb-8 sm:mb-12 self-center relative">
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 items-center">
+      <header className="w-full max-w-2xl mb-8 self-center relative">
         <Link href="/rest" passHref>
           <Button variant="outline" size="sm" className="absolute top-0 left-0">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t.backButton}
           </Button>
         </Link>
-        <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary text-center pt-1 sm:pt-0">
+        <h1 className="text-3xl font-headline font-bold text-primary text-center pt-1 sm:pt-0">
           {t.pageTitle}
         </h1>
       </header>
@@ -149,8 +149,8 @@ export default function FoodFinderPage() {
       <main className="w-full max-w-2xl flex flex-col items-center flex-grow">
         {!hasInitiatedSearch && (
           <div className="text-center p-8 bg-card rounded-lg shadow-xl">
-            <Utensils className="w-20 h-20 sm:w-24 sm:h-24 text-primary mb-6 mx-auto" />
-            <p className="text-muted-foreground mb-8 text-lg sm:text-xl max-w-sm">
+            <Utensils className="w-20 h-20 text-primary mb-6 mx-auto" />
+            <p className="text-muted-foreground mb-8 text-lg max-w-sm">
               {t.initialPrompt}
             </p>
             <Button onClick={handleFetchLocationAndRestaurants} size="lg" className="px-8 py-6 text-lg">
@@ -234,4 +234,3 @@ export default function FoodFinderPage() {
     </div>
   );
 }
-

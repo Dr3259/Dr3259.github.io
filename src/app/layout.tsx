@@ -5,6 +5,18 @@ import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 export const metadata: Metadata = {
   title: '周览',
   description: '一目了然地规划你的一周。',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '周览',
+  },
 };
 
 export default function RootLayout({

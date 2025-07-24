@@ -218,14 +218,14 @@ export default function KlotskiPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
-      <header className="w-full max-w-xs sm:max-w-sm md:max-w-md mb-6 sm:mb-8">
+      <header className="w-full max-w-sm mb-6 sm:mb-8">
         <Button variant="outline" size="sm" onClick={() => router.push('/rest')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.backButton}
         </Button>
       </header>
 
-      <main className="w-full max-w-xs sm:max-w-sm md:max-w-md flex flex-col items-center">
+      <main className="w-full max-w-sm flex flex-col items-center">
         <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary mb-4">
           {t.pageTitle}
         </h1>
@@ -242,11 +242,11 @@ export default function KlotskiPage() {
         </div>
 
         <div 
-          className="grid gap-1 p-1 bg-gray-400 dark:bg-gray-800 rounded-lg shadow-md mb-6 relative"
+          className="grid gap-1 p-1 bg-gray-400 dark:bg-gray-800 rounded-lg shadow-md mb-6 relative w-full"
           style={{ 
             gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-            width: 'min(100%, 280px)', 
-            height: 'min(100vw - 60px, 280px)' 
+            maxWidth: '320px', 
+            aspectRatio: '1 / 1'
           }}
         >
           {board.map((row, rIndex) =>
@@ -285,5 +285,3 @@ export default function KlotskiPage() {
     </div>
   );
 }
-
-    

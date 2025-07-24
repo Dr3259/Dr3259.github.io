@@ -59,7 +59,7 @@ export default function RestHubPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
-      <header className="w-full max-w-xl mb-8 sm:mb-12 self-center">
+      <header className="w-full max-w-lg mb-8 sm:mb-12 self-center">
         <Link href="/" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -76,7 +76,7 @@ export default function RestHubPage() {
             {t.pageDescription}
         </p>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 w-full">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full">
           <GameCard 
             title={t.gameStationButton} 
             icon={Gamepad2} 
