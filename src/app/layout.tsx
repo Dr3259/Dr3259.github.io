@@ -6,11 +6,6 @@ export const metadata: Metadata = {
   title: '周览',
   description: '一目了然地规划你的一周。',
   manifest: '/manifest.json', // Link to the manifest file
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: '周览',
-  },
 };
 
 export const viewport: Viewport = {
@@ -19,6 +14,11 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '周览',
+  },
 };
 
 export default function RootLayout({
