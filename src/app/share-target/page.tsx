@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
 
-export default function ShareTargetPage() {
+function ShareTargetClientComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -40,4 +40,17 @@ export default function ShareTargetPage() {
       <p className="text-muted-foreground">Processing share...</p>
     </div>
   );
+}
+
+
+export default function ShareTargetPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-background">
+                <p className="text-muted-foreground">Loading...</p>
+            </div>
+        }>
+            <ShareTargetClientComponent />
+        </Suspense>
+    );
 }
