@@ -14,7 +14,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter, differenceInDays } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { ShareTargetModal } from '@/components/ShareTargetModal';
 
 
 // Types from DayDetailPage - needed for checking content
@@ -79,14 +78,17 @@ const translations = {
     weekLabelFormat: (weekNumber: number) => `第 ${weekNumber} 周`,
     selectDate: '选择日期',
     shareTarget: {
-      toastTitle: "已接收到分享内容",
-      toastDescription: "请选择一个日期来保存这个链接。",
-      modalTitle: "保存分享的链接",
-      modalDescription: "请选择一个日期，我们会将链接保存到该日期的第一个时间段（凌晨）。",
-      saveButton: "保存到选中日期",
-      cancelButton: "取消",
-      linkSavedToast: "链接已保存！"
-    }
+      linkSavedToastTitle: "分享已保存",
+      linkSavedToastDescription: (slot: string) => `链接已保存到当前时间段 (${slot})`
+    },
+    timeIntervals: {
+        midnight: '凌晨 (00:00 - 05:00)',
+        earlyMorning: '清晨 (05:00 - 09:00)',
+        morning: '上午 (09:00 - 12:00)',
+        noon: '中午 (12:00 - 14:00)',
+        afternoon: '下午 (14:00 - 18:00)',
+        evening: '晚上 (18:00 - 24:00)',
+    },
   },
   'en': {
     pageTitle: 'Week Glance',
@@ -122,14 +124,17 @@ const translations = {
     weekLabelFormat: (weekNumber: number) => `Week ${weekNumber}`,
     selectDate: 'Select a date',
     shareTarget: {
-      toastTitle: "Received Shared Content",
-      toastDescription: "Please select a date to save this link.",
-      modalTitle: "Save Shared Link",
-      modalDescription: "Select a date, and the link will be saved to the first time slot (Midnight) of that day.",
-      saveButton: "Save to Selected Date",
-      cancelButton: "Cancel",
-      linkSavedToast: "Link saved!"
-    }
+      linkSavedToastTitle: "Share Saved",
+      linkSavedToastDescription: (slot: string) => `Link saved to the current time slot (${slot})`
+    },
+     timeIntervals: {
+        midnight: 'Midnight (00:00 - 05:00)',
+        earlyMorning: 'Early Morning (05:00 - 09:00)',
+        morning: 'Morning (09:00 - 12:00)',
+        noon: 'Noon (12:00 - 14:00)',
+        afternoon: 'Afternoon (14:00 - 18:00)',
+        evening: 'Evening (18:00 - 24:00)',
+    },
   }
 };
 type LanguageKey = keyof typeof translations;
@@ -195,6 +200,37 @@ const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
 
+const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
+  const match = intervalLabelWithTime.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+  if (!match) {
+    return [];
+  }
+
+  const startTimeStr = match[1];
+  const endTimeStr = match[2];
+
+  const startHour = parseInt(startTimeStr.split(':')[0]);
+  let endHour = parseInt(endTimeStr.split(':')[0]);
+
+  if (endTimeStr === "00:00" && startHour !== 0 && endHour === 0) {
+      endHour = 24;
+  }
+
+  const slots: string[] = [];
+  if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
+     if (!(startHour < 24 && endHour === 0)) { 
+        return [];
+     }
+  }
+
+  for (let h = startHour; h < endHour; h++) {
+    const currentSlotStart = `${String(h).padStart(2, '0')}:00`;
+    const nextHour = h + 1;
+    const currentSlotEnd = `${String(nextHour).padStart(2, '0')}:00`;
+    slots.push(`${currentSlotStart} - ${currentSlotEnd}`);
+  }
+  return slots;
+};
 
 export default function WeekGlancePage() {
   const router = useRouter();
@@ -223,9 +259,6 @@ export default function WeekGlancePage() {
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const [shareData, setShareData] = useState<ReceivedShareData | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
@@ -243,6 +276,62 @@ export default function WeekGlancePage() {
       hidePreviewTimerRef.current = null;
     }
   }, []);
+
+  const handleSaveShareLink = useCallback((shareData: ReceivedShareData) => {
+    if (!shareData) return;
+    const { title, text, url } = shareData;
+
+    const linkUrl = url || text;
+    if (!linkUrl) {
+      console.warn("No URL or text found in shared data.");
+      return;
+    }
+
+    const newLink: ShareLinkItem = {
+      id: Date.now().toString(),
+      url: linkUrl,
+      title: title || linkUrl
+    };
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDateKey = getDateKey(now);
+    
+    const timeIntervals = t.timeIntervals;
+    let targetIntervalLabel = timeIntervals.evening; // Default to evening
+    if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
+    else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
+    else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
+    else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
+    else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+
+    const hourlySlots = generateHourlySlots(targetIntervalLabel);
+    if (hourlySlots.length === 0) {
+        console.error("Could not find a valid hourly slot for the current time.");
+        return;
+    }
+    const targetSlot = hourlySlots[0];
+
+    // Load, update, and save allShareLinks
+    try {
+        const storedLinks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
+        const dayLinks = storedLinks[currentDateKey] || {};
+        const slotLinks = dayLinks[targetSlot] || [];
+        const updatedSlotLinks = [...slotLinks, newLink];
+        const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
+        const newAllLinks = { ...storedLinks, [currentDateKey]: updatedDayLinks };
+        
+        localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
+        setAllShareLinks(newAllLinks); // Update state to reflect change immediately
+        
+        toast({ 
+            title: t.shareTarget.linkSavedToastTitle,
+            description: t.shareTarget.linkSavedToastDescription(targetIntervalLabel.split(' (')[0])
+        });
+    } catch(e) {
+        console.error("Failed to save shared link to localStorage", e);
+    }
+  }, [toast, t]);
 
   useEffect(() => {
     setIsClientMounted(true); 
@@ -284,15 +373,10 @@ export default function WeekGlancePage() {
     if (sharedDataString) {
       try {
         const parsedData = JSON.parse(sharedDataString);
-        setShareData(parsedData);
-        setIsShareModalOpen(true);
-        toast({
-            title: t.shareTarget.toastTitle,
-            description: t.shareTarget.toastDescription,
-        });
+        handleSaveShareLink(parsedData);
         localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       } catch (e) {
-          console.error("Failed to parse shared data", e);
+          console.error("Failed to parse or save shared data", e);
           localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       }
     }
@@ -300,7 +384,7 @@ export default function WeekGlancePage() {
     return () => {
       clearTimeoutIfNecessary();
     };
-  }, [clearTimeoutIfNecessary, toast, t.shareTarget.toastTitle, t.shareTarget.toastDescription]);
+  }, [clearTimeoutIfNecessary, handleSaveShareLink]);
 
 
   useEffect(() => {
@@ -546,47 +630,6 @@ export default function WeekGlancePage() {
     return !weekHasContent(date, allLoadedDataMemo);
   }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale, systemToday]);
 
-  const handleSaveShareLink = (targetDate: Date) => {
-    if (!shareData) return;
-    const { title, text, url } = shareData;
-
-    // Use URL from share data if available, otherwise use text.
-    const linkUrl = url || text;
-    if (!linkUrl) {
-      console.warn("No URL or text found in shared data.");
-      return;
-    }
-
-    // New link item to be added
-    const newLink: ShareLinkItem = {
-      id: Date.now().toString(),
-      url: linkUrl,
-      title: title || linkUrl // Use title from share, or fallback to the URL itself
-    };
-
-    const dateKey = getDateKey(targetDate);
-    const firstTimeSlot = "Midnight (00:00 - 05:00)"; // As per design
-    const hourlySlots = ["00:00 - 01:00", "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00"];
-    const targetSlot = hourlySlots[0];
-
-    // Update the state for allShareLinks
-    setAllShareLinks(prevAllLinks => {
-      const dayLinks = prevAllLinks[dateKey] || {};
-      const slotLinks = dayLinks[targetSlot] || [];
-      const updatedSlotLinks = [...slotLinks, newLink];
-      const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
-      const newAllLinks = { ...prevAllLinks, [dateKey]: updatedDayLinks };
-      
-      // Save to localStorage
-      localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
-      
-      return newAllLinks;
-    });
-
-    setIsShareModalOpen(false);
-    setShareData(null);
-    toast({ title: t.shareTarget.linkSavedToast });
-  };
 
   if (!isClientMounted || !systemToday || !displayedDate) {
     return (
@@ -725,17 +768,6 @@ export default function WeekGlancePage() {
           onMouseEnterPreview={handlePreviewMouseEnter}
           onMouseLeavePreview={handlePreviewMouseLeave}
           onClickPreview={handlePreviewClick}
-        />
-      )}
-
-      {isClientMounted && shareData && (
-        <ShareTargetModal
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-          onSave={handleSaveShareLink}
-          shareData={shareData}
-          translations={t.shareTarget}
-          dateLocale={dateLocale}
         />
       )}
 
