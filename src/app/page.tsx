@@ -360,7 +360,7 @@ export default function WeekGlancePage() {
             description: t.shareTarget.linkSavedToastDescription(slotName)
         });
     }
-  }, [toast, t]);
+  }, [toast, t, setAllShareLinks]);
 
   useEffect(() => {
     setIsClientMounted(true);
@@ -409,28 +409,40 @@ export default function WeekGlancePage() {
     }
   }, [clearTimeoutIfNecessary, handleSaveShareLinkFromPWA]);
 
-  // Effect to check clipboard on mount
-  useEffect(() => {
-      const checkClipboard = async () => {
-          try {
-              // Use the Permissions API to query for clipboard-read permission.
-              // This is a more robust way to handle permissions.
-              const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
-              if (permission.state === 'denied') {
-                  console.warn(t.clipboard.permissionDenied);
-                  return;
-              }
-              // If permission is granted or prompt, try to read.
-              const text = await navigator.clipboard.readText();
-              if (text) {
-                  setClipboardContent(text);
-                  setIsClipboardModalOpen(true);
-              }
-          } catch (err) {
-              console.error(t.clipboard.checkClipboardError, err);
-          }
-      };
-      checkClipboard();
+  // Effect to check clipboard on focus
+   useEffect(() => {
+        const checkClipboard = async () => {
+            try {
+                if (typeof navigator?.permissions?.query !== 'function') {
+                    console.warn("Clipboard permissions API not supported.");
+                    return;
+                }
+                const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
+                if (permission.state === 'denied') {
+                    console.warn(t.clipboard.permissionDenied);
+                    return;
+                }
+                
+                // This will only succeed if the document has focus
+                const text = await navigator.clipboard.readText();
+
+                if (text) {
+                    setClipboardContent(text);
+                    setIsClipboardModalOpen(true);
+                }
+            } catch (err: any) {
+                // Ignore "document is not focused" errors, as they are expected when the tab is not active.
+                if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
+                   console.error(t.clipboard.checkClipboardError, err);
+                }
+            }
+        };
+
+        window.addEventListener('focus', checkClipboard);
+
+        return () => {
+            window.removeEventListener('focus', checkClipboard);
+        };
   }, [t.clipboard.checkClipboardError, t.clipboard.permissionDenied]);
 
   const handleSaveFromClipboard = () => {
