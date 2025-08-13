@@ -212,54 +212,22 @@ const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
 
-const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
-  const match = intervalLabelWithTime.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-  if (!match) {
-    return [];
-  }
-
-  const startTimeStr = match[1];
-  const endTimeStr = match[2];
-
-  const startHour = parseInt(startTimeStr.split(':')[0]);
-  let endHour = parseInt(endTimeStr.split(':')[0]);
-
-  if (endTimeStr === "00:00" && startHour !== 0 && endHour === 0) {
-      endHour = 24;
-  }
-
-  const slots: string[] = [];
-  if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
-     if (!(startHour < 24 && endHour === 0)) { 
-        return [];
-     }
-  }
-
-  for (let h = startHour; h < endHour; h++) {
-    const currentSlotStart = `${String(h).padStart(2, '0')}:00`;
-    const nextHour = h + 1;
-    const currentSlotEnd = `${String(nextHour).padStart(2, '0')}:00`;
-    slots.push(`${currentSlotStart} - ${currentSlotEnd}`);
-  }
-  return slots;
-};
-
-// Function to save a URL to local storage for the current time slot
+// Helper function to save a URL to local storage for the current time slot
 const saveUrlToCurrentTimeSlot = (
-  url: string, 
-  setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
-  t: (typeof translations)['zh-CN'] // Or 'en'
-) => {
+    url: string,
+    setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
+    t: (typeof translations)['zh-CN']
+): { success: boolean; slotName: string } => {
     const newLink: ShareLinkItem = {
         id: Date.now().toString(),
         url: url,
-        title: url,
+        title: url, // Use URL as title by default
     };
 
     const now = new Date();
     const currentHour = now.getHours();
     const currentDateKey = getDateKey(now);
-    
+
     const timeIntervals = t.timeIntervals;
     let targetIntervalLabel = timeIntervals.evening; // Default
     if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
@@ -267,8 +235,21 @@ const saveUrlToCurrentTimeSlot = (
     else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
     else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
     else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+    
+    const hourlySlots = (() => {
+        const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+        if (!match) return [];
+        const [, startTimeStr, endTimeStr] = match;
+        const startHour = parseInt(startTimeStr.split(':')[0]);
+        let endHour = parseInt(endTimeStr.split(':')[0]);
+        if (endTimeStr === "00:00" && startHour !== 0) endHour = 24;
+        const slots: string[] = [];
+        for (let h = startHour; h < endHour; h++) {
+            slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
+        }
+        return slots;
+    })();
 
-    const hourlySlots = generateHourlySlots(targetIntervalLabel);
     if (hourlySlots.length === 0) {
         console.error("Could not find a valid hourly slot for the current time.");
         return { success: false, slotName: '' };
@@ -302,7 +283,6 @@ const saveUrlToCurrentTimeSlot = (
         return { success: false, slotName: '' };
     }
 };
-
 
 export default function WeekGlancePage() {
   const router = useRouter();
@@ -351,7 +331,7 @@ export default function WeekGlancePage() {
     }
   }, []);
 
-  const handleSaveShareLink = useCallback((shareData: ReceivedShareData) => {
+  const handleSaveShareLink = useCallback((shareData: ReceivedShareData, allLinks: typeof allShareLinks, translations: typeof t) => {
     if (!shareData) return;
     const { text, url } = shareData;
 
@@ -360,15 +340,15 @@ export default function WeekGlancePage() {
       console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, setAllShareLinks, translations);
     if(success) {
         toast({ 
-            title: t.shareTarget.linkSavedToastTitle,
-            description: t.shareTarget.linkSavedToastDescription(slotName)
+            title: translations.shareTarget.linkSavedToastTitle,
+            description: translations.shareTarget.linkSavedToastDescription(slotName)
         });
     }
-
-  }, [toast, t]);
+  }, [toast]);
+  
 
   useEffect(() => {
     setIsClientMounted(true); 
@@ -386,6 +366,7 @@ export default function WeekGlancePage() {
     setDisplayedDate(today); 
     setCurrentYear(today.getFullYear());
 
+    let loadedShareLinks = {};
     const loadData = () => {
         try {
             setNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_NOTES) || '{}'));
@@ -394,7 +375,10 @@ export default function WeekGlancePage() {
             setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
             setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
             setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
-            setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
+            
+            loadedShareLinks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
+            setAllShareLinks(loadedShareLinks);
+
             setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
         } catch (e) {
             console.error("Error loading data from localStorage", e);
@@ -404,12 +388,13 @@ export default function WeekGlancePage() {
     };
     loadData();
     
-    // Check for shared data
+    // Check for shared data after initial data load
     const sharedDataString = localStorage.getItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
     if (sharedDataString) {
       try {
         const parsedData = JSON.parse(sharedDataString);
-        handleSaveShareLink(parsedData);
+        // Use the just-loaded data and current translations
+        handleSaveShareLink(parsedData, loadedShareLinks, translations[browserLang]);
         localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       } catch (e) {
           console.error("Failed to parse or save shared data", e);
@@ -422,45 +407,42 @@ export default function WeekGlancePage() {
     };
   }, [clearTimeoutIfNecessary, handleSaveShareLink]);
 
-  // Effect for handling clipboard on visibility change
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-        if (document.visibilityState === 'visible') {
-            try {
-                // Check for clipboard read permission
-                if (navigator.clipboard && 'readText' in navigator.clipboard) {
-                    const clipboardText = await navigator.clipboard.readText();
-                    
-                    if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
-                        lastProcessedClipboardUrl.current = clipboardText;
-                        
-                        saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
+    // Effect for handling clipboard on visibility change
+    const handleClipboardCheck = useCallback(async () => {
+      if (document.visibilityState === 'visible') {
+          try {
+              if (navigator.clipboard && 'readText' in navigator.clipboard) {
+                  const clipboardText = await navigator.clipboard.readText();
+                  
+                  if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
+                      lastProcessedClipboardUrl.current = clipboardText;
+                      
+                      const { success } = saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
 
+                      if (success) {
                         toast({
                             title: t.clipboard.linkSavedToastTitle,
                             description: t.clipboard.linkSavedToastDescription,
                         });
-                    }
-                }
-            } catch (err: any) {
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    // This can happen if user denies permission. Silently fail or inform once.
-                    console.warn('Clipboard read permission denied.');
-                    // You might want to toast only once about this
-                    // toast({ variant: "destructive", title: t.clipboard.permissionDenied });
-                } else {
-                    console.error('Failed to read clipboard contents: ', err);
-                }
-            }
-        }
-    };
+                      }
+                  }
+              }
+          } catch (err: any) {
+              if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                  console.warn('Clipboard read permission denied.');
+              } else {
+                  console.error('Failed to read clipboard contents: ', err);
+              }
+          }
+      }
+  }, [t, toast, setAllShareLinks]);
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-}, [t, toast, setAllShareLinks]);
+  useEffect(() => {
+      document.addEventListener('visibilitychange', handleClipboardCheck);
+      return () => {
+          document.removeEventListener('visibilitychange', handleClipboardCheck);
+      };
+  }, [handleClipboardCheck]);
 
 
   useEffect(() => {
@@ -874,5 +856,7 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
+    
 
     
