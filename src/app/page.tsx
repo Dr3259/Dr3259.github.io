@@ -84,8 +84,10 @@ const translations = {
     clipboard: {
         linkSavedToastTitle: "链接已记录",
         linkSavedToastDescription: "已从剪贴板自动记录链接。",
-        permissionDenied: "无法访问剪贴板，请检查权限设置。"
+        permissionDenied: "无法访问剪贴板，请检查权限设置。",
+        noValidLink: "剪贴板中未发现有效链接。"
     },
+    pasteFromClipboard: "从剪贴板粘贴",
     timeIntervals: {
         midnight: '凌晨 (00:00 - 05:00)',
         earlyMorning: '清晨 (05:00 - 09:00)',
@@ -135,8 +137,10 @@ const translations = {
     clipboard: {
         linkSavedToastTitle: "Link Saved",
         linkSavedToastDescription: "Link automatically saved from clipboard.",
-        permissionDenied: "Could not access clipboard. Please check permissions."
+        permissionDenied: "Could not access clipboard. Please check permissions.",
+        noValidLink: "No valid link found in clipboard."
     },
+    pasteFromClipboard: "Paste from clipboard",
      timeIntervals: {
         midnight: 'Midnight (00:00 - 05:00)',
         earlyMorning: 'Early Morning (05:00 - 09:00)',
@@ -311,9 +315,6 @@ export default function WeekGlancePage() {
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
-  const lastProcessedClipboardUrl = useRef<string | null>(null);
-  const isInitialLoad = useRef(true);
-
 
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
@@ -328,8 +329,8 @@ export default function WeekGlancePage() {
       hidePreviewTimerRef.current = null;
     }
   }, []);
-  
-  const handleSaveShareLink = useCallback((shareData: ReceivedShareData) => {
+
+   const handleSaveShareLinkFromPWA = useCallback((shareData: ReceivedShareData) => {
     if (!shareData) return;
     const { text, url } = shareData;
 
@@ -345,7 +346,7 @@ export default function WeekGlancePage() {
             description: t.shareTarget.linkSavedToastDescription(slotName)
         });
     }
-  }, [toast, t]);
+  }, [toast, t, setAllShareLinks]);
 
 
   useEffect(() => {
@@ -364,7 +365,6 @@ export default function WeekGlancePage() {
     setDisplayedDate(today); 
     setCurrentYear(today.getFullYear());
 
-    let loadedShareLinks = {};
     const loadData = () => {
         try {
             setNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_NOTES) || '{}'));
@@ -373,10 +373,7 @@ export default function WeekGlancePage() {
             setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
             setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
             setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
-            
-            loadedShareLinks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
-            setAllShareLinks(loadedShareLinks);
-
+            setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
             setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
         } catch (e) {
             console.error("Error loading data from localStorage", e);
@@ -390,7 +387,7 @@ export default function WeekGlancePage() {
     if (sharedDataString) {
       try {
         const parsedData = JSON.parse(sharedDataString);
-        handleSaveShareLink(parsedData);
+        handleSaveShareLinkFromPWA(parsedData);
         localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       } catch (e) {
           console.error("Failed to parse or save shared data", e);
@@ -401,47 +398,34 @@ export default function WeekGlancePage() {
     return () => {
       clearTimeoutIfNecessary();
     };
-  }, [clearTimeoutIfNecessary, handleSaveShareLink]);
+  }, [clearTimeoutIfNecessary, handleSaveShareLinkFromPWA]);
 
-  const handleClipboardCheck = useCallback(async () => {
-    if (isInitialLoad.current) {
-        isInitialLoad.current = false;
-        return;
-    }
-    if (document.visibilityState === 'visible') {
-        try {
-            if (navigator.clipboard && 'readText' in navigator.clipboard) {
-                const clipboardText = await navigator.clipboard.readText();
-                
-                if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
-                    lastProcessedClipboardUrl.current = clipboardText;
-                    
-                    const { success } = saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
 
-                    if (success) {
-                      toast({
-                          title: t.clipboard.linkSavedToastTitle,
-                          description: t.clipboard.linkSavedToastDescription,
-                      });
-                    }
-                }
-            }
-        } catch (err: any) {
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                console.warn('Clipboard read permission denied by user or browser setting.');
-            } else {
-                console.error('Failed to read clipboard contents: ', err);
-            }
+  const handlePasteFromClipboard = useCallback(async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText && URL_REGEX.test(clipboardText)) {
+        const { success } = saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
+        if (success) {
+          toast({
+            title: t.clipboard.linkSavedToastTitle,
+            description: t.clipboard.linkSavedToastDescription,
+          });
         }
+      } else {
+        toast({
+          variant: "destructive",
+          title: t.clipboard.noValidLink,
+        });
+      }
+    } catch (err: any) {
+      console.warn('Clipboard read permission denied by user or browser setting.', err);
+      toast({
+        variant: "destructive",
+        title: t.clipboard.permissionDenied,
+      });
     }
-}, [t, toast, setAllShareLinks]);
-
-  useEffect(() => {
-      document.addEventListener('visibilitychange', handleClipboardCheck);
-      return () => {
-          document.removeEventListener('visibilitychange', handleClipboardCheck);
-      };
-  }, [handleClipboardCheck]);
+  }, [t, toast, setAllShareLinks]);
 
 
   useEffect(() => {
@@ -703,157 +687,167 @@ export default function WeekGlancePage() {
   }
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-      <header className="mb-8 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={toggleLanguage} aria-label={currentLanguage === 'zh-CN' ? 'Switch to English' : '切换到中文'}>
-            <Languages className="mr-2 h-4 w-4" />{t.languageButtonText}
-          </Button>
-          <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
-            <PauseCircle className="mr-2 h-4 w-4" />{t.restButtonText}
-          </Button>
-        </div>
-      </header>
-
-      <div className="w-full max-w-4xl mb-6 sm:mb-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 p-3 bg-card/50 rounded-lg shadow">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviousWeek} aria-label={t.previousWeek} disabled={isPreviousWeekDisabled}>
-              <ChevronLeft className="h-4 w-4" />
+    <>
+      <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
+        <header className="mb-8 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={toggleLanguage} aria-label={currentLanguage === 'zh-CN' ? 'Switch to English' : '切换到中文'}>
+              <Languages className="mr-2 h-4 w-4" />{t.languageButtonText}
             </Button>
-             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-[240px] sm:w-[320px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        <span className="truncate">
-                           {`${format(currentDisplayedWeekStart, t.yearMonthFormat, { locale: dateLocale })}, ${t.weekLabelFormat(getDisplayWeekOfMonth(currentDisplayedWeekStart, { locale: dateLocale, weekStartsOn: 1 }))}`}
-                        </span>
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={displayedDate}
-                        onSelect={handleDateSelectForJump}
-                        disabled={calendarDisabledMatcher}
-                        initialFocus
-                        locale={dateLocale}
-                        weekStartsOn={1}
-                        fromDate={firstEverWeekWithDataStart || undefined} 
-                        toDate={systemToday || undefined} 
-                    />
-                </PopoverContent>
-            </Popover>
-             <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek} disabled={isNextWeekDisabled}>
-                <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
+              <PauseCircle className="mr-2 h-4 w-4" />{t.restButtonText}
             </Button>
           </div>
-          {!isViewingActualCurrentWeek && (
-            <Button variant="outline" size="sm" onClick={handleGoToCurrentWeek} aria-label={t.backToCurrentWeek} className="mt-2 sm:mt-0">
-              <Undo className="mr-2 h-4 w-4" />{t.backToCurrentWeek}
-            </Button>
-          )}
+        </header>
+
+        <div className="w-full max-w-4xl mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 p-3 bg-card/50 rounded-lg shadow">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="outline" size="sm" onClick={handlePreviousWeek} aria-label={t.previousWeek} disabled={isPreviousWeekDisabled}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-[240px] sm:w-[320px] justify-start text-left font-normal" aria-label={t.jumpToWeek}>
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          <span className="truncate">
+                            {`${format(currentDisplayedWeekStart, t.yearMonthFormat, { locale: dateLocale })}, ${t.weekLabelFormat(getDisplayWeekOfMonth(currentDisplayedWeekStart, { locale: dateLocale, weekStartsOn: 1 }))}`}
+                          </span>
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                          mode="single"
+                          selected={displayedDate}
+                          onSelect={handleDateSelectForJump}
+                          disabled={calendarDisabledMatcher}
+                          initialFocus
+                          locale={dateLocale}
+                          weekStartsOn={1}
+                          fromDate={firstEverWeekWithDataStart || undefined} 
+                          toDate={systemToday || undefined} 
+                      />
+                  </PopoverContent>
+              </Popover>
+              <Button variant="outline" size="sm" onClick={handleNextWeek} aria-label={t.nextWeek} disabled={isNextWeekDisabled}>
+                  <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            {!isViewingActualCurrentWeek && (
+              <Button variant="outline" size="sm" onClick={handleGoToCurrentWeek} aria-label={t.backToCurrentWeek} className="mt-2 sm:mt-0">
+                <Undo className="mr-2 h-4 w-4" />{t.backToCurrentWeek}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
-        {daysToDisplay.map((dateInWeek) => {
-          const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
-          const dateKeyForStorage = getDateKey(dateInWeek);
-          
-          const currentSystemTodayToUse = systemToday; 
-          const isCurrentActualDay = currentSystemTodayToUse ? isSameDay(dateInWeek, currentSystemTodayToUse) : false;
-          const isPastActualDay = currentSystemTodayToUse ? (isBefore(dateInWeek, currentSystemTodayToUse) && !isSameDay(dateInWeek, currentSystemTodayToUse)) : false;
-          const isFutureActualDay = currentSystemTodayToUse ? (!isCurrentActualDay && !isPastActualDay) : false;
-          
-          const noteForThisDayBox = notes[dateKeyForStorage] || '';
-          const ratingForThisDayBox = ratings[dateKeyForStorage] || null;
-          const hasAnyDataForThisDay = dayHasContent(dateInWeek, allLoadedDataMemo);
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
+          {daysToDisplay.map((dateInWeek) => {
+            const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
+            const dateKeyForStorage = getDateKey(dateInWeek);
+            
+            const currentSystemTodayToUse = systemToday; 
+            const isCurrentActualDay = currentSystemTodayToUse ? isSameDay(dateInWeek, currentSystemTodayToUse) : false;
+            const isPastActualDay = currentSystemTodayToUse ? (isBefore(dateInWeek, currentSystemTodayToUse) && !isSameDay(dateInWeek, currentSystemTodayToUse)) : false;
+            const isFutureActualDay = currentSystemTodayToUse ? (!isCurrentActualDay && !isPastActualDay) : false;
+            
+            const noteForThisDayBox = notes[dateKeyForStorage] || '';
+            const ratingForThisDayBox = ratings[dateKeyForStorage] || null;
+            const hasAnyDataForThisDay = dayHasContent(dateInWeek, allLoadedDataMemo);
 
-          return (
-            <DayBox
-              key={dateKeyForStorage} // Use unique dateKey as key
-              dayName={dayNameForDisplay}
-              onClick={() => handleDaySelect(dayNameForDisplay, dateInWeek)}
-              notes={noteForThisDayBox} 
-              dayHasAnyData={hasAnyDataForThisDay}
-              rating={ratingForThisDayBox}
-              onRatingChange={(newRating) => handleRatingChange(dateKeyForStorage, newRating)}
-              isCurrentDay={isCurrentActualDay}
-              isPastDay={isPastActualDay}
-              isFutureDay={isFutureActualDay}
-              isAfter6PMToday={isAfter6PMToday} 
-              todayLabel={t.todayPrefix}
-              selectDayLabel={t.selectDayAria(dayNameForDisplay)}
-              contentIndicatorLabel={t.hasNotesAria}
-              ratingUiLabels={t.ratingLabels}
-              onHoverStart={handleDayHoverStart}
-              onHoverEnd={handleDayHoverEnd}
-              imageHint="activity memory"
-            />
-          );
-        })}
-         <Card className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
-            <CardHeader className="p-2 pb-1 text-center">
-               <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 flex-grow flex flex-col">
-              <Textarea
-                placeholder={t.weeklySummaryPlaceholder}
-                value={weeklySummary}
-                onChange={(e) => handleSummaryChange(e.target.value)}
-                className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1"
-                aria-label={t.weeklySummaryTitle}
+            return (
+              <DayBox
+                key={dateKeyForStorage} // Use unique dateKey as key
+                dayName={dayNameForDisplay}
+                onClick={() => handleDaySelect(dayNameForDisplay, dateInWeek)}
+                notes={noteForThisDayBox} 
+                dayHasAnyData={hasAnyDataForThisDay}
+                rating={ratingForThisDayBox}
+                onRatingChange={(newRating) => handleRatingChange(dateKeyForStorage, newRating)}
+                isCurrentDay={isCurrentActualDay}
+                isPastDay={isPastActualDay}
+                isFutureDay={isFutureActualDay}
+                isAfter6PMToday={isAfter6PMToday} 
+                todayLabel={t.todayPrefix}
+                selectDayLabel={t.selectDayAria(dayNameForDisplay)}
+                contentIndicatorLabel={t.hasNotesAria}
+                ratingUiLabels={t.ratingLabels}
+                onHoverStart={handleDayHoverStart}
+                onHoverEnd={handleDayHoverEnd}
+                imageHint="activity memory"
               />
-            </CardContent>
-          </Card>
-      </div>
+            );
+          })}
+          <Card className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+              <CardHeader className="p-2 pb-1 text-center">
+                <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 flex-grow flex flex-col">
+                <Textarea
+                  placeholder={t.weeklySummaryPlaceholder}
+                  value={weeklySummary}
+                  onChange={(e) => handleSummaryChange(e.target.value)}
+                  className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1"
+                  aria-label={t.weeklySummaryTitle}
+                />
+              </CardContent>
+            </Card>
+        </div>
 
-      {hoverPreviewData && (
-        <DayHoverPreview
-          dayName={hoverPreviewData.dayName}
-          notes={hoverPreviewData.notes}
-          imageHint={hoverPreviewData.imageHint}
-          altText={hoverPreviewData.altText}
-          onMouseEnterPreview={handlePreviewMouseEnter}
-          onMouseLeavePreview={handlePreviewMouseLeave}
-          onClickPreview={handlePreviewClick}
-        />
-      )}
+        {hoverPreviewData && (
+          <DayHoverPreview
+            dayName={hoverPreviewData.dayName}
+            notes={hoverPreviewData.notes}
+            imageHint={hoverPreviewData.imageHint}
+            altText={hoverPreviewData.altText}
+            onMouseEnterPreview={handlePreviewMouseEnter}
+            onMouseLeavePreview={handlePreviewMouseLeave}
+            onClickPreview={handlePreviewClick}
+          />
+        )}
 
-      <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
-        <div className="border-t border-border pt-8">
-          <div className="text-center md:flex md:items-center md:justify-between">
-            <div className="md:order-1">
-              {currentYear && (
-                <p className="text-sm text-muted-foreground">
-                  {t.copyrightText(currentYear, t.pageTitle)}
-                  <span className="mx-1">·</span>
-                  <a href="/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label={t.mitLicenseLinkAria}>
-                    {t.mitLicenseLinkText}
-                  </a>
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
-              <a href="#" aria-label={t.wechatAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                <MessageSquare className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label={t.emailAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">Email</a>
+        <footer className="mt-auto pt-10 pb-6 w-full max-w-4xl">
+          <div className="border-t border-border pt-8">
+            <div className="text-center md:flex md:items-center md:justify-between">
+              <div className="md:order-1">
+                {currentYear && (
+                  <p className="text-sm text-muted-foreground">
+                    {t.copyrightText(currentYear, t.pageTitle)}
+                    <span className="mx-1">·</span>
+                    <a href="/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label={t.mitLicenseLinkAria}>
+                      {t.mitLicenseLinkText}
+                    </a>
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
+                <a href="#" aria-label={t.wechatAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <MessageSquare className="h-4 w-4" />
+                </a>
+                <a href="#" aria-label={t.emailAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">Email</a>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
-    </main>
+        </footer>
+      </main>
+
+      <Button
+        variant="outline"
+        size="icon"
+        className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg"
+        onClick={handlePasteFromClipboard}
+        aria-label={t.pasteFromClipboard}
+      >
+        <FileEdit className="h-6 w-6" />
+      </Button>
+    </>
   );
 }
-
-    
