@@ -81,6 +81,11 @@ const translations = {
       linkSavedToastTitle: "分享已保存",
       linkSavedToastDescription: (slot: string) => `链接已保存到当前时间段 (${slot})`
     },
+    clipboard: {
+        linkSavedToastTitle: "链接已记录",
+        linkSavedToastDescription: "已从剪贴板自动记录链接。",
+        permissionDenied: "无法访问剪贴板，请检查权限设置。"
+    },
     timeIntervals: {
         midnight: '凌晨 (00:00 - 05:00)',
         earlyMorning: '清晨 (05:00 - 09:00)',
@@ -127,6 +132,11 @@ const translations = {
       linkSavedToastTitle: "Share Saved",
       linkSavedToastDescription: (slot: string) => `Link saved to the current time slot (${slot})`
     },
+    clipboard: {
+        linkSavedToastTitle: "Link Saved",
+        linkSavedToastDescription: "Link automatically saved from clipboard.",
+        permissionDenied: "Could not access clipboard. Please check permissions."
+    },
      timeIntervals: {
         midnight: 'Midnight (00:00 - 05:00)',
         earlyMorning: 'Early Morning (05:00 - 09:00)',
@@ -167,6 +177,8 @@ interface ReceivedShareData {
 const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
 const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
+const URL_REGEX = /^(https?:\/\/[^\s$.?#].[^\s]*)$/i;
+
 
 const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: number }): number => {
   const monthOfLabel = weekStartDate.getMonth();
@@ -232,6 +244,57 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   return slots;
 };
 
+// Function to save a URL to local storage for the current time slot
+const saveUrlToCurrentTimeSlot = (
+  url: string, 
+  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>,
+  setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
+  t: (typeof translations)['zh-CN'] // Or 'en'
+) => {
+    const newLink: ShareLinkItem = {
+        id: Date.now().toString(),
+        url: url,
+        title: url,
+    };
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDateKey = getDateKey(now);
+    
+    const timeIntervals = t.timeIntervals;
+    let targetIntervalLabel = timeIntervals.evening; // Default
+    if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
+    else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
+    else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
+    else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
+    else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+
+    const hourlySlots = generateHourlySlots(targetIntervalLabel);
+    if (hourlySlots.length === 0) {
+        console.error("Could not find a valid hourly slot for the current time.");
+        return { success: false, slotName: '' };
+    }
+    const targetSlot = hourlySlots[0];
+
+    try {
+        const updatedLinks = JSON.parse(JSON.stringify(allShareLinks));
+        const dayLinks = updatedLinks[currentDateKey] || {};
+        const slotLinks = dayLinks[targetSlot] || [];
+        const updatedSlotLinks = [...slotLinks, newLink];
+        const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
+        const newAllLinks = { ...updatedLinks, [currentDateKey]: updatedDayLinks };
+        
+        localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
+        setAllShareLinks(newAllLinks);
+        
+        return { success: true, slotName: targetIntervalLabel.split(' (')[0] };
+    } catch(e) {
+        console.error("Failed to save link to localStorage", e);
+        return { success: false, slotName: '' };
+    }
+};
+
+
 export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -262,6 +325,8 @@ export default function WeekGlancePage() {
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
+  const lastProcessedClipboardUrl = useRef<string | null>(null);
+
 
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
@@ -286,52 +351,15 @@ export default function WeekGlancePage() {
       console.warn("No URL or text found in shared data.");
       return;
     }
-
-    const newLink: ShareLinkItem = {
-      id: Date.now().toString(),
-      url: linkUrl,
-      title: title || linkUrl
-    };
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentDateKey = getDateKey(now);
-    
-    const timeIntervals = t.timeIntervals;
-    let targetIntervalLabel = timeIntervals.evening; // Default to evening
-    if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
-    else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
-    else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
-    else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
-    else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
-
-    const hourlySlots = generateHourlySlots(targetIntervalLabel);
-    if (hourlySlots.length === 0) {
-        console.error("Could not find a valid hourly slot for the current time.");
-        return;
-    }
-    const targetSlot = hourlySlots[0];
-
-    // Load, update, and save allShareLinks
-    try {
-        const storedLinks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
-        const dayLinks = storedLinks[currentDateKey] || {};
-        const slotLinks = dayLinks[targetSlot] || [];
-        const updatedSlotLinks = [...slotLinks, newLink];
-        const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
-        const newAllLinks = { ...storedLinks, [currentDateKey]: updatedDayLinks };
-        
-        localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
-        setAllShareLinks(newAllLinks); // Update state to reflect change immediately
-        
+    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, allShareLinks, setAllShareLinks, t);
+    if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
-            description: t.shareTarget.linkSavedToastDescription(targetIntervalLabel.split(' (')[0])
+            description: t.shareTarget.linkSavedToastDescription(slotName)
         });
-    } catch(e) {
-        console.error("Failed to save shared link to localStorage", e);
     }
-  }, [toast, t]);
+
+  }, [allShareLinks, toast, t]);
 
   useEffect(() => {
     setIsClientMounted(true); 
@@ -385,6 +413,46 @@ export default function WeekGlancePage() {
       clearTimeoutIfNecessary();
     };
   }, [clearTimeoutIfNecessary, handleSaveShareLink]);
+
+  // Effect for handling clipboard on visibility change
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+        if (document.visibilityState === 'visible') {
+            try {
+                // Check for clipboard read permission
+                if (navigator.clipboard && 'readText' in navigator.clipboard) {
+                    const clipboardText = await navigator.clipboard.readText();
+                    
+                    if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
+                        lastProcessedClipboardUrl.current = clipboardText;
+                        
+                        saveUrlToCurrentTimeSlot(clipboardText, allShareLinks, setAllShareLinks, t);
+
+                        toast({
+                            title: t.clipboard.linkSavedToastTitle,
+                            description: t.clipboard.linkSavedToastDescription,
+                        });
+                    }
+                }
+            } catch (err: any) {
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    // This can happen if user denies permission. Silently fail or inform once.
+                    console.warn('Clipboard read permission denied.');
+                    // You might want to toast only once about this
+                    // toast({ variant: "destructive", title: t.clipboard.permissionDenied });
+                } else {
+                    console.error('Failed to read clipboard contents: ', err);
+                }
+            }
+        }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+}, [allShareLinks, t, toast]);
 
 
   useEffect(() => {
