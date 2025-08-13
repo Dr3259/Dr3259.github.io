@@ -14,6 +14,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter, differenceInDays } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { ClipboardModal } from '@/components/ClipboardModal';
+import copy from 'copy-to-clipboard';
 
 
 // Types from DayDetailPage - needed for checking content
@@ -83,9 +85,13 @@ const translations = {
     },
     clipboard: {
         linkSavedToastTitle: "链接已记录",
-        linkSavedToastDescription: "已从剪贴板自动记录链接。",
+        linkSavedToastDescription: (slot: string) => `链接已保存到: ${slot}`,
         permissionDenied: "无法访问剪贴板，请检查权限设置。",
-        noValidLink: "剪贴板中未发现有效链接。"
+        checkClipboardError: "检查剪贴板时出错。",
+        modalTitle: "检测到剪贴板内容",
+        modalDescription: "您想将以下内容保存到今天的日程中吗？",
+        saveButton: "保存",
+        cancelButton: "关闭",
     },
     pasteFromClipboard: "从剪贴板粘贴",
     timeIntervals: {
@@ -136,9 +142,13 @@ const translations = {
     },
     clipboard: {
         linkSavedToastTitle: "Link Saved",
-        linkSavedToastDescription: "Link automatically saved from clipboard.",
+        linkSavedToastDescription: (slot: string) => `Link saved to: ${slot}`,
         permissionDenied: "Could not access clipboard. Please check permissions.",
-        noValidLink: "No valid link found in clipboard."
+        checkClipboardError: "Error checking clipboard.",
+        modalTitle: "Content Detected in Clipboard",
+        modalDescription: "Would you like to save the following content to today's schedule?",
+        saveButton: "Save",
+        cancelButton: "Close",
     },
     pasteFromClipboard: "Paste from clipboard",
      timeIntervals: {
@@ -220,10 +230,11 @@ const saveUrlToCurrentTimeSlot = (
     setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
     t: (typeof translations)['zh-CN']
 ): { success: boolean; slotName: string } => {
+    // Treat any non-empty string as a potential link/content to be saved.
     const newLink: ShareLinkItem = {
         id: Date.now().toString(),
-        url: url,
-        title: url, // Use URL as title by default
+        url: url, // Save the raw content in the URL field
+        title: url.length > 50 ? url.substring(0, 47) + '...' : url, // Generate a title from content
     };
 
     const now = new Date();
@@ -312,6 +323,9 @@ export default function WeekGlancePage() {
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+  const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
+  const [clipboardContent, setClipboardContent] = useState('');
+
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
@@ -346,11 +360,10 @@ export default function WeekGlancePage() {
             description: t.shareTarget.linkSavedToastDescription(slotName)
         });
     }
-  }, [toast, t, setAllShareLinks]);
-
+  }, [toast, t]);
 
   useEffect(() => {
-    setIsClientMounted(true); 
+    setIsClientMounted(true);
 
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
     setCurrentLanguage(browserLang);
@@ -394,38 +407,46 @@ export default function WeekGlancePage() {
           localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       }
     }
-
-    return () => {
-      clearTimeoutIfNecessary();
-    };
   }, [clearTimeoutIfNecessary, handleSaveShareLinkFromPWA]);
 
+  // Effect to check clipboard on mount
+  useEffect(() => {
+      const checkClipboard = async () => {
+          try {
+              // Use the Permissions API to query for clipboard-read permission.
+              // This is a more robust way to handle permissions.
+              const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
+              if (permission.state === 'denied') {
+                  console.warn(t.clipboard.permissionDenied);
+                  return;
+              }
+              // If permission is granted or prompt, try to read.
+              const text = await navigator.clipboard.readText();
+              if (text) {
+                  setClipboardContent(text);
+                  setIsClipboardModalOpen(true);
+              }
+          } catch (err) {
+              console.error(t.clipboard.checkClipboardError, err);
+          }
+      };
+      checkClipboard();
+  }, [t.clipboard.checkClipboardError, t.clipboard.permissionDenied]);
 
-  const handlePasteFromClipboard = useCallback(async () => {
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      if (clipboardText && URL_REGEX.test(clipboardText)) {
-        const { success } = saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
-        if (success) {
-          toast({
-            title: t.clipboard.linkSavedToastTitle,
-            description: t.clipboard.linkSavedToastDescription,
-          });
-        }
-      } else {
-        toast({
-          variant: "destructive",
-          title: t.clipboard.noValidLink,
-        });
-      }
-    } catch (err: any) {
-      console.warn('Clipboard read permission denied by user or browser setting.', err);
+  const handleSaveFromClipboard = () => {
+    if (!clipboardContent) return;
+    const { success, slotName } = saveUrlToCurrentTimeSlot(clipboardContent, setAllShareLinks, t);
+    if (success) {
       toast({
-        variant: "destructive",
-        title: t.clipboard.permissionDenied,
+        title: t.clipboard.linkSavedToastTitle,
+        description: t.clipboard.linkSavedToastDescription(slotName),
       });
+      // Clear clipboard to prevent re-opening
+      copy('');
     }
-  }, [t, toast, setAllShareLinks]);
+    setIsClipboardModalOpen(false);
+    setClipboardContent('');
+  };
 
 
   useEffect(() => {
@@ -838,16 +859,13 @@ export default function WeekGlancePage() {
           </div>
         </footer>
       </main>
-
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg"
-        onClick={handlePasteFromClipboard}
-        aria-label={t.pasteFromClipboard}
-      >
-        <FileEdit className="h-6 w-6" />
-      </Button>
+      <ClipboardModal
+        isOpen={isClipboardModalOpen}
+        onClose={() => setIsClipboardModalOpen(false)}
+        onSave={handleSaveFromClipboard}
+        content={clipboardContent}
+        translations={t.clipboard}
+      />
     </>
   );
 }
