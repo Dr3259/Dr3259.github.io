@@ -191,7 +191,7 @@ interface ReceivedShareData {
 const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
 const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
-const URL_REGEX = /^(https?:\/\/[^\s$.?#].[^\s]*)$/i;
+const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/gi;
 
 const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: number }): number => {
   const monthOfLabel = weekStartDate.getMonth();
@@ -225,16 +225,16 @@ const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
 
-const saveUrlToCurrentTimeSlot = (
-    url: string,
+const saveItemToCurrentTimeSlot = (
+    item: { title: string, url: string },
     setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
     t: (typeof translations)['zh-CN']
 ): { success: boolean; slotName: string } => {
-    // Treat any non-empty string as a potential link/content to be saved.
+
     const newLink: ShareLinkItem = {
         id: Date.now().toString(),
-        url: url, // Save the raw content in the URL field
-        title: url.length > 50 ? url.substring(0, 47) + '...' : url, // Generate a title from content
+        url: item.url,
+        title: item.title,
     };
 
     const now = new Date();
@@ -349,11 +349,11 @@ export default function WeekGlancePage() {
     const { text, url } = shareData;
 
     const linkUrl = url || text;
-    if (!linkUrl || !URL_REGEX.test(linkUrl)) {
+    if (!linkUrl.match(URL_REGEX)) {
       console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, setAllShareLinks, t);
+    const { success, slotName } = saveItemToCurrentTimeSlot({ title: text || url, url: linkUrl }, setAllShareLinks, t);
     if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
@@ -423,7 +423,6 @@ export default function WeekGlancePage() {
                     return;
                 }
                 
-                // This will only succeed if the document has focus
                 const text = await navigator.clipboard.readText();
 
                 if (text) {
@@ -431,7 +430,6 @@ export default function WeekGlancePage() {
                     setIsClipboardModalOpen(true);
                 }
             } catch (err: any) {
-                // Ignore "document is not focused" errors, as they are expected when the tab is not active.
                 if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
                    console.error(t.clipboard.checkClipboardError, err);
                 }
@@ -447,13 +445,22 @@ export default function WeekGlancePage() {
 
   const handleSaveFromClipboard = () => {
     if (!clipboardContent) return;
-    const { success, slotName } = saveUrlToCurrentTimeSlot(clipboardContent, setAllShareLinks, t);
+    
+    const urlMatches = clipboardContent.match(URL_REGEX);
+    const url = urlMatches ? urlMatches[0] : '';
+    const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
+
+    const itemToSave = {
+        title: title || url, // If no other text, use URL as title
+        url: url
+    };
+
+    const { success, slotName } = saveItemToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
     if (success) {
       toast({
         title: t.clipboard.linkSavedToastTitle,
         description: t.clipboard.linkSavedToastDescription(slotName),
       });
-      // Clear clipboard to prevent re-opening
       copy('');
     }
     setIsClipboardModalOpen(false);
