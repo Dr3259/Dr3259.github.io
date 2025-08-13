@@ -225,7 +225,7 @@ const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
 
-const saveItemToCurrentTimeSlot = (
+const saveUrlToCurrentTimeSlot = (
     item: { title: string, url: string },
     setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
     t: (typeof translations)['zh-CN']
@@ -325,6 +325,8 @@ export default function WeekGlancePage() {
 
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
+  const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
+
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -353,7 +355,7 @@ export default function WeekGlancePage() {
       console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveItemToCurrentTimeSlot({ title: text || url, url: linkUrl }, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot({ title: text || url, url: linkUrl }, setAllShareLinks, t);
     if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
@@ -412,6 +414,8 @@ export default function WeekGlancePage() {
   // Effect to check clipboard on focus
    useEffect(() => {
         const checkClipboard = async () => {
+            if (document.hidden) return; // Don't check if page is not visible
+
             try {
                 if (typeof navigator?.permissions?.query !== 'function') {
                     console.warn("Clipboard permissions API not supported.");
@@ -419,13 +423,12 @@ export default function WeekGlancePage() {
                 }
                 const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
                 if (permission.state === 'denied') {
-                    console.warn(t.clipboard.permissionDenied);
                     return;
                 }
                 
                 const text = await navigator.clipboard.readText();
 
-                if (text) {
+                if (text && text !== lastProcessedClipboardText) {
                     setClipboardContent(text);
                     setIsClipboardModalOpen(true);
                 }
@@ -441,11 +444,13 @@ export default function WeekGlancePage() {
         return () => {
             window.removeEventListener('focus', checkClipboard);
         };
-  }, [t.clipboard.checkClipboardError, t.clipboard.permissionDenied]);
+  }, [t.clipboard.checkClipboardError, lastProcessedClipboardText]);
 
   const handleSaveFromClipboard = () => {
     if (!clipboardContent) return;
     
+    setLastProcessedClipboardText(clipboardContent);
+
     const urlMatches = clipboardContent.match(URL_REGEX);
     const url = urlMatches ? urlMatches[0] : '';
     const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
@@ -455,16 +460,25 @@ export default function WeekGlancePage() {
         url: url
     };
 
-    const { success, slotName } = saveItemToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
     if (success) {
       toast({
         title: t.clipboard.linkSavedToastTitle,
         description: t.clipboard.linkSavedToastDescription(slotName),
       });
-      copy('');
+      // Clear clipboard to prevent re-triggering for the same content
+      try {
+        copy('');
+      } catch (error) {
+        console.warn("Could not clear clipboard.", error);
+      }
     }
     setIsClipboardModalOpen(false);
-    setClipboardContent('');
+  };
+  
+  const handleCloseClipboardModal = () => {
+    setLastProcessedClipboardText(clipboardContent);
+    setIsClipboardModalOpen(false);
   };
 
 
@@ -880,7 +894,7 @@ export default function WeekGlancePage() {
       </main>
       <ClipboardModal
         isOpen={isClipboardModalOpen}
-        onClose={() => setIsClipboardModalOpen(false)}
+        onClose={handleCloseClipboardModal}
         onSave={handleSaveFromClipboard}
         content={clipboardContent}
         translations={t.clipboard}
