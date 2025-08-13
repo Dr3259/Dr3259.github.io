@@ -404,41 +404,40 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary, handleSaveShareLink]);
 
   const handleClipboardCheck = useCallback(async () => {
-      if (isInitialLoad.current) {
-          isInitialLoad.current = false;
-          return;
-      }
-      if (document.visibilityState === 'visible') {
-          try {
-              if (navigator.clipboard && 'readText' in navigator.clipboard) {
-                  const clipboardText = await navigator.clipboard.readText();
-                  
-                  if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
-                      lastProcessedClipboardUrl.current = clipboardText;
-                      
-                      const { success } = saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
+    if (isInitialLoad.current) {
+        isInitialLoad.current = false;
+        return;
+    }
+    if (document.visibilityState === 'visible') {
+        try {
+            if (navigator.clipboard && 'readText' in navigator.clipboard) {
+                const clipboardText = await navigator.clipboard.readText();
+                
+                if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
+                    lastProcessedClipboardUrl.current = clipboardText;
+                    
+                    const { success } = saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
 
-                      if (success) {
-                        toast({
-                            title: t.clipboard.linkSavedToastTitle,
-                            description: t.clipboard.linkSavedToastDescription,
-                        });
-                      }
-                  }
-              }
-          } catch (err: any) {
-              if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                  console.warn('Clipboard read permission denied.');
-              } else {
-                  console.error('Failed to read clipboard contents: ', err);
-              }
-          }
-      }
-  }, [t, toast, setAllShareLinks]);
+                    if (success) {
+                      toast({
+                          title: t.clipboard.linkSavedToastTitle,
+                          description: t.clipboard.linkSavedToastDescription,
+                      });
+                    }
+                }
+            }
+        } catch (err: any) {
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                console.warn('Clipboard read permission denied by user or browser setting.');
+            } else {
+                console.error('Failed to read clipboard contents: ', err);
+            }
+        }
+    }
+}, [t, toast, setAllShareLinks]);
 
   useEffect(() => {
       document.addEventListener('visibilitychange', handleClipboardCheck);
-      handleClipboardCheck();
       return () => {
           document.removeEventListener('visibilitychange', handleClipboardCheck);
       };
@@ -856,3 +855,5 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
+    
