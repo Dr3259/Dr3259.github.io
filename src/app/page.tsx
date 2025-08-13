@@ -179,7 +179,6 @@ const HIDE_PREVIEW_DELAY = 200;
 const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
 const URL_REGEX = /^(https?:\/\/[^\s$.?#].[^\s]*)$/i;
 
-
 const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: number }): number => {
   const monthOfLabel = weekStartDate.getMonth();
   const yearOfLabel = weekStartDate.getFullYear();
@@ -212,7 +211,6 @@ const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
 };
 
-// Helper function to save a URL to local storage for the current time slot
 const saveUrlToCurrentTimeSlot = (
     url: string,
     setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
@@ -296,7 +294,6 @@ export default function WeekGlancePage() {
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
   const [isClientMounted, setIsClientMounted] = useState(false);
   
-  // All data states now expect YYYY-MM-DD keys
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
   const [weeklySummary, setWeeklySummary] = useState<string>('');
@@ -315,6 +312,7 @@ export default function WeekGlancePage() {
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
   const lastProcessedClipboardUrl = useRef<string | null>(null);
+  const isInitialLoad = useRef(true);
 
 
   const t = translations[currentLanguage];
@@ -330,8 +328,8 @@ export default function WeekGlancePage() {
       hidePreviewTimerRef.current = null;
     }
   }, []);
-
-  const handleSaveShareLink = useCallback((shareData: ReceivedShareData, allLinks: typeof allShareLinks, translations: typeof t) => {
+  
+  const handleSaveShareLink = useCallback((shareData: ReceivedShareData) => {
     if (!shareData) return;
     const { text, url } = shareData;
 
@@ -340,15 +338,15 @@ export default function WeekGlancePage() {
       console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, setAllShareLinks, translations);
+    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, setAllShareLinks, t);
     if(success) {
         toast({ 
-            title: translations.shareTarget.linkSavedToastTitle,
-            description: translations.shareTarget.linkSavedToastDescription(slotName)
+            title: t.shareTarget.linkSavedToastTitle,
+            description: t.shareTarget.linkSavedToastDescription(slotName)
         });
     }
-  }, [toast]);
-  
+  }, [toast, t]);
+
 
   useEffect(() => {
     setIsClientMounted(true); 
@@ -388,13 +386,11 @@ export default function WeekGlancePage() {
     };
     loadData();
     
-    // Check for shared data after initial data load
     const sharedDataString = localStorage.getItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
     if (sharedDataString) {
       try {
         const parsedData = JSON.parse(sharedDataString);
-        // Use the just-loaded data and current translations
-        handleSaveShareLink(parsedData, loadedShareLinks, translations[browserLang]);
+        handleSaveShareLink(parsedData);
         localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       } catch (e) {
           console.error("Failed to parse or save shared data", e);
@@ -407,8 +403,11 @@ export default function WeekGlancePage() {
     };
   }, [clearTimeoutIfNecessary, handleSaveShareLink]);
 
-    // Effect for handling clipboard on visibility change
-    const handleClipboardCheck = useCallback(async () => {
+  const handleClipboardCheck = useCallback(async () => {
+      if (isInitialLoad.current) {
+          isInitialLoad.current = false;
+          return;
+      }
       if (document.visibilityState === 'visible') {
           try {
               if (navigator.clipboard && 'readText' in navigator.clipboard) {
@@ -439,6 +438,7 @@ export default function WeekGlancePage() {
 
   useEffect(() => {
       document.addEventListener('visibilitychange', handleClipboardCheck);
+      handleClipboardCheck();
       return () => {
           document.removeEventListener('visibilitychange', handleClipboardCheck);
       };
@@ -856,7 +856,3 @@ export default function WeekGlancePage() {
     </main>
   );
 }
-
-    
-
-    
