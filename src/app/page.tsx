@@ -86,6 +86,7 @@ const translations = {
     clipboard: {
         linkSavedToastTitle: "链接已记录",
         linkSavedToastDescription: (slot: string) => `链接已保存到: ${slot}`,
+        linkAlreadyExists: "这个链接已经记录过了。",
         permissionDenied: "无法访问剪贴板，请检查权限设置。",
         checkClipboardError: "检查剪贴板时出错。",
         modalTitle: "检测到剪贴板内容",
@@ -143,6 +144,7 @@ const translations = {
     clipboard: {
         linkSavedToastTitle: "Link Saved",
         linkSavedToastDescription: (slot: string) => `Link saved to: ${slot}`,
+        linkAlreadyExists: "This link has already been saved.",
         permissionDenied: "Could not access clipboard. Please check permissions.",
         checkClipboardError: "Error checking clipboard.",
         modalTitle: "Content Detected in Clipboard",
@@ -297,6 +299,18 @@ const saveUrlToCurrentTimeSlot = (
     }
 };
 
+const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, ShareLinkItem[]>>): boolean => {
+    if (!url) return false;
+    for (const dateKey in allLinks) {
+        for (const hourSlot in allLinks[dateKey]) {
+            if (allLinks[dateKey][hourSlot].some(item => item.url === url)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
 export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -428,7 +442,7 @@ export default function WeekGlancePage() {
                 
                 const text = await navigator.clipboard.readText();
 
-                if (text && text !== lastProcessedClipboardText) {
+                if (text && text.trim() && text !== lastProcessedClipboardText) {
                     setClipboardContent(text);
                     setIsClipboardModalOpen(true);
                 }
@@ -449,10 +463,20 @@ export default function WeekGlancePage() {
   const handleSaveFromClipboard = () => {
     if (!clipboardContent) return;
     
-    setLastProcessedClipboardText(clipboardContent);
-
     const urlMatches = clipboardContent.match(URL_REGEX);
     const url = urlMatches ? urlMatches[0] : '';
+    
+    // Check for duplicates before saving
+    if (url && isUrlAlreadySaved(url, allShareLinks)) {
+        toast({
+            title: t.clipboard.linkAlreadyExists,
+            variant: "default"
+        });
+        setLastProcessedClipboardText(clipboardContent);
+        setIsClipboardModalOpen(false);
+        return;
+    }
+    
     const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
 
     const itemToSave = {
@@ -473,6 +497,7 @@ export default function WeekGlancePage() {
         console.warn("Could not clear clipboard.", error);
       }
     }
+    setLastProcessedClipboardText(clipboardContent);
     setIsClipboardModalOpen(false);
   };
   
@@ -902,3 +927,5 @@ export default function WeekGlancePage() {
     </>
   );
 }
+
+    
