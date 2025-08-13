@@ -247,7 +247,6 @@ const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
 // Function to save a URL to local storage for the current time slot
 const saveUrlToCurrentTimeSlot = (
   url: string, 
-  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>,
   setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
   t: (typeof translations)['zh-CN'] // Or 'en'
 ) => {
@@ -274,15 +273,25 @@ const saveUrlToCurrentTimeSlot = (
         console.error("Could not find a valid hourly slot for the current time.");
         return { success: false, slotName: '' };
     }
-    const targetSlot = hourlySlots[0];
+    const targetSlot = hourlySlots.find(slot => {
+        const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
+        if (match) {
+            const startH = parseInt(match[1]);
+            let endH = parseInt(match[2]);
+            if (endH === 0) endH = 24;
+            return currentHour >= startH && currentHour < endH;
+        }
+        return false;
+    }) || hourlySlots[0];
+
 
     try {
-        const updatedLinks = JSON.parse(JSON.stringify(allShareLinks));
-        const dayLinks = updatedLinks[currentDateKey] || {};
+        const existingData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
+        const dayLinks = existingData[currentDateKey] || {};
         const slotLinks = dayLinks[targetSlot] || [];
         const updatedSlotLinks = [...slotLinks, newLink];
         const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
-        const newAllLinks = { ...updatedLinks, [currentDateKey]: updatedDayLinks };
+        const newAllLinks = { ...existingData, [currentDateKey]: updatedDayLinks };
         
         localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
         setAllShareLinks(newAllLinks);
@@ -303,7 +312,7 @@ export default function WeekGlancePage() {
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false); 
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(isAfter(new Date(), new Date().setHours(18, 0, 0, 0))); 
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
   const [isClientMounted, setIsClientMounted] = useState(false);
   
@@ -344,14 +353,14 @@ export default function WeekGlancePage() {
 
   const handleSaveShareLink = useCallback((shareData: ReceivedShareData) => {
     if (!shareData) return;
-    const { title, text, url } = shareData;
+    const { text, url } = shareData;
 
     const linkUrl = url || text;
-    if (!linkUrl) {
-      console.warn("No URL or text found in shared data.");
+    if (!linkUrl || !URL_REGEX.test(linkUrl)) {
+      console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, allShareLinks, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot(linkUrl, setAllShareLinks, t);
     if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
@@ -359,7 +368,7 @@ export default function WeekGlancePage() {
         });
     }
 
-  }, [allShareLinks, toast, t]);
+  }, [toast, t]);
 
   useEffect(() => {
     setIsClientMounted(true); 
@@ -375,7 +384,6 @@ export default function WeekGlancePage() {
     const today = new Date();
     setSystemToday(today);
     setDisplayedDate(today); 
-    setIsAfter6PMToday(today.getHours() >= 18);
     setCurrentYear(today.getFullYear());
 
     const loadData = () => {
@@ -426,7 +434,7 @@ export default function WeekGlancePage() {
                     if (clipboardText && clipboardText !== lastProcessedClipboardUrl.current && URL_REGEX.test(clipboardText)) {
                         lastProcessedClipboardUrl.current = clipboardText;
                         
-                        saveUrlToCurrentTimeSlot(clipboardText, allShareLinks, setAllShareLinks, t);
+                        saveUrlToCurrentTimeSlot(clipboardText, setAllShareLinks, t);
 
                         toast({
                             title: t.clipboard.linkSavedToastTitle,
@@ -452,7 +460,7 @@ export default function WeekGlancePage() {
     return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-}, [allShareLinks, t, toast]);
+}, [t, toast, setAllShareLinks]);
 
 
   useEffect(() => {
@@ -866,3 +874,5 @@ export default function WeekGlancePage() {
     </main>
   );
 }
+
+    
