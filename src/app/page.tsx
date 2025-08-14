@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare, FileEdit, CalendarPlus, BarChart } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -48,7 +49,9 @@ const translations = {
   'zh-CN': {
     pageTitle: '周览',
     pageSubtitle: '规划你的一周，一日一览。',
-    languageButtonText: 'English',
+    languageButtonText: '切换到英文',
+    themeButtonText: '切换主题',
+    settingsMenuTitle: '设置',
     daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
     selectDayAria: (day: string) => `查看 ${day} 详情`,
     hasNotesAria: '有内容记录',
@@ -108,7 +111,9 @@ const translations = {
   'en': {
     pageTitle: 'Week Glance',
     pageSubtitle: 'Plan your week, one day at a glance.',
-    languageButtonText: '中文',
+    languageButtonText: 'Switch to Chinese',
+    themeButtonText: 'Toggle Theme',
+    settingsMenuTitle: 'Settings',
     daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     selectDayAria: (day: string) => `View details for ${day}`,
     hasNotesAria: 'Has recorded content',
@@ -797,15 +802,29 @@ export default function WeekGlancePage() {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={toggleLanguage} aria-label={currentLanguage === 'zh-CN' ? 'Switch to English' : '切换到中文'}>
-              <Languages className="mr-2 h-4 w-4" />{t.languageButtonText}
-            </Button>
-            <Button variant="outline" size="sm" onClick={toggleTheme} aria-label={t.toggleThemeAria}>
-              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </Button>
             <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
               <PauseCircle className="mr-2 h-4 w-4" />{t.restButtonText}
             </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-9 w-9">
+                        <Settings className="h-4 w-4" />
+                        <span className="sr-only">{t.settingsMenuTitle}</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{t.settingsMenuTitle}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={toggleLanguage}>
+                        <Languages className="mr-2 h-4 w-4" />
+                        <span>{t.languageButtonText}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={toggleTheme}>
+                        {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                        <span>{t.themeButtonText}</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -934,7 +953,7 @@ export default function WeekGlancePage() {
               <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
                 <a href="#" aria-label={t.wechatAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <MessageSquare className="h-4 w-4" />
+                  <span className="sr-only">WeChat</span>
                 </a>
                 <a href="#" aria-label={t.emailAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">Email</a>
               </div>
