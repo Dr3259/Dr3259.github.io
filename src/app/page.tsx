@@ -524,6 +524,7 @@ export default function WeekGlancePage() {
   };
   
   const handleCloseClipboardModal = () => {
+    setLastProcessedClipboardText(clipboardContent); // Mark as handled even if closed
     setIsClipboardModalOpen(false);
   };
 
