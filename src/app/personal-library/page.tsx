@@ -1,18 +1,16 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon, ChevronLeft, ChevronRight, Loader2, Maximize, Minimize } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Library, Plus, Trash2, FileText, Book } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+
 
 const translations = {
   'zh-CN': {
@@ -20,92 +18,50 @@ const translations = {
     backButton: '返回休闲驿站',
     bookshelfTitle: '我的书架',
     importBook: '导入书籍',
-    noBooks: '您的书架是空的。',
-    readingAreaPrompt: '请从书架选择一本书开始阅读。',
+    noBooks: '您的书架是空的。点击“导入书籍”来添加您的第一本书吧！',
     deleteBook: '删除书籍',
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
     bookDeleted: '书籍已删除',
     importError: '导入书籍失败，请确保文件是 .txt 或 .pdf 格式。',
-    settings: '阅读设置',
-    fontSize: '字号',
-    theme: '主题',
-    lightTheme: '浅色',
-    darkTheme: '深色',
-    page: (current: number, total: number) => `第 ${current} / ${total} 页`,
-    pdfError: '加载PDF失败。请确保文件未损坏。',
-    pdfLoading: '正在加载 PDF...',
-    storageWarningTitle: "注意：内容不会被保存",
-    storageWarningDescription: "书籍内容只在当前会话中可用。刷新页面后需要重新导入。",
-    fullscreen: '全屏',
-    exitFullscreen: '退出全屏',
+    readBook: '阅读这本书',
   },
   'en': {
     pageTitle: 'Personal Library',
     backButton: 'Back to Rest Stop',
     bookshelfTitle: 'My Bookshelf',
     importBook: 'Import Book',
-    noBooks: 'Your bookshelf is empty.',
-    readingAreaPrompt: 'Select a book from your shelf to start reading.',
+    noBooks: 'Your bookshelf is empty. Click "Import Book" to add your first one!',
     deleteBook: 'Delete Book',
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
     bookDeleted: 'Book has been deleted.',
     importError: 'Failed to import book. Please ensure it is a .txt or .pdf file.',
-    settings: 'Reading Settings',
-    fontSize: 'Font Size',
-    theme: 'Theme',
-    lightTheme: 'Light',
-    darkTheme: 'Dark',
-    page: (current: number, total: number) => `Page ${current} of ${total}`,
-    pdfError: 'Failed to load PDF. Please ensure the file is not corrupted.',
-    pdfLoading: 'Loading PDF...',
-    storageWarningTitle: "Note: Content is not saved",
-    storageWarningDescription: "Book content is only available in the current session. You will need to re-import after refreshing the page.",
-    fullscreen: 'Fullscreen',
-    exitFullscreen: 'Exit Fullscreen',
+    readBook: 'Read this book',
   }
 };
 
 type LanguageKey = keyof typeof translations;
 
-interface Book {
+interface BookMetadata {
   id: string;
   title: string;
-  content: string | null; // Content can be null initially
   type: 'txt' | 'pdf';
 }
 
-interface ReadingSettings {
-  fontSize: number;
-  theme: 'light' | 'dark';
+interface BookWithContent extends BookMetadata {
+  content: string; // Data URI for both txt and pdf
 }
 
-const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v3_meta'; // Changed key to reflect metadata only
-const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings';
+const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v4_meta';
+const SESSION_STORAGE_BOOK_CONTENT_PREFIX = 'personal_library_content_';
 
 
-// Dynamically import react-pdf components to prevent SSR issues
-const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
-    ssr: false,
-    loading: () => (
-        <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2 text-muted-foreground">Loading PDF viewer...</p>
-        </div>
-    )
-});
-
-
-export default function PersonalLibraryPage() {
+export default function PersonalLibraryListPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light' });
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
+  const [books, setBooks] = useState<BookMetadata[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const libraryContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
 
   useEffect(() => {
@@ -115,18 +71,12 @@ export default function PersonalLibraryPage() {
     }
     
     try {
-      // Load only metadata from localStorage
       const savedBooksMeta = localStorage.getItem(LOCAL_STORAGE_BOOKS_KEY);
       if (savedBooksMeta) {
-        const booksMeta = JSON.parse(savedBooksMeta) as Omit<Book, 'content'>[];
-        // Initialize books with null content
-        setBooks(booksMeta.map(meta => ({ ...meta, content: null })));
+        setBooks(JSON.parse(savedBooksMeta));
       }
-
-      const savedSettings = localStorage.getItem(LOCAL_STORAGE_SETTINGS_KEY);
-      if (savedSettings) setSettings(JSON.parse(savedSettings));
     } catch (error) {
-      console.error("Failed to load data from localStorage", error);
+      console.error("Failed to load book metadata from localStorage", error);
     }
     setIsMounted(true);
   }, []);
@@ -135,10 +85,8 @@ export default function PersonalLibraryPage() {
 
   useEffect(() => {
     if (isMounted) {
-      // Save only metadata to localStorage to avoid quota exceeded error
       try {
-        const booksMetadata = books.map(({ id, title, type }) => ({ id, title, type }));
-        localStorage.setItem(LOCAL_STORAGE_BOOKS_KEY, JSON.stringify(booksMetadata));
+        localStorage.setItem(LOCAL_STORAGE_BOOKS_KEY, JSON.stringify(books));
       } catch (error) {
           console.error("Could not save book metadata to localStorage", error);
           toast({
@@ -149,24 +97,6 @@ export default function PersonalLibraryPage() {
       }
     }
   }, [books, isMounted, toast]);
-
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem(LOCAL_STORAGE_SETTINGS_KEY, JSON.stringify(settings));
-    }
-  }, [settings, isMounted]);
-
-  const handleFullscreenChange = useCallback(() => {
-    setIsFullscreen(!!document.fullscreenElement);
-  }, []);
-
-  useEffect(() => {
-      document.addEventListener('fullscreenchange', handleFullscreenChange);
-      return () => {
-          document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      };
-  }, [handleFullscreenChange]);
-
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -184,54 +114,45 @@ export default function PersonalLibraryPage() {
       const content = e.target?.result as string;
       const bookId = `book-${Date.now()}`;
       
-      // Add or update the book with its content in the state
-      const existingBookIndex = books.findIndex(b => b.title === file.name.replace(/\.(txt|pdf)$/, ''));
-      const newBook: Book = {
+      const newBookMeta: BookMetadata = {
         id: bookId,
         title: file.name.replace(/\.(txt|pdf)$/, ''),
-        content: content,
         type: fileType,
       };
 
-      setBooks(prevBooks => {
-          const newBooks = [...prevBooks];
-          const existingIndex = newBooks.findIndex(b => b.id === newBook.id);
-          if(existingIndex > -1) {
-            newBooks[existingIndex] = newBook;
-          } else {
-            newBooks.push(newBook);
-          }
-          return newBooks;
-      });
+      const bookWithContent: BookWithContent = { ...newBookMeta, content };
 
-      setSelectedBookId(newBook.id);
+      try {
+        // Save full content to sessionStorage for immediate use
+        sessionStorage.setItem(`${SESSION_STORAGE_BOOK_CONTENT_PREFIX}${bookId}`, JSON.stringify(bookWithContent));
+      } catch (error) {
+        console.error("Session storage error:", error);
+        toast({
+            title: "Could not store book content",
+            description: "The book is too large to be stored in the session.",
+            variant: "destructive"
+        });
+        return;
+      }
+
+      setBooks(prevBooks => [...prevBooks, newBookMeta]);
       
-      toast({
-          title: t.storageWarningTitle,
-          description: t.storageWarningDescription,
-          duration: 5000,
-      });
+      // Navigate to the reader page immediately after import
+      router.push(`/personal-library/${bookId}`);
     };
     reader.onerror = () => {
         toast({ title: t.importError, variant: 'destructive' });
     }
 
-    if (fileType === 'pdf') {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file, 'UTF-8');
-    }
+    // Reading as Data URL works for both text and binary files like PDF
+    reader.readAsDataURL(file);
+    
     // Reset file input to allow re-importing the same file
     event.target.value = '';
   };
   
-  const handleBookSelect = (book: Book) => {
-      setSelectedBookId(book.id);
-      // If book content is not loaded, trigger import
-      if (!book.content) {
-          toast({ title: "Content not loaded", description: "Please re-import this book to view its content." });
-          fileInputRef.current?.click();
-      }
+  const handleBookSelect = (bookId: string) => {
+      router.push(`/personal-library/${bookId}`);
   }
 
   const deleteBook = (bookId: string) => {
@@ -240,30 +161,10 @@ export default function PersonalLibraryPage() {
 
     if (window.confirm(t.deleteConfirmation(bookToDelete.title))) {
         setBooks(prev => prev.filter(b => b.id !== bookId));
-        if (selectedBookId === bookId) {
-            setSelectedBookId(null);
-        }
+        // Also remove from session storage if it exists
+        sessionStorage.removeItem(`${SESSION_STORAGE_BOOK_CONTENT_PREFIX}${bookId}`);
         toast({ title: t.bookDeleted });
     }
-  };
-  
-  const updateSettings = (newSettings: Partial<ReadingSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  };
-
-  const selectedBook = useMemo(() => books.find(b => b.id === selectedBookId), [books, selectedBookId]);
-
-    const toggleFullscreen = () => {
-      const element = libraryContainerRef.current;
-      if (!element) return;
-
-      if (!document.fullscreenElement) {
-          element.requestFullscreen().catch(err => {
-              console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-          });
-      } else {
-          document.exitFullscreen();
-      }
   };
 
   if (!isMounted) {
@@ -275,164 +176,78 @@ export default function PersonalLibraryPage() {
   }
 
   return (
-    <div ref={libraryContainerRef} className={cn("flex flex-col h-screen bg-background text-foreground", isFullscreen && "h-screen w-screen fixed top-0 left-0 z-50")}>
-      <header className={cn("flex items-center justify-between p-4 border-b shrink-0", isFullscreen && "hidden")}>
-        <div className="flex items-center gap-4">
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
+        <header className="w-full max-w-4xl mb-8 self-center flex justify-between items-center">
             <Link href="/rest" passHref>
                 <Button variant="outline" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t.backButton}
                 </Button>
             </Link>
-            <h1 className="text-xl font-headline font-semibold text-primary hidden sm:block">
+            <h1 className="text-2xl font-headline font-semibold text-primary">
             {t.pageTitle}
             </h1>
-        </div>
-        
-        <div className="flex items-center gap-2">
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" disabled={!selectedBook || selectedBook?.type === 'pdf'}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        {t.settings}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64">
-                    <div className="grid gap-4">
-                        <div className="space-y-2">
-                            <h4 className="font-medium leading-none">{t.fontSize}</h4>
-                            <Slider
-                                defaultValue={[settings.fontSize]}
-                                min={12}
-                                max={24}
-                                step={1}
-                                onValueChange={(value) => updateSettings({ fontSize: value[0] })}
-                            />
-                        </div>
-                         <div className="space-y-2">
-                            <h4 className="font-medium leading-none">{t.theme}</h4>
-                            <div className="grid grid-cols-2 gap-2">
-                                <Button variant={settings.theme === 'light' ? 'default' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
-                                    <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
-                                </Button>
-                                 <Button variant={settings.theme === 'dark' ? 'default' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
-                                    <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
-            <Button variant="outline" size="sm" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
-                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                <span className="sr-only">{isFullscreen ? t.exitFullscreen : t.fullscreen}</span>
-            </Button>
-        </div>
-      </header>
+            <div className="w-24"></div>
+        </header>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Bookshelf Panel */}
-        <aside className={cn("w-1/3 max-w-xs min-w-[250px] border-r flex-col", isFullscreen ? "hidden" : "flex")}>
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-semibold">{t.bookshelfTitle}</h2>
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-2">
-              {books.length > 0 ? (
-                books.map(book => (
-                  <Card 
-                    key={book.id}
-                    className={cn(
-                        "p-3 cursor-pointer group hover:bg-accent transition-colors",
-                        selectedBookId === book.id && "bg-accent border-primary"
-                    )}
-                    onClick={() => handleBookSelect(book)}
-                  >
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-muted-foreground"/>
-                            <p className="font-medium text-sm truncate" title={book.title}>{book.title}</p>
-                        </div>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-                            onClick={(e) => { e.stopPropagation(); deleteBook(book.id); }}
-                            aria-label={t.deleteBook}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">{t.noBooks}</p>
-              )}
-            </div>
-          </ScrollArea>
-          <div className="p-4 border-t">
-            <input
-                type="file"
-                accept=".txt,.pdf"
-                ref={fileInputRef}
-                onChange={handleFileImport}
-                className="hidden"
-            />
-            <Button className="w-full" onClick={() => fileInputRef.current?.click()}>
-              <Plus className="mr-2 h-4 w-4"/>
-              {t.importBook}
-            </Button>
-          </div>
-        </aside>
-
-        {/* Reading Panel */}
-        <main className={cn(
-            "flex-1 flex flex-col transition-colors",
-            settings.theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800',
-            isFullscreen ? "w-full h-full" : ""
-        )}>
-          {selectedBook && selectedBook.content ? (
-            selectedBook.type === 'txt' ? (
-                <div className="flex-1 flex flex-col min-h-0">
-                     <div className="p-4 border-b text-center shrink-0"
-                       style={{
-                         backgroundColor: settings.theme === 'dark' ? 'hsl(222, 12%, 18%)' : 'hsl(0, 0%, 98%)',
-                         borderColor: settings.theme === 'dark' ? 'hsl(222, 12%, 25%)' : 'hsl(0, 0%, 93%)',
-                       }}
-                     >
-                        <h3 className="font-semibold text-lg truncate" title={selectedBook.title}>{selectedBook.title}</h3>
-                    </div>
-                    <ScrollArea className="flex-1 p-6 md:p-8 lg:p-12">
-                        <p 
-                            className="whitespace-pre-wrap leading-relaxed"
-                            style={{ fontSize: `${settings.fontSize}px` }}
-                        >
-                            {selectedBook.content}
-                        </p>
-                    </ScrollArea>
-                </div>
-            ) : (
-                <PdfViewer
-                    file={selectedBook.content}
-                    title={selectedBook.title}
-                    theme={settings.theme}
-                    translations={{
-                        page: t.page,
-                        pdfError: t.pdfError,
-                        pdfLoading: t.pdfLoading,
-                    }}
+        <main className="w-full max-w-4xl flex flex-col items-center flex-grow">
+            <div className="w-full p-4 border-b mb-6 flex justify-between items-center">
+                <h2 className="text-xl font-semibold">{t.bookshelfTitle}</h2>
+                <input
+                    type="file"
+                    accept=".txt,.pdf"
+                    ref={fileInputRef}
+                    onChange={handleFileImport}
+                    className="hidden"
                 />
-            )
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <Library className="mx-auto h-12 w-12 mb-4" />
-                <p>{t.readingAreaPrompt}</p>
-              </div>
+                <Button className="w-auto" onClick={() => fileInputRef.current?.click()}>
+                    <Plus className="mr-2 h-4 w-4"/>
+                    {t.importBook}
+                </Button>
             </div>
-          )}
+            
+            <ScrollArea className="w-full flex-1">
+                {books.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+                        {books.map(book => (
+                            <Card 
+                                key={book.id}
+                                className={cn("p-3 group hover:bg-accent transition-colors flex flex-col")}
+                            >
+                                <div 
+                                    className="flex-grow flex flex-col items-center justify-center text-center cursor-pointer p-4"
+                                    onClick={() => handleBookSelect(book.id)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleBookSelect(book.id); }}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`${t.readBook}: ${book.title}`}
+                                >
+                                    <Book className="h-16 w-16 text-primary/70 mb-4"/>
+                                    <p className="font-semibold text-base leading-tight break-words" title={book.title}>{book.title}</p>
+                                    <p className="text-xs text-muted-foreground mt-1 uppercase bg-primary/10 px-2 py-0.5 rounded-full">{book.type}</p>
+                                </div>
+                                <div className="border-t pt-2 mt-2 flex justify-end">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                        onClick={(e) => { e.stopPropagation(); deleteBook(book.id); }}
+                                        aria-label={t.deleteBook}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full py-20">
+                        <Library className="h-20 w-20 mb-6" />
+                        <p className="max-w-xs">{t.noBooks}</p>
+                    </div>
+                )}
+            </ScrollArea>
         </main>
-      </div>
     </div>
   );
 }

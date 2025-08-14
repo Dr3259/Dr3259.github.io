@@ -10,11 +10,8 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 
-// Setup pdf.js worker. This is required for react-pdf to work.
-// Use a stable CDN link to ensure version consistency.
-if (typeof window !== 'undefined') {
-    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-}
+// Setup pdf.js worker from a stable CDN to ensure version consistency.
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfViewerProps {
     file: string; // data URI
@@ -30,6 +27,11 @@ interface PdfViewerProps {
 const PdfViewer: React.FC<PdfViewerProps> = ({ file, title, theme, translations }) => {
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     // Reset page number when file changes
     useEffect(() => {
@@ -52,32 +54,29 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, title, theme, translations 
             setPageNumber(pageNumber - 1);
         }
     }
+    
+    // Defer rendering of Document component until client-side to avoid SSR issues.
+    if (!isClient) {
+        return (
+            <div className="flex items-center justify-center p-10">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                {translations.pdfLoading}
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 flex flex-col min-h-0">
-            <div className="p-4 border-b text-center shrink-0 flex justify-between items-center"
-              style={{
-                backgroundColor: theme === 'dark' ? 'hsl(222, 12%, 18%)' : 'hsl(0, 0%, 98%)',
-                borderColor: theme === 'dark' ? 'hsl(222, 12%, 25%)' : 'hsl(0, 0%, 93%)',
-              }}
-            >
-                <div className="w-1/4"></div>
-                <h3 className="font-semibold text-lg truncate w-1/2" title={title}>{title}</h3>
-                <div className="w-1/4 text-right">
-                    {numPages && (
-                         <div className="flex items-center justify-end gap-2">
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevPage} disabled={pageNumber <= 1}>
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <span className="text-sm font-medium text-muted-foreground tabular-nums">
-                                {translations.page(pageNumber, numPages)}
-                            </span>
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextPage} disabled={pageNumber >= numPages}>
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    )}
-                </div>
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-end gap-2 p-2 bg-background/80 border rounded-lg shadow-lg backdrop-blur-sm">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevPage} disabled={!numPages || pageNumber <= 1}>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium text-muted-foreground tabular-nums px-2">
+                    {numPages ? translations.page(pageNumber, numPages) : '...'}
+                </span>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextPage} disabled={!numPages || pageNumber >= numPages}>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
             </div>
 
              <ScrollArea className="flex-1 flex justify-center items-start p-4">
