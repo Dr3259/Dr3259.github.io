@@ -968,7 +968,7 @@ export default function WeekGlancePage() {
                 )}
               </div>
               <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
+                <a href="https://github.com/Dr3259/Dr3259.github.io" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
                 <a href="#" aria-label={t.wechatAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">
                   <span className="sr-only">WeChat</span>
                 </a>
