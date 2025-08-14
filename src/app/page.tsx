@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare, FileEdit, CalendarPlus } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, MessageSquare, FileEdit, CalendarPlus, BarChart } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -59,7 +58,7 @@ const translations = {
       terrible: '糟透了',
     },
     weeklySummaryTitle: '本周总结',
-    weeklySummaryPlaceholder: '写下你的本周总结...',
+    weeklySummaryPlaceholder: '查看本周总结与统计',
     toggleThemeAria: '切换主题',
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
@@ -117,7 +116,7 @@ const translations = {
       terrible: 'Terrible',
     },
     weeklySummaryTitle: 'Weekly Summary',
-    weeklySummaryPlaceholder: 'Write your weekly summary here...',
+    weeklySummaryPlaceholder: 'View weekly summary and statistics',
     toggleThemeAria: 'Toggle theme',
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
@@ -325,7 +324,6 @@ export default function WeekGlancePage() {
   
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, RatingType>>({});
-  const [weeklySummary, setWeeklySummary] = useState<string>('');
   const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({});
   const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
   const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
@@ -398,7 +396,6 @@ export default function WeekGlancePage() {
         try {
             setNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_NOTES) || '{}'));
             setRatings(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS) || '{}'));
-            setWeeklySummary(localStorage.getItem(LOCAL_STORAGE_KEY_SUMMARY) || '');
             setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
             setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
             setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
@@ -441,7 +438,7 @@ export default function WeekGlancePage() {
                 }
                 
                 const text = await navigator.clipboard.readText();
-
+                
                 if (text && text.trim() && text !== lastProcessedClipboardText) {
                     setClipboardContent(text);
                     setIsClipboardModalOpen(true);
@@ -501,6 +498,7 @@ export default function WeekGlancePage() {
   
   const handleCloseClipboardModal = () => {
     setIsClipboardModalOpen(false);
+    // Don't set last processed text here, so user can choose to deal with it later
   };
 
 
@@ -607,10 +605,11 @@ export default function WeekGlancePage() {
     });
   }, []);
 
-  const handleSummaryChange = useCallback((summary: string) => {
-    setWeeklySummary(summary);
-    if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_SUMMARY, summary);
-  }, []);
+  const handleWeeklySummaryClick = () => {
+    if (!displayedDate) return;
+    const weekStartKey = getDateKey(currentDisplayedWeekStart);
+    router.push(`/weekly-summary?weekStart=${weekStartKey}`);
+  };
 
   const handleDayHoverStart = useCallback((dayData: { dayName: string; notes: string; imageHint: string }) => {
     clearTimeoutIfNecessary();
@@ -861,20 +860,22 @@ export default function WeekGlancePage() {
               />
             );
           })}
-          <Card className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
-              <CardHeader className="p-2 pb-1 text-center">
-                <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-2 flex-grow flex flex-col">
-                <Textarea
-                  placeholder={t.weeklySummaryPlaceholder}
-                  value={weeklySummary}
-                  onChange={(e) => handleSummaryChange(e.target.value)}
-                  className="flex-grow bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary text-sm rounded-md w-full resize-none p-1"
-                  aria-label={t.weeklySummaryTitle}
-                />
-              </CardContent>
-            </Card>
+          <Card 
+            className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 cursor-pointer"
+            onClick={handleWeeklySummaryClick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWeeklySummaryClick(); }}
+            role="button"
+            tabIndex={0}
+            aria-label={t.weeklySummaryPlaceholder}
+          >
+            <CardHeader className="p-2 pb-1 text-center">
+              <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 flex-grow flex flex-col items-center justify-center">
+              <BarChart className="w-12 h-12 text-primary/80 mb-2" />
+              <p className="text-xs text-center text-muted-foreground">{t.weeklySummaryPlaceholder}</p>
+            </CardContent>
+          </Card>
         </div>
 
         {hoverPreviewData && (
