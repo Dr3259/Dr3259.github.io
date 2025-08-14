@@ -99,7 +99,7 @@ const RestItem: React.FC<RestItemProps> = ({ itemKey, icon: Icon, title, descrip
         {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
       </div>
       
-      <div className="absolute top-2 right-2">
+      <div className="absolute bottom-4 right-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
