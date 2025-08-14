@@ -5,10 +5,9 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Type, Sun, Moon, Maximize, Minimize, Loader2, Library } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -33,7 +32,7 @@ const translations = {
     backButton: 'Back to Bookshelf',
     loadingBook: 'Loading book...',
     bookNotFound: 'Book Content Not Found',
-    bookNotFoundDescription: 'The content for this book was not found in the current session. Please return to the bookshelf and re-import it.',
+    bookNotFoundDescription: 'The content for this book was not found in the current session. Please return to the bookshelf to access it again.',
     settings: 'Reading Settings',
     fontSize: 'Font Size',
     theme: 'Theme',
@@ -108,6 +107,7 @@ export default function BookReaderPage() {
         if (bookContentJSON) {
           setBook(JSON.parse(bookContentJSON));
         } else {
+          // This is the fallback case: content is not in session storage.
           setError(t.bookNotFound);
         }
       } catch (e) {
@@ -149,7 +149,7 @@ export default function BookReaderPage() {
   const renderContent = () => {
     if (error) {
       return (
-        <div className="flex-1 flex items-center justify-center text-center">
+        <div className="flex-1 flex items-center justify-center text-center p-4">
             <div>
                 <Library className="h-16 w-16 text-destructive mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-destructive">{t.bookNotFound}</h2>
@@ -204,8 +204,8 @@ export default function BookReaderPage() {
   }
 
   return (
-    <div ref={readerContainerRef} className={cn("flex flex-col h-screen", settings.theme === 'dark' ? 'dark bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800')}>
-        <header className={cn("flex items-center justify-between p-4 border-b shrink-0", isFullscreen && "hidden", settings.theme === 'dark' ? 'border-gray-700' : 'border-gray-200')}>
+    <div ref={readerContainerRef} className={cn("flex flex-col h-screen", settings.theme === 'dark' ? 'dark bg-gray-800 text-gray-200' : 'bg-white text-gray-800')}>
+        <header className={cn("flex items-center justify-between p-4 border-b shrink-0", isFullscreen && "hidden", settings.theme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50')}>
             <Button variant="outline" size="sm" onClick={() => router.push('/personal-library')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t.backButton}
@@ -253,4 +253,3 @@ export default function BookReaderPage() {
     </div>
   )
 }
-

@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Library, Plus, Trash2, FileText, Book } from 'lucide-react';
+import { ArrowLeft, Library, Plus, Trash2, Book } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,8 @@ const translations = {
     bookDeleted: '书籍已删除',
     importError: '导入书籍失败，请确保文件是 .txt 或 .pdf 格式。',
     readBook: '阅读这本书',
+    storageErrorTitle: "无法存储书籍",
+    storageErrorMessage: "这本书太大了，无法在浏览器会话间保持。刷新页面后需要重新导入。",
   },
   'en': {
     pageTitle: 'Personal Library',
@@ -36,6 +38,8 @@ const translations = {
     bookDeleted: 'Book has been deleted.',
     importError: 'Failed to import book. Please ensure it is a .txt or .pdf file.',
     readBook: 'Read this book',
+    storageErrorTitle: "Could Not Store Book",
+    storageErrorMessage: "This book is too large to be kept between sessions. You will need to re-import it after refreshing the page.",
   }
 };
 
@@ -123,16 +127,18 @@ export default function PersonalLibraryListPage() {
       const bookWithContent: BookWithContent = { ...newBookMeta, content };
 
       try {
-        // Save full content to sessionStorage for immediate use
+        // Attempt to save full content to sessionStorage for immediate use
         sessionStorage.setItem(`${SESSION_STORAGE_BOOK_CONTENT_PREFIX}${bookId}`, JSON.stringify(bookWithContent));
       } catch (error) {
-        console.error("Session storage error:", error);
+        // If it fails (quota exceeded), don't block the user.
+        // The reader page will handle the missing content.
+        console.warn("Session storage quota exceeded. Book content will not persist across refresh.", error);
         toast({
-            title: "Could not store book content",
-            description: "The book is too large to be stored in the session.",
-            variant: "destructive"
+            title: t.storageErrorTitle,
+            description: t.storageErrorMessage,
+            variant: "default",
+            duration: 8000
         });
-        return;
       }
 
       setBooks(prevBooks => [...prevBooks, newBookMeta]);
@@ -144,10 +150,8 @@ export default function PersonalLibraryListPage() {
         toast({ title: t.importError, variant: 'destructive' });
     }
 
-    // Reading as Data URL works for both text and binary files like PDF
     reader.readAsDataURL(file);
     
-    // Reset file input to allow re-importing the same file
     event.target.value = '';
   };
   
