@@ -82,10 +82,16 @@ const RestItem: React.FC<RestItemProps> = ({ itemKey, icon: Icon, title, descrip
       tabIndex={0}
       className={cn(
         "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-5 relative",
-        "bg-card/60 hover:bg-card/90 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2 focus:ring-offset-background"
+        "focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2 focus:ring-offset-background",
+        isPinned 
+          ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg hover:-translate-y-1"
+          : "bg-card/60 hover:bg-card/90 hover:shadow-lg hover:-translate-y-1"
       )}
     >
-      <div className="p-2.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+      <div className={cn(
+          "p-2.5 rounded-lg transition-colors",
+          isPinned ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"
+      )}>
         <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110 h-6 w-6")} />
       </div>
       <div className="flex-grow">
