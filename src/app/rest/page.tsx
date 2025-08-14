@@ -183,7 +183,7 @@ export default function RestHubPage() {
         <h1 className="text-2xl sm:text-3xl font-headline font-bold text-primary mb-4">
           {t.pageTitle}
         </h1>
-        <p className="text-muted-foreground mb-10 sm:mb-12 text-base sm:text-lg max-w-md">
+        <p className="text-muted-foreground mb-8 text-sm sm:text-base max-w-md">
             {t.pageDescription}
         </p>
         
