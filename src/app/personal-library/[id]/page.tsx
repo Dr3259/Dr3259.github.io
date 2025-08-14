@@ -69,6 +69,7 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
 });
 
 const PRESET_PDF_SCALES = [0.75, 1.0, 1.5, 2.0];
+const PRESET_FONT_SIZES = [14, 16, 18, 20];
 
 export default function BookReaderPage() {
   const params = useParams();
@@ -227,11 +228,20 @@ export default function BookReaderPage() {
     // Default to TXT settings
     return (
         <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium leading-none flex items-center"><CaseSensitive className="mr-2 h-4 w-4"/>{t.fontSize}</h4>
-              <span className="text-sm text-muted-foreground">{settings.fontSize}px</span>
+            <h4 className="font-medium leading-none flex items-center"><CaseSensitive className="mr-2 h-4 w-4"/>{t.fontSize}</h4>
+            <div className="grid grid-cols-4 gap-2">
+                {PRESET_FONT_SIZES.map(sizeValue => (
+                    <Button 
+                        key={sizeValue}
+                        variant={settings.fontSize === sizeValue ? 'secondary' : 'outline'}
+                        size="sm"
+                        onClick={() => updateSettings({ fontSize: sizeValue })}
+                        className="text-xs"
+                    >
+                        {sizeValue}px
+                    </Button>
+                ))}
             </div>
-            <Slider defaultValue={[settings.fontSize]} min={12} max={32} step={1} onValueChange={(v) => updateSettings({ fontSize: v[0] })} />
         </div>
     )
   }
