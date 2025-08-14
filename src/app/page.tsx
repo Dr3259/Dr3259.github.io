@@ -192,7 +192,7 @@ interface ReceivedShareData {
 const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
 const MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT = 104; // Approx 2 years
-const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/gi;
+const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
 const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: number }): number => {
   const monthOfLabel = weekStartDate.getMonth();
@@ -423,39 +423,37 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary, handleSaveShareLinkFromPWA]);
 
   // Effect to check clipboard on focus
+  const checkClipboard = useCallback(async () => {
+    if (document.hidden) return;
+
+    try {
+        if (typeof navigator?.permissions?.query !== 'function') {
+            return;
+        }
+        const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
+        if (permission.state === 'denied') {
+            return;
+        }
+        
+        const text = await navigator.clipboard.readText();
+        
+        if (text && text.trim() && text !== lastProcessedClipboardText) {
+            setClipboardContent(text);
+            setIsClipboardModalOpen(true);
+        }
+    } catch (err: any) {
+        if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
+           console.error(t.clipboard.checkClipboardError, err);
+        }
+    }
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError]);
+
    useEffect(() => {
-        const checkClipboard = async () => {
-            if (document.hidden) return;
-
-            try {
-                if (typeof navigator?.permissions?.query !== 'function') {
-                    console.warn("Clipboard permissions API not supported.");
-                    return;
-                }
-                const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
-                if (permission.state === 'denied') {
-                    return;
-                }
-                
-                const text = await navigator.clipboard.readText();
-                
-                if (text && text.trim() && text !== lastProcessedClipboardText) {
-                    setClipboardContent(text);
-                    setIsClipboardModalOpen(true);
-                }
-            } catch (err: any) {
-                if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
-                   console.error(t.clipboard.checkClipboardError, err);
-                }
-            }
-        };
-
         window.addEventListener('focus', checkClipboard);
-
         return () => {
             window.removeEventListener('focus', checkClipboard);
         };
-  }, [t.clipboard.checkClipboardError, lastProcessedClipboardText]);
+  }, [checkClipboard]);
 
   const handleSaveFromClipboard = () => {
     if (!clipboardContent) return;
@@ -468,7 +466,7 @@ export default function WeekGlancePage() {
             title: t.clipboard.linkAlreadyExists,
             variant: "default"
         });
-        setLastProcessedClipboardText(clipboardContent); // Mark as processed even if duplicate
+        setLastProcessedClipboardText(clipboardContent);
         setIsClipboardModalOpen(false);
         return;
     }
@@ -498,8 +496,6 @@ export default function WeekGlancePage() {
   
   const handleCloseClipboardModal = () => {
     setIsClipboardModalOpen(false);
-    // User chose to close, so DON'T mark as processed. 
-    // It will pop up again on next focus if content is still there, unless it was a processed item.
   };
 
 
