@@ -2,7 +2,7 @@
 // src/app/day/[dayName]/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, parseISO, isAfter as dateIsAfter } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { ClipboardModal } from '@/components/ClipboardModal';
+import copy from 'copy-to-clipboard';
 
 
 // Helper function to extract time range and generate hourly slots
@@ -178,6 +181,25 @@ const translations = {
     editReflection: '编辑心得',
     deleteReflection: '删除心得',
     daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
+    clipboard: {
+        linkSavedToastTitle: "链接已记录",
+        linkSavedToastDescription: (slot: string) => `链接已保存到: ${slot}`,
+        linkAlreadyExists: "这个链接已经记录过了。",
+        permissionDenied: "无法访问剪贴板，请检查权限设置。",
+        checkClipboardError: "检查剪贴板时出错。",
+        modalTitle: "检测到剪贴板内容",
+        modalDescription: "您想将以下内容保存到今天的日程中吗？",
+        saveButton: "保存",
+        cancelButton: "关闭",
+    },
+    timeIntervals: {
+        midnight: '凌晨 (00:00 - 05:00)',
+        earlyMorning: '清晨 (05:00 - 09:00)',
+        morning: '上午 (09:00 - 12:00)',
+        noon: '中午 (12:00 - 14:00)',
+        afternoon: '下午 (14:00 - 18:00)',
+        evening: '晚上 (18:00 - 24:00)',
+    },
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -298,6 +320,25 @@ const translations = {
     editReflection: 'Edit Insight',
     deleteReflection: 'Delete Insight',
     daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    clipboard: {
+        linkSavedToastTitle: "Link Saved",
+        linkSavedToastDescription: (slot: string) => `Link saved to: ${slot}`,
+        linkAlreadyExists: "This link has already been saved.",
+        permissionDenied: "Could not access clipboard. Please check permissions.",
+        checkClipboardError: "Error checking clipboard.",
+        modalTitle: "Content Detected in Clipboard",
+        modalDescription: "Would you like to save the following content to today's schedule?",
+        saveButton: "Save",
+        cancelButton: "Close",
+    },
+    timeIntervals: {
+        midnight: 'Midnight (00:00 - 05:00)',
+        earlyMorning: 'Early Morning (05:00 - 09:00)',
+        morning: 'Morning (09:00 - 12:00)',
+        noon: 'Noon (12:00 - 14:00)',
+        afternoon: 'Afternoon (14:00 - 18:00)',
+        evening: 'Evening (18:00 - 24:00)',
+    },
   }
 };
 
@@ -309,6 +350,7 @@ const LOCAL_STORAGE_KEY_ALL_TODOS = 'allWeekTodos_v2';
 const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes_v2';
 const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks_v2';
 const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
+const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
 interface SlotDetails {
   dateKey: string; // YYYY-MM-DD
@@ -338,12 +380,101 @@ const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType
 const MAX_DAILY_NOTE_LENGTH = 1000;
 type DailyNoteDisplayMode = 'read' | 'edit' | 'pending';
 
+const getDateKey = (date: Date): string => {
+  return format(date, 'yyyy-MM-dd');
+};
+
+const saveUrlToCurrentTimeSlot = (
+    item: { title: string, url: string },
+    setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
+    t: (typeof translations)['zh-CN']
+): { success: boolean; slotName: string } => {
+
+    const newLink: ShareLinkItem = {
+        id: Date.now().toString(),
+        url: item.url,
+        title: item.title,
+    };
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDateKey = getDateKey(now);
+
+    const timeIntervals = t.timeIntervals;
+    let targetIntervalLabel = timeIntervals.evening; // Default
+    if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
+    else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
+    else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
+    else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
+    else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+    
+    const hourlySlots = (() => {
+        const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+        if (!match) return [];
+        const [, startTimeStr, endTimeStr] = match;
+        const startHour = parseInt(startTimeStr.split(':')[0]);
+        let endHour = parseInt(endTimeStr.split(':')[0]);
+        if (endTimeStr === "00:00" && startHour !== 0) endHour = 24;
+        const slots: string[] = [];
+        for (let h = startHour; h < endHour; h++) {
+            slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
+        }
+        return slots;
+    })();
+
+    if (hourlySlots.length === 0) {
+        console.error("Could not find a valid hourly slot for the current time.");
+        return { success: false, slotName: '' };
+    }
+    const targetSlot = hourlySlots.find(slot => {
+        const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
+        if (match) {
+            const startH = parseInt(match[1]);
+            let endH = parseInt(match[2]);
+            if (endH === 0) endH = 24;
+            return currentHour >= startH && currentHour < endH;
+        }
+        return false;
+    }) || hourlySlots[0];
+
+
+    try {
+        const existingData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
+        const dayLinks = existingData[currentDateKey] || {};
+        const slotLinks = dayLinks[targetSlot] || [];
+        const updatedSlotLinks = [...slotLinks, newLink];
+        const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
+        const newAllLinks = { ...existingData, [currentDateKey]: updatedDayLinks };
+        
+        localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
+        setAllShareLinks(newAllLinks);
+        
+        return { success: true, slotName: targetIntervalLabel.split(' ')[0] };
+    } catch(e) {
+        console.error("Failed to save link to localStorage", e);
+        return { success: false, slotName: '' };
+    }
+};
+
+const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, ShareLinkItem[]>>): boolean => {
+    if (!url) return false;
+    for (const dateKey in allLinks) {
+        for (const hourSlot in allLinks[dateKey]) {
+            if (allLinks[dateKey][hourSlot].some(item => item.url === url)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
 
 export default function DayDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const dayNameForDisplay = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
   const dateKey = searchParams.get('date') || ''; // YYYY-MM-DD
+  const { toast } = useToast();
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [clientPageLoadTime, setClientPageLoadTime] = useState<Date | null>(null);
@@ -378,6 +509,105 @@ export default function DayDetailPage() {
 
   const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
+
+  const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
+  const [clipboardContent, setClipboardContent] = useState('');
+  const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
+
+  const t = translations[currentLanguage];
+
+  const checkClipboard = useCallback(async () => {
+    if (document.hidden) return;
+
+    try {
+        if (typeof navigator?.permissions?.query !== 'function') {
+            return;
+        }
+        const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
+        if (permission.state === 'denied') {
+            return;
+        }
+        
+        const text = await navigator.clipboard.readText();
+        
+        const urlMatches = text.match(URL_REGEX);
+        const url = urlMatches ? urlMatches[0] : null;
+        
+        if (!url) {
+            return;
+        }
+
+        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
+            return;
+        }
+
+        if (isUrlAlreadySaved(url, allShareLinks)) {
+            setLastProcessedClipboardText(text); 
+            return; 
+        }
+
+        setClipboardContent(text);
+        setIsClipboardModalOpen(true);
+        setLastProcessedClipboardText(text);
+
+    } catch (err: any) {
+        if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
+           console.error(t.clipboard.checkClipboardError, err);
+        }
+    }
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, toast, t.clipboard]);
+  
+  useEffect(() => {
+        window.addEventListener('focus', checkClipboard);
+        return () => {
+            window.removeEventListener('focus', checkClipboard);
+        };
+  }, [checkClipboard]);
+
+  const handleSaveFromClipboard = () => {
+    if (!clipboardContent) return;
+    
+    const urlMatches = clipboardContent.match(URL_REGEX);
+    const url = urlMatches ? urlMatches[0] : '';
+
+    if (url && isUrlAlreadySaved(url, allShareLinks)) {
+        toast({
+            title: t.clipboard.linkAlreadyExists,
+            variant: "default",
+            duration: 3000,
+        });
+        setLastProcessedClipboardText(clipboardContent);
+        setIsClipboardModalOpen(false);
+        return;
+    }
+    
+    const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
+
+    const itemToSave = {
+        title: title || url,
+        url: url
+    };
+
+    const { success, slotName } = saveUrlToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
+    if (success) {
+      toast({
+        title: t.clipboard.linkSavedToastTitle,
+        description: t.clipboard.linkSavedToastDescription(slotName),
+        duration: 3000,
+      });
+      try {
+        copy('');
+      } catch (error) {
+        console.warn("Could not clear clipboard.", error);
+      }
+    }
+    setLastProcessedClipboardText(clipboardContent);
+    setIsClipboardModalOpen(false);
+  };
+  
+  const handleCloseClipboardModal = () => {
+    setIsClipboardModalOpen(false);
+  };
 
 
   useEffect(() => {
@@ -426,7 +656,7 @@ export default function DayDetailPage() {
   };
 
 
-  const t = translations[currentLanguage];
+  
   const tTodoModal = translations[currentLanguage].todoModal;
   const tMeetingNoteModal = translations[currentLanguage].meetingNoteModal;
   const tShareLinkModal = translations[currentLanguage].shareLinkModal;
@@ -700,7 +930,7 @@ export default function DayDetailPage() {
      setAllReflections(prev => {
         const slotReflections = prev[currentDateKey]?.[targetHourSlot] || [];
         const updatedSlot = slotReflections.filter(r => r.id !== reflectionId);
-        const newAll = { ...prev, [currentDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+        const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
         saveAllReflectionsToLocalStorage(newAll); return newAll;
     });
   };
@@ -1140,7 +1370,15 @@ export default function DayDetailPage() {
             translations={tReflectionModal}
         />
       )}
+      <ClipboardModal
+        isOpen={isClipboardModalOpen}
+        onClose={handleCloseClipboardModal}
+        onSave={handleSaveFromClipboard}
+        content={clipboardContent}
+        translations={t.clipboard}
+      />
     </TooltipProvider>
   );
 }
 
+    
