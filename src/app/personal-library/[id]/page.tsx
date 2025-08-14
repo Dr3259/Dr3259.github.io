@@ -68,6 +68,8 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
     )
 });
 
+const PRESET_PDF_SCALES = [0.75, 1.0, 1.5, 2.0];
+
 export default function BookReaderPage() {
   const params = useParams();
   const router = useRouter();
@@ -205,11 +207,20 @@ export default function BookReaderPage() {
     if (book?.type === 'pdf') {
       return (
         <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <h4 className="font-medium leading-none flex items-center"><ZoomIn className="mr-2 h-4 w-4"/>{t.zoom}</h4>
-                <span className="text-sm text-muted-foreground">{settings.pdfScale.toFixed(2)}x</span>
+            <h4 className="font-medium leading-none flex items-center"><ZoomIn className="mr-2 h-4 w-4"/>{t.zoom}</h4>
+            <div className="grid grid-cols-4 gap-2">
+                {PRESET_PDF_SCALES.map(scaleValue => (
+                    <Button 
+                        key={scaleValue}
+                        variant={settings.pdfScale === scaleValue ? 'secondary' : 'outline'}
+                        size="sm"
+                        onClick={() => updateSettings({ pdfScale: scaleValue })}
+                        className="text-xs"
+                    >
+                        {scaleValue * 100}%
+                    </Button>
+                ))}
             </div>
-            <Slider defaultValue={[settings.pdfScale]} min={0.5} max={2.5} step={0.1} onValueChange={(v) => updateSettings({ pdfScale: v[0] })} />
         </div>
       )
     }
