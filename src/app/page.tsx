@@ -157,7 +157,7 @@ const translations = {
         earlyMorning: 'Early Morning (05:00 - 09:00)',
         morning: 'Morning (09:00 - 12:00)',
         noon: 'Noon (12:00 - 14:00)',
-        afternoon: 'Afternoon (14:00 - 18:00)',
+        afternoon: 'Afternoon (18:00 - 24:00)',
         evening: 'Evening (18:00 - 24:00)',
     },
   }
@@ -468,7 +468,7 @@ export default function WeekGlancePage() {
             title: t.clipboard.linkAlreadyExists,
             variant: "default"
         });
-        setLastProcessedClipboardText(clipboardContent);
+        setLastProcessedClipboardText(clipboardContent); // Mark as processed even if duplicate
         setIsClipboardModalOpen(false);
         return;
     }
@@ -498,7 +498,8 @@ export default function WeekGlancePage() {
   
   const handleCloseClipboardModal = () => {
     setIsClipboardModalOpen(false);
-    // Don't set last processed text here, so user can choose to deal with it later
+    // User chose to close, so don't mark as processed. 
+    // It will pop up again on next focus if content is still there.
   };
 
 
