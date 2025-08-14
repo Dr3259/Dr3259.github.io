@@ -1,22 +1,22 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
+import { cn } from '@/lib/utils';
 
-// Setup pdf.js worker from a stable CDN to ensure version consistency.
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfViewerProps {
-    file: string; // data URI
-    title: string;
+    file: string; 
     theme: 'light' | 'dark';
+    scale?: number;
     translations: {
         page: (current: number, total: number) => string;
         pdfError: string;
@@ -24,20 +24,34 @@ interface PdfViewerProps {
     }
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ file, title, theme, translations }) => {
+const PdfViewer: React.FC<PdfViewerProps> = ({ file, theme, scale = 1.0, translations }) => {
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
+    const [rotation, setRotation] = useState(0);
     const [isClient, setIsClient] = useState(false);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    // Reset page number when file changes
     useEffect(() => {
         setPageNumber(1);
         setNumPages(null);
+        setRotation(0);
     }, [file]);
+    
+    // Reset scroll position when page changes
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+           const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+           if(viewport) {
+             viewport.scrollTop = 0;
+           }
+        }
+    }, [pageNumber, file]);
+
 
     function onDocumentLoadSuccess({ numPages: nextNumPages }: PDFDocumentProxy) {
         setNumPages(nextNumPages);
@@ -55,7 +69,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, title, theme, translations 
         }
     }
     
-    // Defer rendering of Document component until client-side to avoid SSR issues.
     if (!isClient) {
         return (
             <div className="flex items-center justify-center p-10">
@@ -79,8 +92,8 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, title, theme, translations 
                 </Button>
             </div>
 
-             <ScrollArea className="flex-1 flex justify-center items-start p-4">
-                <div className="flex justify-center">
+             <ScrollArea className="flex-1 flex justify-center items-start p-4" ref={scrollAreaRef}>
+                <div className={cn("flex justify-center", theme === 'dark' && 'invert-[0.9] hue-rotate-[180deg]')}>
                     <Document
                         file={file}
                         onLoadSuccess={onDocumentLoadSuccess}
@@ -96,8 +109,14 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, title, theme, translations 
                             </div>
                         }
                         className="shadow-lg"
+                        rotate={rotation}
                     >
-                        <Page pageNumber={pageNumber} />
+                        <Page 
+                            pageNumber={pageNumber} 
+                            scale={scale}
+                            renderAnnotationLayer={false}
+                            renderTextLayer={true}
+                         />
                     </Document>
                 </div>
             </ScrollArea>

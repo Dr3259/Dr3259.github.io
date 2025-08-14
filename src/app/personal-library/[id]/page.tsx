@@ -5,12 +5,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getBookContent, type BookWithContent } from '@/lib/db'; // Import from db
+import { getBookContent, type BookWithContent } from '@/lib/db';
 
 const translations = {
   'zh-CN': {
@@ -20,6 +20,7 @@ const translations = {
     bookNotFoundDescription: '这本书的内容没有在当前会话中找到。请返回书架重新导入。',
     settings: '阅读设置',
     fontSize: '字号',
+    zoom: '缩放',
     theme: '主题',
     lightTheme: '浅色',
     darkTheme: '深色',
@@ -36,6 +37,7 @@ const translations = {
     bookNotFoundDescription: 'The content for this book was not found in the current session. Please return to the bookshelf to access it again.',
     settings: 'Reading Settings',
     fontSize: 'Font Size',
+    zoom: 'Zoom',
     theme: 'Theme',
     lightTheme: 'Light',
     darkTheme: 'Dark',
@@ -52,9 +54,10 @@ type LanguageKey = keyof typeof translations;
 interface ReadingSettings {
   fontSize: number;
   theme: 'light' | 'dark';
+  pdfScale: number;
 }
 
-const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v2';
+const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v3';
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
     ssr: false,
@@ -73,7 +76,7 @@ export default function BookReaderPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [book, setBook] = useState<BookWithContent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light' });
+  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light', pdfScale: 1.0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   
@@ -89,7 +92,11 @@ export default function BookReaderPage() {
 
     try {
       const savedSettings = localStorage.getItem(LOCAL_STORAGE_SETTINGS_KEY);
-      if (savedSettings) setSettings(JSON.parse(savedSettings));
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        // Merge with defaults to ensure new settings properties are present
+        setSettings(prev => ({ ...prev, ...parsed }));
+      }
     } catch (e) {
       console.error("Failed to load settings", e);
     }
@@ -180,8 +187,8 @@ export default function BookReaderPage() {
         return (
             <PdfViewer
                 file={book.content}
-                title={book.title}
                 theme={settings.theme}
+                scale={settings.pdfScale}
                 translations={{
                     page: t.page,
                     pdfError: t.pdfError,
@@ -192,6 +199,30 @@ export default function BookReaderPage() {
     }
 
     return null;
+  }
+  
+  const renderSettingsContent = () => {
+    if (book?.type === 'pdf') {
+      return (
+        <div className="space-y-2">
+            <div className="flex items-center justify-between">
+                <h4 className="font-medium leading-none flex items-center"><ZoomIn className="mr-2 h-4 w-4"/>{t.zoom}</h4>
+                <span className="text-sm text-muted-foreground">{settings.pdfScale.toFixed(2)}x</span>
+            </div>
+            <Slider defaultValue={[settings.pdfScale]} min={0.5} max={2.5} step={0.1} onValueChange={(v) => updateSettings({ pdfScale: v[0] })} />
+        </div>
+      )
+    }
+    // Default to TXT settings
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium leading-none flex items-center"><CaseSensitive className="mr-2 h-4 w-4"/>{t.fontSize}</h4>
+              <span className="text-sm text-muted-foreground">{settings.fontSize}px</span>
+            </div>
+            <Slider defaultValue={[settings.fontSize]} min={12} max={32} step={1} onValueChange={(v) => updateSettings({ fontSize: v[0] })} />
+        </div>
+    )
   }
 
   return (
@@ -207,17 +238,14 @@ export default function BookReaderPage() {
             <div className="flex items-center gap-2">
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" disabled={!book || book?.type === 'pdf'}>
+                        <Button variant="outline" size="sm" disabled={!book}>
                             <Settings className="mr-2 h-4 w-4" />
                             <span className="hidden sm:inline">{t.settings}</span>
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-64">
                         <div className="grid gap-4">
-                            <div className="space-y-2">
-                                <h4 className="font-medium leading-none">{t.fontSize}</h4>
-                                <Slider defaultValue={[settings.fontSize]} min={12} max={24} step={1} onValueChange={(v) => updateSettings({ fontSize: v[0] })} />
-                            </div>
+                            {renderSettingsContent()}
                             <div className="space-y-2">
                                 <h4 className="font-medium leading-none">{t.theme}</h4>
                                 <div className="grid grid-cols-2 gap-2">
