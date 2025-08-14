@@ -49,7 +49,7 @@ const translations = {
   'zh-CN': {
     pageTitle: '周览',
     pageSubtitle: '规划你的一周，一日一览。',
-    languageButtonText: '切换到英文',
+    languageButtonText: '语言选择',
     themeButtonText: '切换主题',
     settingsMenuTitle: '设置',
     daysOfWeek: ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"],
@@ -111,7 +111,7 @@ const translations = {
   'en': {
     pageTitle: 'Week Glance',
     pageSubtitle: 'Plan your week, one day at a glance.',
-    languageButtonText: 'Switch to Chinese',
+    languageButtonText: 'Language',
     themeButtonText: 'Toggle Theme',
     settingsMenuTitle: 'Settings',
     daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -429,7 +429,7 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, toast, t.shareTarget]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
 
 
   useEffect(() => {
