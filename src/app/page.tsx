@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -328,7 +328,7 @@ export default function WeekGlancePage() {
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(isAfter(new Date(), new Date().setHours(18, 0, 0, 0))); 
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
   const [isClientMounted, setIsClientMounted] = useState(false);
   
@@ -401,7 +401,7 @@ export default function WeekGlancePage() {
         
         const text = await navigator.clipboard.readText();
         
-        if (!text || text.trim() === '') {
+        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
             return;
         }
 
@@ -409,10 +409,6 @@ export default function WeekGlancePage() {
         const url = urlMatches ? urlMatches[0] : null;
         
         if (!url) {
-            return;
-        }
-
-        if (text === lastProcessedClipboardText) {
             return;
         }
         
@@ -429,25 +425,30 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, toast]);
 
 
   useEffect(() => {
     setIsClientMounted(true);
+    
+    // Set today's date and related states immediately
+    const today = new Date();
+    setSystemToday(today);
+    setDisplayedDate(today);
+    setIsAfter6PMToday(isAfter(today, new Date().setHours(18, 0, 0, 0)));
+    setCurrentYear(today.getFullYear());
 
-    const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
+    // Language setting
+    const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
     if (typeof document !== 'undefined') document.documentElement.lang = browserLang;
     
+    // Theme setting
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null : null;
     const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
     setTheme(storedTheme || (systemPrefersDark ? 'dark' : 'light'));
-
-    const today = new Date();
-    setSystemToday(today);
-    setDisplayedDate(today); 
-    setCurrentYear(today.getFullYear());
-
+    
+    // Load all data from localStorage
     const loadData = () => {
         try {
             setNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_NOTES) || '{}'));
@@ -465,6 +466,7 @@ export default function WeekGlancePage() {
     };
     loadData();
     
+    // Handle PWA Share Target
     const sharedDataString = localStorage.getItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
     if (sharedDataString) {
       try {
@@ -476,7 +478,7 @@ export default function WeekGlancePage() {
           localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       }
     }
-  }, [clearTimeoutIfNecessary, handleSaveShareLinkFromPWA]);
+  }, [handleSaveShareLinkFromPWA]);
 
   // Effect to check clipboard on focus
    useEffect(() => {
@@ -492,7 +494,9 @@ export default function WeekGlancePage() {
     const urlMatches = clipboardContent.match(URL_REGEX);
     const url = urlMatches ? urlMatches[0] : '';
 
-    if (url && isUrlAlreadySaved(url, allShareLinks)) {
+    if (!url) return;
+
+    if (isUrlAlreadySaved(url, allShareLinks)) {
         toast({
             title: t.clipboard.linkAlreadyExists,
             variant: "default",
@@ -503,12 +507,12 @@ export default function WeekGlancePage() {
         return;
     }
     
-    const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
+    const title = clipboardContent.replace(url, '').trim();
 
     const itemToSave = {
         title: title || url,
         url: url,
-        category: data.category || null,
+        category: data.category || null
     };
 
     const { success, slotName } = saveUrlToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
@@ -613,10 +617,9 @@ export default function WeekGlancePage() {
   }, [displayedDate, systemToday, dateLocale]);
 
 
-  const toggleLanguage = () => {
-    const newLang = currentLanguage === 'zh-CN' ? 'en' : 'zh-CN';
-    setCurrentLanguage(newLang);
-    if (typeof document !== 'undefined') document.documentElement.lang = newLang;
+  const setLanguage = (lang: LanguageKey) => {
+    setCurrentLanguage(lang);
+    if (typeof document !== 'undefined') document.documentElement.lang = lang;
   };
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -815,10 +818,24 @@ export default function WeekGlancePage() {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>{t.settingsMenuTitle}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={toggleLanguage}>
-                        <Languages className="mr-2 h-4 w-4" />
-                        <span>{t.languageButtonText}</span>
-                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Languages className="mr-2 h-4 w-4" />
+                            <span>{t.languageButtonText}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onClick={() => setLanguage('zh-CN')}>
+                                    {currentLanguage === 'zh-CN' && <Check className="mr-2 h-4 w-4" />}
+                                    <span>中文</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setLanguage('en')}>
+                                    {currentLanguage === 'en' && <Check className="mr-2 h-4 w-4" />}
+                                    <span>English</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
                     <DropdownMenuItem onClick={toggleTheme}>
                         {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                         <span>{t.themeButtonText}</span>
