@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { type FC, type ElementType } from 'react'; // Import React
-import { Card } from "@/components/ui/card";
+import React, { type FC, type ElementType } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export interface GameCardProps {
@@ -17,8 +17,8 @@ export const GameCard: FC<GameCardProps> = React.memo(({ title, icon: Icon, isSm
   return (
     <Card
       className={cn(
-        "flex flex-col items-center justify-center text-center p-3 sm:p-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-accent/30 cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-105",
-        "h-36 w-full",
+        "group w-full cursor-pointer overflow-hidden rounded-xl border-2 border-transparent bg-card shadow-lg transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-xl hover:scale-105",
+        isSmall ? "h-36" : "h-48"
       )}
       onClick={onClick}
       role="button"
@@ -26,8 +26,12 @@ export const GameCard: FC<GameCardProps> = React.memo(({ title, icon: Icon, isSm
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.();}}
     >
-      <Icon className={cn("mb-2 text-primary w-12 h-12")} />
-      <p className={cn("font-medium text-foreground text-sm")}>{title}</p>
+      <CardContent className="flex h-full flex-col items-center justify-center p-4 text-center">
+        <div className={cn("mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 transition-colors duration-300 group-hover:bg-primary/20", isSmall && "h-12 w-12")}>
+            <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110", isSmall ? "h-6 w-6" : "h-8 w-8")} />
+        </div>
+        <p className={cn("font-medium text-foreground", isSmall ? "text-sm" : "text-base")}>{title}</p>
+      </CardContent>
     </Card>
   );
 });
