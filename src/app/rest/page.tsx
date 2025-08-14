@@ -5,9 +5,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { GameCard } from '@/components/GameCard';
-import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, ChevronRight } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { cn } from "@/lib/utils";
 
 const translations = {
   'zh-CN': {
@@ -16,8 +16,9 @@ const translations = {
     pageDescription: '选择一项活动来放松身心，或探索实用工具。',
     gameStationButton: '小游戏驿站',
     gameStationDescription: '畅玩 2048、数字华容道等经典益智游戏。',
-    utilitiesTitle: '实用工具',
     foodFinderButton: '去哪吃',
+    foodFinderDescription: '帮你发现附近的美味餐厅。',
+    utilitiesTitle: '实用工具',
     legalInfoButton: '法律普及',
     personalityTestButton: '人格测试',
     personalHubTitle: '个人中心',
@@ -32,8 +33,9 @@ const translations = {
     pageDescription: 'Choose an activity to relax, or explore useful tools.',
     gameStationButton: 'Mini Game Station',
     gameStationDescription: 'Play classic puzzle games like 2048, Klotski, and more.',
-    utilitiesTitle: 'Utilities',
     foodFinderButton: 'Where to Eat',
+    foodFinderDescription: 'Helps you discover delicious restaurants nearby.',
+    utilitiesTitle: 'Utilities',
     legalInfoButton: 'Legal Info',
     personalityTestButton: 'Personality Test',
     personalHubTitle: 'Personal Hub',
@@ -45,6 +47,38 @@ const translations = {
 };
 
 type LanguageKey = keyof typeof translations;
+
+interface RestItemProps {
+  icon: React.ElementType;
+  title: string;
+  description?: string;
+  path: string;
+  isFeatured?: boolean;
+}
+
+const RestItem: React.FC<RestItemProps & { onClick: (path: string) => void }> = ({ icon: Icon, title, description, path, isFeatured, onClick }) => {
+  return (
+    <div
+      onClick={() => onClick(path)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(path); }}
+      role="button"
+      tabIndex={0}
+      className={cn(
+        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-5",
+        "bg-card/60 hover:bg-card/90 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2 focus:ring-offset-background"
+      )}
+    >
+      <div className="p-2.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+        <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110", isFeatured ? "h-8 w-8" : "h-6 w-6")} />
+      </div>
+      <div className="flex-grow">
+        <p className={cn("font-semibold text-foreground", isFeatured ? "text-lg" : "text-base")}>{title}</p>
+        {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
+      </div>
+      <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1" />
+    </div>
+  )
+};
 
 export default function RestHubPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
@@ -80,88 +114,41 @@ export default function RestHubPage() {
             {t.pageDescription}
         </p>
         
-        {/* Highlighted Game Station Card */}
-        <Card 
-          className="w-full mb-10 sm:mb-12 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group"
-          onClick={() => handleNavigation('/rest/games')}
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleNavigation('/rest/games'); }}
-        >
-          <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between bg-gradient-to-br from-primary/10 via-background to-background rounded-lg">
-            <div className="flex items-center mb-4 sm:mb-0">
-                <div className="p-3 bg-primary/20 rounded-full mr-5">
-                    <Gamepad2 className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
-                </div>
-                <div>
-                    <CardTitle className="text-xl sm:text-2xl font-bold text-left text-foreground">{t.gameStationButton}</CardTitle>
-                    <p className="text-sm text-muted-foreground text-left mt-1">{t.gameStationDescription}</p>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+            {/* Left Column - Featured Items */}
+            <div className="space-y-6">
+                <RestItem 
+                    icon={Gamepad2}
+                    title={t.gameStationButton}
+                    description={t.gameStationDescription}
+                    path="/rest/games"
+                    isFeatured
+                    onClick={handleNavigation}
+                />
+                <RestItem 
+                    icon={Utensils}
+                    title={t.foodFinderButton}
+                    description={t.foodFinderDescription}
+                    path="/food-finder"
+                    isFeatured
+                    onClick={handleNavigation}
+                />
             </div>
-            <Button variant="ghost" size="lg" className="group-hover:bg-accent transition-colors">
-              {currentLanguage === 'zh-CN' ? '进入' : 'Enter'}
-              <ArrowLeft className="h-4 w-4 ml-2 transform rotate-180 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </CardContent>
-        </Card>
 
-        {/* Utilities Section */}
-        <div className="w-full mb-10 sm:mb-12">
-            <h2 className="text-2xl font-semibold text-foreground mb-6 text-left">{t.utilitiesTitle}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                 <GameCard 
-                    title={t.foodFinderButton} 
-                    icon={Utensils} 
-                    onClick={() => handleNavigation('/food-finder')} 
-                    ariaLabel={t.foodFinderButton}
-                 />
-                 <GameCard 
-                    title={t.legalInfoButton} 
-                    icon={Scale} 
-                    onClick={() => handleNavigation('/legal-info')} 
-                    ariaLabel={t.legalInfoButton}
-                 />
-                 <GameCard 
-                    title={t.personalityTestButton} 
-                    icon={Brain}
-                    onClick={() => handleNavigation('/personality-test')} 
-                    ariaLabel={t.personalityTestButton}
-                 />
-            </div>
-        </div>
-
-        {/* Personal Hub Section */}
-        <div className="w-full">
-            <h2 className="text-2xl font-semibold text-foreground mb-6 text-left">{t.personalHubTitle}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                <GameCard 
-                    title={t.recommendedWebsitesButton} 
-                    icon={Globe}
-                    onClick={() => handleNavigation('/recommended-websites')} 
-                    ariaLabel={t.recommendedWebsitesButton}
-                    isSmall
-                />
-                <GameCard 
-                    title={t.personalLibraryButton} 
-                    icon={Library}
-                    onClick={() => handleNavigation('/personal-library')} 
-                    ariaLabel={t.personalLibraryButton}
-                    isSmall
-                />
-                <GameCard 
-                    title={t.personalCinemaButton} 
-                    icon={Film}
-                    onClick={() => handleNavigation('/personal-cinema')} 
-                    ariaLabel={t.personalCinemaButton}
-                    isSmall
-                />
-                <GameCard 
-                    title={t.privateMusicPlayerButton} 
-                    icon={Music}
-                    onClick={() => handleNavigation('/private-music-player')} 
-                    ariaLabel={t.privateMusicPlayerButton}
-                    isSmall
-                />
-            </div>
+            {/* Right Column - Other Items */}
+            <Card className="bg-card/50 border-none shadow-none">
+              <CardHeader>
+                  <CardTitle className="text-xl font-semibold text-left text-foreground/80">{t.personalHubTitle}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                  <RestItem icon={Library} title={t.personalLibraryButton} path="/personal-library" onClick={handleNavigation} />
+                  <RestItem icon={Film} title={t.personalCinemaButton} path="/personal-cinema" onClick={handleNavigation} />
+                  <RestItem icon={Music} title={t.privateMusicPlayerButton} path="/private-music-player" onClick={handleNavigation} />
+                  <RestItem icon={Globe} title={t.recommendedWebsitesButton} path="/recommended-websites" onClick={handleNavigation} />
+                  <RestItem icon={Scale} title={t.legalInfoButton} path="/legal-info" onClick={handleNavigation} />
+                  <RestItem icon={Brain} title={t.personalityTestButton} path="/personality-test" onClick={handleNavigation} />
+              </CardContent>
+            </Card>
         </div>
       </main>
     </div>
