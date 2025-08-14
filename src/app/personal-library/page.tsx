@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { saveBook, getBooksMetadata, deleteBookContent, type BookMetadata, type BookWithContent } from '@/lib/db';
 
 
 const translations = {
@@ -23,9 +24,8 @@ const translations = {
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
     bookDeleted: '书籍已删除',
     importError: '导入书籍失败，请确保文件是 .txt 或 .pdf 格式。',
+    importSuccess: '书籍导入成功！',
     readBook: '阅读这本书',
-    storageErrorTitle: "无法存储书籍",
-    storageErrorMessage: "这本书太大了，无法在浏览器会话间保持。刷新页面后需要重新导入。",
   },
   'en': {
     pageTitle: 'Personal Library',
@@ -37,27 +37,12 @@ const translations = {
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
     bookDeleted: 'Book has been deleted.',
     importError: 'Failed to import book. Please ensure it is a .txt or .pdf file.',
+    importSuccess: 'Book imported successfully!',
     readBook: 'Read this book',
-    storageErrorTitle: "Could Not Store Book",
-    storageErrorMessage: "This book is too large to be kept between sessions. You will need to re-import it after refreshing the page.",
   }
 };
 
 type LanguageKey = keyof typeof translations;
-
-interface BookMetadata {
-  id: string;
-  title: string;
-  type: 'txt' | 'pdf';
-}
-
-interface BookWithContent extends BookMetadata {
-  content: string; // Data URI for both txt and pdf
-}
-
-const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v4_meta';
-const SESSION_STORAGE_BOOK_CONTENT_PREFIX = 'personal_library_content_';
-
 
 export default function PersonalLibraryListPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -74,33 +59,16 @@ export default function PersonalLibraryListPage() {
       setCurrentLanguage(browserLang);
     }
     
-    try {
-      const savedBooksMeta = localStorage.getItem(LOCAL_STORAGE_BOOKS_KEY);
-      if (savedBooksMeta) {
-        setBooks(JSON.parse(savedBooksMeta));
-      }
-    } catch (error) {
-      console.error("Failed to load book metadata from localStorage", error);
-    }
+    getBooksMetadata().then(metadata => {
+        setBooks(metadata);
+    }).catch(error => {
+        console.error("Failed to load book metadata from DB", error);
+    });
+
     setIsMounted(true);
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
-
-  useEffect(() => {
-    if (isMounted) {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_BOOKS_KEY, JSON.stringify(books));
-      } catch (error) {
-          console.error("Could not save book metadata to localStorage", error);
-          toast({
-              title: "Error",
-              description: "Could not save book list.",
-              variant: "destructive"
-          });
-      }
-    }
-  }, [books, isMounted, toast]);
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,34 +82,25 @@ export default function PersonalLibraryListPage() {
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const content = e.target?.result as string;
       const bookId = `book-${Date.now()}`;
       
-      const newBookMeta: BookMetadata = {
+      const newBook: BookWithContent = {
         id: bookId,
         title: file.name.replace(/\.(txt|pdf)$/, ''),
         type: fileType,
+        content: content,
       };
 
-      const bookWithContent: BookWithContent = { ...newBookMeta, content };
-
       try {
-        // Attempt to save full content to sessionStorage for immediate use
-        sessionStorage.setItem(`${SESSION_STORAGE_BOOK_CONTENT_PREFIX}${bookId}`, JSON.stringify(bookWithContent));
+        await saveBook(newBook);
+        setBooks(prevBooks => [...prevBooks, { id: newBook.id, title: newBook.title, type: newBook.type }]);
+        toast({ title: t.importSuccess });
       } catch (error) {
-        // If it fails (quota exceeded), don't block the user.
-        // The reader page will handle the missing content.
-        console.warn("Session storage quota exceeded. Book content will not persist across refresh.", error);
-        toast({
-            title: t.storageErrorTitle,
-            description: t.storageErrorMessage,
-            variant: "default",
-            duration: 8000
-        });
+        console.error("Failed to save book to IndexedDB", error);
+        toast({ title: "Error saving book", variant: 'destructive' });
       }
-
-      setBooks(prevBooks => [...prevBooks, newBookMeta]);
       
       // Navigate to the reader page immediately after import
       router.push(`/personal-library/${bookId}`);
@@ -159,15 +118,19 @@ export default function PersonalLibraryListPage() {
       router.push(`/personal-library/${bookId}`);
   }
 
-  const deleteBook = (bookId: string) => {
+  const deleteBook = async (bookId: string) => {
     const bookToDelete = books.find(b => b.id === bookId);
     if (!bookToDelete) return;
 
     if (window.confirm(t.deleteConfirmation(bookToDelete.title))) {
-        setBooks(prev => prev.filter(b => b.id !== bookId));
-        // Also remove from session storage if it exists
-        sessionStorage.removeItem(`${SESSION_STORAGE_BOOK_CONTENT_PREFIX}${bookId}`);
-        toast({ title: t.bookDeleted });
+        try {
+            await deleteBookContent(bookId);
+            setBooks(prev => prev.filter(b => b.id !== bookId));
+            toast({ title: t.bookDeleted });
+        } catch (error) {
+            console.error("Failed to delete book", error);
+            toast({ title: "Error deleting book", variant: 'destructive' });
+        }
     }
   };
 

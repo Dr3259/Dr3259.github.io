@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getBookContent, type BookWithContent } from '@/lib/db'; // Import from db
 
 const translations = {
   'zh-CN': {
@@ -48,20 +49,12 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
-interface BookWithContent {
-  id: string;
-  title: string;
-  type: 'txt' | 'pdf';
-  content: string; // Data URI for both txt and pdf
-}
-
 interface ReadingSettings {
   fontSize: number;
   theme: 'light' | 'dark';
 }
 
 const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v2';
-const SESSION_STORAGE_BOOK_CONTENT_PREFIX = 'personal_library_content_';
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
     ssr: false,
@@ -102,18 +95,16 @@ export default function BookReaderPage() {
     }
 
     if (bookId) {
-      try {
-        const bookContentJSON = sessionStorage.getItem(`${SESSION_STORAGE_BOOK_CONTENT_PREFIX}${bookId}`);
-        if (bookContentJSON) {
-          setBook(JSON.parse(bookContentJSON));
+      getBookContent(bookId).then(bookContent => {
+        if (bookContent) {
+          setBook(bookContent);
         } else {
-          // This is the fallback case: content is not in session storage.
           setError(t.bookNotFound);
         }
-      } catch (e) {
-        console.error("Failed to load book content from sessionStorage", e);
+      }).catch(err => {
+        console.error("Failed to load book content from IndexedDB", err);
         setError(t.bookNotFound);
-      }
+      });
     }
   }, [bookId, t.bookNotFound]);
 
