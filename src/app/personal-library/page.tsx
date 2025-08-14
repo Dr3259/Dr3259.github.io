@@ -3,25 +3,16 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
-
-
-// Setup pdf.js worker
-if (typeof window !== 'undefined') {
-    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.js`;
-}
-
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 const translations = {
   'zh-CN': {
@@ -80,18 +71,27 @@ interface ReadingSettings {
   theme: 'light' | 'dark';
 }
 
-const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v2'; // version up for new structure
+const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v2';
 const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings';
+
+
+// Dynamically import react-pdf components to prevent SSR issues
+const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-2 text-muted-foreground">Loading PDF viewer...</p>
+        </div>
+    )
+});
+
 
 export default function PersonalLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light' });
-  
-  // PDF state
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
 
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
@@ -182,28 +182,6 @@ export default function PersonalLibraryPage() {
   };
 
   const selectedBook = useMemo(() => books.find(b => b.id === selectedBookId), [books, selectedBookId]);
-  
-  // Reset page number when book changes
-  useEffect(() => {
-    setPageNumber(1);
-    setNumPages(null);
-  }, [selectedBookId]);
-
-  function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number }) {
-    setNumPages(nextNumPages);
-  }
-
-  function goToNextPage() {
-    if (pageNumber && numPages && pageNumber < numPages) {
-        setPageNumber(pageNumber + 1);
-    }
-  }
-
-  function goToPrevPage() {
-    if (pageNumber && pageNumber > 1) {
-        setPageNumber(pageNumber - 1);
-    }
-  }
 
   if (!isMounted) {
       return (
@@ -324,33 +302,16 @@ export default function PersonalLibraryPage() {
             settings.theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'
         )}>
           {selectedBook ? (
-            <div className="flex-1 flex flex-col min-h-0">
-                <div className="p-4 border-b text-center shrink-0 flex justify-between items-center"
-                  style={{
-                    backgroundColor: settings.theme === 'dark' ? 'hsl(222, 12%, 18%)' : 'hsl(0, 0%, 98%)',
-                    borderColor: settings.theme === 'dark' ? 'hsl(222, 12%, 25%)' : 'hsl(0, 0%, 93%)',
-                  }}
-                >
-                    <div className="w-1/4"></div>
-                    <h3 className="font-semibold text-lg truncate w-1/2" title={selectedBook.title}>{selectedBook.title}</h3>
-                    <div className="w-1/4 text-right">
-                        {selectedBook.type === 'pdf' && numPages && (
-                             <div className="flex items-center justify-end gap-2">
-                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevPage} disabled={pageNumber <= 1}>
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <span className="text-sm font-medium text-muted-foreground tabular-nums">
-                                    {t.page(pageNumber, numPages)}
-                                </span>
-                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextPage} disabled={pageNumber >= numPages}>
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        )}
+            selectedBook.type === 'txt' ? (
+                <div className="flex-1 flex flex-col min-h-0">
+                     <div className="p-4 border-b text-center shrink-0"
+                       style={{
+                         backgroundColor: settings.theme === 'dark' ? 'hsl(222, 12%, 18%)' : 'hsl(0, 0%, 98%)',
+                         borderColor: settings.theme === 'dark' ? 'hsl(222, 12%, 25%)' : 'hsl(0, 0%, 93%)',
+                       }}
+                     >
+                        <h3 className="font-semibold text-lg truncate" title={selectedBook.title}>{selectedBook.title}</h3>
                     </div>
-                </div>
-
-                {selectedBook.type === 'txt' ? (
                     <ScrollArea className="flex-1 p-6 md:p-8 lg:p-12">
                         <p 
                             className="whitespace-pre-wrap leading-relaxed"
@@ -359,22 +320,19 @@ export default function PersonalLibraryPage() {
                             {selectedBook.content}
                         </p>
                     </ScrollArea>
-                ) : (
-                    <ScrollArea className="flex-1 flex justify-center items-start p-4">
-                        <div className="flex justify-center">
-                            <Document
-                                file={selectedBook.content}
-                                onLoadSuccess={onDocumentLoadSuccess}
-                                loading={<p className="text-muted-foreground">{t.pdfLoading}</p>}
-                                error={<p className="text-destructive">{t.pdfError}</p>}
-                                className="shadow-lg"
-                            >
-                                <Page pageNumber={pageNumber} />
-                            </Document>
-                        </div>
-                    </ScrollArea>
-                )}
-            </div>
+                </div>
+            ) : (
+                <PdfViewer
+                    file={selectedBook.content}
+                    title={selectedBook.title}
+                    theme={settings.theme}
+                    translations={{
+                        page: t.page,
+                        pdfError: t.pdfError,
+                        pdfLoading: t.pdfLoading,
+                    }}
+                />
+            )
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
