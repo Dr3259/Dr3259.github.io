@@ -66,8 +66,6 @@ const translations = {
     todayPrefix: '今天',
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
     githubAria: 'GitHub',
-    wechatAria: '微信',
-    emailAria: '电子邮件',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
     mitLicenseLinkAria: '查看 MIT 许可证详情',
@@ -128,8 +126,6 @@ const translations = {
     todayPrefix: 'Today',
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
     githubAria: 'GitHub',
-    wechatAria: 'WeChat',
-    emailAria: 'Email',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
@@ -401,7 +397,7 @@ export default function WeekGlancePage() {
         
         const text = await navigator.clipboard.readText();
         
-        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
+        if (!text || text.trim() === '') {
             return;
         }
 
@@ -409,6 +405,10 @@ export default function WeekGlancePage() {
         const url = urlMatches ? urlMatches[0] : null;
         
         if (!url) {
+            return;
+        }
+
+        if (text === lastProcessedClipboardText) {
             return;
         }
         
@@ -425,7 +425,7 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, toast]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
 
 
   useEffect(() => {
@@ -969,10 +969,6 @@ export default function WeekGlancePage() {
               </div>
               <div className="flex flex-col items-center space-y-3 mt-4 md:flex-row md:space-y-0 md:space-x-6 md:mt-0 md:order-2">
                 <a href="https://github.com/Dr3259/Dr3259.github.io" target="_blank" rel="noopener noreferrer" aria-label={t.githubAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">GitHub</a>
-                <a href="#" aria-label={t.wechatAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <span className="sr-only">WeChat</span>
-                </a>
-                <a href="#" aria-label={t.emailAria} className="text-xs text-muted-foreground hover:text-primary transition-colors">Email</a>
               </div>
             </div>
           </div>
