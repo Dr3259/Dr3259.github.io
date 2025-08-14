@@ -156,6 +156,8 @@ const translations = {
         urlPlaceholder: 'https://example.com',
         titleLabel: '标题 (可选):',
         titlePlaceholder: '输入链接标题或描述...',
+        categoryLabel: '标签 (可选):',
+        categoryPlaceholder: '例如：学习，食谱',
         saveButton: '保存链接',
         updateButton: '更新链接',
         cancelButton: '取消',
@@ -295,6 +297,8 @@ const translations = {
         urlPlaceholder: 'https://example.com',
         titleLabel: 'Title (optional):',
         titlePlaceholder: 'Enter link title or description...',
+        categoryLabel: 'Tag (optional):',
+        categoryPlaceholder: 'E.g. Study, Recipe',
         saveButton: 'Save Link',
         updateButton: 'Update Link',
         cancelButton: 'Cancel',
@@ -394,6 +398,7 @@ const saveUrlToCurrentTimeSlot = (
         id: Date.now().toString(),
         url: item.url,
         title: item.title,
+        category: null,
     };
 
     const now = new Date();
@@ -466,6 +471,17 @@ const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, 
         }
     }
     return false;
+};
+
+// Helper function to get a color for a category tag based on its name
+const getTagColor = (tagName: string | null): string => {
+    if (!tagName) return 'bg-gray-200 text-gray-800';
+    let hash = 0;
+    for (let i = 0; i < tagName.length; i++) {
+        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = hash % 360;
+    return `hsl(${h}, 70%, 85%)`; // Using HSL for a wide range of soft colors
 };
 
 
@@ -548,14 +564,13 @@ export default function DayDetailPage() {
 
         setClipboardContent(text);
         setIsClipboardModalOpen(true);
-        setLastProcessedClipboardText(text);
 
     } catch (err: any) {
         if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, toast, t.clipboard]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
   
   useEffect(() => {
         window.addEventListener('focus', checkClipboard);
@@ -606,6 +621,7 @@ export default function DayDetailPage() {
   };
   
   const handleCloseClipboardModal = () => {
+    setLastProcessedClipboardText(clipboardContent); // Mark as handled even if closed
     setIsClipboardModalOpen(false);
   };
 
@@ -1274,7 +1290,17 @@ export default function DayDetailPage() {
                                     <ul className="space-y-2 p-px mb-3">
                                       {shareLinksForSlot.map((link) => (
                                         <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex-1 min-w-0 truncate" title={link.title || link.url}>{link.title || link.url}</a>
+                                          <div className="flex-1 min-w-0 flex items-center">
+                                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate" title={link.title || link.url}>{link.title || link.url}</a>
+                                            {link.category && (
+                                                <span 
+                                                  className="text-xs rounded-full px-2 py-0.5 ml-2 shrink-0"
+                                                  style={{ backgroundColor: getTagColor(link.category) }}
+                                                >
+                                                  {link.category}
+                                                </span>
+                                            )}
+                                          </div>
                                           <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/linkitem:opacity-100 transition-opacity">
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditShareLinkModalInPage(dateKey, slot, link)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editLink}</p></TooltipContent></Tooltip>
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteShareLinkInPage(dateKey, slot, link.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteLink}</p></TooltipContent></Tooltip>
@@ -1380,5 +1406,3 @@ export default function DayDetailPage() {
     </TooltipProvider>
   );
 }
-
-    

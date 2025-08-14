@@ -25,7 +25,7 @@ interface TodoItem {
   importance: 'important' | 'notImportant' | null;
 }
 interface MeetingNoteItem { id: string; title: string; notes: string; attendees: string; actionItems: string; }
-interface ShareLinkItem { id: string; url: string; title: string; }
+interface ShareLinkItem { id: string; url: string; title: string; category: string | null; }
 interface ReflectionItem { id: string; text: string; }
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
@@ -236,6 +236,7 @@ const saveUrlToCurrentTimeSlot = (
         id: Date.now().toString(),
         url: item.url,
         title: item.title,
+        category: null,
     };
 
     const now = new Date();
@@ -375,7 +376,7 @@ export default function WeekGlancePage() {
             duration: 3000,
         });
     }
-  }, [toast, t, setAllShareLinks]);
+  }, [toast, t]);
 
   const checkClipboard = useCallback(async () => {
     if (document.hidden) return;
@@ -390,19 +391,20 @@ export default function WeekGlancePage() {
         }
         
         const text = await navigator.clipboard.readText();
-        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
-            return;
-        }
         
         const urlMatches = text.match(URL_REGEX);
         const url = urlMatches ? urlMatches[0] : null;
+        
+        if (!url) {
+            return;
+        }
 
-        if (!url) { // New filtering logic
+        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
             return;
         }
 
         if (isUrlAlreadySaved(url, allShareLinks)) {
-            setLastProcessedClipboardText(text); // Mark as processed to prevent re-triggering
+            setLastProcessedClipboardText(text); 
             return; 
         }
 
@@ -414,7 +416,7 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, t.shareTarget, toast]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, toast, t.shareTarget]);
 
 
   useEffect(() => {
@@ -940,7 +942,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
-    
-
-    

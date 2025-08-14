@@ -20,6 +20,7 @@ export interface ShareLinkItem {
   id: string;
   url: string;
   title: string;
+  category: string | null;
 }
 
 export interface ShareLinkModalTranslations {
@@ -30,6 +31,8 @@ export interface ShareLinkModalTranslations {
   urlPlaceholder: string;
   titleLabel: string;
   titlePlaceholder: string;
+  categoryLabel: string;
+  categoryPlaceholder: string;
   saveButton: string;
   updateButton: string;
   cancelButton: string;
@@ -39,9 +42,9 @@ export interface ShareLinkModalTranslations {
 interface ShareLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (dateKey: string, hourSlot: string, link: ShareLinkItem) => void; // Changed dayName to dateKey
+  onSave: (dateKey: string, hourSlot: string, link: ShareLinkItem) => void;
   onDelete?: (linkId: string) => void;
-  dateKey: string; // YYYY-MM-DD
+  dateKey: string;
   hourSlot: string;
   initialData?: ShareLinkItem | null;
   translations: ShareLinkModalTranslations;
@@ -49,28 +52,32 @@ interface ShareLinkModalProps {
 
 const MAX_URL_LENGTH = 2048;
 const MAX_LINK_TITLE_LENGTH = 50;
+const MAX_CATEGORY_LENGTH = 15;
 
 export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   isOpen,
   onClose,
   onSave,
   onDelete,
-  dateKey, // Changed from dayName
+  dateKey,
   hourSlot,
   initialData,
   translations,
 }) => {
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         setUrl(initialData.url);
         setTitle(initialData.title);
+        setCategory(initialData.category || '');
       } else {
         setUrl('');
         setTitle('');
+        setCategory('');
       }
     }
   }, [isOpen, initialData]);
@@ -84,8 +91,9 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       id: initialData?.id || Date.now().toString(),
       url: url.trim(),
       title: title.trim(),
+      category: category.trim() || null,
     };
-    onSave(dateKey, hourSlot, linkData); // Pass dateKey
+    onSave(dateKey, hourSlot, linkData);
     onClose();
   };
 
@@ -129,9 +137,6 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 maxLength={MAX_URL_LENGTH}
                 type="url"
               />
-              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                {url.length}/{MAX_URL_LENGTH}
-              </div>
             </div>
 
             <div>
@@ -146,9 +151,20 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_LINK_TITLE_LENGTH}
               />
-              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                {title.length}/{MAX_LINK_TITLE_LENGTH}
-              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="share-link-category" className="text-xs font-medium text-muted-foreground mb-1 block">
+                {translations.categoryLabel}
+              </Label>
+              <Input
+                id="share-link-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value.substring(0, MAX_CATEGORY_LENGTH))}
+                placeholder={translations.categoryPlaceholder}
+                className="bg-background text-base py-2.5"
+                maxLength={MAX_CATEGORY_LENGTH}
+              />
             </div>
           </div>
         </ScrollArea>
