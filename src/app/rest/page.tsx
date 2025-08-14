@@ -99,13 +99,13 @@ const RestItem: React.FC<RestItemProps> = ({ itemKey, icon: Icon, title, descrip
         {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
       </div>
       
-      <div className="absolute bottom-4 right-4">
+      <div className="absolute top-2 right-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full opacity-50 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreVertical className="h-4 w-4" />
