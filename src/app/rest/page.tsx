@@ -5,8 +5,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, ChevronRight, MoreVertical, Pin, PinOff } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 const translations = {
@@ -14,49 +15,68 @@ const translations = {
     backButton: '返回主页',
     pageTitle: '休闲驿站',
     pageDescription: '选择一项活动来放松身心，或探索实用工具。',
-    gameStationButton: '小游戏驿站',
-    gameStationDescription: '畅玩 2048、数字华容道等经典益智游戏。',
-    foodFinderButton: '去哪吃',
-    foodFinderDescription: '帮你发现附近的美味餐厅。',
-    utilitiesTitle: '实用工具',
-    legalInfoButton: '法律普及',
-    personalityTestButton: '人格测试',
-    personalHubTitle: '个人中心',
-    recommendedWebsitesButton: '精品网站推荐',
-    personalLibraryButton: '个人图书馆',
-    personalCinemaButton: '个人电影院',
-    privateMusicPlayerButton: '私人音乐播放器',
+    pinnedTitle: '置顶功能',
+    featuredTitle: '主要功能',
+    exploreTitle: '探索更多',
+    pinItem: '置顶',
+    unpinItem: '取消置顶',
+    pinLimitReached: '最多只能置顶2个项目',
+    items: {
+      games: { title: '小游戏驿站', description: '畅玩 2048、数字华容道等经典益智游戏。', icon: Gamepad2, path: '/rest/games', isFeatured: true },
+      food: { title: '去哪吃', description: '帮你发现附近的美味餐厅。', icon: Utensils, path: '/food-finder', isFeatured: true },
+      library: { title: '个人图书馆', description: '', icon: Library, path: '/personal-library', isFeatured: false },
+      cinema: { title: '个人电影院', description: '', icon: Film, path: '/personal-cinema', isFeatured: false },
+      music: { title: '私人音乐播放器', description: '', icon: Music, path: '/private-music-player', isFeatured: false },
+      websites: { title: '精品网站推荐', description: '', icon: Globe, path: '/recommended-websites', isFeatured: false },
+      legal: { title: '法律普及', description: '', icon: Scale, path: '/legal-info', isFeatured: false },
+      personality: { title: '人格测试', description: '', icon: Brain, path: '/personality-test', isFeatured: false },
+    }
   },
   'en': {
     backButton: 'Back to Home',
     pageTitle: 'Rest Stop',
     pageDescription: 'Choose an activity to relax, or explore useful tools.',
-    gameStationButton: 'Mini Game Station',
-    gameStationDescription: 'Play classic puzzle games like 2048, Klotski, and more.',
-    foodFinderButton: 'Where to Eat',
-    foodFinderDescription: 'Helps you discover delicious restaurants nearby.',
-    utilitiesTitle: 'Utilities',
-    legalInfoButton: 'Legal Info',
-    personalityTestButton: 'Personality Test',
-    personalHubTitle: 'Personal Hub',
-    recommendedWebsitesButton: 'Recommended Websites',
-    personalLibraryButton: 'Personal Library',
-    personalCinemaButton: 'Personal Cinema',
-    privateMusicPlayerButton: 'Private Music Player',
+    pinnedTitle: 'Pinned',
+    featuredTitle: 'Featured',
+    exploreTitle: 'Explore',
+    pinItem: 'Pin',
+    unpinItem: 'Unpin',
+    pinLimitReached: 'You can only pin up to 2 items',
+    items: {
+      games: { title: 'Mini Game Station', description: 'Play classic puzzle games like 2048, Klotski, and more.', icon: Gamepad2, path: '/rest/games', isFeatured: true },
+      food: { title: 'Where to Eat', description: 'Helps you discover delicious restaurants nearby.', icon: Utensils, path: '/food-finder', isFeatured: true },
+      library: { title: 'Personal Library', description: '', icon: Library, path: '/personal-library', isFeatured: false },
+      cinema: { title: 'Personal Cinema', description: '', icon: Film, path: '/personal-cinema', isFeatured: false },
+      music: { title: 'Private Music Player', description: '', icon: Music, path: '/private-music-player', isFeatured: false },
+      websites: { title: 'Recommended Websites', description: '', icon: Globe, path: '/recommended-websites', isFeatured: false },
+      legal: { title: 'Legal Info', description: '', icon: Scale, path: '/legal-info', isFeatured: false },
+      personality: { title: 'Personality Test', description: '', icon: Brain, path: '/personality-test', isFeatured: false },
+    }
   }
 };
 
 type LanguageKey = keyof typeof translations;
+type RestItemKey = keyof (typeof translations)['en']['items'];
 
 interface RestItemProps {
+  itemKey: RestItemKey;
   icon: React.ElementType;
   title: string;
   description?: string;
   path: string;
-  isFeatured?: boolean;
+  isPinned: boolean;
+  canPin: boolean;
+  onPinToggle: (itemKey: RestItemKey) => void;
+  onClick: (path: string) => void;
+  pinLimitReachedText: string;
+  pinItemText: string;
+  unpinItemText: string;
 }
 
-const RestItem: React.FC<RestItemProps & { onClick: (path: string) => void }> = ({ icon: Icon, title, description, path, isFeatured, onClick }) => {
+const LOCAL_STORAGE_KEY_PINNED_REST_ITEMS = 'weekglance_pinned_rest_items_v1';
+const MAX_PINS = 2;
+
+const RestItem: React.FC<RestItemProps> = ({ itemKey, icon: Icon, title, description, path, isPinned, canPin, onPinToggle, onClick, pinLimitReachedText, pinItemText, unpinItemText }) => {
   return (
     <div
       onClick={() => onClick(path)}
@@ -64,36 +84,89 @@ const RestItem: React.FC<RestItemProps & { onClick: (path: string) => void }> = 
       role="button"
       tabIndex={0}
       className={cn(
-        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-5",
+        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-5 relative",
         "bg-card/60 hover:bg-card/90 hover:shadow-lg hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:ring-offset-2 focus:ring-offset-background"
       )}
     >
       <div className="p-2.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-        <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110", isFeatured ? "h-8 w-8" : "h-6 w-6")} />
+        <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110 h-6 w-6")} />
       </div>
       <div className="flex-grow">
-        <p className={cn("font-semibold text-foreground", isFeatured ? "text-lg" : "text-base")}>{title}</p>
+        <p className={cn("font-semibold text-foreground text-base")}>{title}</p>
         {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1" />
+      
+      <div className="absolute top-2 right-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-full opacity-50 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent onClick={(e) => e.stopPropagation()} align="end">
+            {isPinned ? (
+              <DropdownMenuItem onClick={() => onPinToggle(itemKey)}>
+                <PinOff className="mr-2 h-4 w-4" />
+                <span>{unpinItemText}</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => onPinToggle(itemKey)} disabled={!canPin} title={!canPin ? pinLimitReachedText : ''}>
+                <Pin className="mr-2 h-4 w-4" />
+                <span>{pinItemText}</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
-  )
+  );
 };
+
 
 export default function RestHubPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
+  const [pinnedItems, setPinnedItems] = useState<RestItemKey[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
+    if (typeof window !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
       setCurrentLanguage(browserLang);
+      
+      const savedPins = localStorage.getItem(LOCAL_STORAGE_KEY_PINNED_REST_ITEMS);
+      if (savedPins) {
+        setPinnedItems(JSON.parse(savedPins));
+      }
     }
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   const handleNavigation = useCallback((path: string) => router.push(path), [router]);
+
+  const handlePinToggle = (itemKey: RestItemKey) => {
+    const newPinnedItems = pinnedItems.includes(itemKey)
+      ? pinnedItems.filter(key => key !== itemKey)
+      : [...pinnedItems, itemKey];
+
+    if (newPinnedItems.length > MAX_PINS) return;
+
+    setPinnedItems(newPinnedItems);
+    localStorage.setItem(LOCAL_STORAGE_KEY_PINNED_REST_ITEMS, JSON.stringify(newPinnedItems));
+  };
+  
+  const allItems: RestItemKey[] = Object.keys(t.items) as RestItemKey[];
+  const canPinMore = pinnedItems.length < MAX_PINS;
+  
+  const unpinnedItems = allItems.filter(key => !pinnedItems.includes(key));
+  const featuredItems = unpinnedItems.filter(key => t.items[key].isFeatured);
+  const exploreItems = unpinnedItems.filter(key => !t.items[key].isFeatured);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 sm:px-8 items-center">
@@ -114,41 +187,82 @@ export default function RestHubPage() {
             {t.pageDescription}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-            {/* Left Column - Featured Items */}
-            <div className="space-y-6">
-                <RestItem 
-                    icon={Gamepad2}
-                    title={t.gameStationButton}
-                    description={t.gameStationDescription}
-                    path="/rest/games"
-                    isFeatured
-                    onClick={handleNavigation}
-                />
-                <RestItem 
-                    icon={Utensils}
-                    title={t.foodFinderButton}
-                    description={t.foodFinderDescription}
-                    path="/food-finder"
-                    isFeatured
-                    onClick={handleNavigation}
-                />
-            </div>
+        <div className="w-full space-y-12">
+          {pinnedItems.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.pinnedTitle}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {pinnedItems.map(itemKey => {
+                  const item = t.items[itemKey];
+                  return (
+                    <RestItem
+                      key={itemKey}
+                      itemKey={itemKey}
+                      {...item}
+                      isPinned={true}
+                      canPin={true}
+                      onPinToggle={handlePinToggle}
+                      onClick={handleNavigation}
+                      pinLimitReachedText={t.pinLimitReached}
+                      pinItemText={t.pinItem}
+                      unpinItemText={t.unpinItem}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-            {/* Right Column - Other Items */}
-            <Card className="bg-card/50 border-none shadow-none">
-              <CardHeader>
-                  <CardTitle className="text-xl font-semibold text-left text-foreground/80">{t.personalHubTitle}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                  <RestItem icon={Library} title={t.personalLibraryButton} path="/personal-library" onClick={handleNavigation} />
-                  <RestItem icon={Film} title={t.personalCinemaButton} path="/personal-cinema" onClick={handleNavigation} />
-                  <RestItem icon={Music} title={t.privateMusicPlayerButton} path="/private-music-player" onClick={handleNavigation} />
-                  <RestItem icon={Globe} title={t.recommendedWebsitesButton} path="/recommended-websites" onClick={handleNavigation} />
-                  <RestItem icon={Scale} title={t.legalInfoButton} path="/legal-info" onClick={handleNavigation} />
-                  <RestItem icon={Brain} title={t.personalityTestButton} path="/personality-test" onClick={handleNavigation} />
-              </CardContent>
-            </Card>
+          {featuredItems.length > 0 && (
+             <section>
+              <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.featuredTitle}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {featuredItems.map(itemKey => {
+                    const item = t.items[itemKey];
+                    return (
+                        <RestItem
+                          key={itemKey}
+                          itemKey={itemKey}
+                          {...item}
+                          isPinned={false}
+                          canPin={canPinMore}
+                          onPinToggle={handlePinToggle}
+                          onClick={handleNavigation}
+                          pinLimitReachedText={t.pinLimitReached}
+                          pinItemText={t.pinItem}
+                          unpinItemText={t.unpinItem}
+                        />
+                    );
+                })}
+              </div>
+            </section>
+          )}
+          
+          {exploreItems.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.exploreTitle}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                 {exploreItems.map(itemKey => {
+                    const item = t.items[itemKey];
+                    return (
+                        <RestItem
+                          key={itemKey}
+                          itemKey={itemKey}
+                          {...item}
+                          isPinned={false}
+                          canPin={canPinMore}
+                          onPinToggle={handlePinToggle}
+                          onClick={handleNavigation}
+                          pinLimitReachedText={t.pinLimitReached}
+                          pinItemText={t.pinItem}
+                          unpinItemText={t.unpinItem}
+                        />
+                    );
+                })}
+              </div>
+            </section>
+          )}
+
         </div>
       </main>
     </div>
