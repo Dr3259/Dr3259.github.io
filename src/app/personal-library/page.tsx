@@ -34,6 +34,8 @@ const translations = {
     page: (current: number, total: number) => `第 ${current} / ${total} 页`,
     pdfError: '加载PDF失败。请确保文件未损坏。',
     pdfLoading: '正在加载 PDF...',
+    storageWarningTitle: "注意：内容不会被保存",
+    storageWarningDescription: "书籍内容只在当前会话中可用。刷新页面后需要重新导入。",
   },
   'en': {
     pageTitle: 'Personal Library',
@@ -54,6 +56,8 @@ const translations = {
     page: (current: number, total: number) => `Page ${current} of ${total}`,
     pdfError: 'Failed to load PDF. Please ensure the file is not corrupted.',
     pdfLoading: 'Loading PDF...',
+    storageWarningTitle: "Note: Content is not saved",
+    storageWarningDescription: "Book content is only available in the current session. You will need to re-import after refreshing the page.",
   }
 };
 
@@ -62,7 +66,7 @@ type LanguageKey = keyof typeof translations;
 interface Book {
   id: string;
   title: string;
-  content: string; // For 'txt', this is text. For 'pdf', this is a data URI.
+  content: string | null; // Content can be null initially
   type: 'txt' | 'pdf';
 }
 
@@ -71,7 +75,7 @@ interface ReadingSettings {
   theme: 'light' | 'dark';
 }
 
-const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v2';
+const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v3_meta'; // Changed key to reflect metadata only
 const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings';
 
 
@@ -104,8 +108,13 @@ export default function PersonalLibraryPage() {
     }
     
     try {
-      const savedBooks = localStorage.getItem(LOCAL_STORAGE_BOOKS_KEY);
-      if (savedBooks) setBooks(JSON.parse(savedBooks));
+      // Load only metadata from localStorage
+      const savedBooksMeta = localStorage.getItem(LOCAL_STORAGE_BOOKS_KEY);
+      if (savedBooksMeta) {
+        const booksMeta = JSON.parse(savedBooksMeta) as Omit<Book, 'content'>[];
+        // Initialize books with null content
+        setBooks(booksMeta.map(meta => ({ ...meta, content: null })));
+      }
 
       const savedSettings = localStorage.getItem(LOCAL_STORAGE_SETTINGS_KEY);
       if (savedSettings) setSettings(JSON.parse(savedSettings));
@@ -119,9 +128,20 @@ export default function PersonalLibraryPage() {
 
   useEffect(() => {
     if (isMounted) {
-      localStorage.setItem(LOCAL_STORAGE_BOOKS_KEY, JSON.stringify(books));
+      // Save only metadata to localStorage to avoid quota exceeded error
+      try {
+        const booksMetadata = books.map(({ id, title, type }) => ({ id, title, type }));
+        localStorage.setItem(LOCAL_STORAGE_BOOKS_KEY, JSON.stringify(booksMetadata));
+      } catch (error) {
+          console.error("Could not save book metadata to localStorage", error);
+          toast({
+              title: "Error",
+              description: "Could not save book list.",
+              variant: "destructive"
+          });
+      }
     }
-  }, [books, isMounted]);
+  }, [books, isMounted, toast]);
 
   useEffect(() => {
     if (isMounted) {
@@ -144,14 +164,35 @@ export default function PersonalLibraryPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
+      const bookId = `book-${Date.now()}`;
+      
+      // Add or update the book with its content in the state
+      const existingBookIndex = books.findIndex(b => b.title === file.name.replace(/\.(txt|pdf)$/, ''));
       const newBook: Book = {
-        id: `book-${Date.now()}`,
+        id: bookId,
         title: file.name.replace(/\.(txt|pdf)$/, ''),
         content: content,
         type: fileType,
       };
-      setBooks(prevBooks => [...prevBooks, newBook]);
+
+      setBooks(prevBooks => {
+          const newBooks = [...prevBooks];
+          const existingIndex = newBooks.findIndex(b => b.id === newBook.id);
+          if(existingIndex > -1) {
+            newBooks[existingIndex] = newBook;
+          } else {
+            newBooks.push(newBook);
+          }
+          return newBooks;
+      });
+
       setSelectedBookId(newBook.id);
+      
+      toast({
+          title: t.storageWarningTitle,
+          description: t.storageWarningDescription,
+          duration: 5000,
+      });
     };
     reader.onerror = () => {
         toast({ title: t.importError, variant: 'destructive' });
@@ -162,7 +203,18 @@ export default function PersonalLibraryPage() {
     } else {
       reader.readAsText(file, 'UTF-8');
     }
+    // Reset file input to allow re-importing the same file
+    event.target.value = '';
   };
+  
+  const handleBookSelect = (book: Book) => {
+      setSelectedBookId(book.id);
+      // If book content is not loaded, trigger import
+      if (!book.content) {
+          toast({ title: "Content not loaded", description: "Please re-import this book to view its content." });
+          fileInputRef.current?.click();
+      }
+  }
 
   const deleteBook = (bookId: string) => {
     const bookToDelete = books.find(b => b.id === bookId);
@@ -208,7 +260,7 @@ export default function PersonalLibraryPage() {
         
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" disabled={selectedBook?.type === 'pdf'}>
+                <Button variant="outline" size="sm" disabled={!selectedBook || selectedBook?.type === 'pdf'}>
                     <Settings className="mr-2 h-4 w-4" />
                     {t.settings}
                 </Button>
@@ -257,7 +309,7 @@ export default function PersonalLibraryPage() {
                         "p-3 cursor-pointer group hover:bg-accent transition-colors",
                         selectedBookId === book.id && "bg-accent border-primary"
                     )}
-                    onClick={() => setSelectedBookId(book.id)}
+                    onClick={() => handleBookSelect(book)}
                   >
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -301,7 +353,7 @@ export default function PersonalLibraryPage() {
             "flex-1 flex flex-col transition-colors",
             settings.theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'
         )}>
-          {selectedBook ? (
+          {selectedBook && selectedBook.content ? (
             selectedBook.type === 'txt' ? (
                 <div className="flex-1 flex flex-col min-h-0">
                      <div className="p-4 border-b text-center shrink-0"
