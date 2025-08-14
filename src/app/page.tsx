@@ -438,6 +438,14 @@ export default function WeekGlancePage() {
         const text = await navigator.clipboard.readText();
         
         if (text && text.trim() && text !== lastProcessedClipboardText) {
+            const urlMatches = text.match(URL_REGEX);
+            const url = urlMatches ? urlMatches[0] : null;
+
+            if (url && isUrlAlreadySaved(url, allShareLinks)) {
+                setLastProcessedClipboardText(text); // Mark as processed even if duplicate
+                return; // Do not show modal for already saved URLs
+            }
+
             setClipboardContent(text);
             setIsClipboardModalOpen(true);
         }
@@ -446,7 +454,7 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
 
    useEffect(() => {
         window.addEventListener('focus', checkClipboard);
@@ -495,6 +503,7 @@ export default function WeekGlancePage() {
   };
   
   const handleCloseClipboardModal = () => {
+    // Only mark as processed if user saves, not on close
     setIsClipboardModalOpen(false);
   };
 
@@ -922,3 +931,5 @@ export default function WeekGlancePage() {
     </>
   );
 }
+
+    
