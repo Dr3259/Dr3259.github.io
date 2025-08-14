@@ -5,8 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, ChevronRight, MoreVertical, Pin, PinOff } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -16,20 +15,19 @@ const translations = {
     pageTitle: '休闲驿站',
     pageDescription: '选择一项活动来放松身心，或探索实用工具。',
     pinnedTitle: '置顶功能',
-    featuredTitle: '主要功能',
-    exploreTitle: '探索更多',
+    allFeaturesTitle: '所有功能',
     pinItem: '置顶',
     unpinItem: '取消置顶',
     pinLimitReached: '最多只能置顶2个项目',
     items: {
-      games: { title: '小游戏驿站', description: '畅玩 2048、数字华容道等经典益智游戏。', icon: Gamepad2, path: '/rest/games', isFeatured: true },
-      food: { title: '去哪吃', description: '帮你发现附近的美味餐厅。', icon: Utensils, path: '/food-finder', isFeatured: true },
-      library: { title: '个人图书馆', description: '', icon: Library, path: '/personal-library', isFeatured: false },
-      cinema: { title: '个人电影院', description: '', icon: Film, path: '/personal-cinema', isFeatured: false },
-      music: { title: '私人音乐播放器', description: '', icon: Music, path: '/private-music-player', isFeatured: false },
-      websites: { title: '精品网站推荐', description: '', icon: Globe, path: '/recommended-websites', isFeatured: false },
-      legal: { title: '法律普及', description: '', icon: Scale, path: '/legal-info', isFeatured: false },
-      personality: { title: '人格测试', description: '', icon: Brain, path: '/personality-test', isFeatured: false },
+      games: { title: '小游戏驿站', description: '畅玩 2048、数字华容道等经典益智游戏。', icon: Gamepad2, path: '/rest/games' },
+      food: { title: '去哪吃', description: '帮你发现附近的美味餐厅。', icon: Utensils, path: '/food-finder' },
+      library: { title: '个人图书馆', description: '管理您的阅读列表和笔记。', icon: Library, path: '/personal-library' },
+      cinema: { title: '个人电影院', description: '收藏和追踪您想看的电影。', icon: Film, path: '/personal-cinema' },
+      music: { title: '私人音乐播放器', description: '创建和聆听您的专属歌单。', icon: Music, path: '/private-music-player' },
+      websites: { title: '精品网站推荐', description: '发现有趣和实用的网站。', icon: Globe, path: '/recommended-websites' },
+      legal: { title: '法律普及', description: '了解与生活相关的法律常识。', icon: Scale, path: '/legal-info' },
+      personality: { title: '人格测试', description: '探索和了解真实的自我。', icon: Brain, path: '/personality-test' },
     }
   },
   'en': {
@@ -37,20 +35,19 @@ const translations = {
     pageTitle: 'Rest Stop',
     pageDescription: 'Choose an activity to relax, or explore useful tools.',
     pinnedTitle: 'Pinned',
-    featuredTitle: 'Featured',
-    exploreTitle: 'Explore',
+    allFeaturesTitle: 'All Features',
     pinItem: 'Pin',
     unpinItem: 'Unpin',
     pinLimitReached: 'You can only pin up to 2 items',
     items: {
-      games: { title: 'Mini Game Station', description: 'Play classic puzzle games like 2048, Klotski, and more.', icon: Gamepad2, path: '/rest/games', isFeatured: true },
-      food: { title: 'Where to Eat', description: 'Helps you discover delicious restaurants nearby.', icon: Utensils, path: '/food-finder', isFeatured: true },
-      library: { title: 'Personal Library', description: '', icon: Library, path: '/personal-library', isFeatured: false },
-      cinema: { title: 'Personal Cinema', description: '', icon: Film, path: '/personal-cinema', isFeatured: false },
-      music: { title: 'Private Music Player', description: '', icon: Music, path: '/private-music-player', isFeatured: false },
-      websites: { title: 'Recommended Websites', description: '', icon: Globe, path: '/recommended-websites', isFeatured: false },
-      legal: { title: 'Legal Info', description: '', icon: Scale, path: '/legal-info', isFeatured: false },
-      personality: { title: 'Personality Test', description: '', icon: Brain, path: '/personality-test', isFeatured: false },
+      games: { title: 'Mini Game Station', description: 'Play classic puzzle games like 2048, Klotski, and more.', icon: Gamepad2, path: '/rest/games' },
+      food: { title: 'Where to Eat', description: 'Helps you discover delicious restaurants nearby.', icon: Utensils, path: '/food-finder' },
+      library: { title: 'Personal Library', description: 'Manage your reading lists and notes.', icon: Library, path: '/personal-library' },
+      cinema: { title: 'Personal Cinema', description: 'Collect and track movies you want to watch.', icon: Film, path: '/personal-cinema' },
+      music: { title: 'Private Music Player', description: 'Create and listen to your exclusive playlists.', icon: Music, path: '/private-music-player' },
+      websites: { title: 'Recommended Websites', description: 'Discover interesting and useful websites.', icon: Globe, path: '/recommended-websites' },
+      legal: { title: 'Legal Info', description: 'Learn about legal knowledge relevant to daily life.', icon: Scale, path: '/legal-info' },
+      personality: { title: 'Personality Test', description: 'Explore and understand your true self.', icon: Brain, path: '/personality-test' },
     }
   }
 };
@@ -95,7 +92,6 @@ const RestItem: React.FC<RestItemProps> = ({ itemKey, icon: Icon, title, descrip
         <p className={cn("font-semibold text-foreground text-base")}>{title}</p>
         {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
       </div>
-      <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1" />
       
       <div className="absolute top-2 right-2">
         <DropdownMenu>
@@ -165,8 +161,6 @@ export default function RestHubPage() {
   const canPinMore = pinnedItems.length < MAX_PINS;
   
   const unpinnedItems = allItems.filter(key => !pinnedItems.includes(key));
-  const featuredItems = unpinnedItems.filter(key => t.items[key].isFeatured);
-  const exploreItems = unpinnedItems.filter(key => !t.items[key].isFeatured);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 sm:px-8 items-center">
@@ -213,11 +207,10 @@ export default function RestHubPage() {
             </section>
           )}
 
-          {featuredItems.length > 0 && (
-             <section>
-              <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.featuredTitle}</h2>
+          <section>
+              {pinnedItems.length > 0 && <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.allFeaturesTitle}</h2>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {featuredItems.map(itemKey => {
+                {unpinnedItems.map(itemKey => {
                     const item = t.items[itemKey];
                     return (
                         <RestItem
@@ -236,33 +229,6 @@ export default function RestHubPage() {
                 })}
               </div>
             </section>
-          )}
-          
-          {exploreItems.length > 0 && (
-            <section>
-              <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.exploreTitle}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                 {exploreItems.map(itemKey => {
-                    const item = t.items[itemKey];
-                    return (
-                        <RestItem
-                          key={itemKey}
-                          itemKey={itemKey}
-                          {...item}
-                          isPinned={false}
-                          canPin={canPinMore}
-                          onPinToggle={handlePinToggle}
-                          onClick={handleNavigation}
-                          pinLimitReachedText={t.pinLimitReached}
-                          pinItemText={t.pinItem}
-                          unpinItemText={t.unpinItem}
-                        />
-                    );
-                })}
-              </div>
-            </section>
-          )}
-
         </div>
       </main>
     </div>
