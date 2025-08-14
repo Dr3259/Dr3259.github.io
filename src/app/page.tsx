@@ -397,7 +397,11 @@ export default function WeekGlancePage() {
         const urlMatches = text.match(URL_REGEX);
         const url = urlMatches ? urlMatches[0] : null;
 
-        if (url && isUrlAlreadySaved(url, allShareLinks)) {
+        if (!url) { // New filtering logic
+            return;
+        }
+
+        if (isUrlAlreadySaved(url, allShareLinks)) {
             setLastProcessedClipboardText(text); // Mark as processed to prevent re-triggering
             return; 
         }
@@ -410,7 +414,7 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, t.shareTarget, toast]);
 
 
   useEffect(() => {
@@ -936,5 +940,7 @@ export default function WeekGlancePage() {
     </>
   );
 }
+
+    
 
     
