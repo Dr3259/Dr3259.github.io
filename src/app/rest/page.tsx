@@ -174,7 +174,7 @@ export default function RestHubPage() {
       </header>
 
       <main className="w-full max-w-4xl flex flex-col items-center text-center flex-grow">
-        <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary mb-4">
+        <h1 className="text-2xl sm:text-3xl font-headline font-bold text-primary mb-4">
           {t.pageTitle}
         </h1>
         <p className="text-muted-foreground mb-10 sm:mb-12 text-base sm:text-lg max-w-md">
