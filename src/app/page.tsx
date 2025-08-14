@@ -371,10 +371,47 @@ export default function WeekGlancePage() {
     if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
-            description: t.shareTarget.linkSavedToastDescription(slotName)
+            description: t.shareTarget.linkSavedToastDescription(slotName),
+            duration: 3000,
         });
     }
   }, [toast, t, setAllShareLinks]);
+
+  const checkClipboard = useCallback(async () => {
+    if (document.hidden) return;
+
+    try {
+        if (typeof navigator?.permissions?.query !== 'function') {
+            return;
+        }
+        const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
+        if (permission.state === 'denied') {
+            return;
+        }
+        
+        const text = await navigator.clipboard.readText();
+        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
+            return;
+        }
+        
+        const urlMatches = text.match(URL_REGEX);
+        const url = urlMatches ? urlMatches[0] : null;
+
+        if (url && isUrlAlreadySaved(url, allShareLinks)) {
+            setLastProcessedClipboardText(text); // Mark as processed to prevent re-triggering
+            return; 
+        }
+
+        setClipboardContent(text);
+        setIsClipboardModalOpen(true);
+
+    } catch (err: any) {
+        if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
+           console.error(t.clipboard.checkClipboardError, err);
+        }
+    }
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
+
 
   useEffect(() => {
     setIsClientMounted(true);
@@ -423,39 +460,6 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary, handleSaveShareLinkFromPWA]);
 
   // Effect to check clipboard on focus
-  const checkClipboard = useCallback(async () => {
-    if (document.hidden) return;
-
-    try {
-        if (typeof navigator?.permissions?.query !== 'function') {
-            return;
-        }
-        const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
-        if (permission.state === 'denied') {
-            return;
-        }
-        
-        const text = await navigator.clipboard.readText();
-        
-        if (text && text.trim() && text !== lastProcessedClipboardText) {
-            const urlMatches = text.match(URL_REGEX);
-            const url = urlMatches ? urlMatches[0] : null;
-
-            if (url && isUrlAlreadySaved(url, allShareLinks)) {
-                setLastProcessedClipboardText(text); // Mark as processed even if duplicate
-                return; // Do not show modal for already saved URLs
-            }
-
-            setClipboardContent(text);
-            setIsClipboardModalOpen(true);
-        }
-    } catch (err: any) {
-        if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
-           console.error(t.clipboard.checkClipboardError, err);
-        }
-    }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
-
    useEffect(() => {
         window.addEventListener('focus', checkClipboard);
         return () => {
@@ -468,11 +472,12 @@ export default function WeekGlancePage() {
     
     const urlMatches = clipboardContent.match(URL_REGEX);
     const url = urlMatches ? urlMatches[0] : '';
-    
+
     if (url && isUrlAlreadySaved(url, allShareLinks)) {
         toast({
             title: t.clipboard.linkAlreadyExists,
-            variant: "default"
+            variant: "default",
+            duration: 3000,
         });
         setLastProcessedClipboardText(clipboardContent);
         setIsClipboardModalOpen(false);
@@ -491,6 +496,7 @@ export default function WeekGlancePage() {
       toast({
         title: t.clipboard.linkSavedToastTitle,
         description: t.clipboard.linkSavedToastDescription(slotName),
+        duration: 3000,
       });
       try {
         copy('');
@@ -503,7 +509,6 @@ export default function WeekGlancePage() {
   };
   
   const handleCloseClipboardModal = () => {
-    // Only mark as processed if user saves, not on close
     setIsClipboardModalOpen(false);
   };
 
