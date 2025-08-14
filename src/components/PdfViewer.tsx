@@ -11,12 +11,9 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 
 // Setup pdf.js worker. This is required for react-pdf to work.
-// The URL points to a copy of the worker script hosted on a CDN.
+// Use a stable CDN link to ensure version consistency.
 if (typeof window !== 'undefined') {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-        'pdfjs-dist/build/pdf.worker.min.mjs',
-        import.meta.url,
-    ).toString();
+    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 }
 
 interface PdfViewerProps {
