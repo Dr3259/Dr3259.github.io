@@ -72,10 +72,12 @@ interface RestItemProps {
   unpinItemText: string;
   isDraggable: boolean;
   onDragStart?: (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => void;
-  onDragOver?: (e: DragEvent<HTMLDivElement>) => void;
+  onDragOver?: (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => void;
   onDragLeave?: (e: DragEvent<HTMLDivElement>) => void;
   onDrop?: (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => void;
+  onDragEnd?: (e: DragEvent<HTMLDivElement>) => void;
   isBeingDragged: boolean;
+  isDragOver: boolean;
   dragHandleLabel: string;
 }
 
@@ -87,16 +89,17 @@ const RestItem: React.FC<RestItemProps> = ({
     itemKey, icon: Icon, title, description, path, 
     isPinned, canPin, onPinToggle, onClick, 
     pinLimitReachedText, pinItemText, unpinItemText,
-    isDraggable, onDragStart, onDragOver, onDragLeave, onDrop,
-    isBeingDragged, dragHandleLabel
+    isDraggable, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
+    isBeingDragged, isDragOver, dragHandleLabel
 }) => {
   return (
     <div
       draggable={isDraggable}
       onDragStart={(e) => onDragStart?.(e, itemKey)}
-      onDragOver={onDragOver}
+      onDragOver={(e) => onDragOver?.(e, itemKey)}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop?.(e, itemKey)}
+      onDragEnd={onDragEnd}
       className={cn(
         "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative",
         "focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
@@ -104,7 +107,8 @@ const RestItem: React.FC<RestItemProps> = ({
           ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg"
           : "bg-card/60 hover:bg-card/90 hover:shadow-lg",
         isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-        isBeingDragged && "opacity-40"
+        isBeingDragged && "opacity-50 ring-2 ring-primary",
+        isDragOver && "border-t-4 border-t-primary"
       )}
     >
       {isDraggable && (
@@ -238,27 +242,22 @@ export default function RestHubPage() {
   const handleDragStart = (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => {
       setDraggedItem(itemKey);
       e.dataTransfer.effectAllowed = "move";
-      e.currentTarget.style.cursor = 'grabbing';
   };
   
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => {
       e.preventDefault(); 
-      e.dataTransfer.dropEffect = "move";
-      const target = e.currentTarget as HTMLDivElement;
-      target.style.transform = "translateY(-2px)";
-      target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+      if (draggedItem !== itemKey) {
+        setDragOverItem(itemKey);
+      }
   };
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-    const target = e.currentTarget as HTMLDivElement;
-    target.style.transform = "";
-    target.style.boxShadow = "";
+    setDragOverItem(null);
   };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>, dropTargetKey: RestItemKey) => {
     e.preventDefault();
     if (!draggedItem || draggedItem === dropTargetKey) {
-        setDraggedItem(null);
         return;
     }
 
@@ -271,16 +270,11 @@ export default function RestHubPage() {
     
     setUnpinnedOrder(newOrder);
     localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_ORDER, JSON.stringify(newOrder));
-    
-    setDraggedItem(null);
-    const target = e.currentTarget as HTMLDivElement;
-    target.style.transform = "";
-    target.style.boxShadow = "";
   };
 
   const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
       setDraggedItem(null);
-      e.currentTarget.style.cursor = 'grab';
+      setDragOverItem(null);
   };
   
   return (
@@ -323,6 +317,7 @@ export default function RestHubPage() {
                       unpinItemText={t.unpinItem}
                       isDraggable={false}
                       isBeingDragged={false}
+                      isDragOver={false}
                       dragHandleLabel={t.dragHandleLabel}
                     />
                   );
@@ -333,7 +328,7 @@ export default function RestHubPage() {
 
           <section>
               <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.allFeaturesTitle}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6" onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {unpinnedOrder.map(itemKey => {
                     const item = t.items[itemKey];
                     if (!item) return null; // Safety check
@@ -354,7 +349,9 @@ export default function RestHubPage() {
                           onDragOver={handleDragOver}
                           onDragLeave={handleDragLeave}
                           onDrop={handleDrop}
+                          onDragEnd={handleDragEnd}
                           isBeingDragged={draggedItem === itemKey}
+                          isDragOver={dragOverItem === itemKey}
                           dragHandleLabel={t.dragHandleLabel}
                         />
                     );
