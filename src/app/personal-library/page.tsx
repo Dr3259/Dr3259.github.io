@@ -1,11 +1,11 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon, ChevronLeft, ChevronRight, Loader2, Maximize, Minimize } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -36,6 +36,8 @@ const translations = {
     pdfLoading: '正在加载 PDF...',
     storageWarningTitle: "注意：内容不会被保存",
     storageWarningDescription: "书籍内容只在当前会话中可用。刷新页面后需要重新导入。",
+    fullscreen: '全屏',
+    exitFullscreen: '退出全屏',
   },
   'en': {
     pageTitle: 'Personal Library',
@@ -58,6 +60,8 @@ const translations = {
     pdfLoading: 'Loading PDF...',
     storageWarningTitle: "Note: Content is not saved",
     storageWarningDescription: "Book content is only available in the current session. You will need to re-import after refreshing the page.",
+    fullscreen: 'Fullscreen',
+    exitFullscreen: 'Exit Fullscreen',
   }
 };
 
@@ -96,10 +100,13 @@ export default function PersonalLibraryPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light' });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const libraryContainerRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -148,6 +155,17 @@ export default function PersonalLibraryPage() {
       localStorage.setItem(LOCAL_STORAGE_SETTINGS_KEY, JSON.stringify(settings));
     }
   }, [settings, isMounted]);
+
+  const handleFullscreenChange = useCallback(() => {
+    setIsFullscreen(!!document.fullscreenElement);
+  }, []);
+
+  useEffect(() => {
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      return () => {
+          document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      };
+  }, [handleFullscreenChange]);
 
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,6 +253,19 @@ export default function PersonalLibraryPage() {
 
   const selectedBook = useMemo(() => books.find(b => b.id === selectedBookId), [books, selectedBookId]);
 
+    const toggleFullscreen = () => {
+      const element = libraryContainerRef.current;
+      if (!element) return;
+
+      if (!document.fullscreenElement) {
+          element.requestFullscreen().catch(err => {
+              console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+          });
+      } else {
+          document.exitFullscreen();
+      }
+  };
+
   if (!isMounted) {
       return (
           <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center justify-center">
@@ -244,8 +275,8 @@ export default function PersonalLibraryPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
-      <header className="flex items-center justify-between p-4 border-b shrink-0">
+    <div ref={libraryContainerRef} className={cn("flex flex-col h-screen bg-background text-foreground", isFullscreen && "h-screen w-screen fixed top-0 left-0 z-50")}>
+      <header className={cn("flex items-center justify-between p-4 border-b shrink-0", isFullscreen && "hidden")}>
         <div className="flex items-center gap-4">
             <Link href="/rest" passHref>
                 <Button variant="outline" size="sm">
@@ -258,44 +289,50 @@ export default function PersonalLibraryPage() {
             </h1>
         </div>
         
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" disabled={!selectedBook || selectedBook?.type === 'pdf'}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t.settings}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64">
-                <div className="grid gap-4">
-                    <div className="space-y-2">
-                        <h4 className="font-medium leading-none">{t.fontSize}</h4>
-                        <Slider
-                            defaultValue={[settings.fontSize]}
-                            min={12}
-                            max={24}
-                            step={1}
-                            onValueChange={(value) => updateSettings({ fontSize: value[0] })}
-                        />
-                    </div>
-                     <div className="space-y-2">
-                        <h4 className="font-medium leading-none">{t.theme}</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button variant={settings.theme === 'light' ? 'default' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
-                                <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
-                            </Button>
-                             <Button variant={settings.theme === 'dark' ? 'default' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
-                                <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
-                            </Button>
+        <div className="flex items-center gap-2">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={!selectedBook || selectedBook?.type === 'pdf'}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        {t.settings}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none">{t.fontSize}</h4>
+                            <Slider
+                                defaultValue={[settings.fontSize]}
+                                min={12}
+                                max={24}
+                                step={1}
+                                onValueChange={(value) => updateSettings({ fontSize: value[0] })}
+                            />
+                        </div>
+                         <div className="space-y-2">
+                            <h4 className="font-medium leading-none">{t.theme}</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button variant={settings.theme === 'light' ? 'default' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
+                                    <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
+                                </Button>
+                                 <Button variant={settings.theme === 'dark' ? 'default' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
+                                    <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </PopoverContent>
-        </Popover>
+                </PopoverContent>
+            </Popover>
+            <Button variant="outline" size="sm" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                <span className="sr-only">{isFullscreen ? t.exitFullscreen : t.fullscreen}</span>
+            </Button>
+        </div>
       </header>
 
       <div className="flex flex-1 min-h-0">
         {/* Bookshelf Panel */}
-        <aside className="w-1/3 max-w-xs min-w-[250px] border-r flex flex-col">
+        <aside className={cn("w-1/3 max-w-xs min-w-[250px] border-r flex-col", isFullscreen ? "hidden" : "flex")}>
           <div className="p-4 border-b">
             <h2 className="text-lg font-semibold">{t.bookshelfTitle}</h2>
           </div>
@@ -351,7 +388,8 @@ export default function PersonalLibraryPage() {
         {/* Reading Panel */}
         <main className={cn(
             "flex-1 flex flex-col transition-colors",
-            settings.theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'
+            settings.theme === 'dark' ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800',
+            isFullscreen ? "w-full h-full" : ""
         )}>
           {selectedBook && selectedBook.content ? (
             selectedBook.type === 'txt' ? (
