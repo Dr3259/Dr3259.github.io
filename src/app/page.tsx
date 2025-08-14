@@ -428,7 +428,7 @@ export default function WeekGlancePage() {
   // Effect to check clipboard on focus
    useEffect(() => {
         const checkClipboard = async () => {
-            if (document.hidden) return; // Don't check if page is not visible
+            if (document.hidden) return;
 
             try {
                 if (typeof navigator?.permissions?.query !== 'function') {
@@ -466,7 +466,6 @@ export default function WeekGlancePage() {
     const urlMatches = clipboardContent.match(URL_REGEX);
     const url = urlMatches ? urlMatches[0] : '';
     
-    // Check for duplicates before saving
     if (url && isUrlAlreadySaved(url, allShareLinks)) {
         toast({
             title: t.clipboard.linkAlreadyExists,
@@ -480,7 +479,7 @@ export default function WeekGlancePage() {
     const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
 
     const itemToSave = {
-        title: title || url, // If no other text, use URL as title
+        title: title || url,
         url: url
     };
 
@@ -490,7 +489,6 @@ export default function WeekGlancePage() {
         title: t.clipboard.linkSavedToastTitle,
         description: t.clipboard.linkSavedToastDescription(slotName),
       });
-      // Clear clipboard to prevent re-triggering for the same content
       try {
         copy('');
       } catch (error) {
@@ -502,7 +500,6 @@ export default function WeekGlancePage() {
   };
   
   const handleCloseClipboardModal = () => {
-    setLastProcessedClipboardText(clipboardContent);
     setIsClipboardModalOpen(false);
   };
 
@@ -927,5 +924,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
-    
