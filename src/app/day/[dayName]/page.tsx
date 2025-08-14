@@ -193,6 +193,8 @@ const translations = {
         modalDescription: "您想将以下内容保存到今天的日程中吗？",
         saveButton: "保存",
         cancelButton: "关闭",
+        categoryLabel: "标签 (可选):",
+        categoryPlaceholder: "例如：学习资料, 食谱",
     },
     timeIntervals: {
         midnight: '凌晨 (00:00 - 05:00)',
@@ -334,6 +336,8 @@ const translations = {
         modalDescription: "Would you like to save the following content to today's schedule?",
         saveButton: "Save",
         cancelButton: "Close",
+        categoryLabel: "Tag (optional):",
+        categoryPlaceholder: "e.g. Study, Recipe",
     },
     timeIntervals: {
         midnight: 'Midnight (00:00 - 05:00)',
@@ -389,7 +393,7 @@ const getDateKey = (date: Date): string => {
 };
 
 const saveUrlToCurrentTimeSlot = (
-    item: { title: string, url: string },
+    item: { title: string, url: string, category: string | null },
     setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
     t: (typeof translations)['zh-CN']
 ): { success: boolean; slotName: string } => {
@@ -398,7 +402,7 @@ const saveUrlToCurrentTimeSlot = (
         id: Date.now().toString(),
         url: item.url,
         title: item.title,
-        category: null,
+        category: item.category,
     };
 
     const now = new Date();
@@ -546,6 +550,10 @@ export default function DayDetailPage() {
         
         const text = await navigator.clipboard.readText();
         
+        if (!text || text.trim() === '') {
+            return;
+        }
+
         const urlMatches = text.match(URL_REGEX);
         const url = urlMatches ? urlMatches[0] : null;
         
@@ -553,10 +561,10 @@ export default function DayDetailPage() {
             return;
         }
 
-        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
+        if (text === lastProcessedClipboardText) {
             return;
         }
-
+        
         if (isUrlAlreadySaved(url, allShareLinks)) {
             setLastProcessedClipboardText(text); 
             return; 
@@ -579,7 +587,7 @@ export default function DayDetailPage() {
         };
   }, [checkClipboard]);
 
-  const handleSaveFromClipboard = () => {
+  const handleSaveFromClipboard = (data: { category: string }) => {
     if (!clipboardContent) return;
     
     const urlMatches = clipboardContent.match(URL_REGEX);
@@ -600,7 +608,8 @@ export default function DayDetailPage() {
 
     const itemToSave = {
         title: title || url,
-        url: url
+        url: url,
+        category: data.category || null
     };
 
     const { success, slotName } = saveUrlToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
@@ -880,7 +889,7 @@ export default function DayDetailPage() {
     if (selectedSlotForMeetingNote) handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId);
   };
   const handleOpenEditMeetingNoteModalInPage = (targetDateKey: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
-    handleOpenMeetingNoteModal(targetHourSlot, noteToEdit);
+    handleOpenMeetingNoteModal(hourSlot, noteToEdit);
   };
   const getMeetingNotesForSlot = (targetDateKey: string, targetHourSlot: string): MeetingNoteItem[] => {
     return allMeetingNotes[targetDateKey]?.[targetHourSlot] || [];
@@ -917,7 +926,7 @@ export default function DayDetailPage() {
     if (selectedSlotForShareLink) handleDeleteShareLinkInPage(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId);
   };
   const handleOpenEditShareLinkModalInPage = (targetDateKey: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
-    handleOpenShareLinkModal(targetHourSlot, linkToEdit);
+    handleOpenShareLinkModal(hourSlot, linkToEdit);
   };
   const getShareLinksForSlot = (targetDateKey: string, targetHourSlot: string): ShareLinkItem[] => {
     return allShareLinks[targetDateKey]?.[targetHourSlot] || [];
@@ -954,7 +963,7 @@ export default function DayDetailPage() {
     if (selectedSlotForReflection) handleDeleteReflectionInPage(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId);
   };
   const handleOpenEditReflectionModalInPage = (targetDateKey: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
-    handleOpenReflectionModal(targetHourSlot, reflectionToEdit);
+    handleOpenReflectionModal(hourSlot, reflectionToEdit);
   };
   const getReflectionsForSlot = (targetDateKey: string, targetHourSlot: string): ReflectionItem[] => {
     return allReflections[targetDateKey]?.[targetHourSlot] || [];

@@ -92,6 +92,8 @@ const translations = {
         modalDescription: "您想将以下内容保存到今天的日程中吗？",
         saveButton: "保存",
         cancelButton: "关闭",
+        categoryLabel: "标签 (可选):",
+        categoryPlaceholder: "例如：学习资料, 食谱",
     },
     pasteFromClipboard: "从剪贴板粘贴",
     timeIntervals: {
@@ -150,6 +152,8 @@ const translations = {
         modalDescription: "Would you like to save the following content to today's schedule?",
         saveButton: "Save",
         cancelButton: "Close",
+        categoryLabel: "Tag (optional):",
+        categoryPlaceholder: "e.g. Study, Recipe",
     },
     pasteFromClipboard: "Paste from clipboard",
      timeIntervals: {
@@ -227,7 +231,7 @@ const getDateKey = (date: Date): string => {
 };
 
 const saveUrlToCurrentTimeSlot = (
-    item: { title: string, url: string },
+    item: { title: string, url: string, category: string | null },
     setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
     t: (typeof translations)['zh-CN']
 ): { success: boolean; slotName: string } => {
@@ -236,7 +240,7 @@ const saveUrlToCurrentTimeSlot = (
         id: Date.now().toString(),
         url: item.url,
         title: item.title,
-        category: null,
+        category: item.category,
     };
 
     const now = new Date();
@@ -368,7 +372,7 @@ export default function WeekGlancePage() {
       console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveUrlToCurrentTimeSlot({ title: text || url, url: linkUrl }, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot({ title: text || url, url: linkUrl, category: null }, setAllShareLinks, t);
     if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
@@ -392,6 +396,10 @@ export default function WeekGlancePage() {
         
         const text = await navigator.clipboard.readText();
         
+        if (!text || text.trim() === '') {
+            return;
+        }
+
         const urlMatches = text.match(URL_REGEX);
         const url = urlMatches ? urlMatches[0] : null;
         
@@ -399,10 +407,10 @@ export default function WeekGlancePage() {
             return;
         }
 
-        if (!text || text.trim() === '' || text === lastProcessedClipboardText) {
+        if (text === lastProcessedClipboardText) {
             return;
         }
-
+        
         if (isUrlAlreadySaved(url, allShareLinks)) {
             setLastProcessedClipboardText(text); 
             return; 
@@ -473,7 +481,7 @@ export default function WeekGlancePage() {
         };
   }, [checkClipboard]);
 
-  const handleSaveFromClipboard = () => {
+  const handleSaveFromClipboard = (data: { category: string }) => {
     if (!clipboardContent) return;
     
     const urlMatches = clipboardContent.match(URL_REGEX);
@@ -494,7 +502,8 @@ export default function WeekGlancePage() {
 
     const itemToSave = {
         title: title || url,
-        url: url
+        url: url,
+        category: data.category || null,
     };
 
     const { success, slotName } = saveUrlToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
