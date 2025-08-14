@@ -4,14 +4,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Library, Plus, Trash2, FileText, Settings, Type, Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+
+// Setup pdf.js worker
+if (typeof window !== 'undefined') {
+    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.js`;
+}
+
 
 const translations = {
   'zh-CN': {
@@ -24,12 +34,15 @@ const translations = {
     deleteBook: '删除书籍',
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
     bookDeleted: '书籍已删除',
-    importError: '导入书籍失败，请确保文件是 .txt 格式。',
+    importError: '导入书籍失败，请确保文件是 .txt 或 .pdf 格式。',
     settings: '阅读设置',
     fontSize: '字号',
     theme: '主题',
     lightTheme: '浅色',
     darkTheme: '深色',
+    page: (current: number, total: number) => `第 ${current} / ${total} 页`,
+    pdfError: '加载PDF失败。请确保文件未损坏。',
+    pdfLoading: '正在加载 PDF...',
   },
   'en': {
     pageTitle: 'Personal Library',
@@ -41,12 +54,15 @@ const translations = {
     deleteBook: 'Delete Book',
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
     bookDeleted: 'Book has been deleted.',
-    importError: 'Failed to import book. Please ensure it is a .txt file.',
+    importError: 'Failed to import book. Please ensure it is a .txt or .pdf file.',
     settings: 'Reading Settings',
     fontSize: 'Font Size',
     theme: 'Theme',
     lightTheme: 'Light',
     darkTheme: 'Dark',
+    page: (current: number, total: number) => `Page ${current} of ${total}`,
+    pdfError: 'Failed to load PDF. Please ensure the file is not corrupted.',
+    pdfLoading: 'Loading PDF...',
   }
 };
 
@@ -55,7 +71,8 @@ type LanguageKey = keyof typeof translations;
 interface Book {
   id: string;
   title: string;
-  content: string;
+  content: string; // For 'txt', this is text. For 'pdf', this is a data URI.
+  type: 'txt' | 'pdf';
 }
 
 interface ReadingSettings {
@@ -63,7 +80,7 @@ interface ReadingSettings {
   theme: 'light' | 'dark';
 }
 
-const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books';
+const LOCAL_STORAGE_BOOKS_KEY = 'personal_library_books_v2'; // version up for new structure
 const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings';
 
 export default function PersonalLibraryPage() {
@@ -71,6 +88,11 @@ export default function PersonalLibraryPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light' });
+  
+  // PDF state
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -81,7 +103,6 @@ export default function PersonalLibraryPage() {
       setCurrentLanguage(browserLang);
     }
     
-    // Load data from localStorage
     try {
       const savedBooks = localStorage.getItem(LOCAL_STORAGE_BOOKS_KEY);
       if (savedBooks) setBooks(JSON.parse(savedBooks));
@@ -96,14 +117,12 @@ export default function PersonalLibraryPage() {
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
-  // Save books to localStorage whenever they change
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(LOCAL_STORAGE_BOOKS_KEY, JSON.stringify(books));
     }
   }, [books, isMounted]);
 
-  // Save settings to localStorage whenever they change
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(LOCAL_STORAGE_SETTINGS_KEY, JSON.stringify(settings));
@@ -113,7 +132,11 @@ export default function PersonalLibraryPage() {
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !file.name.endsWith('.txt')) {
+    if (!file) return;
+
+    const fileType = file.name.endsWith('.pdf') ? 'pdf' : file.name.endsWith('.txt') ? 'txt' : null;
+
+    if (!fileType) {
       toast({ title: t.importError, variant: 'destructive' });
       return;
     }
@@ -123,8 +146,9 @@ export default function PersonalLibraryPage() {
       const content = e.target?.result as string;
       const newBook: Book = {
         id: `book-${Date.now()}`,
-        title: file.name.replace('.txt', ''),
+        title: file.name.replace(/\.(txt|pdf)$/, ''),
         content: content,
+        type: fileType,
       };
       setBooks(prevBooks => [...prevBooks, newBook]);
       setSelectedBookId(newBook.id);
@@ -132,7 +156,12 @@ export default function PersonalLibraryPage() {
     reader.onerror = () => {
         toast({ title: t.importError, variant: 'destructive' });
     }
-    reader.readAsText(file, 'UTF-8');
+
+    if (fileType === 'pdf') {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsText(file, 'UTF-8');
+    }
   };
 
   const deleteBook = (bookId: string) => {
@@ -153,6 +182,28 @@ export default function PersonalLibraryPage() {
   };
 
   const selectedBook = useMemo(() => books.find(b => b.id === selectedBookId), [books, selectedBookId]);
+  
+  // Reset page number when book changes
+  useEffect(() => {
+    setPageNumber(1);
+    setNumPages(null);
+  }, [selectedBookId]);
+
+  function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number }) {
+    setNumPages(nextNumPages);
+  }
+
+  function goToNextPage() {
+    if (pageNumber && numPages && pageNumber < numPages) {
+        setPageNumber(pageNumber + 1);
+    }
+  }
+
+  function goToPrevPage() {
+    if (pageNumber && pageNumber > 1) {
+        setPageNumber(pageNumber - 1);
+    }
+  }
 
   if (!isMounted) {
       return (
@@ -179,7 +230,7 @@ export default function PersonalLibraryPage() {
         
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" disabled={selectedBook?.type === 'pdf'}>
                     <Settings className="mr-2 h-4 w-4" />
                     {t.settings}
                 </Button>
@@ -255,7 +306,7 @@ export default function PersonalLibraryPage() {
           <div className="p-4 border-t">
             <input
                 type="file"
-                accept=".txt"
+                accept=".txt,.pdf"
                 ref={fileInputRef}
                 onChange={handleFileImport}
                 className="hidden"
@@ -274,22 +325,55 @@ export default function PersonalLibraryPage() {
         )}>
           {selectedBook ? (
             <div className="flex-1 flex flex-col min-h-0">
-                <div className="p-4 border-b text-center shrink-0"
+                <div className="p-4 border-b text-center shrink-0 flex justify-between items-center"
                   style={{
                     backgroundColor: settings.theme === 'dark' ? 'hsl(222, 12%, 18%)' : 'hsl(0, 0%, 98%)',
                     borderColor: settings.theme === 'dark' ? 'hsl(222, 12%, 25%)' : 'hsl(0, 0%, 93%)',
                   }}
                 >
-                    <h3 className="font-semibold text-lg truncate" title={selectedBook.title}>{selectedBook.title}</h3>
+                    <div className="w-1/4"></div>
+                    <h3 className="font-semibold text-lg truncate w-1/2" title={selectedBook.title}>{selectedBook.title}</h3>
+                    <div className="w-1/4 text-right">
+                        {selectedBook.type === 'pdf' && numPages && (
+                             <div className="flex items-center justify-end gap-2">
+                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevPage} disabled={pageNumber <= 1}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <span className="text-sm font-medium text-muted-foreground tabular-nums">
+                                    {t.page(pageNumber, numPages)}
+                                </span>
+                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextPage} disabled={pageNumber >= numPages}>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <ScrollArea className="flex-1 p-6 md:p-8 lg:p-12">
-                    <p 
-                        className="whitespace-pre-wrap leading-relaxed"
-                        style={{ fontSize: `${settings.fontSize}px` }}
-                    >
-                        {selectedBook.content}
-                    </p>
-                </ScrollArea>
+
+                {selectedBook.type === 'txt' ? (
+                    <ScrollArea className="flex-1 p-6 md:p-8 lg:p-12">
+                        <p 
+                            className="whitespace-pre-wrap leading-relaxed"
+                            style={{ fontSize: `${settings.fontSize}px` }}
+                        >
+                            {selectedBook.content}
+                        </p>
+                    </ScrollArea>
+                ) : (
+                    <ScrollArea className="flex-1 flex justify-center items-start p-4">
+                        <div className="flex justify-center">
+                            <Document
+                                file={selectedBook.content}
+                                onLoadSuccess={onDocumentLoadSuccess}
+                                loading={<p className="text-muted-foreground">{t.pdfLoading}</p>}
+                                error={<p className="text-destructive">{t.pdfError}</p>}
+                                className="shadow-lg"
+                            >
+                                <Page pageNumber={pageNumber} />
+                            </Document>
+                        </div>
+                    </ScrollArea>
+                )}
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
