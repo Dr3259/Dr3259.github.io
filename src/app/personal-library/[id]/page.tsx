@@ -200,26 +200,6 @@ export default function BookReaderPage() {
     setPageNumber(1);
   };
   
-  const calculateAndSetFitHeightScale = useCallback(async () => {
-      if (!pdfDoc || !pdfViewerWrapperRef.current) return;
-      setIsCalculatingScale(true);
-      
-      const page: PDFPageProxy = await pdfDoc.getPage(pageNumber);
-      const pageViewport = page.getViewport({ scale: 1 });
-      const containerHeight = pdfViewerWrapperRef.current.clientHeight;
-
-      const verticalPadding = 32;
-      const scaleY = (containerHeight - verticalPadding) / pageViewport.height;
-      const resultingWidth = pageViewport.width * scaleY;
-
-      if (resultingWidth > pdfViewerWrapperRef.current.clientWidth) {
-         calculateAndSetFitWidthScale();
-      } else {
-         setCurrentScale(scaleY);
-      }
-      setIsCalculatingScale(false);
-  }, [pdfDoc, pageNumber, calculateAndSetFitWidthScale]);
-
   const calculateAndSetFitWidthScale = useCallback(async () => {
     if (!pdfDoc || !pdfViewerWrapperRef.current) return;
     setIsCalculatingScale(true);
@@ -242,6 +222,27 @@ export default function BookReaderPage() {
     setIsCalculatingScale(false);
 
   }, [pdfDoc, pageNumber, numPages, settings.pageLayout]);
+
+  const calculateAndSetFitHeightScale = useCallback(async () => {
+      if (!pdfDoc || !pdfViewerWrapperRef.current) return;
+      setIsCalculatingScale(true);
+      
+      const page: PDFPageProxy = await pdfDoc.getPage(pageNumber);
+      const pageViewport = page.getViewport({ scale: 1 });
+      const containerHeight = pdfViewerWrapperRef.current.clientHeight;
+
+      const verticalPadding = 32;
+      const scaleY = (containerHeight - verticalPadding) / pageViewport.height;
+      const resultingWidth = pageViewport.width * scaleY;
+
+      if (resultingWidth > pdfViewerWrapperRef.current.clientWidth) {
+         calculateAndSetFitWidthScale();
+      } else {
+         setCurrentScale(scaleY);
+      }
+      setIsCalculatingScale(false);
+  }, [pdfDoc, pageNumber, calculateAndSetFitWidthScale]);
+
   
   useEffect(() => {
     if(!isMounted || !pdfDoc) return;
@@ -469,5 +470,3 @@ export default function BookReaderPage() {
     </div>
   );
 }
-
-    
