@@ -7,7 +7,6 @@ import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger, PopoverPortal } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getBookContent, type BookWithContent } from '@/lib/db';
@@ -34,7 +33,7 @@ const translations = {
     backButton: 'Back to Bookshelf',
     loadingBook: 'Loading book...',
     bookNotFound: 'Book Content Not Found',
-    bookNotFoundDescription: 'The content for this book was not found in the current session. Please return to the bookshelf to access it again.',
+    bookNotFoundDescription: 'The content for this book was not found. Please return to the bookshelf and select it again.',
     settings: 'Reading Settings',
     fontSize: 'Font Size',
     zoom: 'Zoom',
@@ -80,12 +79,17 @@ export default function BookReaderPage() {
   const [book, setBook] = useState<BookWithContent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light', pdfScale: 1.0 });
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   
   const readerContainerRef = useRef<HTMLDivElement>(null);
+  const settingsPanelRef = useRef<HTMLDivElement>(null);
+
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   useEffect(() => {
@@ -118,6 +122,8 @@ export default function BookReaderPage() {
         console.error("Failed to load book content from IndexedDB", err);
         setError(t.bookNotFound);
       });
+    } else {
+        setError(t.bookNotFound);
     }
   }, [bookId, t.bookNotFound]);
 
@@ -135,6 +141,22 @@ export default function BookReaderPage() {
       document.addEventListener('fullscreenchange', handleFullscreenChange);
       return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [handleFullscreenChange]);
+
+  // Click outside to close settings
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (settingsPanelRef.current && !settingsPanelRef.current.contains(event.target as Node)) {
+            setIsSettingsOpen(false);
+        }
+    };
+    if (isSettingsOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
+
 
   const updateSettings = (newSettings: Partial<ReadingSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
@@ -282,7 +304,25 @@ export default function BookReaderPage() {
         </main>
 
         <div className="fixed bottom-4 right-4 z-50 flex flex-col items-center gap-2">
-            <div className="flex items-center justify-end gap-2 p-2 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm">
+            {isSettingsOpen && (
+                 <div ref={settingsPanelRef} className="w-64 mb-2 p-4 bg-popover text-popover-foreground border rounded-lg shadow-lg">
+                    <div className="grid gap-4">
+                        {renderSettingsContent()}
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none text-sm">{t.theme}</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button size="sm" className="h-8" variant={settings.theme === 'light' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
+                                    <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
+                                </Button>
+                                <Button size="sm" className="h-8" variant={settings.theme === 'dark' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
+                                    <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            <div className="flex items-center justify-end gap-2 p-2 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
                 
                 {book?.type === 'pdf' && (
                     <>
@@ -298,31 +338,9 @@ export default function BookReaderPage() {
                     </>
                 )}
 
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={!book}>
-                            <Settings className="h-5 w-5" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverPortal container={readerContainerRef.current}>
-                        <PopoverContent className="w-64 mb-2 z-[100]" side="top" align="end">
-                            <div className="grid gap-4">
-                                {renderSettingsContent()}
-                                <div className="space-y-2">
-                                    <h4 className="font-medium leading-none text-sm">{t.theme}</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Button size="sm" className="h-8" variant={settings.theme === 'light' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
-                                            <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
-                                        </Button>
-                                        <Button size="sm" className="h-8" variant={settings.theme === 'dark' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
-                                            <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </PopoverContent>
-                    </PopoverPortal>
-                </Popover>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}>
+                    <Settings className="h-5 w-5" />
+                </Button>
 
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
                     {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
@@ -332,6 +350,3 @@ export default function BookReaderPage() {
     </div>
   )
 }
-
-
-    
