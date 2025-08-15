@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger, PopoverPortal } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getBookContent, type BookWithContent } from '@/lib/db';
@@ -304,22 +304,24 @@ export default function BookReaderPage() {
                             <Settings className="h-5 w-5" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-64 mb-2" side="top" align="end">
-                        <div className="grid gap-4">
-                            {renderSettingsContent()}
-                            <div className="space-y-2">
-                                <h4 className="font-medium leading-none text-sm">{t.theme}</h4>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Button size="sm" className="h-8" variant={settings.theme === 'light' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
-                                        <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
-                                    </Button>
-                                    <Button size="sm" className="h-8" variant={settings.theme === 'dark' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
-                                        <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
-                                    </Button>
+                    <PopoverPortal container={readerContainerRef.current}>
+                        <PopoverContent className="w-64 mb-2 z-[100]" side="top" align="end">
+                            <div className="grid gap-4">
+                                {renderSettingsContent()}
+                                <div className="space-y-2">
+                                    <h4 className="font-medium leading-none text-sm">{t.theme}</h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button size="sm" className="h-8" variant={settings.theme === 'light' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'light' })}>
+                                            <Sun className="mr-2 h-4 w-4"/> {t.lightTheme}
+                                        </Button>
+                                        <Button size="sm" className="h-8" variant={settings.theme === 'dark' ? 'secondary' : 'outline'} onClick={() => updateSettings({ theme: 'dark' })}>
+                                            <Moon className="mr-2 h-4 w-4"/> {t.darkTheme}
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </PopoverContent>
+                        </PopoverContent>
+                    </PopoverPortal>
                 </Popover>
 
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
@@ -330,3 +332,6 @@ export default function BookReaderPage() {
     </div>
   )
 }
+
+
+    
