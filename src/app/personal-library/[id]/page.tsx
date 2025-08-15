@@ -247,7 +247,8 @@ export default function BookReaderPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Don't interfere if the user is typing in an input, textarea, etc.
+      if (!isMounted || !book) return;
+      
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
         return;
@@ -277,7 +278,7 @@ export default function BookReaderPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [goToPrevPage, goToNextPage]);
+  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout]);
 
 
   const renderContent = () => {
