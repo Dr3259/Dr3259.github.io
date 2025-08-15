@@ -61,12 +61,12 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 type PageLayout = 'single' | 'double';
-type ScaleMode = 'fitHeight' | 'fitWidth' | number;
+type ScaleMode = 'fitHeight' | 'fitWidth';
 
 interface ReadingSettings {
   fontSize: number;
   theme: 'light' | 'dark';
-  pdfScale: ScaleMode;
+  pdfScaleMode: ScaleMode;
   pageLayout: PageLayout;
 }
 
@@ -92,7 +92,7 @@ export default function BookReaderPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [book, setBook] = useState<BookWithContent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light', pdfScale: 'fitHeight', pageLayout: 'single' });
+  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light', pdfScaleMode: 'fitHeight', pageLayout: 'single' });
   const [isMounted, setIsMounted] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -101,6 +101,9 @@ export default function BookReaderPage() {
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [currentScale, setCurrentScale] = useState<number>(1.0);
+  const [isCalculatingScale, setIsCalculatingScale] = useState(false);
+
   
   const readerContainerRef = useRef<HTMLDivElement>(null);
   const pdfViewerWrapperRef = useRef<HTMLDivElement>(null);
@@ -178,20 +181,27 @@ export default function BookReaderPage() {
   
   const calculateAndSetFitHeightScale = useCallback(async () => {
       if (!pdfDoc || !pdfViewerWrapperRef.current) return;
+      setIsCalculatingScale(true);
       
       const page: PDFPageProxy = await pdfDoc.getPage(pageNumber);
       const pageViewport = page.getViewport({ scale: 1 });
       const containerHeight = pdfViewerWrapperRef.current.clientHeight;
 
       const verticalPadding = 32;
-      const scale = (containerHeight - verticalPadding) / pageViewport.height;
-      
-      updateSettings({ pdfScale: scale });
+      const scaleY = (containerHeight - verticalPadding) / pageViewport.height;
+      const resultingWidth = pageViewport.width * scaleY;
 
+      if (resultingWidth > pdfViewerWrapperRef.current.clientWidth) {
+         calculateAndSetFitWidthScale();
+      } else {
+         setCurrentScale(scaleY);
+      }
+      setIsCalculatingScale(false);
   }, [pdfDoc, pageNumber]);
 
   const calculateAndSetFitWidthScale = useCallback(async () => {
     if (!pdfDoc || !pdfViewerWrapperRef.current) return;
+    setIsCalculatingScale(true);
 
     const page: PDFPageProxy = await pdfDoc.getPage(pageNumber);
     let pageViewport = page.getViewport({ scale: 1 });
@@ -207,27 +217,58 @@ export default function BookReaderPage() {
     const horizontalPadding = 32;
     const scale = (containerWidth - horizontalPadding) / totalWidth;
 
-    updateSettings({ pdfScale: scale });
+    setCurrentScale(scale);
+    setIsCalculatingScale(false);
 
   }, [pdfDoc, pageNumber, numPages, settings.pageLayout]);
   
   useEffect(() => {
-    if(settings.pdfScale === 'fitHeight' && isMounted && pdfDoc) {
+    if(!isMounted || !pdfDoc) return;
+
+    if(settings.pdfScaleMode === 'fitHeight') {
         calculateAndSetFitHeightScale();
-    } else if (settings.pdfScale === 'fitWidth' && isMounted && pdfDoc) {
+    } else if (settings.pdfScaleMode === 'fitWidth') {
         calculateAndSetFitWidthScale();
     }
-  }, [settings.pdfScale, calculateAndSetFitHeightScale, calculateAndSetFitWidthScale, isMounted, pdfDoc, pageNumber]);
+  }, [settings.pdfScaleMode, calculateAndSetFitHeightScale, calculateAndSetFitWidthScale, isMounted, pdfDoc, pageNumber, settings.pageLayout]);
 
-  const goToNextPage = () => {
+
+  const goToNextPage = useCallback(() => {
     if (!numPages) return;
     const increment = settings.pageLayout === 'double' ? 2 : 1;
     setPageNumber(prev => Math.min(prev + increment, numPages));
-  };
-  const goToPrevPage = () => {
+  }, [numPages, settings.pageLayout]);
+
+  const goToPrevPage = useCallback(() => {
     const increment = settings.pageLayout === 'double' ? 2 : 1;
     setPageNumber(prev => Math.max(prev - increment, 1));
-  };
+  }, [settings.pageLayout]);
+
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't interfere if the user is typing in an input, textarea, etc.
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
+        return;
+      }
+      
+      switch(event.key) {
+        case 'ArrowLeft':
+          goToPrevPage();
+          break;
+        case 'ArrowRight':
+          goToNextPage();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [goToPrevPage, goToNextPage]);
+
 
   const renderContent = () => {
     if (error) {
@@ -255,7 +296,7 @@ export default function BookReaderPage() {
     }
 
     if (book.type === 'pdf') {
-      return <PdfViewer file={book.content} theme={settings.theme} scale={settings.pdfScale} pageNumber={pageNumber} pageLayout={settings.pageLayout} numPages={numPages} onDocumentLoadSuccess={onDocumentLoadSuccess} wrapperRef={pdfViewerWrapperRef} translations={{ pdfError: t.pdfError, pdfLoading: t.pdfLoading }} />;
+      return <PdfViewer file={book.content} theme={settings.theme} scale={currentScale} isCalculatingScale={isCalculatingScale} pageNumber={pageNumber} pageLayout={settings.pageLayout} numPages={numPages} onDocumentLoadSuccess={onDocumentLoadSuccess} wrapperRef={pdfViewerWrapperRef} translations={{ pdfError: t.pdfError, pdfLoading: t.pdfLoading }} />;
     }
 
     return null;
@@ -275,8 +316,8 @@ export default function BookReaderPage() {
            <div className="space-y-2">
               <h4 className="font-medium leading-none flex items-center text-sm"><StretchVertical className="mr-2 h-4 w-4"/>{t.scaleMode}</h4>
               <div className="grid grid-cols-2 gap-2">
-                 <Button variant={settings.pdfScale === 'fitHeight' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: 'fitHeight' })} className="w-full text-xs h-7"><StretchVertical className="mr-1.5 h-3.5 w-3.5"/>{t.fitHeight}</Button>
-                 <Button variant={settings.pdfScale === 'fitWidth' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: 'fitWidth' })} className="w-full text-xs h-7"><StretchHorizontal className="mr-1.5 h-3.5 w-3.5"/>{t.fitWidth}</Button>
+                 <Button variant={settings.pdfScaleMode === 'fitHeight' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScaleMode: 'fitHeight' })} className="w-full text-xs h-7"><StretchVertical className="mr-1.5 h-3.5 w-3.5"/>{t.fitHeight}</Button>
+                 <Button variant={settings.pdfScaleMode === 'fitWidth' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScaleMode: 'fitWidth' })} className="w-full text-xs h-7"><StretchHorizontal className="mr-1.5 h-3.5 w-3.5"/>{t.fitWidth}</Button>
               </div>
           </div>
         </>

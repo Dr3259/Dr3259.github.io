@@ -12,12 +12,12 @@ import { cn } from '@/lib/utils';
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type PageLayout = 'single' | 'double';
-type ScaleMode = 'fitHeight' | number;
 
 interface PdfViewerProps {
     file: string; 
     theme: 'light' | 'dark';
-    scale?: ScaleMode;
+    scale: number;
+    isCalculatingScale: boolean;
     pageNumber: number;
     pageLayout: PageLayout;
     numPages: number | null;
@@ -33,6 +33,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
     file, 
     theme, 
     scale = 1.0, 
+    isCalculatingScale,
     pageNumber, 
     pageLayout,
     numPages,
@@ -46,9 +47,16 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
         }
     }, [pageNumber, file, wrapperRef]);
     
-    const actualScale = typeof scale === 'number' ? scale : 1.0;
 
     const renderPages = () => {
+        if (isCalculatingScale) {
+            return (
+                <div className="flex items-center justify-center h-full w-full absolute inset-0">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            );
+        }
+
         const isSinglePageLayout = pageLayout === 'single' || !numPages || pageNumber === 1;
 
         if (isSinglePageLayout) {
@@ -56,7 +64,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                 <Page 
                     key={`page_${pageNumber}`}
                     pageNumber={pageNumber} 
-                    scale={actualScale}
+                    scale={scale}
                     renderAnnotationLayer={false}
                     renderTextLayer={true}
                     className="shadow-md"
@@ -64,10 +72,9 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
             );
         }
 
-        const startPage = pageNumber % 2 === 0 ? pageNumber -1 : pageNumber;
-        if(startPage === 0) return null;
+        const firstPageOfPair = (pageNumber % 2 === 0) ? pageNumber - 1 : pageNumber;
+        if(firstPageOfPair === 0) return null; // Should not happen with validation
         
-        const firstPageOfPair = Math.max(1, startPage);
         const secondPageOfPair = firstPageOfPair + 1;
         
         return (
@@ -75,7 +82,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                 <Page 
                     key={`page_${firstPageOfPair}`}
                     pageNumber={firstPageOfPair} 
-                    scale={actualScale}
+                    scale={scale}
                     renderAnnotationLayer={false}
                     renderTextLayer={true}
                     className="shadow-md"
@@ -84,7 +91,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                     <Page 
                         key={`page_${secondPageOfPair}`}
                         pageNumber={secondPageOfPair} 
-                        scale={actualScale}
+                        scale={scale}
                         renderAnnotationLayer={false}
                         renderTextLayer={true}
                         className="shadow-md"
@@ -96,7 +103,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
 
     return (
         <div ref={wrapperRef} className="flex-1 flex justify-center items-start p-4 overflow-y-auto">
-            <div className={cn("flex justify-center", theme === 'dark' && 'invert-[0.9] hue-rotate-[180deg]')}>
+            <div className={cn("relative flex justify-center", theme === 'dark' && 'invert-[0.9] hue-rotate-[180deg]')}>
                 <Document
                     file={file}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -111,10 +118,15 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                             {translations.pdfError}
                         </div>
                     }
-                    className="shadow-lg"
+                    className={cn("shadow-lg", isCalculatingScale && "opacity-0")}
                 >
                     {renderPages()}
                 </Document>
+                 {isCalculatingScale && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                 )}
             </div>
         </div>
     );
