@@ -350,36 +350,40 @@ export default function BookReaderPage() {
     
     let lines: { text: string; y: number; x: number; isBold: boolean; isItalic: boolean; size: number }[] = [];
     
-    for (const item of items) {
-        if (!item.str.trim()) continue;
+    items.forEach(item => {
+        if (!item.str.trim()) return;
 
         const y = item.transform[5];
         const x = item.transform[4];
-        const fontName = item.fontName;
+        const fontName = item.fontName || 'unknown';
         const size = item.transform[3];
         
         const isBold = fontName.toLowerCase().includes('bold') || fontName.toLowerCase().includes('semibold') || fontName.toLowerCase().includes('black');
         const isItalic = fontName.toLowerCase().includes('italic') || fontName.toLowerCase().includes('oblique');
 
-        let line = lines.find(l => Math.abs(l.y - y) < 5);
+        let line = lines.find(l => Math.abs(l.y - y) < 5); // Group text on the same line
         
         if (!line) {
-            line = { text: item.str, y, x, isBold, isItalic, size };
-            lines.push(line);
+            lines.push({ text: item.str, y, x, isBold, isItalic, size });
         } else {
+            // This is a simplified concatenation. For more complex layouts, need to sort by X.
+            // For now, let's assume reading order is generally correct in items.
             line.text += ' ' + item.str;
+            line.isBold = line.isBold || isBold;
+            line.isItalic = line.isItalic || isItalic;
         }
-    }
+    });
     
-    lines.sort((a, b) => b.y - a.y);
-    const fontSizes: number[] = lines.map(line => line.size);
-    const mostCommonFontSize = fontSizes.sort((a,b) =>
+    lines.sort((a, b) => b.y - a.y); // Sort lines from top to bottom
+    
+    const fontSizes: number[] = lines.map(line => line.size).filter(size => size > 0);
+    const mostCommonFontSize = fontSizes.length > 0 ? fontSizes.sort((a,b) =>
           fontSizes.filter(v => v===a).length
         - fontSizes.filter(v => v===b).length
-    ).pop();
+    ).pop() : null;
     
     return lines.map(line => {
-      let text = line.text;
+      let text = line.text.trim();
       
       if(mostCommonFontSize) {
         if(line.size > mostCommonFontSize * 1.5) text = `# ${text}`;
@@ -421,11 +425,14 @@ export default function BookReaderPage() {
   const handleJumpToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
         const targetPage = parseInt(jumpToPageInput, 10);
+        
+        // Hide input first, then jump.
+        setIsJumpingToPage(false);
+        setJumpToPageInput('');
+
         if (!isNaN(targetPage)) {
             goToPage(targetPage);
         }
-        setIsJumpingToPage(false);
-        setJumpToPageInput('');
     } else if (e.key === 'Escape') {
         setIsJumpingToPage(false);
         setJumpToPageInput('');
@@ -498,6 +505,7 @@ export default function BookReaderPage() {
 
   const readingBgClass = settings.theme === 'light' ? 'bg-[--background]' : 'bg-gray-800';
   const readingFgClass = settings.theme === 'light' ? 'text-gray-800' : 'text-gray-200';
+  
   const isCurrentPageBookmarked = useMemo(() => {
     if (!book || !bookmarks) return false;
     return bookmarks.includes(pageNumber);
@@ -574,5 +582,3 @@ export default function BookReaderPage() {
     </div>
   );
 }
-
-    
