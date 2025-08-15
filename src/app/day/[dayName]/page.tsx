@@ -889,7 +889,7 @@ export default function DayDetailPage() {
     if (selectedSlotForMeetingNote) handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId);
   };
   const handleOpenEditMeetingNoteModalInPage = (targetDateKey: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
-    handleOpenMeetingNoteModal(hourSlot, noteToEdit);
+    handleOpenMeetingNoteModal(targetHourSlot, noteToEdit);
   };
   const getMeetingNotesForSlot = (targetDateKey: string, targetHourSlot: string): MeetingNoteItem[] => {
     return allMeetingNotes[targetDateKey]?.[targetHourSlot] || [];
@@ -926,7 +926,7 @@ export default function DayDetailPage() {
     if (selectedSlotForShareLink) handleDeleteShareLinkInPage(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId);
   };
   const handleOpenEditShareLinkModalInPage = (targetDateKey: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
-    handleOpenShareLinkModal(hourSlot, linkToEdit);
+    handleOpenShareLinkModal(targetHourSlot, linkToEdit);
   };
   const getShareLinksForSlot = (targetDateKey: string, targetHourSlot: string): ShareLinkItem[] => {
     return allShareLinks[targetDateKey]?.[targetHourSlot] || [];
@@ -963,7 +963,7 @@ export default function DayDetailPage() {
     if (selectedSlotForReflection) handleDeleteReflectionInPage(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId);
   };
   const handleOpenEditReflectionModalInPage = (targetDateKey: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
-    handleOpenReflectionModal(hourSlot, reflectionToEdit);
+    handleOpenReflectionModal(targetHourSlot, reflectionToEdit);
   };
   const getReflectionsForSlot = (targetDateKey: string, targetHourSlot: string): ReflectionItem[] => {
     return allReflections[targetDateKey]?.[targetHourSlot] || [];
