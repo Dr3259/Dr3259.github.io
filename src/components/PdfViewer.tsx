@@ -66,14 +66,14 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                     pageNumber={pageNumber} 
                     scale={scale}
                     renderAnnotationLayer={false}
-                    renderTextLayer={true}
+                    renderTextLayer={false}
                     className="shadow-md"
                 />
             );
         }
 
         const firstPageOfPair = (pageNumber % 2 === 0) ? pageNumber - 1 : pageNumber;
-        if(firstPageOfPair === 0) return null; // Should not happen with validation
+        if(firstPageOfPair === 0) return null;
         
         const secondPageOfPair = firstPageOfPair + 1;
         
@@ -84,7 +84,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                     pageNumber={firstPageOfPair} 
                     scale={scale}
                     renderAnnotationLayer={false}
-                    renderTextLayer={true}
+                    renderTextLayer={false}
                     className="shadow-md"
                 />
                  {secondPageOfPair <= numPages && (
@@ -93,7 +93,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
                         pageNumber={secondPageOfPair} 
                         scale={scale}
                         renderAnnotationLayer={false}
-                        renderTextLayer={true}
+                        renderTextLayer={false}
                         className="shadow-md"
                     />
                  )}
