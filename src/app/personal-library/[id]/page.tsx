@@ -332,10 +332,40 @@ export default function BookReaderPage() {
   };
 
   const extractTextFromPage = async (page: PDFPageProxy): Promise<string> => {
-    // This leverages the built-in intelligence of pdf.js to order text items.
-    // By default, `getTextContent` attempts to combine text items into lines.
     const textContent = await page.getTextContent();
-    return textContent.items.map(item => (item as TextItem).str).join('\n');
+    const items = textContent.items as TextItem[];
+
+    if (!items || items.length === 0) {
+      return '';
+    }
+
+    // Group items by line (y-coordinate)
+    const lines: TextItem[][] = [];
+    let currentLine: TextItem[] = [items[0]];
+
+    for (let i = 1; i < items.length; i++) {
+        const currentItem = items[i];
+        const prevItem = items[i-1];
+        // A simple check for new line: check if y-coordinates are different.
+        // A tolerance can be added for slightly misaligned text.
+        if (Math.abs(currentItem.transform[5] - prevItem.transform[5]) > 1) {
+            lines.push(currentLine);
+            currentLine = [currentItem];
+        } else {
+            currentLine.push(currentItem);
+        }
+    }
+    lines.push(currentLine);
+
+    // Sort items within each line by x-coordinate and join
+    return lines
+        .map(line => {
+            return line
+                .sort((a, b) => a.transform[4] - b.transform[4])
+                .map(item => item.str)
+                .join(' ');
+        })
+        .join('\n');
   };
 
   const handleCopyPageText = async () => {
@@ -472,3 +502,5 @@ export default function BookReaderPage() {
     </div>
   );
 }
+
+    
