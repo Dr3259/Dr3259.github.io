@@ -12,11 +12,15 @@ import { cn } from '@/lib/utils';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+type PageLayout = 'single' | 'double';
+
 interface PdfViewerProps {
     file: string; 
     theme: 'light' | 'dark';
     scale?: number;
     pageNumber: number;
+    pageLayout: PageLayout;
+    numPages: number | null;
     onDocumentLoadSuccess: ({ numPages }: PDFDocumentProxy) => void;
     translations: {
         pdfError: string;
@@ -24,7 +28,16 @@ interface PdfViewerProps {
     }
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ file, theme, scale = 1.0, pageNumber, onDocumentLoadSuccess, translations }) => {
+const PdfViewer: React.FC<PdfViewerProps> = ({ 
+    file, 
+    theme, 
+    scale = 1.0, 
+    pageNumber, 
+    pageLayout,
+    numPages,
+    onDocumentLoadSuccess, 
+    translations 
+}) => {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     // Reset scroll position when page or file changes
@@ -37,6 +50,60 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, theme, scale = 1.0, pageNum
         }
     }, [pageNumber, file]);
 
+    const renderPages = () => {
+        if (pageLayout === 'single' || !numPages) {
+            return (
+                <Page 
+                    key={`page_${pageNumber}`}
+                    pageNumber={pageNumber} 
+                    scale={scale}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={true}
+                />
+            );
+        }
+
+        // Double page layout logic
+        // Page 1 is always single
+        if (pageNumber === 1) {
+             return (
+                <Page 
+                    key={`page_1`}
+                    pageNumber={1} 
+                    scale={scale}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={true}
+                />
+            );
+        }
+        
+        // For other pages, show them in pairs. Ensure the first page of a pair is even.
+        const firstPageOfPair = pageNumber % 2 === 0 ? pageNumber : pageNumber - 1;
+        const secondPageOfPair = firstPageOfPair + 1;
+        
+        return (
+            <div className="flex justify-center items-start gap-x-2">
+                <Page 
+                    key={`page_${firstPageOfPair}`}
+                    pageNumber={firstPageOfPair} 
+                    scale={scale}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={true}
+                    className="shadow-md"
+                />
+                 {secondPageOfPair <= numPages && (
+                    <Page 
+                        key={`page_${secondPageOfPair}`}
+                        pageNumber={secondPageOfPair} 
+                        scale={scale}
+                        renderAnnotationLayer={false}
+                        renderTextLayer={true}
+                        className="shadow-md"
+                    />
+                 )}
+            </div>
+        );
+    }
 
     return (
         <ScrollArea className="flex-1 flex justify-center items-start p-4" ref={scrollAreaRef}>
@@ -57,13 +124,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ file, theme, scale = 1.0, pageNum
                     }
                     className="shadow-lg"
                 >
-                    <Page 
-                        key={`page_${pageNumber}`}
-                        pageNumber={pageNumber} 
-                        scale={scale}
-                        renderAnnotationLayer={false}
-                        renderTextLayer={true}
-                     />
+                    {renderPages()}
                 </Document>
             </div>
         </ScrollArea>

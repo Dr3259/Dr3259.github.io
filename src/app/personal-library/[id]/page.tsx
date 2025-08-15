@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getBookContent, type BookWithContent } from '@/lib/db';
@@ -28,6 +28,9 @@ const translations = {
     pdfLoading: '正在加载 PDF...',
     fullscreen: '全屏',
     exitFullscreen: '退出全屏',
+    pageLayout: '页面布局',
+    singlePage: '单页',
+    doublePage: '双页',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -45,18 +48,23 @@ const translations = {
     pdfLoading: 'Loading PDF...',
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit Fullscreen',
+    pageLayout: 'Page Layout',
+    singlePage: 'Single',
+    doublePage: 'Double',
   }
 };
 
 type LanguageKey = keyof typeof translations;
+type PageLayout = 'single' | 'double';
 
 interface ReadingSettings {
   fontSize: number;
   theme: 'light' | 'dark';
   pdfScale: number;
+  pageLayout: PageLayout;
 }
 
-const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v3';
+const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v4';
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
     ssr: false,
@@ -78,7 +86,7 @@ export default function BookReaderPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [book, setBook] = useState<BookWithContent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light', pdfScale: 1.0 });
+  const [settings, setSettings] = useState<ReadingSettings>({ fontSize: 16, theme: 'light', pdfScale: 1.0, pageLayout: 'single' });
   const [isMounted, setIsMounted] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -102,7 +110,13 @@ export default function BookReaderPage() {
     try {
       const savedSettings = localStorage.getItem(LOCAL_STORAGE_SETTINGS_KEY);
       if (savedSettings) {
-        setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
+        // Ensure new settings have defaults if not in saved data
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(prev => ({ 
+            ...prev, 
+            ...parsedSettings,
+            pageLayout: parsedSettings.pageLayout || 'single'
+        }));
       } else {
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         setSettings(prev => ({ ...prev, theme: prefersDark ? 'dark' : 'light' }));
@@ -180,10 +194,13 @@ export default function BookReaderPage() {
   };
 
   const goToNextPage = () => {
-      if (numPages && pageNumber < numPages) setPageNumber(pageNumber + 1);
+      if (!numPages) return;
+      const increment = settings.pageLayout === 'double' ? 2 : 1;
+      setPageNumber(prev => Math.min(prev + increment, numPages));
   };
   const goToPrevPage = () => {
-      if (pageNumber > 1) setPageNumber(pageNumber - 1);
+      const increment = settings.pageLayout === 'double' ? 2 : 1;
+      setPageNumber(prev => Math.max(prev - increment, 1));
   };
 
   const renderContent = () => {
@@ -232,6 +249,8 @@ export default function BookReaderPage() {
                 theme={settings.theme}
                 scale={settings.pdfScale}
                 pageNumber={pageNumber}
+                pageLayout={settings.pageLayout}
+                numPages={numPages}
                 onDocumentLoadSuccess={onDocumentLoadSuccess}
                 translations={{
                     pdfError: t.pdfError,
@@ -247,22 +266,47 @@ export default function BookReaderPage() {
   const renderSettingsContent = () => {
     if (book?.type === 'pdf') {
       return (
-        <div className="space-y-2">
-            <h4 className="font-medium leading-none flex items-center text-sm"><ZoomIn className="mr-2 h-4 w-4"/>{t.zoom}</h4>
-            <div className="grid grid-cols-5 gap-2">
-                {PRESET_PDF_SCALES.map(scaleValue => (
+        <>
+            <div className="space-y-2">
+                <h4 className="font-medium leading-none flex items-center text-sm"><BookOpen className="mr-2 h-4 w-4"/>{t.pageLayout}</h4>
+                <div className="grid grid-cols-2 gap-2">
                     <Button 
-                        key={scaleValue}
-                        variant={settings.pdfScale === scaleValue ? 'secondary' : 'outline'}
+                        key="single"
+                        variant={settings.pageLayout === 'single' ? 'secondary' : 'outline'}
                         size="sm"
-                        onClick={() => updateSettings({ pdfScale: scaleValue })}
+                        onClick={() => updateSettings({ pageLayout: 'single' })}
                         className="text-xs h-7"
                     >
-                        {scaleValue * 100}%
+                       <Book className="mr-1.5 h-3.5 w-3.5"/> {t.singlePage}
                     </Button>
-                ))}
+                     <Button 
+                        key="double"
+                        variant={settings.pageLayout === 'double' ? 'secondary' : 'outline'}
+                        size="sm"
+                        onClick={() => updateSettings({ pageLayout: 'double' })}
+                        className="text-xs h-7"
+                    >
+                       <BookOpen className="mr-1.5 h-3.5 w-3.5"/>{t.doublePage}
+                    </Button>
+                </div>
             </div>
-        </div>
+            <div className="space-y-2">
+                <h4 className="font-medium leading-none flex items-center text-sm"><ZoomIn className="mr-2 h-4 w-4"/>{t.zoom}</h4>
+                <div className="grid grid-cols-5 gap-2">
+                    {PRESET_PDF_SCALES.map(scaleValue => (
+                        <Button 
+                            key={scaleValue}
+                            variant={settings.pdfScale === scaleValue ? 'secondary' : 'outline'}
+                            size="sm"
+                            onClick={() => updateSettings({ pdfScale: scaleValue })}
+                            className="text-xs h-7"
+                        >
+                            {scaleValue * 100}%
+                        </Button>
+                    ))}
+                </div>
+            </div>
+        </>
       )
     }
     // Default to TXT settings
@@ -286,7 +330,7 @@ export default function BookReaderPage() {
     )
   }
 
-  const readingBgClass = settings.theme === 'light' ? 'bg-[--background]' : 'bg-[--background]';
+  const readingBgClass = settings.theme === 'light' ? 'bg-[--background]' : 'bg-gray-800';
   const readingFgClass = settings.theme === 'light' ? 'text-gray-800' : 'text-gray-200';
   
   return (
@@ -342,7 +386,7 @@ export default function BookReaderPage() {
                             <ChevronLeft className="h-5 w-5" />
                         </Button>
                         <span className="text-sm font-medium text-muted-foreground tabular-nums px-1">
-                            {numPages ? `${pageNumber}/${numPages}` : '...'}
+                            {numPages ? `${pageNumber} / ${numPages}` : '...'}
                         </span>
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={!numPages || (numPages && pageNumber >= numPages)}>
                             <ChevronRight className="h-5 w-5" />
@@ -362,5 +406,3 @@ export default function BookReaderPage() {
     </div>
   )
 }
-
-    
