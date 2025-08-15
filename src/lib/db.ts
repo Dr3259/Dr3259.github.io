@@ -7,6 +7,7 @@ export interface BookMetadata {
   id: string;
   title: string;
   type: 'txt' | 'pdf';
+  bookmarks?: number[];
 }
 
 export interface BookWithContent extends BookMetadata {
@@ -77,7 +78,7 @@ export async function getBooksMetadata(): Promise<BookMetadata[]> {
 
         request.onsuccess = () => {
             const allBooks: BookWithContent[] = request.result;
-            const metadata: BookMetadata[] = allBooks.map(({ id, title, type }) => ({ id, title, type }));
+            const metadata: BookMetadata[] = allBooks.map(({ id, title, type, bookmarks }) => ({ id, title, type, bookmarks }));
             resolve(metadata);
         };
         request.onerror = () => reject(request.error);

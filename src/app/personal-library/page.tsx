@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Library, Plus, Trash2, Book } from 'lucide-react';
+import { ArrowLeft, Library, Plus, Trash2, Book, Bookmark } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -91,11 +91,12 @@ export default function PersonalLibraryListPage() {
         title: file.name.replace(/\.(txt|pdf)$/, ''),
         type: fileType,
         content: content,
+        bookmarks: [],
       };
 
       try {
         await saveBook(newBook);
-        setBooks(prevBooks => [...prevBooks, { id: newBook.id, title: newBook.title, type: newBook.type }]);
+        setBooks(prevBooks => [...prevBooks, { id: newBook.id, title: newBook.title, type: newBook.type, bookmarks: [] }]);
         toast({ title: t.importSuccess });
       } catch (error) {
         console.error("Failed to save book to IndexedDB", error);
@@ -191,7 +192,15 @@ export default function PersonalLibraryListPage() {
                                 >
                                     <Book className="h-16 w-16 text-primary/70 mb-4"/>
                                     <p className="font-semibold text-base leading-tight break-words" title={book.title}>{book.title}</p>
-                                    <p className="text-xs text-muted-foreground mt-1 uppercase bg-primary/10 px-2 py-0.5 rounded-full">{book.type}</p>
+                                    <div className='flex items-center space-x-2 mt-2'>
+                                      <p className="text-xs text-muted-foreground uppercase bg-primary/10 px-2 py-0.5 rounded-full">{book.type}</p>
+                                       {book.bookmarks && book.bookmarks.length > 0 && (
+                                        <div className='flex items-center text-xs text-muted-foreground bg-amber-400/10 px-2 py-0.5 rounded-full'>
+                                          <Bookmark className="h-3 w-3 mr-1 text-amber-500"/>
+                                          <span>{book.bookmarks.length}</span>
+                                        </div>
+                                      )}
+                                    </div>
                                 </div>
                                 <div className="border-t pt-2 mt-2 flex justify-end">
                                     <Button 

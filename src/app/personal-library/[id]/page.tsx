@@ -6,9 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal, Bookmark, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getBookContent, type BookWithContent } from '@/lib/db';
+import { getBookContent, saveBook, type BookWithContent } from '@/lib/db';
+import { BookmarkPanel } from '@/components/BookmarkPanel';
+
 
 const translations = {
   'zh-CN': {
@@ -18,7 +20,6 @@ const translations = {
     bookNotFoundDescription: '这本书的内容没有在数据库中找到。请返回书架重新选择。',
     settings: '阅读设置',
     fontSize: '字号',
-    zoom: '缩放',
     theme: '主题',
     lightTheme: '浅色',
     darkTheme: '深色',
@@ -33,6 +34,9 @@ const translations = {
     scaleMode: '缩放模式',
     fitHeight: '适应高度',
     fitWidth: '适应宽度',
+    addBookmark: '添加书签',
+    removeBookmark: '移除书签',
+    bookmarks: '书签列表',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -41,7 +45,6 @@ const translations = {
     bookNotFoundDescription: 'The content for this book was not found in the database. Please return to the bookshelf and select it again.',
     settings: 'Reading Settings',
     fontSize: 'Font Size',
-    zoom: 'Zoom',
     theme: 'Theme',
     lightTheme: 'Light',
     darkTheme: 'Dark',
@@ -56,6 +59,9 @@ const translations = {
     scaleMode: 'Scale Mode',
     fitHeight: 'Fit Height',
     fitWidth: 'Fit Width',
+    addBookmark: 'Add Bookmark',
+    removeBookmark: 'Remove Bookmark',
+    bookmarks: 'Bookmarks',
   }
 };
 
@@ -97,12 +103,14 @@ export default function BookReaderPage() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isBookmarkPanelOpen, setIsBookmarkPanelOpen] = useState(false);
   
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [currentScale, setCurrentScale] = useState<number>(1.0);
   const [isCalculatingScale, setIsCalculatingScale] = useState(false);
+  const [bookmarks, setBookmarks] = useState<number[]>([]);
 
   
   const readerContainerRef = useRef<HTMLDivElement>(null);
@@ -131,7 +139,10 @@ export default function BookReaderPage() {
 
     if (bookId) {
       getBookContent(bookId).then(bookContent => {
-        if (bookContent) setBook(bookContent);
+        if (bookContent) {
+            setBook(bookContent);
+            setBookmarks(bookContent.bookmarks || []);
+        }
         else setError(t.bookNotFound);
       }).catch(err => {
         console.error("Failed to load book content from IndexedDB", err);
@@ -225,11 +236,15 @@ export default function BookReaderPage() {
   useEffect(() => {
     if(!isMounted || !pdfDoc) return;
 
-    if(settings.pdfScaleMode === 'fitHeight') {
-        calculateAndSetFitHeightScale();
-    } else if (settings.pdfScaleMode === 'fitWidth') {
-        calculateAndSetFitWidthScale();
-    }
+    const calculateScale = async () => {
+        if(settings.pdfScaleMode === 'fitHeight') {
+            await calculateAndSetFitHeightScale();
+        } else if (settings.pdfScaleMode === 'fitWidth') {
+            await calculateAndSetFitWidthScale();
+        }
+    };
+    calculateScale();
+
   }, [settings.pdfScaleMode, calculateAndSetFitHeightScale, calculateAndSetFitWidthScale, isMounted, pdfDoc, pageNumber, settings.pageLayout]);
 
 
@@ -244,11 +259,15 @@ export default function BookReaderPage() {
     setPageNumber(prev => Math.max(prev - increment, 1));
   }, [settings.pageLayout]);
 
+  const goToPage = useCallback((pageNum: number) => {
+    if (!numPages) return;
+    setPageNumber(Math.max(1, Math.min(pageNum, numPages)));
+  }, [numPages]);
 
   useEffect(() => {
+    if (!isMounted || !book) return;
+    
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isMounted || !book) return;
-      
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
         return;
@@ -279,6 +298,30 @@ export default function BookReaderPage() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout]);
+
+  const toggleBookmark = async () => {
+    if (!book) return;
+    const currentPage = pageNumber;
+    let newBookmarks;
+    if (bookmarks.includes(currentPage)) {
+        newBookmarks = bookmarks.filter(b => b !== currentPage);
+    } else {
+        newBookmarks = [...bookmarks, currentPage].sort((a,b) => a - b);
+    }
+    setBookmarks(newBookmarks);
+    const updatedBook = { ...book, bookmarks: newBookmarks };
+    await saveBook(updatedBook);
+    setBook(updatedBook);
+  };
+  
+  const removeBookmark = async (pageNum: number) => {
+    if(!book) return;
+    const newBookmarks = bookmarks.filter(b => b !== pageNum);
+    setBookmarks(newBookmarks);
+    const updatedBook = { ...book, bookmarks: newBookmarks };
+    await saveBook(updatedBook);
+    setBook(updatedBook);
+  };
 
 
   const renderContent = () => {
@@ -346,13 +389,16 @@ export default function BookReaderPage() {
 
   const readingBgClass = settings.theme === 'light' ? 'bg-[--background]' : 'bg-gray-800';
   const readingFgClass = settings.theme === 'light' ? 'text-gray-800' : 'text-gray-200';
-  
+  const isCurrentPageBookmarked = book?.type === 'pdf' && bookmarks.includes(pageNumber);
+
   return (
     <div ref={readerContainerRef} className={cn("flex flex-col h-screen", readingBgClass, readingFgClass)} style={{ '--background': settings.theme === 'light' ? 'hsl(var(--reading-background))' : '#1f2937' } as React.CSSProperties}>
       <Button variant="outline" size="icon" onClick={() => router.push('/personal-library')} className="fixed bottom-4 left-4 z-50 h-11 w-11 rounded-full shadow-lg bg-background/80 backdrop-blur-sm border-border text-foreground" title={t.backButton}><ArrowLeft className="h-5 w-5" /></Button>
+      <Button variant="outline" size="icon" onClick={() => setIsBookmarkPanelOpen(true)} className="fixed top-4 right-4 z-50 h-11 w-11 rounded-full shadow-lg bg-background/80 backdrop-blur-sm border-border text-foreground" title={t.bookmarks}><PanelLeft className="h-5 w-5" /></Button>
+
       <main className="flex-1 flex flex-col min-h-0">{renderContent()}</main>
       
-      <div id="reading-controls" className="fixed bottom-4 right-4 z-[100] flex flex-col items-end gap-2">
+      <div id="reading-controls" className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
          {isSettingsOpen && (
           <div ref={settingsPanelRef} className="w-64 mb-1 p-4 bg-popover text-popover-foreground border rounded-lg shadow-lg transition-all animate-in fade-in-50 slide-in-from-bottom-2">
             <div className="grid gap-4">
@@ -370,12 +416,19 @@ export default function BookReaderPage() {
 
         <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
           {book?.type === 'pdf' && numPages && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{`${pageNumber} / ${numPages}`}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
+          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>{isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}</Button>
         </div>
       </div>
+      <BookmarkPanel 
+        isOpen={isBookmarkPanelOpen}
+        onClose={() => setIsBookmarkPanelOpen(false)}
+        bookmarks={bookmarks}
+        onGoToPage={goToPage}
+        onRemoveBookmark={removeBookmark}
+        translations={{title: t.bookmarks}}
+       />
     </div>
   );
 }
-
-    
