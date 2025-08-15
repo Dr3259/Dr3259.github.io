@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, AspectRatio } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBookContent, type BookWithContent } from '@/lib/db';
 
@@ -80,6 +80,8 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
 });
 
 const PRESET_FONT_SIZES = [14, 16, 18, 20];
+const PRESET_PDF_SCALES = [0.8, 1.0, 1.25, 1.5, 1.75];
+
 
 export default function BookReaderPage() {
   const params = useParams();
@@ -180,7 +182,6 @@ export default function BookReaderPage() {
       const pageViewport = page.getViewport({ scale: 1 });
       const containerHeight = pdfViewerWrapperRef.current.clientHeight;
 
-      // Add some padding to the calculation
       const verticalPadding = 32;
       const scale = (containerHeight - verticalPadding) / pageViewport.height;
       
@@ -189,10 +190,10 @@ export default function BookReaderPage() {
   }, [pdfDoc, pageNumber]);
   
   useEffect(() => {
-    if(settings.pdfScale === 'fitHeight') {
+    if(settings.pdfScale === 'fitHeight' && isMounted && pdfDoc) {
         calculateAndSetFitHeightScale();
     }
-  }, [settings.pdfScale, calculateAndSetFitHeightScale]);
+  }, [settings.pdfScale, calculateAndSetFitHeightScale, isMounted, pdfDoc, pageNumber]);
 
   const goToNextPage = () => {
     if (!numPages) return;
@@ -248,8 +249,11 @@ export default function BookReaderPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h4 className="font-medium leading-none flex items-center text-sm"><AspectRatio className="mr-2 h-4 w-4"/>{t.scaleMode}</h4>
-            <Button variant={settings.pdfScale === 'fitHeight' ? 'secondary' : 'outline'} size="sm" onClick={calculateAndSetFitHeightScale} className="w-full text-xs h-7">{t.fitHeight}</Button>
+            <h4 className="font-medium leading-none flex items-center text-sm"><StretchVertical className="mr-2 h-4 w-4"/>{t.scaleMode}</h4>
+            <div className="grid grid-cols-3 gap-2">
+               <Button variant={settings.pdfScale === 'fitHeight' ? 'secondary' : 'outline'} size="sm" onClick={calculateAndSetFitHeightScale} className="w-full text-xs h-7 col-span-3">{t.fitHeight}</Button>
+                {PRESET_PDF_SCALES.map(scaleValue => <Button key={scaleValue} variant={settings.pdfScale === scaleValue ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: scaleValue })} className="text-xs h-7">{(scaleValue * 100).toFixed(0)}%</Button>)}
+            </div>
           </div>
         </>
       );
@@ -271,8 +275,9 @@ export default function BookReaderPage() {
     <div ref={readerContainerRef} className={cn("flex flex-col h-screen", readingBgClass, readingFgClass)} style={{ '--background': settings.theme === 'light' ? 'hsl(var(--reading-background))' : '#1f2937' } as React.CSSProperties}>
       <Button variant="outline" size="icon" onClick={() => router.push('/personal-library')} className="fixed bottom-4 left-4 z-50 h-11 w-11 rounded-full shadow-lg bg-background/80 backdrop-blur-sm border-border text-foreground" title={t.backButton}><ArrowLeft className="h-5 w-5" /></Button>
       <main className="flex-1 flex flex-col min-h-0">{renderContent()}</main>
+      
       <div id="reading-controls" className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-        {isSettingsOpen && (
+         {isSettingsOpen && (
           <div ref={settingsPanelRef} className="w-64 mb-1 p-4 bg-popover text-popover-foreground border rounded-lg shadow-lg transition-all animate-in fade-in-50 slide-in-from-bottom-2">
             <div className="grid gap-4">
               {renderSettingsContent()}
@@ -286,8 +291,9 @@ export default function BookReaderPage() {
             </div>
           </div>
         )}
+
         <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
-          {book?.type === 'pdf' && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={!numPages || pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{numPages ? `${pageNumber} / ${numPages}` : '...'}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={!numPages || (settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
+          {book?.type === 'pdf' && numPages && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{`${pageNumber} / ${numPages}`}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>{isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}</Button>
         </div>
