@@ -260,6 +260,16 @@ export default function BookReaderPage() {
         case 'ArrowRight':
           goToNextPage();
           break;
+        case 'ArrowUp':
+          if (pdfViewerWrapperRef.current) {
+            pdfViewerWrapperRef.current.scrollBy({ top: -50, behavior: 'smooth' });
+          }
+          break;
+        case 'ArrowDown':
+          if (pdfViewerWrapperRef.current) {
+            pdfViewerWrapperRef.current.scrollBy({ top: 50, behavior: 'smooth' });
+          }
+          break;
       }
     };
 
@@ -366,3 +376,5 @@ export default function BookReaderPage() {
     </div>
   );
 }
+
+    
