@@ -196,7 +196,7 @@ export default function BookReaderPage() {
     setNumPages(doc.numPages);
     setPageNumber(1);
   };
-    
+
   const calculateAndSetFitWidthScale = useCallback(async () => {
     if (!pdfDoc || !pdfViewerWrapperRef.current) return;
     setIsCalculatingScale(true);
@@ -332,36 +332,10 @@ export default function BookReaderPage() {
   };
 
   const extractTextFromPage = async (page: PDFPageProxy): Promise<string> => {
+    // This leverages the built-in intelligence of pdf.js to order text items.
+    // By default, `getTextContent` attempts to combine text items into lines.
     const textContent = await page.getTextContent();
-    const items = textContent.items as TextItem[];
-
-    // Sort items by their vertical position first, then horizontal.
-    // This helps group text into lines.
-    items.sort((a, b) => {
-        if (Math.abs(a.transform[5] - b.transform[5]) < 5) { // Same line (approx)
-            return a.transform[4] - b.transform[4];
-        }
-        return b.transform[5] - a.transform[5]; // Different lines
-    });
-
-    let lines: string[] = [];
-    if (items.length > 0) {
-        let currentLine = items[0].str;
-        for (let i = 1; i < items.length; i++) {
-            const prevItem = items[i-1];
-            const currentItem = items[i];
-
-            // Check if items are on the same line (y-coordinate is similar)
-            if (Math.abs(prevItem.transform[5] - currentItem.transform[5]) < 5) {
-                currentLine += ' ' + currentItem.str;
-            } else {
-                lines.push(currentLine);
-                currentLine = currentItem.str;
-            }
-        }
-        lines.push(currentLine); // Add the last line
-    }
-    return lines.join('\n');
+    return textContent.items.map(item => (item as TextItem).str).join('\n');
   };
 
   const handleCopyPageText = async () => {
@@ -498,4 +472,3 @@ export default function BookReaderPage() {
     </div>
   );
 }
-
