@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal, Bookmark, PanelLeft, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBookContent, saveBook, type BookWithContent } from '@/lib/db';
-import { BookmarkPanel } from '@/components/BookmarkPanel';
+import { BookmarkPanel, type BookmarkWithTitle } from '@/components/BookmarkPanel';
 import { useToast } from '@/hooks/use-toast';
 import copy from 'copy-to-clipboard';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
@@ -122,6 +122,8 @@ export default function BookReaderPage() {
   const [currentScale, setCurrentScale] = useState<number>(1.0);
   const [isCalculatingScale, setIsCalculatingScale] = useState(false);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [bookmarksWithTitles, setBookmarksWithTitles] = useState<BookmarkWithTitle[]>([]);
+  const [isLoadingBookmarkTitles, setIsLoadingBookmarkTitles] = useState(false);
 
   const [isJumpingToPage, setIsJumpingToPage] = useState(false);
   const [jumpToPageInput, setJumpToPageInput] = useState('');
@@ -202,6 +204,63 @@ export default function BookReaderPage() {
     setNumPages(doc.numPages);
     setPageNumber(1);
   };
+  
+  const extractTextAsMarkdownFromPage = useCallback(async (page: PDFPageProxy, lineLimit?: number): Promise<string> => {
+    const content = await page.getTextContent();
+    const items = content.items as (TextItem & { fontName: string })[];
+
+    if (!items || items.length === 0) return '';
+    
+    let lines: { y: number, x: number, text: string, isBold: boolean, isItalic: boolean, size: number }[] = [];
+    
+    items.forEach(item => {
+        if (!item.str.trim()) return;
+
+        const y = item.transform[5];
+        const x = item.transform[4];
+        const fontName = item.fontName || 'unknown';
+        const size = item.transform[3];
+        
+        const isBold = fontName.toLowerCase().includes('bold') || fontName.toLowerCase().includes('semibold') || fontName.toLowerCase().includes('black');
+        const isItalic = fontName.toLowerCase().includes('italic') || fontName.toLowerCase().includes('oblique');
+
+        let line = lines.find(l => Math.abs(l.y - y) < 5);
+        if (!line) {
+            lines.push({ y, x, text: item.str, isBold, isItalic, size });
+        } else {
+            // Very basic recombination on the same line.
+            // For more complex layouts, this would need a more robust algorithm.
+            line.text += ' ' + item.str;
+        }
+    });
+
+    lines.sort((a, b) => b.y - a.y);
+    if (lineLimit) {
+        lines = lines.slice(0, lineLimit);
+    }
+    
+    const fontSizes: number[] = lines.map(line => line.size).filter(size => size > 0);
+    const mostCommonFontSize = fontSizes.length > 0 ? fontSizes.sort((a,b) =>
+          fontSizes.filter(v => v===a).length
+        - fontSizes.filter(v => v===b).length
+    ).pop() : null;
+    
+    return lines.map(line => {
+      let text = line.text.trim();
+      
+      if(mostCommonFontSize && !lineLimit) { // Don't apply heading logic for title snippets
+        if(line.size > mostCommonFontSize * 1.5) text = `# ${text}`;
+        else if(line.size > mostCommonFontSize * 1.2) text = `## ${text}`;
+      }
+      
+      if(line.isBold && line.isItalic) text = `***${text}***`;
+      else if(line.isBold) text = `**${text}**`;
+      else if(line.isItalic) text = `*${text}*`;
+
+      return text;
+    }).join('\n');
+  }, []);
+
 
   const calculateAndSetFitWidthScale = useCallback(async () => {
     if (!pdfDoc || !pdfViewerWrapperRef.current || !numPages) return;
@@ -342,62 +401,6 @@ export default function BookReaderPage() {
     setBook(updatedBook);
   };
 
-  const extractTextAsMarkdownFromPage = async (page: PDFPageProxy): Promise<string> => {
-    const content = await page.getTextContent();
-    const items = content.items as (TextItem & { fontName: string })[];
-
-    if (!items || items.length === 0) return '';
-    
-    let lines: { text: string; y: number; x: number; isBold: boolean; isItalic: boolean; size: number }[] = [];
-    
-    items.forEach(item => {
-        if (!item.str.trim()) return;
-
-        const y = item.transform[5];
-        const x = item.transform[4];
-        const fontName = item.fontName || 'unknown';
-        const size = item.transform[3];
-        
-        const isBold = fontName.toLowerCase().includes('bold') || fontName.toLowerCase().includes('semibold') || fontName.toLowerCase().includes('black');
-        const isItalic = fontName.toLowerCase().includes('italic') || fontName.toLowerCase().includes('oblique');
-
-        let line = lines.find(l => Math.abs(l.y - y) < 5); // Group text on the same line
-        
-        if (!line) {
-            lines.push({ text: item.str, y, x, isBold, isItalic, size });
-        } else {
-            // This is a simplified concatenation. For more complex layouts, need to sort by X.
-            // For now, let's assume reading order is generally correct in items.
-            line.text += ' ' + item.str;
-            line.isBold = line.isBold || isBold;
-            line.isItalic = line.isItalic || isItalic;
-        }
-    });
-    
-    lines.sort((a, b) => b.y - a.y); // Sort lines from top to bottom
-    
-    const fontSizes: number[] = lines.map(line => line.size).filter(size => size > 0);
-    const mostCommonFontSize = fontSizes.length > 0 ? fontSizes.sort((a,b) =>
-          fontSizes.filter(v => v===a).length
-        - fontSizes.filter(v => v===b).length
-    ).pop() : null;
-    
-    return lines.map(line => {
-      let text = line.text.trim();
-      
-      if(mostCommonFontSize) {
-        if(line.size > mostCommonFontSize * 1.5) text = `# ${text}`;
-        else if(line.size > mostCommonFontSize * 1.2) text = `## ${text}`;
-      }
-      
-      if(line.isBold && line.isItalic) text = `***${text}***`;
-      else if(line.isBold) text = `**${text}**`;
-      else if(line.isItalic) text = `*${text}*`;
-
-      return text;
-    }).join('\n');
-  };
-
   const handleCopyPageText = async () => {
     if (!pdfDoc || !numPages) return;
     
@@ -426,7 +429,6 @@ export default function BookReaderPage() {
     if (e.key === 'Enter') {
         const targetPage = parseInt(jumpToPageInput, 10);
         
-        // Hide input first, then jump.
         setIsJumpingToPage(false);
         setJumpToPageInput('');
 
@@ -438,6 +440,41 @@ export default function BookReaderPage() {
         setJumpToPageInput('');
     }
   };
+
+  const fetchBookmarkTitles = useCallback(async () => {
+    if (!pdfDoc || bookmarks.length === 0) {
+      setBookmarksWithTitles(bookmarks.map(b => ({page: b, title: `Page ${b}`})));
+      return;
+    }
+    setIsLoadingBookmarkTitles(true);
+    try {
+      const titledBookmarks = await Promise.all(
+        bookmarks.map(async (page): Promise<BookmarkWithTitle> => {
+          try {
+            const pdfPage = await pdfDoc.getPage(page);
+            const text = await extractTextAsMarkdownFromPage(pdfPage, 1);
+            return { page, title: text || `Page ${page}` };
+          } catch (e) {
+            console.error(`Failed to get title for page ${page}`, e);
+            return { page, title: `Page ${page}` };
+          }
+        })
+      );
+      setBookmarksWithTitles(titledBookmarks);
+    } catch (e) {
+      console.error("Error fetching bookmark titles", e);
+      // Fallback to simple page numbers on error
+      setBookmarksWithTitles(bookmarks.map(b => ({page: b, title: `Page ${b}`})));
+    } finally {
+      setIsLoadingBookmarkTitles(false);
+    }
+  }, [pdfDoc, bookmarks, extractTextAsMarkdownFromPage]);
+
+  useEffect(() => {
+    if(isBookmarkPanelOpen) {
+      fetchBookmarkTitles();
+    }
+  }, [isBookmarkPanelOpen, fetchBookmarkTitles]);
 
 
   const renderContent = () => {
@@ -574,10 +611,16 @@ export default function BookReaderPage() {
       <BookmarkPanel 
         isOpen={isBookmarkPanelOpen}
         onClose={() => setIsBookmarkPanelOpen(false)}
-        bookmarks={bookmarks}
+        bookmarks={bookmarksWithTitles}
+        isLoading={isLoadingBookmarkTitles}
         onGoToPage={goToPage}
         onRemoveBookmark={removeBookmark}
-        translations={{title: t.bookmarks}}
+        translations={{
+          title: t.bookmarks,
+          loading: t.loadingBook,
+          noBookmarks: "No bookmarks added yet.",
+          pageLabel: "Page"
+        }}
        />
     </div>
   );

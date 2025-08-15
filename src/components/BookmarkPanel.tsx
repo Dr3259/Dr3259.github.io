@@ -2,19 +2,28 @@
 "use client";
 
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
+
+export interface BookmarkWithTitle {
+  page: number;
+  title: string;
+}
 
 interface BookmarkPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  bookmarks: number[];
+  bookmarks: BookmarkWithTitle[];
+  isLoading: boolean;
   onGoToPage: (pageNumber: number) => void;
   onRemoveBookmark: (pageNumber: number) => void;
   translations: {
     title: string;
+    loading: string;
+    noBookmarks: string;
+    pageLabel: string;
   };
 }
 
@@ -22,6 +31,7 @@ export const BookmarkPanel: React.FC<BookmarkPanelProps> = ({
   isOpen,
   onClose,
   bookmarks,
+  isLoading,
   onGoToPage,
   onRemoveBookmark,
   translations,
@@ -33,24 +43,30 @@ export const BookmarkPanel: React.FC<BookmarkPanelProps> = ({
           <SheetTitle>{translations.title}</SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100%-4rem)] mt-4">
-          {bookmarks.length > 0 ? (
+          {isLoading ? (
+             <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="ml-2 text-sm text-muted-foreground">{translations.loading}</p>
+             </div>
+          ) : bookmarks.length > 0 ? (
             <ul className="space-y-2">
-              {bookmarks.map(page => (
-                <li key={page} className="flex items-center justify-between p-2 rounded-md hover:bg-accent group">
+              {bookmarks.map(bookmark => (
+                <li key={bookmark.page} className="flex items-center justify-between p-2 rounded-md hover:bg-accent group">
                   <button
                     onClick={() => {
-                      onGoToPage(page);
+                      onGoToPage(bookmark.page);
                       onClose();
                     }}
-                    className="flex-grow text-left text-sm"
+                    className="flex-grow text-left text-sm space-y-1"
                   >
-                    Page {page}
+                    <span className="font-semibold text-foreground/90">{`${translations.pageLabel} ${bookmark.page}`}</span>
+                    <p className="text-xs text-muted-foreground truncate" title={bookmark.title}>{bookmark.title}</p>
                   </button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
-                    onClick={() => onRemoveBookmark(page)}
+                    onClick={() => onRemoveBookmark(bookmark.page)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -58,7 +74,7 @@ export const BookmarkPanel: React.FC<BookmarkPanelProps> = ({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground text-center mt-8">No bookmarks added yet.</p>
+            <p className="text-sm text-muted-foreground text-center mt-8">{translations.noBookmarks}</p>
           )}
         </ScrollArea>
       </SheetContent>
