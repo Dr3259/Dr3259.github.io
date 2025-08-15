@@ -6,10 +6,12 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal, Bookmark, PanelLeft } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal, Bookmark, PanelLeft, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBookContent, saveBook, type BookWithContent } from '@/lib/db';
 import { BookmarkPanel } from '@/components/BookmarkPanel';
+import { useToast } from '@/hooks/use-toast';
+import copy from 'copy-to-clipboard';
 
 
 const translations = {
@@ -37,6 +39,8 @@ const translations = {
     addBookmark: '添加书签',
     removeBookmark: '移除书签',
     bookmarks: '书签列表',
+    copyPage: '复制本页文本',
+    pageCopied: '当前页文本已复制',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -62,6 +66,8 @@ const translations = {
     addBookmark: 'Add Bookmark',
     removeBookmark: 'Remove Bookmark',
     bookmarks: 'Bookmarks',
+    copyPage: 'Copy page text',
+    pageCopied: 'Page text copied to clipboard',
   }
 };
 
@@ -93,6 +99,7 @@ const PRESET_FONT_SIZES = [14, 16, 18, 20];
 export default function BookReaderPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const bookId = typeof params.id === 'string' ? params.id : null;
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -265,7 +272,7 @@ export default function BookReaderPage() {
   }, [numPages]);
 
   useEffect(() => {
-    if (!isMounted || !book) return;
+    if (!isMounted || !book || !pdfDoc || !numPages) return;
     
     const handleKeyDown = (event: KeyboardEvent) => {
       const activeElement = document.activeElement;
@@ -297,7 +304,7 @@ export default function BookReaderPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout]);
+  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout, pdfDoc]);
 
   const toggleBookmark = async () => {
     if (!book) return;
@@ -321,6 +328,22 @@ export default function BookReaderPage() {
     const updatedBook = { ...book, bookmarks: newBookmarks };
     await saveBook(updatedBook);
     setBook(updatedBook);
+  };
+
+  const handleCopyPageText = async () => {
+    if (!pdfDoc) return;
+    try {
+        const page = await pdfDoc.getPage(pageNumber);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        
+        if (pageText.trim()) {
+            copy(pageText);
+            toast({ title: t.pageCopied });
+        }
+    } catch (err) {
+        console.error("Failed to copy page text:", err);
+    }
   };
 
 
@@ -417,6 +440,7 @@ export default function BookReaderPage() {
         <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
           {book?.type === 'pdf' && numPages && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{`${pageNumber} / ${numPages}`}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
           {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
+          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyPageText} title={t.copyPage}><Copy className="h-5 w-5" /></Button>}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>{isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}</Button>
         </div>
