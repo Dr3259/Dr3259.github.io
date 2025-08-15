@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -203,14 +204,14 @@ export default function BookReaderPage() {
   };
 
   const calculateAndSetFitWidthScale = useCallback(async () => {
-    if (!pdfDoc || !pdfViewerWrapperRef.current) return;
+    if (!pdfDoc || !pdfViewerWrapperRef.current || !numPages) return;
     setIsCalculatingScale(true);
 
     const page: PDFPageProxy = await pdfDoc.getPage(pageNumber);
     let pageViewport = page.getViewport({ scale: 1 });
     let totalWidth = pageViewport.width;
 
-    if (settings.pageLayout === 'double' && pageNumber < numPages!) {
+    if (settings.pageLayout === 'double' && pageNumber < numPages) {
       try {
         const nextPage: PDFPageProxy = await pdfDoc.getPage(pageNumber + 1);
         const nextPageViewport = nextPage.getViewport({ scale: 1 });
@@ -497,7 +498,10 @@ export default function BookReaderPage() {
 
   const readingBgClass = settings.theme === 'light' ? 'bg-[--background]' : 'bg-gray-800';
   const readingFgClass = settings.theme === 'light' ? 'text-gray-800' : 'text-gray-200';
-  const isCurrentPageBookmarked = book?.type === 'pdf' && bookmarks.includes(pageNumber);
+  const isCurrentPageBookmarked = useMemo(() => {
+    if (!book || !bookmarks) return false;
+    return bookmarks.includes(pageNumber);
+  }, [book, bookmarks, pageNumber]);
 
   return (
     <div ref={readerContainerRef} className={cn("flex flex-col h-screen", readingBgClass, readingFgClass)} style={{ '--background': settings.theme === 'light' ? 'hsl(var(--reading-background))' : '#1f2937' } as React.CSSProperties}>
@@ -570,3 +574,5 @@ export default function BookReaderPage() {
     </div>
   );
 }
+
+    
