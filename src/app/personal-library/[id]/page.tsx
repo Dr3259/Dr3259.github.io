@@ -39,9 +39,8 @@ const translations = {
     addBookmark: '添加书签',
     removeBookmark: '移除书签',
     bookmarks: '书签列表',
-    copyFullText: '复制全书文本',
-    fullTextCopied: '整本书的文本已复制',
-    copyingFullText: '正在复制全书文本...',
+    copyPageText: '复制当前页文本',
+    pageTextCopied: '当前页文本已复制',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -67,9 +66,8 @@ const translations = {
     addBookmark: 'Add Bookmark',
     removeBookmark: 'Remove Bookmark',
     bookmarks: 'Bookmarks',
-    copyFullText: 'Copy full text',
-    fullTextCopied: 'Full text copied to clipboard',
-    copyingFullText: 'Copying full text...',
+    copyPageText: 'Copy current page text',
+    pageTextCopied: 'Current page text copied to clipboard',
   }
 };
 
@@ -120,8 +118,6 @@ export default function BookReaderPage() {
   const [currentScale, setCurrentScale] = useState<number>(1.0);
   const [isCalculatingScale, setIsCalculatingScale] = useState(false);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [isCopying, setIsCopying] = useState(false);
-
   
   const readerContainerRef = useRef<HTMLDivElement>(null);
   const pdfViewerWrapperRef = useRef<HTMLDivElement>(null);
@@ -236,7 +232,7 @@ export default function BookReaderPage() {
       const resultingWidth = pageViewport.width * scaleY;
 
       if (resultingWidth > pdfViewerWrapperRef.current.clientWidth) {
-         calculateAndSetFitWidthScale();
+         await calculateAndSetFitWidthScale();
       } else {
          setCurrentScale(scaleY);
       }
@@ -334,29 +330,31 @@ export default function BookReaderPage() {
     setBook(updatedBook);
   };
 
-  const handleCopyFullText = async () => {
+  const handleCopyPageText = async () => {
     if (!pdfDoc || !numPages) return;
-    setIsCopying(true);
-    toast({ title: t.copyingFullText, duration: numPages * 100 }); // Estimate duration
     
     try {
-        let fullText = '';
-        for (let i = 1; i <= numPages; i++) {
-            const page = await pdfDoc.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items.map((item: any) => item.str).join(' ');
-            fullText += pageText + '\n\n';
+        let pageText = '';
+        
+        // Get text from the first visible page
+        const page1 = await pdfDoc.getPage(pageNumber);
+        const textContent1 = await page1.getTextContent();
+        pageText += textContent1.items.map((item: any) => item.str).join(' ');
+
+        // If in double page layout and not on the last page, get text from the second visible page
+        if (settings.pageLayout === 'double' && pageNumber < numPages) {
+            const page2 = await pdfDoc.getPage(pageNumber + 1);
+            const textContent2 = await page2.getTextContent();
+            pageText += '\n\n' + textContent2.items.map((item: any) => item.str).join(' ');
         }
         
-        if (fullText.trim()) {
-            copy(fullText);
-            toast({ title: t.fullTextCopied });
+        if (pageText.trim()) {
+            copy(pageText);
+            toast({ title: t.pageTextCopied });
         }
     } catch (err) {
-        console.error("Failed to copy full text:", err);
+        console.error("Failed to copy page text:", err);
         toast({ title: "Error copying text", variant: 'destructive' });
-    } finally {
-        setIsCopying(false);
     }
   };
 
@@ -454,7 +452,7 @@ export default function BookReaderPage() {
         <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
           {book?.type === 'pdf' && numPages && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{`${pageNumber} / ${numPages}`}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
           {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
-          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyFullText} disabled={isCopying} title={t.copyFullText}>{isCopying ? <Loader2 className="h-5 w-5 animate-spin" /> :<Copy className="h-5 w-5" />}</Button>}
+          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyPageText} title={t.copyPageText}><Copy className="h-5 w-5" /></Button>}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>{isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}</Button>
         </div>
