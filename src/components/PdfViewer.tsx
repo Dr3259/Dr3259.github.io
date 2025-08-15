@@ -51,7 +51,8 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
     }, [pageNumber, file]);
 
     const renderPages = () => {
-        if (pageLayout === 'single' || !numPages) {
+        // Always render single page if layout is single, no pages are loaded, or it's the first page
+        if (pageLayout === 'single' || !numPages || pageNumber === 1) {
             return (
                 <Page 
                     key={`page_${pageNumber}`}
@@ -63,29 +64,18 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
             );
         }
 
-        // Double page layout logic
-        // Page 1 is always single
-        if (pageNumber === 1) {
-             return (
-                <Page 
-                    key={`page_1`}
-                    pageNumber={1} 
-                    scale={scale}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={true}
-                />
-            );
-        }
-        
-        // For other pages, show them in pairs. Ensure the first page of a pair is even.
+        // Double page layout for page numbers > 1
         const firstPageOfPair = pageNumber % 2 === 0 ? pageNumber : pageNumber - 1;
-        const secondPageOfPair = firstPageOfPair + 1;
+        
+        // Ensure firstPageOfPair is at least 2 if it's not the first page, to avoid showing 1-2
+        const startPage = Math.max(2, firstPageOfPair);
+        const secondPageOfPair = startPage + 1;
         
         return (
             <div className="flex justify-center items-start gap-x-2">
                 <Page 
-                    key={`page_${firstPageOfPair}`}
-                    pageNumber={firstPageOfPair} 
+                    key={`page_${startPage}`}
+                    pageNumber={startPage} 
                     scale={scale}
                     renderAnnotationLayer={false}
                     renderTextLayer={true}
