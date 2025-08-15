@@ -40,8 +40,8 @@ const translations = {
     addBookmark: '添加书签',
     removeBookmark: '移除书签',
     bookmarks: '书签列表',
-    copyPageText: '复制当前页文本',
-    pageTextCopied: '当前页文本已复制',
+    copyPageTextAsMarkdown: '复制为 Markdown',
+    pageTextCopied: 'Markdown 内容已复制',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -67,8 +67,8 @@ const translations = {
     addBookmark: 'Add Bookmark',
     removeBookmark: 'Remove Bookmark',
     bookmarks: 'Bookmarks',
-    copyPageText: 'Copy current page text',
-    pageTextCopied: 'Current page text copied to clipboard',
+    copyPageTextAsMarkdown: 'Copy as Markdown',
+    pageTextCopied: 'Markdown content copied to clipboard',
   }
 };
 
@@ -206,9 +206,13 @@ export default function BookReaderPage() {
     let totalWidth = pageViewport.width;
 
     if (settings.pageLayout === 'double' && pageNumber < numPages!) {
-      const nextPage: PDFPageProxy = await pdfDoc.getPage(pageNumber + 1);
-      const nextPageViewport = nextPage.getViewport({ scale: 1 });
-      totalWidth += nextPageViewport.width;
+      try {
+        const nextPage: PDFPageProxy = await pdfDoc.getPage(pageNumber + 1);
+        const nextPageViewport = nextPage.getViewport({ scale: 1 });
+        totalWidth += nextPageViewport.width;
+      } catch(e) {
+        console.warn("Could not get next page for double layout scale calculation.", e);
+      }
     }
     
     const containerWidth = pdfViewerWrapperRef.current.clientWidth;
@@ -331,41 +335,58 @@ export default function BookReaderPage() {
     setBook(updatedBook);
   };
 
-  const extractTextFromPage = async (page: PDFPageProxy): Promise<string> => {
-    const textContent = await page.getTextContent();
-    const items = textContent.items as TextItem[];
+  const extractTextAsMarkdownFromPage = async (page: PDFPageProxy): Promise<string> => {
+    const content = await page.getTextContent();
+    const styles = content.styles;
+    const items = content.items as (TextItem & { fontName: string })[];
 
-    if (!items || items.length === 0) {
-      return '';
-    }
+    if (!items || items.length === 0) return '';
+    
+    const fontSizes: number[] = items.map(item => item.transform[3]);
+    const mostCommonFontSize = fontSizes.sort((a,b) =>
+          fontSizes.filter(v => v===a).length
+        - fontSizes.filter(v => v===b).length
+    ).pop();
 
-    // Group items by line (y-coordinate)
-    const lines: TextItem[][] = [];
-    let currentLine: TextItem[] = [items[0]];
+    let lines: { text: string; y: number; x: number; isBold: boolean; isItalic: boolean; size: number }[] = [];
+    
+    for (const item of items) {
+        if (!item.str.trim()) continue;
 
-    for (let i = 1; i < items.length; i++) {
-        const currentItem = items[i];
-        const prevItem = items[i-1];
-        // A simple check for new line: check if y-coordinates are different.
-        // A tolerance can be added for slightly misaligned text.
-        if (Math.abs(currentItem.transform[5] - prevItem.transform[5]) > 1) {
-            lines.push(currentLine);
-            currentLine = [currentItem];
-        } else {
-            currentLine.push(currentItem);
+        const y = item.transform[5];
+        const x = item.transform[4];
+        const fontName = item.fontName;
+        const size = item.transform[3];
+        
+        const isBold = fontName.toLowerCase().includes('bold') || fontName.toLowerCase().includes('semibold') || fontName.toLowerCase().includes('black');
+        const isItalic = fontName.toLowerCase().includes('italic') || fontName.toLowerCase().includes('oblique');
+
+        let line = lines.find(l => Math.abs(l.y - y) < 5);
+        
+        if (!line) {
+            line = { text: '', y, x, isBold, isItalic, size };
+            lines.push(line);
         }
+        
+        line.text += (line.text ? ' ' : '') + item.str;
     }
-    lines.push(currentLine);
+    
+    lines.sort((a, b) => b.y - a.y);
+    
+    return lines.map(line => {
+      let text = line.text;
+      
+      if(mostCommonFontSize) {
+        if(line.size > mostCommonFontSize * 1.5) text = `# ${text}`;
+        else if(line.size > mostCommonFontSize * 1.2) text = `## ${text}`;
+      }
+      
+      if(line.isBold && line.isItalic) text = `***${text}***`;
+      else if(line.isBold) text = `**${text}**`;
+      else if(line.isItalic) text = `*${text}*`;
 
-    // Sort items within each line by x-coordinate and join
-    return lines
-        .map(line => {
-            return line
-                .sort((a, b) => a.transform[4] - b.transform[4])
-                .map(item => item.str)
-                .join(' ');
-        })
-        .join('\n');
+      return text;
+    }).join('\n');
   };
 
   const handleCopyPageText = async () => {
@@ -374,11 +395,11 @@ export default function BookReaderPage() {
     try {
         let fullText = '';
         const page1 = await pdfDoc.getPage(pageNumber);
-        fullText += await extractTextFromPage(page1);
+        fullText += await extractTextAsMarkdownFromPage(page1);
 
         if (settings.pageLayout === 'double' && pageNumber < numPages) {
             const page2 = await pdfDoc.getPage(pageNumber + 1);
-            const page2Text = await extractTextFromPage(page2);
+            const page2Text = await extractTextAsMarkdownFromPage(page2);
             fullText += '\n\n---\n\n' + page2Text;
         }
         
@@ -486,7 +507,7 @@ export default function BookReaderPage() {
         <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
           {book?.type === 'pdf' && numPages && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{`${pageNumber} / ${numPages}`}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
           {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
-          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyPageText} title={t.copyPageText}><Copy className="h-5 w-5" /></Button>}
+          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyPageText} title={t.copyPageTextAsMarkdown}><Copy className="h-5 w-5" /></Button>}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>{isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}</Button>
         </div>
@@ -502,5 +523,3 @@ export default function BookReaderPage() {
     </div>
   );
 }
-
-    
