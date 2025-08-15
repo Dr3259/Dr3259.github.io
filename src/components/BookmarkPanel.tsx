@@ -5,23 +5,17 @@ import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Loader2 } from 'lucide-react';
-
-export interface BookmarkWithTitle {
-  page: number;
-  title: string;
-}
+import { X } from 'lucide-react';
+import type { Bookmark } from '@/lib/db';
 
 interface BookmarkPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  bookmarks: BookmarkWithTitle[];
-  isLoading: boolean;
+  bookmarks: Bookmark[];
   onGoToPage: (pageNumber: number) => void;
   onRemoveBookmark: (pageNumber: number) => void;
   translations: {
     title: string;
-    loading: string;
     noBookmarks: string;
     pageLabel: string;
   };
@@ -31,7 +25,6 @@ export const BookmarkPanel: React.FC<BookmarkPanelProps> = ({
   isOpen,
   onClose,
   bookmarks,
-  isLoading,
   onGoToPage,
   onRemoveBookmark,
   translations,
@@ -43,12 +36,7 @@ export const BookmarkPanel: React.FC<BookmarkPanelProps> = ({
           <SheetTitle>{translations.title}</SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100%-4rem)] mt-4">
-          {isLoading ? (
-             <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="ml-2 text-sm text-muted-foreground">{translations.loading}</p>
-             </div>
-          ) : bookmarks.length > 0 ? (
+          {bookmarks.length > 0 ? (
             <ul className="space-y-2">
               {bookmarks.map(bookmark => (
                 <li key={bookmark.page} className="flex items-center justify-between p-2 rounded-md hover:bg-accent group">

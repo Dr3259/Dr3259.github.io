@@ -3,11 +3,16 @@ const DB_NAME = 'WeekGlanceDB';
 const DB_VERSION = 1;
 const BOOK_STORE_NAME = 'books';
 
+export interface Bookmark {
+  page: number;
+  title: string;
+}
+
 export interface BookMetadata {
   id: string;
   title: string;
   type: 'txt' | 'pdf';
-  bookmarks?: number[];
+  bookmarks?: Bookmark[];
 }
 
 export interface BookWithContent extends BookMetadata {

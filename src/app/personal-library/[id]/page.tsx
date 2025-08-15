@@ -8,12 +8,13 @@ import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal, Bookmark, PanelLeft, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getBookContent, saveBook, type BookWithContent } from '@/lib/db';
-import { BookmarkPanel, type BookmarkWithTitle } from '@/components/BookmarkPanel';
+import { getBookContent, saveBook, type BookWithContent, type Bookmark } from '@/lib/db';
+import { BookmarkPanel } from '@/components/BookmarkPanel';
 import { useToast } from '@/hooks/use-toast';
 import copy from 'copy-to-clipboard';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import { Input } from '@/components/ui/input';
+import { AddBookmarkDialog } from '@/components/AddBookmarkDialog';
 
 
 const translations = {
@@ -44,6 +45,14 @@ const translations = {
     copyPageTextAsMarkdown: '复制为 Markdown',
     pageTextCopied: 'Markdown 内容已复制',
     jumpToPage: '跳至页面...',
+    addBookmarkDialog: {
+        title: '添加新书签',
+        description: '为当前页面添加一个描述性的标题。',
+        label: '书签标题',
+        placeholder: '例如：第一章重点',
+        save: '保存书签',
+        cancel: '取消',
+    }
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -72,6 +81,14 @@ const translations = {
     copyPageTextAsMarkdown: 'Copy as Markdown',
     pageTextCopied: 'Markdown content copied to clipboard',
     jumpToPage: 'Jump to page...',
+    addBookmarkDialog: {
+        title: 'Add New Bookmark',
+        description: 'Add a descriptive title for the current page.',
+        label: 'Bookmark Title',
+        placeholder: 'E.g., Chapter 1 Key Points',
+        save: 'Save Bookmark',
+        cancel: 'Cancel',
+    }
   }
 };
 
@@ -121,9 +138,10 @@ export default function BookReaderPage() {
   const [pageNumber, setPageNumber] = useState(1);
   const [currentScale, setCurrentScale] = useState<number>(1.0);
   const [isCalculatingScale, setIsCalculatingScale] = useState(false);
-  const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [bookmarksWithTitles, setBookmarksWithTitles] = useState<BookmarkWithTitle[]>([]);
-  const [isLoadingBookmarkTitles, setIsLoadingBookmarkTitles] = useState(false);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  
+  const [isAddBookmarkDialogOpen, setIsAddBookmarkDialogOpen] = useState(false);
+  const [suggestedBookmarkTitle, setSuggestedBookmarkTitle] = useState('');
 
   const [isJumpingToPage, setIsJumpingToPage] = useState(false);
   const [jumpToPageInput, setJumpToPageInput] = useState('');
@@ -211,7 +229,7 @@ export default function BookReaderPage() {
 
     if (!items || items.length === 0) return '';
     
-    let lines: { y: number, x: number, text: string, isBold: boolean, isItalic: boolean, size: number }[] = [];
+    let lines: { y: number, text: string, isBold: boolean, isItalic: boolean, size: number, items: { x: number, str: string }[] }[] = [];
     
     items.forEach(item => {
         if (!item.str.trim()) return;
@@ -226,11 +244,12 @@ export default function BookReaderPage() {
 
         let line = lines.find(l => Math.abs(l.y - y) < 5);
         if (!line) {
-            lines.push({ y, x, text: item.str, isBold, isItalic, size });
+            lines.push({ y, text: '', isBold, isItalic, size, items: [{x, str: item.str}] });
         } else {
-            // Very basic recombination on the same line.
-            // For more complex layouts, this would need a more robust algorithm.
-            line.text += ' ' + item.str;
+            line.items.push({x, str: item.str});
+            // Rough approximation of style for the whole line. Could be improved.
+            if (isBold) line.isBold = true;
+            if (isItalic) line.isItalic = true;
         }
     });
 
@@ -238,6 +257,11 @@ export default function BookReaderPage() {
     if (lineLimit) {
         lines = lines.slice(0, lineLimit);
     }
+    
+    lines.forEach(line => {
+        line.items.sort((a,b) => a.x - b.x);
+        line.text = line.items.map(i => i.str).join(' ');
+    });
     
     const fontSizes: number[] = lines.map(line => line.size).filter(size => size > 0);
     const mostCommonFontSize = fontSizes.length > 0 ? fontSizes.sort((a,b) =>
@@ -248,7 +272,7 @@ export default function BookReaderPage() {
     return lines.map(line => {
       let text = line.text.trim();
       
-      if(mostCommonFontSize && !lineLimit) { // Don't apply heading logic for title snippets
+      if(mostCommonFontSize && !lineLimit) {
         if(line.size > mostCommonFontSize * 1.5) text = `# ${text}`;
         else if(line.size > mostCommonFontSize * 1.2) text = `## ${text}`;
       }
@@ -345,7 +369,7 @@ export default function BookReaderPage() {
     if (!isMounted || !book || !pdfDoc || !numPages) return;
     
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isJumpingToPage) return; // Don't interfere with page jump input
+      if (isJumpingToPage || isAddBookmarkDialogOpen) return;
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
         return;
@@ -375,31 +399,49 @@ export default function BookReaderPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout, pdfDoc, isJumpingToPage]);
+  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout, pdfDoc, isJumpingToPage, isAddBookmarkDialogOpen]);
 
-  const toggleBookmark = async () => {
-    if (!book) return;
-    const currentPage = pageNumber;
-    let newBookmarks;
-    if (bookmarks.includes(currentPage)) {
-        newBookmarks = bookmarks.filter(b => b !== currentPage);
-    } else {
-        newBookmarks = [...bookmarks, currentPage].sort((a,b) => a - b);
-    }
-    setBookmarks(newBookmarks);
-    const updatedBook = { ...book, bookmarks: newBookmarks };
-    await saveBook(updatedBook);
-    setBook(updatedBook);
-  };
-  
   const removeBookmark = async (pageNum: number) => {
     if(!book) return;
-    const newBookmarks = bookmarks.filter(b => b !== pageNum);
+    const newBookmarks = bookmarks.filter(b => b.page !== pageNum);
     setBookmarks(newBookmarks);
     const updatedBook = { ...book, bookmarks: newBookmarks };
     await saveBook(updatedBook);
     setBook(updatedBook);
   };
+
+  const handleToggleBookmark = async () => {
+    if (!book || !pdfDoc) return;
+    
+    const existingBookmark = bookmarks.find(b => b.page === pageNumber);
+
+    if (existingBookmark) {
+      await removeBookmark(pageNumber);
+    } else {
+      try {
+        const page = await pdfDoc.getPage(pageNumber);
+        const title = await extractTextAsMarkdownFromPage(page, 1);
+        setSuggestedBookmarkTitle(title || `Page ${pageNumber}`);
+        setIsAddBookmarkDialogOpen(true);
+      } catch (error) {
+        console.error("Error generating bookmark title", error);
+        setSuggestedBookmarkTitle(`Page ${pageNumber}`);
+        setIsAddBookmarkDialogOpen(true);
+      }
+    }
+  };
+
+  const handleSaveBookmark = async (title: string) => {
+    if (!book) return;
+    const newBookmark: Bookmark = { page: pageNumber, title };
+    const newBookmarks = [...bookmarks, newBookmark].sort((a, b) => a.page - b.page);
+    setBookmarks(newBookmarks);
+    const updatedBook = { ...book, bookmarks: newBookmarks };
+    await saveBook(updatedBook);
+    setBook(updatedBook);
+    setIsAddBookmarkDialogOpen(false);
+  };
+
 
   const handleCopyPageText = async () => {
     if (!pdfDoc || !numPages) return;
@@ -425,7 +467,7 @@ export default function BookReaderPage() {
     }
   };
   
-  const handleJumpToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleJumpToPageSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
         const targetPage = parseInt(jumpToPageInput, 10);
         
@@ -440,41 +482,6 @@ export default function BookReaderPage() {
         setJumpToPageInput('');
     }
   };
-
-  const fetchBookmarkTitles = useCallback(async () => {
-    if (!pdfDoc || bookmarks.length === 0) {
-      setBookmarksWithTitles(bookmarks.map(b => ({page: b, title: `Page ${b}`})));
-      return;
-    }
-    setIsLoadingBookmarkTitles(true);
-    try {
-      const titledBookmarks = await Promise.all(
-        bookmarks.map(async (page): Promise<BookmarkWithTitle> => {
-          try {
-            const pdfPage = await pdfDoc.getPage(page);
-            const text = await extractTextAsMarkdownFromPage(pdfPage, 1);
-            return { page, title: text || `Page ${page}` };
-          } catch (e) {
-            console.error(`Failed to get title for page ${page}`, e);
-            return { page, title: `Page ${page}` };
-          }
-        })
-      );
-      setBookmarksWithTitles(titledBookmarks);
-    } catch (e) {
-      console.error("Error fetching bookmark titles", e);
-      // Fallback to simple page numbers on error
-      setBookmarksWithTitles(bookmarks.map(b => ({page: b, title: `Page ${b}`})));
-    } finally {
-      setIsLoadingBookmarkTitles(false);
-    }
-  }, [pdfDoc, bookmarks, extractTextAsMarkdownFromPage]);
-
-  useEffect(() => {
-    if(isBookmarkPanelOpen) {
-      fetchBookmarkTitles();
-    }
-  }, [isBookmarkPanelOpen, fetchBookmarkTitles]);
 
 
   const renderContent = () => {
@@ -545,7 +552,7 @@ export default function BookReaderPage() {
   
   const isCurrentPageBookmarked = useMemo(() => {
     if (!book || !bookmarks) return false;
-    return bookmarks.includes(pageNumber);
+    return bookmarks.some(b => b.page === pageNumber);
   }, [book, bookmarks, pageNumber]);
 
   return (
@@ -592,7 +599,7 @@ export default function BookReaderPage() {
                     type="number"
                     value={jumpToPageInput}
                     onChange={(e) => setJumpToPageInput(e.target.value)}
-                    onKeyDown={handleJumpToPage}
+                    onKeyDown={handleJumpToPageSubmit}
                     onBlur={() => setIsJumpingToPage(false)}
                     className="w-20 h-8 text-center bg-input"
                     autoFocus
@@ -602,22 +609,27 @@ export default function BookReaderPage() {
             
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button>
           </>)}
-          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
+          {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleToggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
           {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyPageText} title={t.copyPageTextAsMarkdown}><Copy className="h-5 w-5" /></Button>}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>{isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}</Button>
         </div>
       </div>
+      <AddBookmarkDialog
+        isOpen={isAddBookmarkDialogOpen}
+        onClose={() => setIsAddBookmarkDialogOpen(false)}
+        onSave={handleSaveBookmark}
+        suggestedTitle={suggestedBookmarkTitle}
+        translations={t.addBookmarkDialog}
+       />
       <BookmarkPanel 
         isOpen={isBookmarkPanelOpen}
         onClose={() => setIsBookmarkPanelOpen(false)}
-        bookmarks={bookmarksWithTitles}
-        isLoading={isLoadingBookmarkTitles}
+        bookmarks={bookmarks}
         onGoToPage={goToPage}
         onRemoveBookmark={removeBookmark}
         translations={{
           title: t.bookmarks,
-          loading: t.loadingBook,
           noBookmarks: "No bookmarks added yet.",
           pageLabel: "Page"
         }}
