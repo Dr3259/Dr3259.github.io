@@ -12,6 +12,7 @@ import { getBookContent, saveBook, type BookWithContent } from '@/lib/db';
 import { BookmarkPanel } from '@/components/BookmarkPanel';
 import { useToast } from '@/hooks/use-toast';
 import copy from 'copy-to-clipboard';
+import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 
 
 const translations = {
@@ -195,7 +196,7 @@ export default function BookReaderPage() {
     setNumPages(doc.numPages);
     setPageNumber(1);
   };
-  
+    
   const calculateAndSetFitWidthScale = useCallback(async () => {
     if (!pdfDoc || !pdfViewerWrapperRef.current) return;
     setIsCalculatingScale(true);
@@ -218,7 +219,7 @@ export default function BookReaderPage() {
     setIsCalculatingScale(false);
 
   }, [pdfDoc, pageNumber, numPages, settings.pageLayout]);
-
+    
   const calculateAndSetFitHeightScale = useCallback(async () => {
       if (!pdfDoc || !pdfViewerWrapperRef.current) return;
       setIsCalculatingScale(true);
@@ -330,26 +331,55 @@ export default function BookReaderPage() {
     setBook(updatedBook);
   };
 
+  const extractTextFromPage = async (page: PDFPageProxy): Promise<string> => {
+    const textContent = await page.getTextContent();
+    const items = textContent.items as TextItem[];
+
+    // Sort items by their vertical position first, then horizontal.
+    // This helps group text into lines.
+    items.sort((a, b) => {
+        if (Math.abs(a.transform[5] - b.transform[5]) < 5) { // Same line (approx)
+            return a.transform[4] - b.transform[4];
+        }
+        return b.transform[5] - a.transform[5]; // Different lines
+    });
+
+    let lines: string[] = [];
+    if (items.length > 0) {
+        let currentLine = items[0].str;
+        for (let i = 1; i < items.length; i++) {
+            const prevItem = items[i-1];
+            const currentItem = items[i];
+
+            // Check if items are on the same line (y-coordinate is similar)
+            if (Math.abs(prevItem.transform[5] - currentItem.transform[5]) < 5) {
+                currentLine += ' ' + currentItem.str;
+            } else {
+                lines.push(currentLine);
+                currentLine = currentItem.str;
+            }
+        }
+        lines.push(currentLine); // Add the last line
+    }
+    return lines.join('\n');
+  };
+
   const handleCopyPageText = async () => {
     if (!pdfDoc || !numPages) return;
     
     try {
-        let pageText = '';
-        
-        // Get text from the first visible page
+        let fullText = '';
         const page1 = await pdfDoc.getPage(pageNumber);
-        const textContent1 = await page1.getTextContent();
-        pageText += textContent1.items.map((item: any) => item.str).join(' ');
+        fullText += await extractTextFromPage(page1);
 
-        // If in double page layout and not on the last page, get text from the second visible page
         if (settings.pageLayout === 'double' && pageNumber < numPages) {
             const page2 = await pdfDoc.getPage(pageNumber + 1);
-            const textContent2 = await page2.getTextContent();
-            pageText += '\n\n' + textContent2.items.map((item: any) => item.str).join(' ');
+            const page2Text = await extractTextFromPage(page2);
+            fullText += '\n\n---\n\n' + page2Text;
         }
         
-        if (pageText.trim()) {
-            copy(pageText);
+        if (fullText.trim()) {
+            copy(fullText);
             toast({ title: t.pageTextCopied });
         }
     } catch (err) {
@@ -468,3 +498,4 @@ export default function BookReaderPage() {
     </div>
   );
 }
+
