@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical } from 'lucide-react';
+import { ArrowLeft, Settings, Sun, Moon, Maximize, Minimize, Loader2, Library, ZoomIn, CaseSensitive, ChevronLeft, ChevronRight, BookOpen, Book, StretchVertical, StretchHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBookContent, type BookWithContent } from '@/lib/db';
 
@@ -32,6 +32,7 @@ const translations = {
     doublePage: '双页',
     scaleMode: '缩放模式',
     fitHeight: '适应高度',
+    fitWidth: '适应宽度',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -54,12 +55,13 @@ const translations = {
     doublePage: 'Double',
     scaleMode: 'Scale Mode',
     fitHeight: 'Fit Height',
+    fitWidth: 'Fit Width',
   }
 };
 
 type LanguageKey = keyof typeof translations;
 type PageLayout = 'single' | 'double';
-type ScaleMode = 'fitHeight' | number;
+type ScaleMode = 'fitHeight' | 'fitWidth' | number;
 
 interface ReadingSettings {
   fontSize: number;
@@ -68,7 +70,7 @@ interface ReadingSettings {
   pageLayout: PageLayout;
 }
 
-const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v5';
+const LOCAL_STORAGE_SETTINGS_KEY = 'personal_library_settings_v6';
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
     ssr: false,
@@ -188,12 +190,35 @@ export default function BookReaderPage() {
       updateSettings({ pdfScale: scale });
 
   }, [pdfDoc, pageNumber]);
+
+  const calculateAndSetFitWidthScale = useCallback(async () => {
+    if (!pdfDoc || !pdfViewerWrapperRef.current) return;
+
+    const page: PDFPageProxy = await pdfDoc.getPage(pageNumber);
+    let pageViewport = page.getViewport({ scale: 1 });
+    let totalWidth = pageViewport.width;
+
+    if (settings.pageLayout === 'double' && pageNumber < numPages!) {
+      const nextPage: PDFPageProxy = await pdfDoc.getPage(pageNumber + 1);
+      const nextPageViewport = nextPage.getViewport({ scale: 1 });
+      totalWidth += nextPageViewport.width;
+    }
+    
+    const containerWidth = pdfViewerWrapperRef.current.clientWidth;
+    const horizontalPadding = 32;
+    const scale = (containerWidth - horizontalPadding) / totalWidth;
+
+    updateSettings({ pdfScale: scale });
+
+  }, [pdfDoc, pageNumber, numPages, settings.pageLayout]);
   
   useEffect(() => {
     if(settings.pdfScale === 'fitHeight' && isMounted && pdfDoc) {
         calculateAndSetFitHeightScale();
+    } else if (settings.pdfScale === 'fitWidth' && isMounted && pdfDoc) {
+        calculateAndSetFitWidthScale();
     }
-  }, [settings.pdfScale, calculateAndSetFitHeightScale, isMounted, pdfDoc, pageNumber]);
+  }, [settings.pdfScale, calculateAndSetFitHeightScale, calculateAndSetFitWidthScale, isMounted, pdfDoc, pageNumber]);
 
   const goToNextPage = () => {
     if (!numPages) return;
@@ -248,12 +273,15 @@ export default function BookReaderPage() {
               <Button key="double" variant={settings.pageLayout === 'double' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pageLayout: 'double' })} className="text-xs h-7"><BookOpen className="mr-1.5 h-3.5 w-3.5"/>{t.doublePage}</Button>
             </div>
           </div>
-          <div className="space-y-2">
-            <h4 className="font-medium leading-none flex items-center text-sm"><StretchVertical className="mr-2 h-4 w-4"/>{t.scaleMode}</h4>
-            <div className="grid grid-cols-3 gap-2">
-               <Button variant={settings.pdfScale === 'fitHeight' ? 'secondary' : 'outline'} size="sm" onClick={calculateAndSetFitHeightScale} className="w-full text-xs h-7 col-span-3">{t.fitHeight}</Button>
-                {PRESET_PDF_SCALES.map(scaleValue => <Button key={scaleValue} variant={settings.pdfScale === scaleValue ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: scaleValue })} className="text-xs h-7">{(scaleValue * 100).toFixed(0)}%</Button>)}
-            </div>
+           <div className="space-y-2">
+              <h4 className="font-medium leading-none flex items-center text-sm"><StretchVertical className="mr-2 h-4 w-4"/>{t.scaleMode}</h4>
+              <div className="grid grid-cols-2 gap-2">
+                 <Button variant={settings.pdfScale === 'fitHeight' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: 'fitHeight' })} className="w-full text-xs h-7"><StretchVertical className="mr-1.5 h-3.5 w-3.5"/>{t.fitHeight}</Button>
+                 <Button variant={settings.pdfScale === 'fitWidth' ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: 'fitWidth' })} className="w-full text-xs h-7"><StretchHorizontal className="mr-1.5 h-3.5 w-3.5"/>{t.fitWidth}</Button>
+              </div>
+            <div className="grid grid-cols-5 gap-2 pt-2">
+                  {PRESET_PDF_SCALES.map(scaleValue => <Button key={scaleValue} variant={settings.pdfScale === scaleValue ? 'secondary' : 'outline'} size="sm" onClick={() => updateSettings({ pdfScale: scaleValue })} className="text-xs h-7">{(scaleValue * 100).toFixed(0)}%</Button>)}
+              </div>
           </div>
         </>
       );
