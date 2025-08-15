@@ -67,7 +67,7 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
     )
 });
 
-const PRESET_PDF_SCALES = [0.75, 1.0, 1.5, 2.0];
+const PRESET_PDF_SCALES = [0.8, 1.0, 1.25, 1.5, 1.75];
 const PRESET_FONT_SIZES = [14, 16, 18, 20];
 
 export default function BookReaderPage() {
@@ -146,6 +146,8 @@ export default function BookReaderPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         if (settingsPanelRef.current && !settingsPanelRef.current.contains(event.target as Node)) {
+            const controlPanel = document.getElementById('reading-controls');
+            if (controlPanel && controlPanel.contains(event.target as Node)) return;
             setIsSettingsOpen(false);
         }
     };
@@ -247,7 +249,7 @@ export default function BookReaderPage() {
       return (
         <div className="space-y-2">
             <h4 className="font-medium leading-none flex items-center text-sm"><ZoomIn className="mr-2 h-4 w-4"/>{t.zoom}</h4>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
                 {PRESET_PDF_SCALES.map(scaleValue => (
                     <Button 
                         key={scaleValue}
@@ -284,16 +286,23 @@ export default function BookReaderPage() {
     )
   }
 
-  const readingBgClass = settings.theme === 'light' ? 'bg-[hsl(var(--reading-background))]' : 'bg-gray-800';
+  const readingBgClass = settings.theme === 'light' ? 'bg-[--background]' : 'bg-[--background]';
   const readingFgClass = settings.theme === 'light' ? 'text-gray-800' : 'text-gray-200';
   
   return (
-    <div ref={readerContainerRef} className={cn("flex flex-col h-screen", readingBgClass, readingFgClass)}>
+    <div 
+        ref={readerContainerRef} 
+        className={cn("flex flex-col h-screen", readingBgClass, readingFgClass)}
+        style={{
+            // @ts-ignore
+            '--background': settings.theme === 'light' ? 'hsl(var(--reading-background))' : '#1f2937'
+        }}
+    >
         <Button 
             variant="outline"
             size="icon"
             onClick={() => router.push('/personal-library')}
-            className="fixed bottom-4 left-4 z-50 h-11 w-11 rounded-full shadow-lg"
+            className="fixed bottom-4 left-4 z-50 h-11 w-11 rounded-full shadow-lg bg-background/80 backdrop-blur-sm border-border text-foreground"
             title={t.backButton}
         >
             <ArrowLeft className="h-5 w-5" />
@@ -302,10 +311,13 @@ export default function BookReaderPage() {
         <main className="flex-1 flex flex-col min-h-0">
           {renderContent()}
         </main>
-
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-center gap-2">
+        
+        <div id="reading-controls" className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
             {isSettingsOpen && (
-                 <div ref={settingsPanelRef} className="w-64 mb-2 p-4 bg-popover text-popover-foreground border rounded-lg shadow-lg">
+                 <div 
+                    ref={settingsPanelRef} 
+                    className="w-64 mb-1 p-4 bg-popover text-popover-foreground border rounded-lg shadow-lg transition-all animate-in fade-in-50 slide-in-from-bottom-2"
+                >
                     <div className="grid gap-4">
                         {renderSettingsContent()}
                         <div className="space-y-2">
@@ -322,27 +334,27 @@ export default function BookReaderPage() {
                     </div>
                 </div>
             )}
-            <div className="flex items-center justify-end gap-2 p-2 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
+            <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
                 
                 {book?.type === 'pdf' && (
                     <>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={goToPrevPage} disabled={!numPages || pageNumber <= 1}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={!numPages || pageNumber <= 1}>
                             <ChevronLeft className="h-5 w-5" />
                         </Button>
                         <span className="text-sm font-medium text-muted-foreground tabular-nums px-1">
                             {numPages ? `${pageNumber}/${numPages}` : '...'}
                         </span>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={goToNextPage} disabled={!numPages || (numPages && pageNumber >= numPages)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={!numPages || (numPages && pageNumber >= numPages)}>
                             <ChevronRight className="h-5 w-5" />
                         </Button>
                     </>
                 )}
 
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}>
                     <Settings className="h-5 w-5" />
                 </Button>
 
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleFullscreen} title={isFullscreen ? t.exitFullscreen : t.fullscreen}>
                     {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                 </Button>
             </div>
@@ -350,3 +362,5 @@ export default function BookReaderPage() {
     </div>
   )
 }
+
+    
