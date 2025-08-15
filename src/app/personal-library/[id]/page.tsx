@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -13,6 +12,7 @@ import { BookmarkPanel } from '@/components/BookmarkPanel';
 import { useToast } from '@/hooks/use-toast';
 import copy from 'copy-to-clipboard';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
+import { Input } from '@/components/ui/input';
 
 
 const translations = {
@@ -42,6 +42,7 @@ const translations = {
     bookmarks: '书签列表',
     copyPageTextAsMarkdown: '复制为 Markdown',
     pageTextCopied: 'Markdown 内容已复制',
+    jumpToPage: '跳至页面...',
   },
   'en': {
     backButton: 'Back to Bookshelf',
@@ -69,6 +70,7 @@ const translations = {
     bookmarks: 'Bookmarks',
     copyPageTextAsMarkdown: 'Copy as Markdown',
     pageTextCopied: 'Markdown content copied to clipboard',
+    jumpToPage: 'Jump to page...',
   }
 };
 
@@ -119,6 +121,9 @@ export default function BookReaderPage() {
   const [currentScale, setCurrentScale] = useState<number>(1.0);
   const [isCalculatingScale, setIsCalculatingScale] = useState(false);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
+
+  const [isJumpingToPage, setIsJumpingToPage] = useState(false);
+  const [jumpToPageInput, setJumpToPageInput] = useState('');
   
   const readerContainerRef = useRef<HTMLDivElement>(null);
   const pdfViewerWrapperRef = useRef<HTMLDivElement>(null);
@@ -280,6 +285,7 @@ export default function BookReaderPage() {
     if (!isMounted || !book || !pdfDoc || !numPages) return;
     
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isJumpingToPage) return; // Don't interfere with page jump input
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
         return;
@@ -309,7 +315,7 @@ export default function BookReaderPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout, pdfDoc]);
+  }, [isMounted, book, goToPrevPage, goToNextPage, numPages, settings.pageLayout, pdfDoc, isJumpingToPage]);
 
   const toggleBookmark = async () => {
     if (!book) return;
@@ -337,17 +343,10 @@ export default function BookReaderPage() {
 
   const extractTextAsMarkdownFromPage = async (page: PDFPageProxy): Promise<string> => {
     const content = await page.getTextContent();
-    const styles = content.styles;
     const items = content.items as (TextItem & { fontName: string })[];
 
     if (!items || items.length === 0) return '';
     
-    const fontSizes: number[] = items.map(item => item.transform[3]);
-    const mostCommonFontSize = fontSizes.sort((a,b) =>
-          fontSizes.filter(v => v===a).length
-        - fontSizes.filter(v => v===b).length
-    ).pop();
-
     let lines: { text: string; y: number; x: number; isBold: boolean; isItalic: boolean; size: number }[] = [];
     
     for (const item of items) {
@@ -364,14 +363,19 @@ export default function BookReaderPage() {
         let line = lines.find(l => Math.abs(l.y - y) < 5);
         
         if (!line) {
-            line = { text: '', y, x, isBold, isItalic, size };
+            line = { text: item.str, y, x, isBold, isItalic, size };
             lines.push(line);
+        } else {
+            line.text += ' ' + item.str;
         }
-        
-        line.text += (line.text ? ' ' : '') + item.str;
     }
     
     lines.sort((a, b) => b.y - a.y);
+    const fontSizes: number[] = lines.map(line => line.size);
+    const mostCommonFontSize = fontSizes.sort((a,b) =>
+          fontSizes.filter(v => v===a).length
+        - fontSizes.filter(v => v===b).length
+    ).pop();
     
     return lines.map(line => {
       let text = line.text;
@@ -410,6 +414,20 @@ export default function BookReaderPage() {
     } catch (err) {
         console.error("Failed to copy page text:", err);
         toast({ title: "Error copying text", variant: 'destructive' });
+    }
+  };
+  
+  const handleJumpToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+        const targetPage = parseInt(jumpToPageInput, 10);
+        if (!isNaN(targetPage)) {
+            goToPage(targetPage);
+        }
+        setIsJumpingToPage(false);
+        setJumpToPageInput('');
+    } else if (e.key === 'Escape') {
+        setIsJumpingToPage(false);
+        setJumpToPageInput('');
     }
   };
 
@@ -505,7 +523,36 @@ export default function BookReaderPage() {
         )}
 
         <div className="flex items-center justify-end gap-2 p-1.5 bg-background/80 border rounded-full shadow-lg backdrop-blur-sm text-foreground">
-          {book?.type === 'pdf' && numPages && (<><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button><span className="text-sm font-medium text-muted-foreground tabular-nums px-1">{`${pageNumber} / ${numPages}`}</span><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button></>)}
+          {book?.type === 'pdf' && numPages && (
+          <>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToPrevPage} disabled={pageNumber <= 1}><ChevronLeft className="h-5 w-5" /></Button>
+            
+            {!isJumpingToPage ? (
+                <Button 
+                    variant="ghost" 
+                    className="text-sm font-medium text-muted-foreground tabular-nums px-2 h-9 rounded-full"
+                    onClick={() => {
+                        setJumpToPageInput(String(pageNumber));
+                        setIsJumpingToPage(true);
+                    }}
+                >
+                    {`${pageNumber} / ${numPages}`}
+                </Button>
+            ) : (
+                <Input
+                    type="number"
+                    value={jumpToPageInput}
+                    onChange={(e) => setJumpToPageInput(e.target.value)}
+                    onKeyDown={handleJumpToPage}
+                    onBlur={() => setIsJumpingToPage(false)}
+                    className="w-20 h-8 text-center bg-input"
+                    autoFocus
+                    placeholder={t.jumpToPage}
+                />
+            )}
+            
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={goToNextPage} disabled={(settings.pageLayout === 'single' ? pageNumber >= numPages : pageNumber >= numPages - 1)}><ChevronRight className="h-5 w-5" /></Button>
+          </>)}
           {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={toggleBookmark} title={isCurrentPageBookmarked ? t.removeBookmark : t.addBookmark}><Bookmark className={cn("h-5 w-5", isCurrentPageBookmarked && "fill-current text-primary")} /></Button>}
           {book?.type === 'pdf' && <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={handleCopyPageText} title={t.copyPageTextAsMarkdown}><Copy className="h-5 w-5" /></Button>}
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setIsSettingsOpen(prev => !prev)} disabled={!book}><Settings className="h-5 w-5" /></Button>
