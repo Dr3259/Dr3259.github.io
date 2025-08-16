@@ -48,7 +48,7 @@ const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '周览',
+    pageTitle: 'Week Glance',
     pageSubtitle: '规划你的一周，一日一览。',
     languageButtonText: '语言选择',
     themeButtonText: '切换主题',
@@ -792,7 +792,7 @@ export default function WeekGlancePage() {
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <header className="mb-8 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
+            <h1 className="text-3xl sm:text-4xl font-headline font-light text-primary">{t.pageTitle}</h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
         </header>
@@ -806,7 +806,7 @@ export default function WeekGlancePage() {
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <header className="mb-8 sm:mb-12 w-full max-w-4xl flex justify-between items-center">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
+            <h1 className="text-3xl sm:text-4xl font-headline font-light text-primary">{t.pageTitle}</h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
@@ -891,7 +891,7 @@ export default function WeekGlancePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
           {daysToDisplay.map((dateInWeek) => {
             const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
             const dateKeyForStorage = getDateKey(dateInWeek);

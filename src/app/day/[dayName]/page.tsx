@@ -1079,28 +1079,9 @@ export default function DayDetailPage() {
                   (getReflectionsForSlot(dateKey, slot).length > 0)
                 );
                 
-                let shouldHideThisInterval = false;
                 if (isPastDay && !hasContentInAnySlotOfInterval) {
-                   shouldHideThisInterval = true;
-                } else if (isViewingCurrentDay && clientPageLoadTime) {
-                  const pageLoadHour = clientPageLoadTime.getHours();
-                  const pageLoadMinute = clientPageLoadTime.getMinutes();
-                  const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
-
-                  const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-                  if (match) {
-                    const [, startTimeStr, endTimeStr] = match;
-                    const [startH,] = startTimeStr.split(':').map(Number);
-                    let [endH, endM] = endTimeStr.split(':').map(Number);
-                    if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
-
-                    const intervalEndTotalMinutes = endH * 60 + endM;
-                    if (intervalEndTotalMinutes <= pageLoadTotalMinutes && !hasContentInAnySlotOfInterval) {
-                      shouldHideThisInterval = true;
-                    }
-                  }
+                   return null;
                 }
-                if (shouldHideThisInterval) return null;
 
 
                 const hourlySlots = generateHourlySlots(interval.label);
@@ -1162,29 +1143,9 @@ export default function DayDetailPage() {
                           }
 
 
-                          let shouldHideThisSlot = false;
                           if (isPastDay && !hasAnyContentForThisSlot) {
-                              shouldHideThisSlot = true;
-                          } else if (isViewingCurrentDay && clientPageLoadTime) {
-                            const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-                            if (slotTimeMatch) {
-                              const slotEndTimeStr = slotTimeMatch[2];
-                              let slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
-                              const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
-                              if (slotEndHour === 0 && slotEndMinute === 0 && slotTimeMatch[1].split(':')[0] !== "00") {
-                                 slotEndHour = 24;
-                              }
-                              const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
-                              
-                              const pageLoadHour = clientPageLoadTime.getHours();
-                              const pageLoadMinute = clientPageLoadTime.getMinutes();
-                              const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
-                              if (slotEndTotalMinutes <= pageLoadTotalMinutes && !hasAnyContentForThisSlot) {
-                                shouldHideThisSlot = true;
-                              }
-                            }
+                              return null;
                           }
-                          if (shouldHideThisSlot) return null;
 
                           let sectionsRenderedInSlotCount = 0;
 
