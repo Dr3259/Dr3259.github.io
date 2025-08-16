@@ -1080,7 +1080,9 @@ export default function DayDetailPage() {
                 );
                 
                 let shouldHideThisInterval = false;
-                if (isViewingCurrentDay && clientPageLoadTime) {
+                if (isPastDay && !hasContentInAnySlotOfInterval) {
+                   shouldHideThisInterval = true;
+                } else if (isViewingCurrentDay && clientPageLoadTime) {
                   const pageLoadHour = clientPageLoadTime.getHours();
                   const pageLoadMinute = clientPageLoadTime.getMinutes();
                   const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
@@ -1161,7 +1163,9 @@ export default function DayDetailPage() {
 
 
                           let shouldHideThisSlot = false;
-                          if (isViewingCurrentDay && clientPageLoadTime) {
+                          if (isPastDay && !hasAnyContentForThisSlot) {
+                              shouldHideThisSlot = true;
+                          } else if (isViewingCurrentDay && clientPageLoadTime) {
                             const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                             if (slotTimeMatch) {
                               const slotEndTimeStr = slotTimeMatch[2];
