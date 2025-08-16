@@ -21,7 +21,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO, isAfter as dateIsAfter } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter, isBefore } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
 import copy from 'copy-to-clipboard';
@@ -730,8 +730,16 @@ export default function DayDetailPage() {
     return dayProperties.dateObject > today;
   }, [dayProperties, clientPageLoadTime]);
 
+  const isPastDay = useMemo(() => {
+    if (!clientPageLoadTime || !dayProperties.isValid || !dayProperties.dateObject) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return isBefore(dayProperties.dateObject, today);
+  }, [clientPageLoadTime, dayProperties]);
+
 
   const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
+    if (isPastDay) return 'read';
     if (!clientPageLoadTime) return 'pending'; // Default before client hydration
     if (!dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return 'edit';
 
@@ -741,7 +749,7 @@ export default function DayDetailPage() {
         return (dayProperties.dateObject < today) ? 'read' : 'edit';
     }
     return isClientAfter6PMToday ? 'edit' : 'pending';
-  }, [dayProperties, isViewingCurrentDay, isClientAfter6PMToday, clientPageLoadTime]);
+  }, [dayProperties, isViewingCurrentDay, isClientAfter6PMToday, clientPageLoadTime, isPastDay]);
 
 
   useEffect(() => {
@@ -1038,6 +1046,7 @@ export default function DayDetailPage() {
                             placeholder={t.notesPlaceholder}
                             className="min-h-[100px] bg-background/50 text-sm"
                             maxLength={MAX_DAILY_NOTE_LENGTH}
+                            disabled={isPastDay}
                         />
                         <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                             {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
@@ -1119,13 +1128,13 @@ export default function DayDetailPage() {
                           const reflectionsForSlot = getReflectionsForSlot(dateKey, slot);
                           const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
 
-                          let isAddingDisabledForThisSlot = false;
-                          if (isViewingCurrentDay && clientPageLoadTime && dateKey && dayProperties.dateObject) {
+                          let isAddingDisabledForThisSlot = isPastDay;
+                          if (!isPastDay && isViewingCurrentDay && clientPageLoadTime && dateKey && dayProperties.dateObject) {
                             const dateKeyDate = dayProperties.dateObject;
                             const clientDatePart = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
                             
                             if (dateIsAfter(clientDatePart, dateKeyDate)) {
-                              isAddingDisabledForThisSlot = true;
+                              // This case is for future days, handled by isPastDay logic, but keep for safety
                             } else if (format(clientDatePart, 'yyyy-MM-dd') === format(dateKeyDate, 'yyyy-MM-dd')) {
                                 const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                                 if (slotTimeMatch) {
@@ -1238,6 +1247,7 @@ export default function DayDetailPage() {
                                             onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, slot, todo.id)}
                                             aria-label={todo.completed ? t.markIncomplete : t.markComplete}
                                             className="border-primary/50 shrink-0"
+                                            disabled={isPastDay}
                                           />
                                           <div className="flex items-center space-x-1 shrink-0">
                                             {CategoryIcon && todo.category && (
@@ -1252,16 +1262,16 @@ export default function DayDetailPage() {
                                           </div>
                                           <label
                                             htmlFor={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
-                                            className={cn("text-xs cursor-pointer flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90')}
+                                            className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
                                             title={todo.text}
                                           >
                                             {todo.text}
                                           </label>
                                         </div>
-                                        <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
+                                        {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
                                           <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
                                           <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
-                                        </div>
+                                        </div>}
                                       </li>
                                     );
                                   })}
@@ -1279,10 +1289,10 @@ export default function DayDetailPage() {
                                       {meetingNotesForSlot.map((note) => (
                                           <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                             <span className="text-xs text-foreground/90 flex-1 min-w-0 truncate" title={note.title}>{note.title || t.noData}</span>
-                                            <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
+                                            {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
                                               <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditMeetingNoteModalInPage(dateKey, slot, note)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editMeetingNote}</p></TooltipContent></Tooltip>
                                               <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeetingNoteInPage(dateKey, slot, note.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteMeetingNote}</p></TooltipContent></Tooltip>
-                                            </div>
+                                            </div>}
                                           </li>
                                         ))}
                                     </ul>
@@ -1310,10 +1320,10 @@ export default function DayDetailPage() {
                                                 </span>
                                             )}
                                           </div>
-                                          <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/linkitem:opacity-100 transition-opacity">
+                                          {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/linkitem:opacity-100 transition-opacity">
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditShareLinkModalInPage(dateKey, slot, link)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editLink}</p></TooltipContent></Tooltip>
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteShareLinkInPage(dateKey, slot, link.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteLink}</p></TooltipContent></Tooltip>
-                                          </div>
+                                          </div>}
                                         </li>
                                       ))}
                                     </ul>
@@ -1331,10 +1341,10 @@ export default function DayDetailPage() {
                                       {reflectionsForSlot.map((reflection) => (
                                         <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
                                           <ScrollArea className="max-h-20 w-full mr-2"><p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p></ScrollArea>
-                                          <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
+                                          {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditReflectionModalInPage(dateKey, slot, reflection)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editReflection}</p></TooltipContent></Tooltip>
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteReflectionInPage(dateKey, slot, reflection.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteReflection}</p></TooltipContent></Tooltip>
-                                          </div>
+                                          </div>}
                                         </li>
                                       ))}
                                     </ul>
