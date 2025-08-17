@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BrainCircuit, HeartPulse } from 'lucide-react';
+import { ArrowLeft, BrainCircuit, HeartPulse, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,8 @@ const translations = {
     mentalHealthDescription: '关注情绪与思维健康，提供正念练习与心理支持工具。',
     physicalHealthTitle: '身体健康',
     physicalHealthDescription: '追踪身体指标，获取个性化运动与营养建议。',
+    stayYoungTitle: '永葆青春',
+    stayYoungDescription: '探索前沿科技，了解延缓衰老的科学方法。',
   },
   'en': {
     pageTitle: 'Health Center',
@@ -27,6 +29,8 @@ const translations = {
     mentalHealthDescription: 'Care for your emotional and cognitive well-being with mindfulness and support tools.',
     physicalHealthTitle: 'Physical Health',
     physicalHealthDescription: 'Track physical metrics and get personalized fitness and nutrition advice.',
+    stayYoungTitle: 'Stay Young',
+    stayYoungDescription: 'Explore cutting-edge science on anti-aging and longevity.',
   }
 };
 
@@ -112,6 +116,12 @@ export default function HealthPage() {
             description={t.physicalHealthDescription}
             icon={HeartPulse}
             onClick={() => handleCardClick('/health/physical')}
+          />
+           <HealthCard 
+            title={t.stayYoungTitle}
+            description={t.stayYoungDescription}
+            icon={Sparkles}
+            onClick={() => handleCardClick('/health/stay-young')}
           />
         </div>
       </main>
