@@ -81,7 +81,7 @@ export default function HealthPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
-      <header className="w-full max-w-2xl mb-8 self-center">
+      <header className="w-full max-w-4xl mb-8 self-center">
         <Link href="/" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -90,15 +90,17 @@ export default function HealthPage() {
         </Link>
       </header>
 
-      <main className="w-full max-w-2xl flex flex-col items-center text-center flex-grow">
-        <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary mb-3">
-          {t.pageTitle}
-        </h1>
-        <p className="text-muted-foreground mb-10 text-base max-w-md">
-          {t.pageDescription}
-        </p>
+      <main className="w-full max-w-4xl flex flex-col items-start flex-grow">
+        <div className="mb-10">
+            <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary mb-3">
+            {t.pageTitle}
+            </h1>
+            <p className="text-muted-foreground text-base max-w-2xl">
+            {t.pageDescription}
+            </p>
+        </div>
         
-        <div className="w-full space-y-6">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
           <HealthCard 
             title={t.mentalHealthTitle}
             description={t.mentalHealthDescription}
