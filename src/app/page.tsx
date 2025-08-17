@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -75,6 +75,8 @@ const translations = {
     mitLicenseLinkAria: '查看 MIT 许可证详情',
     restButtonText: '休息一下',
     restButtonAria: '进入休息页面',
+    healthButtonText: '健康一下',
+    healthButtonAria: '进入健康页面',
     previousWeek: '上一周',
     nextWeek: '下一周',
     currentWeek: '本周',
@@ -138,6 +140,8 @@ const translations = {
     mitLicenseLinkAria: 'View MIT License details',
     restButtonText: 'Take a Break',
     restButtonAria: 'Go to rest page',
+    healthButtonText: 'Get Healthy',
+    healthButtonAria: 'Go to health page',
     previousWeek: 'Previous Week',
     nextWeek: 'Next Week',
     currentWeek: 'Current Week',
@@ -676,6 +680,7 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary]);
 
   const handleRestButtonClick = () => router.push('/rest');
+  const handleHealthButtonClick = () => router.push('/'); // Placeholder
 
   const handlePreviousWeek = () => {
     if (!displayedDate || !allDataLoaded) return;
@@ -810,6 +815,9 @@ export default function WeekGlancePage() {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={handleHealthButtonClick} aria-label={t.healthButtonAria}>
+              <HeartPulse className="mr-2 h-4 w-4" />{t.healthButtonText}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
               <PauseCircle className="mr-2 h-4 w-4" />{t.restButtonText}
             </Button>
@@ -891,7 +899,7 @@ export default function WeekGlancePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
           {daysToDisplay.map((dateInWeek) => {
             const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
             const dateKeyForStorage = getDateKey(dateInWeek);
