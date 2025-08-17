@@ -436,7 +436,7 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, t]);
 
 
   useEffect(() => {
@@ -680,7 +680,7 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary]);
 
   const handleRestButtonClick = () => router.push('/rest');
-  const handleHealthButtonClick = () => router.push('/'); // Placeholder
+  const handleHealthButtonClick = () => router.push('/health');
 
   const handlePreviousWeek = () => {
     if (!displayedDate || !allDataLoaded) return;
@@ -899,7 +899,7 @@ export default function WeekGlancePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
           {daysToDisplay.map((dateInWeek) => {
             const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
             const dateKeyForStorage = getDateKey(dateInWeek);
