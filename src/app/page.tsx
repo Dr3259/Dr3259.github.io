@@ -15,6 +15,7 @@ import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
+import { QuickAddTodoModal } from '@/components/QuickAddTodoModal';
 import copy from 'copy-to-clipboard';
 import Image from 'next/image';
 
@@ -102,6 +103,15 @@ const translations = {
         categoryLabel: "标签 (可选):",
         categoryPlaceholder: "例如：学习资料, 食谱",
     },
+    quickAddTodo: {
+      modalTitle: "快速添加待办事项",
+      modalDescription: "输入您的待办事项并选择一个日期。",
+      todoPlaceholder: "例如：下午3点和张三开会...",
+      dateLabel: "日期",
+      saveButton: "保存待办",
+      cancelButton: "取消",
+      successToast: "待办事项已添加！"
+    },
     pasteFromClipboard: "从剪贴板粘贴",
     timeIntervals: {
         midnight: '凌晨 (00:00 - 05:00)',
@@ -166,6 +176,15 @@ const translations = {
         cancelButton: "Close",
         categoryLabel: "Tag (optional):",
         categoryPlaceholder: "e.g. Study, Recipe",
+    },
+    quickAddTodo: {
+      modalTitle: "Quick Add To-do",
+      modalDescription: "Enter your to-do item and select a date.",
+      todoPlaceholder: "e.g., Meeting with John at 3 PM...",
+      dateLabel: "Date",
+      saveButton: "Save To-do",
+      cancelButton: "Cancel",
+      successToast: "To-do item added!"
     },
     pasteFromClipboard: "Paste from clipboard",
      timeIntervals: {
@@ -355,6 +374,8 @@ export default function WeekGlancePage() {
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
+  
+  const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
 
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -491,11 +512,24 @@ export default function WeekGlancePage() {
     }
   }, [handleSaveShareLinkFromPWA]);
 
-  // Effect to check clipboard on focus
+  // Effect to check clipboard on focus and handle enter key
    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
+                if (!isInputFocused) {
+                    setIsQuickAddModalOpen(true);
+                }
+            }
+        };
+
         window.addEventListener('focus', checkClipboard);
+        window.addEventListener('keydown', handleKeyDown);
+
         return () => {
             window.removeEventListener('focus', checkClipboard);
+            window.removeEventListener('keydown', handleKeyDown);
         };
   }, [checkClipboard]);
 
@@ -544,6 +578,37 @@ export default function WeekGlancePage() {
   const handleCloseClipboardModal = () => {
     setLastProcessedClipboardText(clipboardContent); // Mark as handled even if closed
     setIsClipboardModalOpen(false);
+  };
+
+  const handleSaveQuickAddTodo = ({ text, date }: { text: string; date: Date }) => {
+    const newTodo: TodoItem = {
+      id: Date.now().toString(),
+      text: text,
+      completed: false,
+      category: null,
+      deadline: null,
+      importance: null,
+    };
+    
+    const dateKey = getDateKey(date);
+    const slotKey = "all-day";
+
+    setAllTodos(prevAllTodos => {
+      const dayTodos = prevAllTodos[dateKey] || {};
+      const slotTodos = dayTodos[slotKey] || [];
+      const updatedSlotTodos = [...slotTodos, newTodo];
+      const updatedDayTodos = { ...dayTodos, [slotKey]: updatedSlotTodos };
+      const newAllTodos = { ...prevAllTodos, [dateKey]: updatedDayTodos };
+
+      localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(newAllTodos));
+      return newAllTodos;
+    });
+
+    toast({
+      title: t.quickAddTodo.successToast,
+      duration: 3000
+    });
+    setIsQuickAddModalOpen(false);
   };
 
 
@@ -1018,6 +1083,14 @@ export default function WeekGlancePage() {
         onSave={handleSaveFromClipboard}
         content={clipboardContent}
         translations={t.clipboard}
+      />
+      <QuickAddTodoModal
+        isOpen={isQuickAddModalOpen}
+        onClose={() => setIsQuickAddModalOpen(false)}
+        onSave={handleSaveQuickAddTodo}
+        weekDays={daysToDisplay}
+        translations={t.quickAddTodo}
+        dateLocale={dateLocale}
       />
     </>
   );

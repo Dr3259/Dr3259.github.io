@@ -11,7 +11,7 @@ import {
     ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText,
     Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock,
     Hourglass, CalendarCheck, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus,
-    Star as StarIcon, FileEdit, Trash2
+    Star as StarIcon, FileEdit, Trash2, Calendar as CalendarIcon
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
@@ -25,6 +25,7 @@ import { format, parseISO, isAfter as dateIsAfter, isBefore } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
 import copy from 'copy-to-clipboard';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 
 // Helper function to extract time range and generate hourly slots
@@ -70,6 +71,7 @@ const translations = {
     noData: '暂无数据',
     notesPlaceholder: '记录今天的总结...',
     summaryAvailableLater: '总结可在下午6点后填写。',
+    allDayTasks: "全天事项",
     timeIntervalsTitle: (dayName: string) => `${dayName}规划`,
     midnight: '凌晨 (00:00 - 05:00)',
     earlyMorning: '清晨 (05:00 - 09:00)',
@@ -213,6 +215,7 @@ const translations = {
     noData: 'No data available',
     notesPlaceholder: 'Write your summary for the day...',
     summaryAvailableLater: 'Summary can be written after 6 PM.',
+    allDayTasks: "All-day Tasks",
     timeIntervalsTitle: (dayName: string) => `${dayName} Schedule`,
     midnight: 'Midnight (00:00 - 05:00)',
     earlyMorning: 'Early Morning (05:00 - 09:00)',
@@ -359,6 +362,8 @@ const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes_v2';
 const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks_v2';
 const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
+const ALL_DAY_SLOT_KEY = 'all-day';
+
 
 interface SlotDetails {
   dateKey: string; // YYYY-MM-DD
@@ -991,6 +996,8 @@ export default function DayDetailPage() {
     return '';
   };
 
+  const allDayTodos = useMemo(() => getTodosForSlot(dateKey, ALL_DAY_SLOT_KEY), [allTodos, dateKey]);
+
 
   if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
       return (
@@ -1070,6 +1077,61 @@ export default function DayDetailPage() {
               {t.timeIntervalsTitle(dayNameForDisplay)}
             </h2>
             <div className="grid grid-cols-1 gap-6">
+              {allDayTodos.length > 0 && (
+                <Card className="bg-card p-4 rounded-lg shadow-lg">
+                  <CardHeader className="p-0 pb-3">
+                    <CardTitle className="text-lg font-medium text-foreground flex items-center">
+                      <CalendarIcon className="mr-3 h-5 w-5 text-primary/80" />
+                      {t.allDayTasks}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <ul className="space-y-2 p-px group/todolist">
+                      {allDayTodos.map((todo) => {
+                        const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
+                        const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
+                        return (
+                          <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
+                            <div className="flex items-center space-x-2 flex-grow min-w-0">
+                              <Checkbox
+                                id={`daypage-todo-${dateKey}-${ALL_DAY_SLOT_KEY}-${todo.id}`}
+                                checked={todo.completed}
+                                onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, ALL_DAY_SLOT_KEY, todo.id)}
+                                aria-label={todo.completed ? t.markIncomplete : t.markComplete}
+                                className="border-primary/50 shrink-0"
+                                disabled={isPastDay}
+                              />
+                              <div className="flex items-center space-x-1 shrink-0">
+                                {CategoryIcon && todo.category && (
+                                  <Tooltip><TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent></Tooltip>
+                                )}
+                                {DeadlineIcon && todo.deadline && (
+                                  <Tooltip><TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent></Tooltip>
+                                )}
+                                {todo.importance === 'important' && (
+                                  <Tooltip><TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger><TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent></Tooltip>
+                                )}
+                              </div>
+                              <label
+                                htmlFor={`daypage-todo-${dateKey}-${ALL_DAY_SLOT_KEY}-${todo.id}`}
+                                className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
+                                title={todo.text}
+                              >
+                                {todo.text}
+                              </label>
+                            </div>
+                            {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
+                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dateKey, ALL_DAY_SLOT_KEY, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dateKey, ALL_DAY_SLOT_KEY, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
+                            </div>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
               {timeIntervals.map(interval => {
                 const hourlySlotsForInterval = generateHourlySlots(interval.label);
                 const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot =>
