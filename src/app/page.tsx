@@ -582,7 +582,7 @@ export default function WeekGlancePage() {
     setIsClipboardModalOpen(false);
   };
 
-  const handleSaveQuickAddTodo = ({ text, date, completed }: { text: string; date: Date; completed: boolean }) => {
+  const handleSaveQuickAddTodo = ({ text, date, completed }: { text: string; date: Date; completed: boolean; }) => {
     const newTodo: TodoItem = {
       id: Date.now().toString(),
       text: text,
@@ -593,7 +593,50 @@ export default function WeekGlancePage() {
     };
     
     const dateKey = getDateKey(date);
-    const slotKey = "all-day";
+    let slotKey = 'all-day';
+    
+    // If adding for today, find the current time slot
+    if (isSameDay(date, new Date())) {
+        const now = new Date();
+        const currentHour = now.getHours();
+
+        const timeIntervals = t.timeIntervals;
+        let targetIntervalLabel = timeIntervals.evening; // Default
+        if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
+        else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
+        else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
+        else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
+        else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+        
+        const hourlySlots = (() => {
+            const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+            if (!match) return [];
+            const [, startTimeStr, endTimeStr] = match;
+            const startHour = parseInt(startTimeStr.split(':')[0]);
+            let endHour = parseInt(endTimeStr.split(':')[0]);
+            if (endTimeStr === "00:00" && startHour !== 0) endHour = 24;
+            const slots: string[] = [];
+            for (let h = startHour; h < endHour; h++) {
+                slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
+            }
+            return slots;
+        })();
+
+        if (hourlySlots.length > 0) {
+            const currentSlot = hourlySlots.find(slot => {
+                const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
+                if (match) {
+                    const startH = parseInt(match[1]);
+                    let endH = parseInt(match[2]);
+                    if (endH === 0) endH = 24;
+                    return currentHour >= startH && currentHour < endH;
+                }
+                return false;
+            }) || hourlySlots[0];
+            slotKey = currentSlot;
+        }
+    }
+
 
     setAllTodos(prevAllTodos => {
       const dayTodos = prevAllTodos[dateKey] || {};
