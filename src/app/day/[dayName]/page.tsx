@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +11,8 @@ import {
     ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText,
     Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock,
     Hourglass, CalendarCheck, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus,
-    Star as StarIcon, FileEdit, Trash2, Calendar as CalendarIcon, Smile, Meh, Frown
+    Star as StarIcon, FileEdit, Trash2, Calendar as CalendarIcon, Smile, Meh, Frown,
+    ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
@@ -21,7 +22,8 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO, isAfter as dateIsAfter, isBefore } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
 import copy from 'copy-to-clipboard';
@@ -212,6 +214,8 @@ const translations = {
         afternoon: '下午 (14:00 - 18:00)',
         evening: '晚上 (18:00 - 24:00)',
     },
+    previousDay: '前一天',
+    nextDay: '后一天',
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -361,6 +365,8 @@ const translations = {
         afternoon: 'Afternoon (14:00 - 18:00)',
         evening: 'Evening (18:00 - 24:00)',
     },
+    previousDay: 'Previous Day',
+    nextDay: 'Next Day',
   }
 };
 
@@ -517,6 +523,7 @@ const getTagColor = (tagName: string | null): string => {
 
 export default function DayDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const dayNameForDisplay = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
   const dateKey = searchParams.get('date') || ''; // YYYY-MM-DD
@@ -562,6 +569,7 @@ export default function DayDetailPage() {
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
 
   const t = translations[currentLanguage];
+  const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
 
   const checkClipboard = useCallback(async () => {
     if (document.hidden) return;
@@ -685,7 +693,7 @@ export default function DayDetailPage() {
         }
     };
     loadData();
-  }, []);
+  }, [dateKey]); // Rerun if dateKey changes to reload data for new day
 
   const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
     try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, JSON.stringify(updatedNotes)); } 
@@ -965,7 +973,7 @@ export default function DayDetailPage() {
   };
   const handleDeleteShareLinkInPage = (targetDateKey: string, targetHourSlot: string, linkId: string) => {
     setAllShareLinks(prev => {
-        const slotLinks = prev[targetDateKey]?.[hourSlot] || [];
+        const slotLinks = prev[targetDateKey]?.[targetHourSlot] || [];
         const updatedSlot = slotLinks.filter(l => l.id !== linkId);
         const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
         saveAllShareLinksToLocalStorage(newAll); return newAll;
@@ -1036,6 +1044,26 @@ export default function DayDetailPage() {
   
   const showRatingControls = (isPastDay || (isViewingCurrentDay && isClientAfter6PMToday)) && !isFutureDay;
 
+  const navigateToDay = (offset: number) => {
+    if (!dayProperties.dateObject) return;
+    const targetDate = offset === 1 ? addDays(dayProperties.dateObject, 1) : subDays(dayProperties.dateObject, 1);
+    
+    // Prevent navigation to future days
+    if (offset === 1 && dateIsAfter(targetDate, new Date()) && !isToday(targetDate)) {
+        return;
+    }
+    
+    const newDateKey = format(targetDate, 'yyyy-MM-dd');
+    const newDayName = format(targetDate, 'EEEE', { locale: dateLocale });
+    router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}`);
+  };
+  
+  const isNextDayDisabled = useMemo(() => {
+    if (!dayProperties.dateObject) return true;
+    const nextDay = addDays(dayProperties.dateObject, 1);
+    return dateIsAfter(nextDay, new Date()) && !isToday(nextDay);
+  }, [dayProperties.dateObject]);
+
 
   if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
       return (
@@ -1054,13 +1082,21 @@ export default function DayDetailPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-col items-center min-h-screen bg-background text-foreground p-4 sm:p-8">
-        <header className="w-full max-w-4xl mb-8">
-          <Link href="/" passHref>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t.backToWeek}
-            </Button>
-          </Link>
+        <header className="w-full max-w-4xl mb-8 flex justify-between items-center">
+            <Link href="/" passHref>
+                <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t.backToWeek}
+                </Button>
+            </Link>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => navigateToDay(-1)} aria-label={t.previousDay}>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" size="icon" onClick={() => navigateToDay(1)} aria-label={t.nextDay} disabled={isNextDayDisabled}>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
         </header>
 
         <main className="w-full max-w-4xl">
@@ -1115,7 +1151,7 @@ export default function DayDetailPage() {
                                 key={type}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleRatingChange(rating === type ? null : type);
+                                    handleRatingChange(rating === type ? null : type as RatingType);
                                 }}
                                 className={cn(
                                     "p-1 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
