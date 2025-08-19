@@ -1145,6 +1145,22 @@ export default function DayDetailPage() {
                    return null;
                 }
 
+                if (isViewingCurrentDay && !hasContentInAnySlotOfInterval && clientPageLoadTime) {
+                    const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+                    if (match) {
+                        const [, , endTimeStr] = match;
+                        let [endH, endM] = endTimeStr.split(':').map(Number);
+                        if (endH === 0 && endM === 0) endH = 24;
+
+                        const intervalEndTotalMinutes = endH * 60 + endM;
+                        const nowTotalMinutes = clientPageLoadTime.getHours() * 60 + clientPageLoadTime.getMinutes();
+
+                        if (intervalEndTotalMinutes <= nowTotalMinutes) {
+                            return null;
+                        }
+                    }
+                }
+
 
                 const hourlySlots = generateHourlySlots(interval.label);
                 const mainTitle = interval.label.split(' (')[0];
