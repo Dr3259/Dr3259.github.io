@@ -857,6 +857,12 @@ export default function WeekGlancePage() {
 
     return !weekHasContent(date, allLoadedDataMemo);
   }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale, systemToday]);
+  
+  const daysForQuickAdd = useMemo(() => {
+      if (!systemToday) return [];
+      const today = new Date(systemToday.setHours(0,0,0,0));
+      return daysToDisplay.filter(day => isSameDay(day, today) || isAfter(day, today));
+  }, [daysToDisplay, systemToday]);
 
 
   if (!isClientMounted || !systemToday || !displayedDate) {
@@ -1090,12 +1096,10 @@ export default function WeekGlancePage() {
         isOpen={isQuickAddModalOpen}
         onClose={() => setIsQuickAddModalOpen(false)}
         onSave={handleSaveQuickAddTodo}
-        weekDays={daysToDisplay}
+        weekDays={daysForQuickAdd}
         translations={t.quickAddTodo}
         dateLocale={dateLocale}
       />
     </>
   );
 }
-
-    
