@@ -1190,21 +1190,20 @@ export default function DayDetailPage() {
                           const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
 
                           let isAddingDisabledForThisSlot = isPastDay;
-                          if (!isPastDay && isViewingCurrentDay && clientPageLoadTime && dateKey && dayProperties.dateObject) {
+                          let shouldHideSlot = false;
+                          
+                          if (!isPastDay && isViewingCurrentDay && clientPageLoadTime && dayProperties.dateObject) {
                             const dateKeyDate = dayProperties.dateObject;
                             const clientDatePart = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
                             
-                            if (dateIsAfter(clientDatePart, dateKeyDate)) {
-                              // This case is for future days, handled by isPastDay logic, but keep for safety
-                            } else if (format(clientDatePart, 'yyyy-MM-dd') === format(dateKeyDate, 'yyyy-MM-dd')) {
+                            if (format(clientDatePart, 'yyyy-MM-dd') === format(dateKeyDate, 'yyyy-MM-dd')) {
                                 const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                                 if (slotTimeMatch) {
-                                    const slotStartTimeStr = slotTimeMatch[1];
                                     const slotEndTimeStr = slotTimeMatch[2];
                                     let slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
                                     const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
 
-                                    if (slotEndHour === 0 && slotEndMinute === 0 && slotStartTimeStr.split(':')[0] !== "00") {
+                                    if (slotEndHour === 0 && slotEndMinute === 0 && slotTimeMatch[1].split(':')[0] !== "00") {
                                         slotEndHour = 24;
                                     }
                                     const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
@@ -1215,6 +1214,9 @@ export default function DayDetailPage() {
 
                                     if (slotEndTotalMinutes <= pageLoadTotalMinutes) {
                                         isAddingDisabledForThisSlot = true;
+                                        if (!hasAnyContentForThisSlot) {
+                                            shouldHideSlot = true;
+                                        }
                                     }
                                 }
                             }
@@ -1222,6 +1224,10 @@ export default function DayDetailPage() {
 
 
                           if (isPastDay && !hasAnyContentForThisSlot) {
+                              return null;
+                          }
+                          
+                          if(shouldHideSlot) {
                               return null;
                           }
 
