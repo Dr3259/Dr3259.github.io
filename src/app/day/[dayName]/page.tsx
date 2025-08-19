@@ -11,7 +11,7 @@ import {
     ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText,
     Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock,
     Hourglass, CalendarCheck, Sunrise, CalendarRange, ArrowRightToLine, CalendarPlus,
-    Star as StarIcon, FileEdit, Trash2, Calendar as CalendarIcon
+    Star as StarIcon, FileEdit, Trash2, Calendar as CalendarIcon, Smile, Meh, Frown
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
@@ -27,6 +27,7 @@ import { ClipboardModal } from '@/components/ClipboardModal';
 import copy from 'copy-to-clipboard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
+type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
 // Helper function to extract time range and generate hourly slots
 const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
@@ -89,6 +90,11 @@ const translations = {
     deleteItem: '删除事项',
     markComplete: '标记为已完成',
     markIncomplete: '标记为未完成',
+    ratingUiLabels: {
+      excellent: '好极了',
+      average: '一般般',
+      terrible: '糟透了',
+    },
     todoModal: {
         modalTitle: (hourSlot: string) => `${hourSlot} - 待办事项`,
         modalDescription: '在此处添加、编辑或删除您的待办事项。',
@@ -233,6 +239,11 @@ const translations = {
     deleteItem: 'Delete item',
     markComplete: 'Mark as complete',
     markIncomplete: 'Mark as incomplete',
+    ratingUiLabels: {
+      excellent: 'Excellent',
+      average: 'Average',
+      terrible: 'Terrible',
+    },
     todoModal: {
         modalTitle: (hourSlot: string) => `${hourSlot} - To-do List`,
         modalDescription: 'Add, edit, or delete your to-do items here.',
@@ -361,6 +372,7 @@ const LOCAL_STORAGE_KEY_ALL_TODOS = 'allWeekTodos_v2';
 const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes_v2';
 const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks_v2';
 const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
+const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 const ALL_DAY_SLOT_KEY = 'all-day';
 
@@ -389,6 +401,15 @@ const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType
   nextWeek: ArrowRightToLine,
   nextMonth: CalendarPlus,
 };
+
+const RATING_ICONS: Record<string, React.ElementType> = {
+  excellent: Smile,
+  average: Meh,
+  terrible: Frown,
+};
+
+const RATING_ORDER: (keyof typeof RATING_ICONS)[] = ['excellent', 'average', 'terrible'];
+
 
 const MAX_DAILY_NOTE_LENGTH = 1000;
 type DailyNoteDisplayMode = 'read' | 'edit' | 'pending';
@@ -507,6 +528,7 @@ export default function DayDetailPage() {
 
 
   const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({}); // Keyed by YYYY-MM-DD
+  const [allRatings, setAllRatings] = useState<Record<string, RatingType>>({});
   const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({}); // Outer key: YYYY-MM-DD
   const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
   const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
@@ -653,6 +675,7 @@ export default function DayDetailPage() {
     const loadData = () => {
         try {
             setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
+            setAllRatings(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS) || '{}'));
             setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
             setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
             setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
@@ -667,6 +690,10 @@ export default function DayDetailPage() {
   const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
     try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, JSON.stringify(updatedNotes)); } 
     catch (e) { console.error("Failed to save daily notes", e); }
+  };
+  const saveAllRatingsToLocalStorage = (updatedRatings: Record<string, RatingType>) => {
+    try { localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings)); }
+    catch (e) { console.error("Failed to save ratings", e); }
   };
   const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
     try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(updatedTodos)); }
@@ -693,7 +720,7 @@ export default function DayDetailPage() {
   const tReflectionModal = translations[currentLanguage].reflectionModal;
 
   const dailyNote = dateKey ? allDailyNotes[dateKey] || "" : "";
-  const rating = ""; // Placeholder
+  const rating = dateKey ? allRatings[dateKey] || null : null;
 
   const timeIntervals = useMemo(() => [
     { key: 'midnight', label: t.midnight }, { key: 'earlyMorning', label: t.earlyMorning },
@@ -707,6 +734,15 @@ export default function DayDetailPage() {
         const updated = {...prev, [dateKey]: newNote.substring(0, MAX_DAILY_NOTE_LENGTH) };
         saveAllDailyNotesToLocalStorage(updated);
         return updated;
+    });
+  };
+  
+  const handleRatingChange = (newRating: RatingType | null) => {
+    if (!dateKey) return;
+    setAllRatings(prev => {
+      const updated = { ...prev, [dateKey]: newRating };
+      saveAllRatingsToLocalStorage(updated);
+      return updated;
     });
   };
 
@@ -902,7 +938,7 @@ export default function DayDetailPage() {
     if (selectedSlotForMeetingNote) handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId);
   };
   const handleOpenEditMeetingNoteModalInPage = (targetDateKey: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
-    handleOpenMeetingNoteModal(targetHourSlot, noteToEdit);
+    handleOpenMeetingNoteModal(hourSlot, noteToEdit);
   };
   const getMeetingNotesForSlot = (targetDateKey: string, targetHourSlot: string): MeetingNoteItem[] => {
     return allMeetingNotes[targetDateKey]?.[targetHourSlot] || [];
@@ -929,7 +965,7 @@ export default function DayDetailPage() {
   };
   const handleDeleteShareLinkInPage = (targetDateKey: string, targetHourSlot: string, linkId: string) => {
     setAllShareLinks(prev => {
-        const slotLinks = prev[targetDateKey]?.[targetHourSlot] || [];
+        const slotLinks = prev[targetDateKey]?.[hourSlot] || [];
         const updatedSlot = slotLinks.filter(l => l.id !== linkId);
         const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
         saveAllShareLinksToLocalStorage(newAll); return newAll;
@@ -939,7 +975,7 @@ export default function DayDetailPage() {
     if (selectedSlotForShareLink) handleDeleteShareLinkInPage(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId);
   };
   const handleOpenEditShareLinkModalInPage = (targetDateKey: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
-    handleOpenShareLinkModal(targetHourSlot, linkToEdit);
+    handleOpenShareLinkModal(hourSlot, linkToEdit);
   };
   const getShareLinksForSlot = (targetDateKey: string, targetHourSlot: string): ShareLinkItem[] => {
     return allShareLinks[targetDateKey]?.[targetHourSlot] || [];
@@ -976,7 +1012,7 @@ export default function DayDetailPage() {
     if (selectedSlotForReflection) handleDeleteReflectionInPage(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId);
   };
   const handleOpenEditReflectionModalInPage = (targetDateKey: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
-    handleOpenReflectionModal(targetHourSlot, reflectionToEdit);
+    handleOpenReflectionModal(hourSlot, reflectionToEdit);
   };
   const getReflectionsForSlot = (targetDateKey: string, targetHourSlot: string): ReflectionItem[] => {
     return allReflections[targetDateKey]?.[targetHourSlot] || [];
@@ -997,6 +1033,8 @@ export default function DayDetailPage() {
   };
 
   const allDayTodos = useMemo(() => getTodosForSlot(dateKey, ALL_DAY_SLOT_KEY), [allTodos, dateKey]);
+  
+  const showRatingControls = (isPastDay || (isViewingCurrentDay && isClientAfter6PMToday)) && !isFutureDay;
 
 
   if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
@@ -1064,8 +1102,35 @@ export default function DayDetailPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
-                    <div className="p-3 border rounded-md bg-background/50">
-                      <p className="text-muted-foreground">{rating || t.noData}</p>
+                    <div className={cn("p-3 border rounded-md bg-background/50", !showRatingControls && "flex items-center")}>
+                      {!showRatingControls ? (
+                        <p className="text-muted-foreground">{rating ? t.ratingUiLabels[rating as keyof typeof t.ratingUiLabels] : t.noData}</p>
+                      ) : (
+                        <div className="flex justify-around w-full">
+                           {RATING_ORDER.map((type) => {
+                            const Icon = RATING_ICONS[type];
+                            const label = t.ratingUiLabels[type as keyof typeof t.ratingUiLabels];
+                            return (
+                                <button
+                                key={type}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRatingChange(rating === type ? null : type);
+                                }}
+                                className={cn(
+                                    "p-1 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                    "hover:bg-accent/50",
+                                    rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                                aria-label={label}
+                                aria-pressed={rating === type}
+                                >
+                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                </button>
+                            );
+                            })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
