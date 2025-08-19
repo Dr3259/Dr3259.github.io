@@ -136,6 +136,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_URL_LENGTH}
                 type="url"
+                autoComplete="off"
               />
             </div>
 
@@ -150,6 +151,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 placeholder={translations.titlePlaceholder}
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_LINK_TITLE_LENGTH}
+                autoComplete="off"
               />
             </div>
 
@@ -164,6 +166,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 placeholder={translations.categoryPlaceholder}
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_CATEGORY_LENGTH}
+                autoComplete="off"
               />
             </div>
           </div>

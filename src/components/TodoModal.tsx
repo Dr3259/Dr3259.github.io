@@ -282,6 +282,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 placeholder={translations.addItemPlaceholder}
                 className="bg-background pr-14 py-2.5 text-base"
                 maxLength={50}
+                autoComplete="off"
               />
               <div className="absolute bottom-1/2 right-3 translate-y-1/2 text-xs text-muted-foreground">
                 {newItemText.length} / 50
@@ -456,4 +457,3 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     </Dialog>
   );
 };
-

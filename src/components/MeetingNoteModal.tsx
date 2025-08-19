@@ -145,6 +145,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 placeholder={translations.titlePlaceholder}
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_TITLE_LENGTH}
+                autoComplete="off"
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {title.length}/{MAX_TITLE_LENGTH}
@@ -162,6 +163,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 placeholder={translations.notesPlaceholder}
                 className="bg-background min-h-[120px] text-base"
                 maxLength={MAX_NOTES_LENGTH}
+                autoComplete="off"
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {notes.length}/{MAX_NOTES_LENGTH}
@@ -179,6 +181,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 placeholder={translations.attendeesPlaceholder}
                 className="bg-background text-base py-2.5"
                 maxLength={MAX_ATTENDEES_LENGTH}
+                autoComplete="off"
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {attendees.length}/{MAX_ATTENDEES_LENGTH}
@@ -196,6 +199,7 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
                 placeholder={translations.actionItemsPlaceholder}
                 className="bg-background min-h-[80px] text-base"
                 maxLength={MAX_ACTION_ITEMS_LENGTH}
+                autoComplete="off"
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {actionItems.length}/{MAX_ACTION_ITEMS_LENGTH}

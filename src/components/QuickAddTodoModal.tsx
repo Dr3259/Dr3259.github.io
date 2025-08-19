@@ -98,6 +98,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
               onChange={(e) => setTodoText(e.target.value)}
               className="col-span-4"
               autoFocus
+              autoComplete="off"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

@@ -1054,6 +1054,7 @@ export default function DayDetailPage() {
                             className="min-h-[100px] bg-background/50 text-sm"
                             maxLength={MAX_DAILY_NOTE_LENGTH}
                             disabled={isPastDay}
+                            autoComplete="off"
                         />
                         <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                             {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}

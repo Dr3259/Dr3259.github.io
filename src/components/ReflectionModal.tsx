@@ -120,6 +120,7 @@ export const ReflectionModal: React.FC<ReflectionModalProps> = ({
                 placeholder={translations.textPlaceholder}
                 className="bg-background min-h-[150px] text-base"
                 maxLength={MAX_REFLECTION_TEXT_LENGTH}
+                autoComplete="off"
               />
               <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
                 {text.length}/{MAX_REFLECTION_TEXT_LENGTH}
@@ -151,4 +152,3 @@ export const ReflectionModal: React.FC<ReflectionModalProps> = ({
     </Dialog>
   );
 };
-

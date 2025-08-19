@@ -76,6 +76,7 @@ export const ClipboardModal: React.FC<ClipboardModalProps> = ({
             value={category}
             onChange={(e) => setCategory(e.target.value.substring(0, 15))}
             maxLength={15}
+            autoComplete="off"
           />
         </div>
 
