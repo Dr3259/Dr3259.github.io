@@ -1077,7 +1077,7 @@ export default function DayDetailPage() {
               {t.timeIntervalsTitle(dayNameForDisplay)}
             </h2>
             <div className="grid grid-cols-1 gap-6">
-              {allDayTodos.length > 0 && (
+              {false && allDayTodos.length > 0 && (
                 <Card className="bg-card p-4 rounded-lg shadow-lg">
                   <CardHeader className="p-0 pb-3">
                     <CardTitle className="text-lg font-medium text-foreground flex items-center">
