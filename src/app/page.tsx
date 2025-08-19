@@ -104,13 +104,14 @@ const translations = {
         categoryPlaceholder: "例如：学习资料, 食谱",
     },
     quickAddTodo: {
-      modalTitle: "快速添加待办事项",
-      modalDescription: "输入您的待办事项并选择一个日期。",
+      modalTitle: "快速添加事项",
+      modalDescription: "输入您的事项并选择一个日期。",
       todoPlaceholder: "例如：下午3点和张三开会...",
       dateLabel: "日期",
-      saveButton: "保存待办",
+      completedLabel: "标记为已完成",
+      saveButton: "保存事项",
       cancelButton: "取消",
-      successToast: "待办事项已添加！"
+      successToast: "事项已添加！"
     },
     pasteFromClipboard: "从剪贴板粘贴",
     timeIntervals: {
@@ -178,13 +179,14 @@ const translations = {
         categoryPlaceholder: "e.g. Study, Recipe",
     },
     quickAddTodo: {
-      modalTitle: "Quick Add To-do",
-      modalDescription: "Enter your to-do item and select a date.",
+      modalTitle: "Quick Add Item",
+      modalDescription: "Enter your item and select a date.",
       todoPlaceholder: "e.g., Meeting with John at 3 PM...",
       dateLabel: "Date",
-      saveButton: "Save To-do",
+      completedLabel: "Mark as completed",
+      saveButton: "Save Item",
       cancelButton: "Cancel",
-      successToast: "To-do item added!"
+      successToast: "Item added!"
     },
     pasteFromClipboard: "Paste from clipboard",
      timeIntervals: {
@@ -580,11 +582,11 @@ export default function WeekGlancePage() {
     setIsClipboardModalOpen(false);
   };
 
-  const handleSaveQuickAddTodo = ({ text, date }: { text: string; date: Date }) => {
+  const handleSaveQuickAddTodo = ({ text, date, completed }: { text: string; date: Date; completed: boolean }) => {
     const newTodo: TodoItem = {
       id: Date.now().toString(),
       text: text,
-      completed: false,
+      completed: completed,
       category: null,
       deadline: null,
       importance: null,

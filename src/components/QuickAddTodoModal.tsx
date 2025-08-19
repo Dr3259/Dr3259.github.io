@@ -20,19 +20,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 
 interface QuickAddTodoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { text: string; date: Date }) => void;
+  onSave: (data: { text: string; date: Date; completed: boolean; }) => void;
   weekDays: Date[];
   translations: {
     modalTitle: string;
     modalDescription: string;
     todoPlaceholder: string;
     dateLabel: string;
+    completedLabel: string;
     saveButton: string;
     cancelButton: string;
   };
@@ -49,11 +51,14 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
 }) => {
   const [todoText, setTodoText] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       // Reset state when modal opens
       setTodoText('');
+      setIsCompleted(false);
+      
       // Set default date to today or the first day of the week
       const today = new Date();
       const todayString = format(today, 'yyyy-MM-dd');
@@ -68,7 +73,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
 
   const handleSave = () => {
     if (!todoText.trim() || !selectedDate) return;
-    onSave({ text: todoText, date: new Date(selectedDate) });
+    onSave({ text: todoText, date: new Date(selectedDate), completed: isCompleted });
   };
   
   const handleOpenChange = (open: boolean) => {
@@ -112,6 +117,19 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                 </SelectContent>
             </Select>
           </div>
+           <div className="flex items-center space-x-2 justify-end mt-2">
+                <Checkbox 
+                    id="completed-checkbox" 
+                    checked={isCompleted}
+                    onCheckedChange={(checked) => setIsCompleted(checked === true)}
+                />
+                <Label
+                    htmlFor="completed-checkbox"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                    {translations.completedLabel}
+                </Label>
+            </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>
