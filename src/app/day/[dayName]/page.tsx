@@ -520,6 +520,14 @@ const getTagColor = (tagName: string | null): string => {
     return `hsl(${h}, 70%, 85%)`; // Using HSL for a wide range of soft colors
 };
 
+interface AllLoadedData {
+  allDailyNotes: Record<string, string>;
+  allTodos: Record<string, Record<string, TodoItem[]>>;
+  allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
+  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
+  allReflections: Record<string, Record<string, ReflectionItem[]>>;
+  allRatings: Record<string, RatingType>;
+}
 
 export default function DayDetailPage() {
   const params = useParams();
@@ -540,6 +548,11 @@ export default function DayDetailPage() {
   const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
   const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
   const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
+  
+  const allLoadedDataMemo = useMemo((): AllLoadedData => ({
+    allDailyNotes, allRatings, allTodos, allMeetingNotes, allShareLinks, allReflections
+  }), [allDailyNotes, allRatings, allTodos, allMeetingNotes, allShareLinks, allReflections]);
+
 
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
@@ -570,6 +583,22 @@ export default function DayDetailPage() {
 
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
+  
+  const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
+    const checkDateKey = getDateKey(date);
+    if (data.allDailyNotes[checkDateKey]?.trim()) return true;
+    if (data.allRatings[checkDateKey]) return true;
+
+    const checkSlotItems = (items: Record<string, any[]> | undefined) =>
+        items && Object.values(items).some(slotItems => slotItems.length > 0);
+
+    if (checkSlotItems(data.allTodos[checkDateKey])) return true;
+    if (checkSlotItems(data.allMeetingNotes[checkDateKey])) return true;
+    if (checkSlotItems(data.allShareLinks[checkDateKey])) return true;
+    if (checkSlotItems(data.allReflections[checkDateKey])) return true;
+
+    return false;
+  }, []);
 
   const checkClipboard = useCallback(async () => {
     if (document.hidden) return;
@@ -1043,26 +1072,41 @@ export default function DayDetailPage() {
   const allDayTodos = useMemo(() => getTodosForSlot(dateKey, ALL_DAY_SLOT_KEY), [allTodos, dateKey]);
   
   const showRatingControls = (isPastDay || (isViewingCurrentDay && isClientAfter6PMToday)) && !isFutureDay;
-
-  const navigateToDay = (offset: number) => {
-    if (!dayProperties.dateObject) return;
-    const targetDate = offset === 1 ? addDays(dayProperties.dateObject, 1) : subDays(dayProperties.dateObject, 1);
-    
-    // Prevent navigation to future days
-    if (offset === 1 && dateIsAfter(targetDate, new Date()) && !isToday(targetDate)) {
-        return;
-    }
-    
-    const newDateKey = format(targetDate, 'yyyy-MM-dd');
-    const newDayName = format(targetDate, 'EEEE', { locale: dateLocale });
-    router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}`);
-  };
   
+  const navigateToDay = (offset: number) => {
+    if (!dayProperties.dateObject || !clientPageLoadTime) return;
+    const targetDate = offset === 1 ? addDays(dayProperties.dateObject, 1) : subDays(dayProperties.dateObject, 1);
+    const today = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
+
+    const canNavigate = isToday(targetDate) || (dayHasContent(targetDate, allLoadedDataMemo) && !dateIsAfter(targetDate, today));
+
+    if (canNavigate) {
+        const newDateKey = format(targetDate, 'yyyy-MM-dd');
+        const newDayName = format(targetDate, 'EEEE', { locale: dateLocale });
+        router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}`);
+    }
+  };
+
   const isNextDayDisabled = useMemo(() => {
-    if (!dayProperties.dateObject) return true;
+    if (!dayProperties.dateObject || !clientPageLoadTime) return true;
     const nextDay = addDays(dayProperties.dateObject, 1);
-    return dateIsAfter(nextDay, new Date()) && !isToday(nextDay);
-  }, [dayProperties.dateObject]);
+    const today = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
+    
+    // The next day is today, always enabled.
+    if (isToday(nextDay)) return false;
+    
+    // The next day is in the future.
+    if (dateIsAfter(nextDay, today)) return true;
+
+    // The next day is in the past. It's only enabled if it has content.
+    return !dayHasContent(nextDay, allLoadedDataMemo);
+  }, [dayProperties.dateObject, clientPageLoadTime, dayHasContent, allLoadedDataMemo]);
+
+  const isPrevDayDisabled = useMemo(() => {
+    if (!dayProperties.dateObject) return true;
+    const prevDay = subDays(dayProperties.dateObject, 1);
+    return !dayHasContent(prevDay, allLoadedDataMemo);
+  }, [dayProperties.dateObject, dayHasContent, allLoadedDataMemo]);
 
 
   if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
@@ -1090,7 +1134,7 @@ export default function DayDetailPage() {
                 </Button>
             </Link>
             <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => navigateToDay(-1)} aria-label={t.previousDay}>
+                <Button variant="outline" size="icon" onClick={() => navigateToDay(-1)} aria-label={t.previousDay} disabled={isPrevDayDisabled}>
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
                  <Button variant="outline" size="icon" onClick={() => navigateToDay(1)} aria-label={t.nextDay} disabled={isNextDayDisabled}>
@@ -1179,7 +1223,7 @@ export default function DayDetailPage() {
               {t.timeIntervalsTitle(dayNameForDisplay)}
             </h2>
             <div className="grid grid-cols-1 gap-6">
-              {false && allDayTodos.length > 0 && (
+              {false && (
                 <Card className="bg-card p-4 rounded-lg shadow-lg">
                   <CardHeader className="p-0 pb-3">
                     <CardTitle className="text-lg font-medium text-foreground flex items-center">
