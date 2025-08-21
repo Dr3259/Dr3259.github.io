@@ -42,21 +42,25 @@ const scrapeTiobeFlow = ai.defineFlow(
 
       const rankings: TiobeIndexEntry[] = [];
 
-      // A more robust selector that finds the first table body and iterates its rows.
-      // This is less likely to break if the table's class or id changes.
-      $('tbody').first().find('tr').each((_index, element) => {
-        const columns = $(element).find('td');
-        
-        // The table has 6 columns: Rank, Rank_last_month, Icon, Language, Rating, Change
-        if (columns.length >= 5) {
-          const rank = parseInt($(columns[0]).text().trim(), 10);
-          const language = $(columns[3]).text().trim();
-          const rating = $(columns[4]).text().trim();
+      // A more robust selector that finds any table body and iterates its rows.
+      // It will stop once it finds the first table that yields results.
+      $('tbody').each((_i, tbody) => {
+        if (rankings.length > 0) return; // Stop if we've already found the data
 
-          if (!isNaN(rank) && language && rating) {
-            rankings.push({ rank, language, rating });
+        $(tbody).find('tr').each((_index, element) => {
+          const columns = $(element).find('td');
+          
+          // The table has 6 columns: Rank, Rank_last_month, Icon, Language, Rating, Change
+          if (columns.length >= 5) {
+            const rank = parseInt($(columns[0]).text().trim(), 10);
+            const language = $(columns[3]).text().trim();
+            const rating = $(columns[4]).text().trim();
+
+            if (!isNaN(rank) && language && rating) {
+              rankings.push({ rank, language, rating });
+            }
           }
-        }
+        });
       });
       
       if (rankings.length === 0) {
