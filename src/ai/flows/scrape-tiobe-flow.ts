@@ -46,7 +46,7 @@ const scrapeTiobeFlow = ai.defineFlow(
       // as the ID on the TIOBE website was removed.
       $('table.table-striped tbody tr').each((_index, element) => {
         const columns = $(element).find('td');
-        if (columns.length >= 4) { // Ensure there are enough columns
+        if (columns.length >= 5) { // Ensure there are enough columns
           const rank = parseInt($(columns[0]).text().trim(), 10);
           const language = $(columns[3]).text().trim();
           const rating = $(columns[4]).text().trim();
@@ -71,3 +71,4 @@ const scrapeTiobeFlow = ai.defineFlow(
     }
   }
 );
+
