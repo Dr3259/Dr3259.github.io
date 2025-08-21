@@ -42,13 +42,14 @@ const scrapeTiobeFlow = ai.defineFlow(
 
       const rankings: TiobeIndexEntry[] = [];
 
-      $('table.table-striped tbody tr').each((_index, element) => {
+      // A more robust selector that finds the first table body and iterates its rows.
+      // This is less likely to break if the table's class or id changes.
+      $('tbody').first().find('tr').each((_index, element) => {
         const columns = $(element).find('td');
         
         // The table has 6 columns: Rank, Rank_last_month, Icon, Language, Rating, Change
         if (columns.length >= 5) {
           const rank = parseInt($(columns[0]).text().trim(), 10);
-          // Correct column indices: Language is at index 3, Rating is at index 4.
           const language = $(columns[3]).text().trim();
           const rating = $(columns[4]).text().trim();
 
