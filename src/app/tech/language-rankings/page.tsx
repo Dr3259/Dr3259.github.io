@@ -130,9 +130,6 @@ export default function LanguageRankingsPage() {
                     <BarChart3 className="mr-3 h-5 w-5 text-primary/80" />
                     {t.rankingsTitle}
                 </CardTitle>
-                <CardDescription>
-                  {t.pageSubtitle}
-                </CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
