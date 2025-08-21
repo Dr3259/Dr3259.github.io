@@ -25,6 +25,7 @@ const translations = {
     summaryPoint1: 'Python 稳居第一，得益于 AI 代码助手推动其日益增长的普及度。',
     summaryPoint2: '多数顶级语言如 C++、C、Java、C# 等都有小幅下降。',
     summaryPoint3: 'Perl 与 Visual Basic、Go、Delphi 等语言表现突出，尤其是 Perl 的回升值得关注。',
+    rankingsTitle: 'Top 10 编程语言',
   },
   'en': {
     pageTitle: 'Language Rankings',
@@ -41,6 +42,7 @@ const translations = {
     summaryPoint1: 'Python remains number one, thanks to the growing adoption driven by AI code assistants.',
     summaryPoint2: 'Most top languages like C++, C, Java, and C# saw a slight decline.',
     summaryPoint3: 'Perl, along with Visual Basic, Go, and Delphi, showed strong performance, with Perl\'s resurgence being particularly noteworthy.',
+    rankingsTitle: 'Top 10 Programming Languages',
   }
 };
 
@@ -126,7 +128,7 @@ export default function LanguageRankingsPage() {
             <CardHeader>
                 <CardTitle className="flex items-center">
                     <BarChart3 className="mr-3 h-5 w-5 text-primary/80" />
-                    Top 10 Programming Languages
+                    {t.rankingsTitle}
                 </CardTitle>
                 <CardDescription>
                   {t.pageSubtitle}
