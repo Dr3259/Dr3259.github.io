@@ -42,23 +42,23 @@ const scrapeTiobeFlow = ai.defineFlow(
 
       const rankings: TiobeIndexEntry[] = [];
 
-      // The selector was changed from '#top20 tbody tr' to a more robust class-based selector
-      // as the ID on the TIOBE website was removed.
       $('table.table-striped tbody tr').each((_index, element) => {
         const columns = $(element).find('td');
-        if (columns.length >= 5) { // Ensure there are enough columns
+        
+        // The table has 6 columns: Rank, Rank_last_month, Icon, Language, Rating, Change
+        if (columns.length >= 5) {
           const rank = parseInt($(columns[0]).text().trim(), 10);
+          // Correct column indices: Language is at index 3, Rating is at index 4.
           const language = $(columns[3]).text().trim();
           const rating = $(columns[4]).text().trim();
 
-          if (!isNaN(rank) && language) {
+          if (!isNaN(rank) && language && rating) {
             rankings.push({ rank, language, rating });
           }
         }
       });
       
       if (rankings.length === 0) {
-        // This could happen if the table structure changes.
         throw new Error('Could not parse any rankings from the TIOBE index page. The website structure may have changed.');
       }
 
@@ -66,9 +66,7 @@ const scrapeTiobeFlow = ai.defineFlow(
 
     } catch (error: any) {
       console.error('Error in scrapeTiobeFlow:', error);
-      // Re-throw the error so the frontend can catch it and display a message.
       throw new Error(error.message || 'An unknown error occurred while scraping the TIOBE index.');
     }
   }
 );
-
