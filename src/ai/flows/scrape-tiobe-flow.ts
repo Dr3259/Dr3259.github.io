@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit/zod';
+import { z } from 'zod';
 import * as cheerio from 'cheerio';
 
 const TiobeIndexEntrySchema = z.object({
