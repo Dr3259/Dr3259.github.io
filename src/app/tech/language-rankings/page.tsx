@@ -5,9 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, BarChart3, Loader2, AlertTriangle } from 'lucide-react';
-import { scrapeTiobe, type TiobeIndexEntry } from '@/ai/flows/scrape-tiobe-flow';
+import { ArrowLeft, BarChart3 } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
@@ -20,6 +18,7 @@ const translations = {
     language: '语言',
     rating: '评级',
     dataSource: '数据来源: TIOBE Index',
+    comingSoon: '敬请期待！此功能正在开发中。',
   },
   'en': {
     pageTitle: 'Language Rankings',
@@ -31,6 +30,7 @@ const translations = {
     language: 'Language',
     rating: 'Rating',
     dataSource: 'Data source: TIOBE Index',
+    comingSoon: 'Coming Soon! This feature is under development.',
   }
 };
 
@@ -38,31 +38,12 @@ type LanguageKey = keyof typeof translations;
 
 export default function LanguageRankingsPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [rankings, setRankings] = useState<TiobeIndexEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    
-    const fetchRankings = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await scrapeTiobe();
-        setRankings(data);
-      } catch (e: any) {
-        console.error(e);
-        setError(e.message || 'An unknown error occurred.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchRankings();
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
@@ -82,7 +63,7 @@ export default function LanguageRankingsPage() {
         <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary mb-2 text-center">
           {t.pageTitle}
         </h1>
-        <a href="https://www.tiobe.com/tiobe-index/" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors mb-8">
+         <a href="https://www.tiobe.com/tiobe-index/" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors mb-8">
             {t.dataSource}
         </a>
         
@@ -94,41 +75,9 @@ export default function LanguageRankingsPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                {isLoading && (
-                    <div className="flex flex-col items-center justify-center p-10 text-center">
-                        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-                        <p className="text-muted-foreground">{t.loading}</p>
-                    </div>
-                )}
-                {error && (
-                    <div className="flex flex-col items-center justify-center p-10 text-center text-destructive bg-destructive/10 rounded-lg">
-                        <AlertTriangle className="h-10 w-10 mb-4" />
-                        <h3 className="text-lg font-semibold">{t.error}</h3>
-                        <p className="text-sm mt-2">{t.errorDescription}</p>
-                    </div>
-                )}
-                {!isLoading && !error && (
-                     <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[80px] text-center">{t.rank}</TableHead>
-                                    <TableHead>{t.language}</TableHead>
-                                    <TableHead className="text-right">{t.rating}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {rankings.map((lang) => (
-                                <TableRow key={lang.rank}>
-                                    <TableCell className="font-medium text-center">{lang.rank}</TableCell>
-                                    <TableCell>{lang.language}</TableCell>
-                                    <TableCell className="text-right">{lang.rating}</TableCell>
-                                </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                )}
+                <div className="flex flex-col items-center justify-center p-10 text-center">
+                    <p className="text-muted-foreground">{t.comingSoon}</p>
+                </div>
             </CardContent>
         </Card>
       </main>
