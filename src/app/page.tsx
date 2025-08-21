@@ -69,7 +69,7 @@ const translations = {
     thumbnailPreviewAlt: (day: string) => `${day} 的缩略图预览`,
     githubAria: 'GitHub',
     wechatAria: '微信',
-    emailAria: '邮箱',
+    emailAria: '发送反馈邮件',
     donateAria: '捐赠',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
@@ -115,12 +115,12 @@ const translations = {
     },
     pasteFromClipboard: "从剪贴板粘贴",
     timeIntervals: {
-        midnight: '凌晨 (00:00 - 05:00)',
-        earlyMorning: '清晨 (05:00 - 09:00)',
-        morning: '上午 (09:00 - 12:00)',
-        noon: '中午 (12:00 - 14:00)',
-        afternoon: '下午 (14:00 - 18:00)',
-        evening: '晚上 (18:00 - 24:00)',
+        midnight: '凌晨',
+        earlyMorning: '清晨',
+        morning: '上午',
+        noon: '中午',
+        afternoon: '下午',
+        evening: '晚上',
     },
   },
   'en': {
@@ -144,7 +144,7 @@ const translations = {
     thumbnailPreviewAlt: (day: string) => `Thumbnail preview for ${day}`,
     githubAria: 'GitHub',
     wechatAria: 'WeChat',
-    emailAria: 'Email',
+    emailAria: 'Send Feedback Email',
     donateAria: 'Donate',
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
@@ -190,12 +190,12 @@ const translations = {
     },
     pasteFromClipboard: "Paste from clipboard",
      timeIntervals: {
-        midnight: 'Midnight (00:00 - 05:00)',
-        earlyMorning: 'Early Morning (05:00 - 09:00)',
-        morning: 'Morning (09:00 - 12:00)',
-        noon: 'Noon (12:00 - 14:00)',
-        afternoon: 'Afternoon (14:00 - 18:00)',
-        evening: 'Evening (18:00 - 24:00)',
+        midnight: 'Midnight',
+        earlyMorning: 'Early Morning',
+        morning: 'Morning',
+        noon: 'Noon',
+        afternoon: 'Afternoon',
+        evening: 'Evening',
     },
   }
 };
@@ -280,14 +280,24 @@ const saveUrlToCurrentTimeSlot = (
     const currentHour = now.getHours();
     const currentDateKey = getDateKey(now);
 
-    const timeIntervals = t.timeIntervals;
-    let targetIntervalLabel = timeIntervals.evening; // Default
-    if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
-    else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
-    else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
-    else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
-    else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+    const timeIntervals = {
+        midnight: '(00:00 - 05:00)',
+        earlyMorning: '(05:00 - 09:00)',
+        morning: '(09:00 - 12:00)',
+        noon: '(12:00 - 14:00)',
+        afternoon: '(14:00 - 18:00)',
+        evening: '(18:00 - 24:00)',
+    };
     
+    let targetIntervalName = 'evening';
+    if (currentHour < 5) targetIntervalName = 'midnight';
+    else if (currentHour < 9) targetIntervalName = 'earlyMorning';
+    else if (currentHour < 12) targetIntervalName = 'morning';
+    else if (currentHour < 14) targetIntervalName = 'noon';
+    else if (currentHour < 18) targetIntervalName = 'afternoon';
+    
+    const targetIntervalLabel = timeIntervals[targetIntervalName as keyof typeof timeIntervals];
+
     const hourlySlots = (() => {
         const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
         if (!match) return [];
@@ -329,7 +339,7 @@ const saveUrlToCurrentTimeSlot = (
         localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
         setAllShareLinks(newAllLinks);
         
-        return { success: true, slotName: targetIntervalLabel.split(' (')[0] };
+        return { success: true, slotName: t.timeIntervals[targetIntervalName as keyof typeof t.timeIntervals] };
     } catch(e) {
         console.error("Failed to save link to localStorage", e);
         return { success: false, slotName: '' };
@@ -600,13 +610,23 @@ export default function WeekGlancePage() {
         const now = new Date();
         const currentHour = now.getHours();
 
-        const timeIntervals = t.timeIntervals;
-        let targetIntervalLabel = timeIntervals.evening; // Default
-        if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
-        else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
-        else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
-        else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
-        else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+        const timeIntervals = {
+            midnight: '(00:00 - 05:00)',
+            earlyMorning: '(05:00 - 09:00)',
+            morning: '(09:00 - 12:00)',
+            noon: '(12:00 - 14:00)',
+            afternoon: '(14:00 - 18:00)',
+            evening: '(18:00 - 24:00)',
+        };
+        
+        let targetIntervalName = 'evening';
+        if (currentHour < 5) targetIntervalName = 'midnight';
+        else if (currentHour < 9) targetIntervalName = 'earlyMorning';
+        else if (currentHour < 12) targetIntervalName = 'morning';
+        else if (currentHour < 14) targetIntervalName = 'noon';
+        else if (currentHour < 18) targetIntervalName = 'afternoon';
+
+        const targetIntervalLabel = timeIntervals[targetIntervalName as keyof typeof timeIntervals];
         
         const hourlySlots = (() => {
             const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
@@ -1117,7 +1137,7 @@ export default function WeekGlancePage() {
                         />
                     </PopoverContent>
                 </Popover>
-                <a href="#" aria-label={t.emailAria} className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="mailto:your-email@example.com?subject=Week Glance User Feedback" aria-label={t.emailAria} className="text-muted-foreground hover:text-primary transition-colors">
                   <Mail className="h-5 w-5" />
                 </a>
                 <a href="#" aria-label={t.donateAria} className="text-muted-foreground hover:text-primary transition-colors">
