@@ -42,7 +42,9 @@ const scrapeTiobeFlow = ai.defineFlow(
 
       const rankings: TiobeIndexEntry[] = [];
 
-      $('#top20 tbody tr').each((_index, element) => {
+      // The selector was changed from '#top20 tbody tr' to a more robust class-based selector
+      // as the ID on the TIOBE website was removed.
+      $('table.table-striped tbody tr').each((_index, element) => {
         const columns = $(element).find('td');
         if (columns.length >= 4) { // Ensure there are enough columns
           const rank = parseInt($(columns[0]).text().trim(), 10);
