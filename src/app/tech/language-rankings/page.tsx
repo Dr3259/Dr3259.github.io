@@ -68,12 +68,12 @@ const rankingData: RankingData[] = [
 
 const ChangeIndicator: React.FC<{ change: string }> = ({ change }) => {
   if (change.startsWith('+')) {
-    return <span className="flex items-center text-green-600"><TrendingUp className="mr-1 h-4 w-4" /> {change}</span>;
+    return <span className="flex items-center justify-end text-green-600"><TrendingUp className="mr-1 h-4 w-4" /> {change}</span>;
   }
   if (change.startsWith('–') || change.startsWith('-')) {
-    return <span className="flex items-center text-red-600"><TrendingDown className="mr-1 h-4 w-4" /> {change}</span>;
+    return <span className="flex items-center justify-end text-red-600"><TrendingDown className="mr-1 h-4 w-4" /> {change}</span>;
   }
-  return <span className="flex items-center text-muted-foreground"><Minus className="mr-1 h-4 w-4" /> {change}</span>;
+  return <span className="flex items-center justify-end text-muted-foreground"><Minus className="mr-1 h-4 w-4" /> {change}</span>;
 };
 
 export default function LanguageRankingsPage() {
