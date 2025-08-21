@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -78,6 +78,10 @@ const translations = {
     restButtonAria: '进入休息页面',
     healthButtonText: '健康一下',
     healthButtonAria: '进入健康页面',
+    techButtonText: '科技一下',
+    techButtonAria: '进入科技页面',
+    richButtonText: '富豪一下',
+    richButtonAria: '进入富豪页面',
     previousWeek: '上一周',
     nextWeek: '下一周',
     currentWeek: '本周',
@@ -153,6 +157,10 @@ const translations = {
     restButtonAria: 'Go to rest page',
     healthButtonText: 'Get Healthy',
     healthButtonAria: 'Go to health page',
+    techButtonText: 'Tech Time',
+    techButtonAria: 'Go to tech page',
+    richButtonText: 'Rich Time',
+    richButtonAria: 'Go to rich page',
     previousWeek: 'Previous Week',
     nextWeek: 'Next Week',
     currentWeek: 'Current Week',
@@ -811,6 +819,8 @@ export default function WeekGlancePage() {
 
   const handleRestButtonClick = () => router.push('/rest');
   const handleHealthButtonClick = () => router.push('/health');
+  const handleTechButtonClick = () => router.push('/tech');
+  const handleRichButtonClick = () => router.push('/rich');
 
   const handlePreviousWeek = () => {
     if (!displayedDate || !allDataLoaded) return;
@@ -951,6 +961,12 @@ export default function WeekGlancePage() {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={handleTechButtonClick} aria-label={t.techButtonAria}>
+              <Cpu className="mr-2 h-4 w-4" />{t.techButtonText}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRichButtonClick} aria-label={t.richButtonAria}>
+              <Gem className="mr-2 h-4 w-4" />{t.richButtonText}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleHealthButtonClick} aria-label={t.healthButtonAria}>
               <HeartPulse className="mr-2 h-4 w-4" />{t.healthButtonText}
             </Button>
@@ -1110,7 +1126,7 @@ export default function WeekGlancePage() {
                   <p className="text-sm text-muted-foreground">
                     {t.copyrightText(currentYear, t.pageTitle)}
                     <span className="mx-1">·</span>
-                    <a href="/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label={t.mitLicenseLinkAria}>
+                    <a href="mailto:your-email@example.com?subject=Week Glance User Feedback" className="hover:text-primary transition-colors" aria-label={t.emailAria}>
                       {t.mitLicenseLinkText}
                     </a>
                   </p>
