@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Minus, Info, ClipboardList } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Minus, Info, ClipboardList, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const translations = {
@@ -20,6 +20,7 @@ const translations = {
     language: '语言',
     rating: '评分',
     change: '变动 (年)',
+    officialWebsite: '官方网站',
     dataSource: '数据来源: TIOBE Index',
     summaryTitle: '小结总结',
     summaryPoint1: 'Python 稳居第一，得益于 AI 代码助手推动其日益增长的普及度。',
@@ -37,6 +38,7 @@ const translations = {
     language: 'Language',
     rating: 'Rating',
     change: 'Change (YoY)',
+    officialWebsite: 'Official Website',
     dataSource: 'Data source: TIOBE Index',
     summaryTitle: 'Summary',
     summaryPoint1: 'Python remains number one, thanks to the growing adoption driven by AI code assistants.',
@@ -53,19 +55,20 @@ interface RankingData {
   language: string;
   rating: string;
   change: string;
+  website: string;
 }
 
 const rankingData: RankingData[] = [
-  { rank: 1, language: 'Python', rating: '26.14%', change: '+8.10%' },
-  { rank: 2, language: 'C++', rating: '9.18%', change: '–0.86%' },
-  { rank: 3, language: 'C', rating: '9.03%', change: '–0.15%' },
-  { rank: 4, language: 'Java', rating: '8.59%', change: '–0.58%' },
-  { rank: 5, language: 'C#', rating: '5.52%', change: '–0.87%' },
-  { rank: 6, language: 'JavaScript', rating: '3.15%', change: '–0.76%' },
-  { rank: 7, language: 'Visual Basic', rating: '2.33%', change: '+0.15%' },
-  { rank: 8, language: 'Go', rating: '2.11%', change: '+0.08%' },
-  { rank: 9, language: 'Perl', rating: '2.08%', change: '+1.17%' },
-  { rank: 10, language: 'Delphi/Object Pascal', rating: '1.82%', change: '+0.19%' },
+  { rank: 1, language: 'Python', rating: '26.14%', change: '+8.10%', website: 'https://www.python.org/' },
+  { rank: 2, language: 'C++', rating: '9.18%', change: '–0.86%', website: 'https://isocpp.org/' },
+  { rank: 3, language: 'C', rating: '9.03%', change: '–0.15%', website: 'https://www.c-language.org/' },
+  { rank: 4, language: 'Java', rating: '8.59%', change: '–0.58%', website: 'https://www.java.com/' },
+  { rank: 5, language: 'C#', rating: '5.52%', change: '–0.87%', website: 'https://dotnet.microsoft.com/en-us/languages/csharp' },
+  { rank: 6, language: 'JavaScript', rating: '3.15%', change: '–0.76%', website: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript' },
+  { rank: 7, language: 'Visual Basic', rating: '2.33%', change: '+0.15%', website: 'https://learn.microsoft.com/en-us/dotnet/visual-basic/' },
+  { rank: 8, language: 'Go', rating: '2.11%', change: '+0.08%', website: 'https://go.dev/' },
+  { rank: 9, language: 'Perl', rating: '2.08%', change: '+1.17%', website: 'https://www.perl.org/' },
+  { rank: 10, language: 'Delphi/Object Pascal', rating: '1.82%', change: '+0.19%', website: 'https://www.embarcadero.com/products/delphi' },
 ];
 
 const ChangeIndicator: React.FC<{ change: string }> = ({ change }) => {
@@ -77,6 +80,15 @@ const ChangeIndicator: React.FC<{ change: string }> = ({ change }) => {
   }
   return <span className="flex items-center justify-end text-muted-foreground"><Minus className="mr-1 h-4 w-4" /> {change}</span>;
 };
+
+const getDomainName = (url: string): string => {
+    try {
+        const domain = new URL(url).hostname;
+        return domain.replace(/^www\./, '');
+    } catch (e) {
+        return url;
+    }
+}
 
 export default function LanguageRankingsPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -138,6 +150,7 @@ export default function LanguageRankingsPage() {
                             <TableHead className="w-[80px]">{t.rank}</TableHead>
                             <TableHead>{t.language}</TableHead>
                             <TableHead>{t.rating}</TableHead>
+                             <TableHead>{t.officialWebsite}</TableHead>
                             <TableHead className="text-right">{t.change}</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -147,6 +160,12 @@ export default function LanguageRankingsPage() {
                                 <TableCell className="font-medium">{item.rank}</TableCell>
                                 <TableCell className={cn(item.language === 'Python' && 'font-bold text-primary')}>{item.language}</TableCell>
                                 <TableCell>{item.rating}</TableCell>
+                                <TableCell>
+                                    <a href={item.website} target="_blank" rel="noopener noreferrer" className="flex items-center text-primary hover:underline underline-offset-4">
+                                       <LinkIcon className="mr-1.5 h-3.5 w-3.5"/> 
+                                       {getDomainName(item.website)}
+                                    </a>
+                                </TableCell>
                                 <TableCell className="text-right">
                                     <ChangeIndicator change={item.change} />
                                 </TableCell>
