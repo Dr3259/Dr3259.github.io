@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Minus, Info, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const translations = {
@@ -21,6 +21,10 @@ const translations = {
     rating: '评分',
     change: '变动 (年)',
     dataSource: '数据来源: TIOBE Index',
+    summaryTitle: '小结总结',
+    summaryPoint1: 'Python 稳居第一，得益于 AI 代码助手推动其日益增长的普及度。',
+    summaryPoint2: '多数顶级语言如 C++、C、Java、C# 等都有小幅下降。',
+    summaryPoint3: 'Perl 与 Visual Basic、Go、Delphi 等语言表现突出，尤其是 Perl 的回升值得关注。',
   },
   'en': {
     pageTitle: 'Language Rankings',
@@ -33,6 +37,10 @@ const translations = {
     rating: 'Rating',
     change: 'Change (YoY)',
     dataSource: 'Data source: TIOBE Index',
+    summaryTitle: 'Summary',
+    summaryPoint1: 'Python remains number one, thanks to the growing adoption driven by AI code assistants.',
+    summaryPoint2: 'Most top languages like C++, C, Java, and C# saw a slight decline.',
+    summaryPoint3: 'Perl, along with Visual Basic, Go, and Delphi, showed strong performance, with Perl\'s resurgence being particularly noteworthy.',
   }
 };
 
@@ -91,8 +99,8 @@ export default function LanguageRankingsPage() {
         </Link>
       </header>
 
-      <main className="w-full max-w-4xl flex flex-col items-center">
-        <div className="text-center mb-8">
+      <main className="w-full max-w-4xl flex flex-col items-center gap-8">
+        <div className="text-center">
             <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary mb-1">
             {t.pageTitle}
             </h1>
@@ -102,7 +110,7 @@ export default function LanguageRankingsPage() {
             </a>
         </div>
         
-        <Card className="w-full shadow-lg mb-8">
+        <Card className="w-full shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center">
                     <Info className="mr-3 h-5 w-5 text-primary/80" />
@@ -147,6 +155,22 @@ export default function LanguageRankingsPage() {
                         ))}
                     </TableBody>
                 </Table>
+            </CardContent>
+        </Card>
+
+        <Card className="w-full shadow-lg">
+            <CardHeader>
+                <CardTitle className="flex items-center">
+                    <ClipboardList className="mr-3 h-5 w-5 text-primary/80" />
+                    {t.summaryTitle}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ul className="space-y-2 list-disc list-inside text-sm text-foreground/90">
+                    <li>{t.summaryPoint1}</li>
+                    <li>{t.summaryPoint2}</li>
+                    <li>{t.summaryPoint3}</li>
+                </ul>
             </CardContent>
         </Card>
       </main>
