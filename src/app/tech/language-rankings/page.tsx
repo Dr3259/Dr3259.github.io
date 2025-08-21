@@ -91,7 +91,7 @@ const getDomainName = (url: string): string => {
 }
 
 export default function LanguageRankingsPage() {
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
