@@ -42,10 +42,10 @@ const CATEGORY_TYPES_EN = {
     'Hip-Hop': '嘻哈',
     'Electronic': '电子',
     'Classical': '古典',
+    'Niche': '小众',
 };
 
 const CATEGORY_PURPOSES_EN = {
-    'Niche': '小众',
     'Study': '学习',
     'Love': '恋爱',
     'Healing': '治愈',
