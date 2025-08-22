@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2 } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, type TrackMetadata, type TrackWithContent } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,11 +17,13 @@ const translations = {
     pageTitle: '私人音乐播放器',
     backButton: '返回休闲驿站',
     importMusic: '导入音乐',
+    importFile: '导入文件',
+    importFolder: '导入文件夹',
     playlistTitle: '播放列表',
     nowPlaying: '正在播放',
     nothingPlaying: '暂无播放',
     noTracks: '您的音乐库是空的。',
-    importError: '导入失败，请确保文件是 .flac 或 .mp3 格式。',
+    importError: '导入失败，请确保文件是 .flac, .mp3, .wav, .ogg 格式。',
     importSuccess: (title: string) => `成功导入: ${title}`,
     deleteTrack: '删除歌曲',
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
@@ -30,11 +33,13 @@ const translations = {
     pageTitle: 'Private Music Player',
     backButton: 'Back to Rest Stop',
     importMusic: 'Import Music',
+    importFile: 'Import File(s)',
+    importFolder: 'Import Folder',
     playlistTitle: 'Playlist',
     nowPlaying: 'Now Playing',
     nothingPlaying: 'Nothing Playing',
     noTracks: 'Your music library is empty.',
-    importError: 'Import failed. Please ensure the file is in .flac or .mp3 format.',
+    importError: 'Import failed. Please ensure it is a .flac, .mp3, .wav, or .ogg file.',
     importSuccess: (title: string) => `Successfully imported: ${title}`,
     deleteTrack: 'Delete track',
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
@@ -64,6 +69,7 @@ export default function PrivateMusicPlayerPage() {
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -135,15 +141,10 @@ export default function PrivateMusicPlayerPage() {
       }
   }, [currentTrackIndex, tracks.length, playTrack]);
 
-
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processAndSaveFile = (file: File) => {
     const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg'];
-    if (!supportedTypes.includes(file.type)) {
-        toast({ title: t.importError, variant: 'destructive' });
-        return;
+    if (!supportedTypes.includes(file.type) && !file.name.match(/\.(flac|mp3|wav|ogg)$/i)) {
+      return;
     }
     
     const reader = new FileReader();
@@ -153,7 +154,7 @@ export default function PrivateMusicPlayerPage() {
         const tempAudio = document.createElement('audio');
         tempAudio.src = content;
         tempAudio.onloadedmetadata = async () => {
-            const trackId = `track-${Date.now()}`;
+            const trackId = `track-${Date.now()}-${Math.random()}`; // Add random to avoid collision in fast loops
             const newTrack: TrackWithContent = {
               id: trackId,
               title: file.name.replace(/\.[^/.]+$/, ""),
@@ -165,17 +166,42 @@ export default function PrivateMusicPlayerPage() {
             try {
               await saveTrack(newTrack);
               setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration }]);
-              toast({ title: t.importSuccess(newTrack.title) });
+              toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
             } catch (error) {
               console.error("Failed to save track", error);
-              toast({ title: "Error saving track", variant: 'destructive' });
+              toast({ title: `Error saving ${newTrack.title}`, variant: 'destructive' });
             }
         }
     };
+    reader.onerror = () => {
+        toast({ title: t.importError, variant: 'destructive' });
+    }
     reader.readAsDataURL(file);
+  };
+
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    for (let i = 0; i < files.length; i++) {
+        processAndSaveFile(files[i]);
+    }
+    
     if(fileInputRef.current) fileInputRef.current.value = '';
   };
   
+  const handleFolderImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    for (let i = 0; i < files.length; i++) {
+        processAndSaveFile(files[i]);
+    }
+
+    if(folderInputRef.current) folderInputRef.current.value = '';
+  };
+
   const handleDeleteTrack = async (trackId: string, trackTitle: string) => {
     if (window.confirm(t.deleteConfirmation(trackTitle))) {
         try {
@@ -313,8 +339,23 @@ export default function PrivateMusicPlayerPage() {
         </Link>
         <h1 className="text-xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
         <div>
-           <input type="file" accept="audio/flac,audio/mp3,audio/wav,audio/ogg" ref={fileInputRef} onChange={handleFileImport} className="hidden" />
-           <Button onClick={() => fileInputRef.current?.click()}><Plus className="mr-2 h-4 w-4" />{t.importMusic}</Button>
+           <input type="file" accept="audio/flac,audio/mp3,audio/wav,audio/ogg" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
+           <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" webkitdirectory="" directory="" />
+           <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button><Plus className="mr-2 h-4 w-4" />{t.importMusic}</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                    <Music className="mr-2 h-4 w-4" />
+                    <span>{t.importFile}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => folderInputRef.current?.click()}>
+                    <FolderPlus className="mr-2 h-4 w-4" />
+                    <span>{t.importFolder}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </header>
 
