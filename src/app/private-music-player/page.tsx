@@ -236,7 +236,7 @@ export default function PrivateMusicPlayerPage() {
                     <p>{t.noTracks}</p>
                   </div>
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 p-px">
                     {tracks.map((track, index) => (
                       <li key={track.id} 
                           onClick={() => playTrack(index)} 
@@ -373,3 +373,4 @@ export default function PrivateMusicPlayerPage() {
     </>
   );
 }
+
