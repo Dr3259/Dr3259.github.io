@@ -23,6 +23,7 @@ const getTagColorHsl = (tagName: string | null | undefined): [number, number, nu
 const getMultipleTagColorsHsl = (categories: string | null | undefined): ([number, number, number] | null)[] => {
     if (!categories) return [null];
     const categoryList = categories.split(',').map(c => c.trim()).filter(Boolean);
+    if(categoryList.length === 0) return [null];
     return categoryList.slice(0, 2).map(cat => getTagColorHsl(cat)); // Take first two for gradient
 }
 
@@ -80,7 +81,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       analyser.getByteFrequencyData(dataArray);
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       
-      const barWidth = (canvas.width / bufferLength);
+      const barWidth = canvas.width / bufferLength;
       let x = 0;
 
       const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
@@ -91,7 +92,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
         let color;
         const activeColors = hslColors.filter(c => c !== null) as [number, number, number][];
 
-        if (activeColors.length > 0) {
+        if (activeColors.length > 0 && activeColors[0] !== null) {
             const gradient = canvasCtx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
             
             activeColors.forEach((hsl, index) => {
