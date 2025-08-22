@@ -87,9 +87,12 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
 
       for (let i = 0; i < bufferLength; i++) {
-        // Apply a scaling factor to reduce the height of low-frequency bars
-        const heightAdjustmentFactor = 0.6 + (i / bufferLength) * 0.4; // Factor from 0.6 (bass) to 1.0 (treble)
-        const barHeight = (dataArray[i] * heightAdjustmentFactor) / 2;
+        const distanceFromCenter = Math.abs(i - bufferLength / 2);
+        const normalizedDistance = distanceFromCenter / (bufferLength / 2);
+        // Create a parabolic scaling factor: 1 at the center, dropping to ~0.2 at the edges.
+        const scalingFactor = Math.max(0.2, 1 - Math.pow(normalizedDistance, 2));
+
+        const barHeight = (dataArray[i] * scalingFactor) / 2;
         
         let color;
         const activeColors = hslColors.filter(c => c !== null) as [number, number, number][];
@@ -102,10 +105,9 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
                     const [h, s, lBase] = hsl;
                     const lightness = Math.max(25, Math.min(85, lBase - 20 + (barHeight / 128) * 40));
                     const stopColor = `hsl(${h}, ${s}%, ${lightness}%)`;
-                    // If only one color, use it for the whole gradient. Otherwise, distribute stops.
                     const stopPosition = activeColors.length > 1 ? index / (activeColors.length - 1) : 0;
                     gradient.addColorStop(stopPosition, stopColor);
-                    if (activeColors.length === 1) { // If only one color, add a brighter stop for a 3D effect
+                    if (activeColors.length === 1) { 
                          const brighterStopColor = `hsl(${h}, ${s}%, ${Math.min(95, lightness + 15)}%)`;
                          gradient.addColorStop(1, brighterStopColor);
                     }
@@ -113,7 +115,6 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
             });
             color = gradient;
         } else {
-            // Fallback to primary theme color
             const primaryColorHslString = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
             const opacity = Math.max(0.3, Math.min(1, (barHeight / 128) * 0.8 + 0.2));
             color = `hsla(${primaryColorHslString}, ${opacity})`;
