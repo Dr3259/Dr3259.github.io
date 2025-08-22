@@ -223,8 +223,7 @@ export default function PrivateMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0">
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
-            <ScrollArea className="flex-1 -mx-4">
-              <div className="px-4">
+            <ScrollArea className="flex-1 -mx-4 px-4">
                 {isLoading ? (
                   <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -246,7 +245,7 @@ export default function PrivateMusicPlayerPage() {
                             <p className="text-xs text-muted-foreground truncate" title={track.artist}>{track.artist}</p>
                             <div className='flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1'>
                                 <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
-                                {track.category?.split(', ').map(cat => (
+                                {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => (
                                     <span key={cat} className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
                                 ))}
                             </div>
@@ -282,7 +281,6 @@ export default function PrivateMusicPlayerPage() {
                     ))}
                   </ul>
                 )}
-              </div>
             </ScrollArea>
           </div>
           <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20">
@@ -296,7 +294,7 @@ export default function PrivateMusicPlayerPage() {
                       <h3 className="text-xl font-semibold truncate" title={currentTrack?.title}>{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
                       {currentTrack?.artist && <p className="text-sm text-muted-foreground mt-1" title={currentTrack.artist}>{currentTrack.artist}</p>}
                        <div className="flex justify-center items-center flex-wrap gap-2 mt-2">
-                         {currentTrack?.category?.split(', ').map(cat => (
+                         {currentTrack?.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => (
                            <span key={cat} className="text-xs rounded-full px-2.5 py-1" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
                          ))}
                        </div>
@@ -373,4 +371,3 @@ export default function PrivateMusicPlayerPage() {
     </>
   );
 }
-
