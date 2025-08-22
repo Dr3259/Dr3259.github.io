@@ -234,6 +234,19 @@ export default function PrivateMusicPlayerPage() {
       }
   }
 
+  const handleVolumeAdjust = useCallback((amount: number) => {
+    if (!audioRef.current) return;
+    const newVolume = Math.max(0, Math.min(1, audioRef.current.volume + amount));
+    audioRef.current.volume = newVolume;
+    setVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+        setIsMuted(false);
+    }
+    if (newVolume === 0 && !isMuted) {
+        setIsMuted(true);
+    }
+  }, [isMuted]);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -268,6 +281,14 @@ export default function PrivateMusicPlayerPage() {
         case 'ArrowLeft':
           handlePrevTrack();
           break;
+        case 'ArrowUp':
+          event.preventDefault();
+          handleVolumeAdjust(0.05);
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          handleVolumeAdjust(-0.05);
+          break;
         default:
           break;
       }
@@ -278,7 +299,7 @@ export default function PrivateMusicPlayerPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handlePlayPause, handleNextTrack, handlePrevTrack]);
+  }, [handlePlayPause, handleNextTrack, handlePrevTrack, handleVolumeAdjust]);
 
 
   return (
