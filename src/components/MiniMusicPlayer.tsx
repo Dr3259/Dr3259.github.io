@@ -32,38 +32,40 @@ export const MiniMusicPlayer = () => {
     }, [currentTrack, pathname]);
     
     useEffect(() => {
-        const handleMouseUp = () => {
-          if (isDragging) {
-            setIsDragging(false);
-          }
-        };
-    
         const handleMouseMove = (e: MouseEvent) => {
-          if (isDragging && playerRef.current) {
-            const dx = e.clientX - dragStartPos.current.x;
-            const dy = e.clientY - dragStartPos.current.y;
-    
-            setPosition(prevPos => {
-              const newX = prevPos.x + dx;
-              const newY = prevPos.y + dy;
-              
-              // Clamp position to be within viewport
-              const clampedX = Math.max(0, Math.min(newX, window.innerWidth - playerRef.current!.offsetWidth));
-              const clampedY = Math.max(0, Math.min(newY, window.innerHeight - playerRef.current!.offsetHeight));
+          if (!isDragging || !playerRef.current) return;
+          
+          const dx = e.clientX - dragStartPos.current.x;
+          const dy = e.clientY - dragStartPos.current.y;
+  
+          setPosition(prevPos => {
+            const newX = prevPos.x + dx;
+            const newY = prevPos.y + dy;
+            
+            // Clamp position to be within viewport
+            const clampedX = Math.max(0, Math.min(newX, window.innerWidth - playerRef.current!.offsetWidth));
+            const clampedY = Math.max(0, Math.min(newY, window.innerHeight - playerRef.current!.offsetHeight));
 
-              return { x: clampedX, y: clampedY };
-            });
+            return { x: clampedX, y: clampedY };
+          });
 
-            dragStartPos.current = { x: e.clientX, y: e.clientY };
-          }
+          dragStartPos.current = { x: e.clientX, y: e.clientY };
         };
 
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+    
         if (isDragging) {
-          window.addEventListener('mousemove', handleMouseMove);
-          window.addEventListener('mouseup', handleMouseUp);
+            document.body.style.userSelect = 'none';
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        } else {
+            document.body.style.userSelect = '';
         }
     
         return () => {
+          document.body.style.userSelect = '';
           window.removeEventListener('mousemove', handleMouseMove);
           window.removeEventListener('mouseup', handleMouseUp);
         };
