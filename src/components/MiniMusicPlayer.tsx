@@ -18,18 +18,10 @@ export const MiniMusicPlayer = () => {
     const [position, setPosition] = useState({ x: 0, y: 10 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
-    const [isVisible, setIsVisible] = useState(false);
     const hasBeenPositioned = useRef(false);
 
-    useEffect(() => {
-        if (currentTrack && pathname !== '/private-music-player') {
-            setIsVisible(true);
-        } else {
-            setIsVisible(false);
-        }
-    }, [currentTrack, pathname]);
-
-
+    const isVisible = currentTrack && pathname !== '/private-music-player';
+    
     useEffect(() => {
         if (isVisible && playerRef.current && !hasBeenPositioned.current) {
             try {
