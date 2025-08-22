@@ -4,29 +4,11 @@
 import React, { useRef, useEffect } from 'react';
 import { useMusic } from '@/context/MusicContext';
 import { cn } from '@/lib/utils';
+import { getHslColorsFromCategory } from '@/lib/utils';
 
 interface RhythmVisualizerProps {
   className?: string;
 }
-
-const getTagColorHsl = (tagName: string | null | undefined): [number, number, number] | null => {
-    if (!tagName) return null;
-    let hash = 0;
-    for (let i = 0; i < tagName.length; i++) {
-        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
-        hash |= 0; // Ensure 32bit integer
-    }
-    const h = Math.abs(hash % 360);
-    return [h, 70, 65]; // Hue, Saturation, Base Lightness
-};
-
-const getMultipleTagColorsHsl = (categories: string | null | undefined): ([number, number, number] | null)[] => {
-    if (!categories) return [null];
-    const categoryList = categories.split(',').map(c => c.trim()).filter(Boolean);
-    if(categoryList.length === 0) return [null];
-    return categoryList.slice(0, 2).map(cat => getTagColorHsl(cat)); // Take first two for gradient
-}
-
 
 export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,7 +66,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       const barWidth = canvas.width / bufferLength;
       let x = 0;
 
-      const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
+      const hslColors = getHslColorsFromCategory(currentTrack?.category);
 
       for (let i = 0; i < bufferLength; i++) {
         const distanceFromCenter = Math.abs(i - bufferLength / 2);

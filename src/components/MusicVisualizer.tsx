@@ -2,6 +2,8 @@
 "use client";
 import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { getColorsFromCategory } from '@/lib/utils';
+
 
 interface MusicVisualizerProps {
   isPlaying: boolean;
@@ -23,22 +25,6 @@ const animationConfig: Record<string, { animation: string }> = {
 
 const defaultAnimation = { animation: 'animate-default-float' };
 
-const getCategoryColors = (category: string | null): string[] => {
-    if (!category) return ['hsl(var(--primary))'];
-    
-    const categories = category.split(',').map(c => c.trim()).filter(Boolean);
-    const colors = categories.map(cat => {
-        let hash = 0;
-        for (let i = 0; i < cat.length; i++) {
-            hash = cat.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const h = hash % 360;
-        return `hsl(${h}, 70%, 60%)`;
-    });
-    
-    return colors.length > 0 ? colors : ['hsl(var(--primary))'];
-};
-
 export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, category }) => {
   const animationClass = useMemo(() => {
     const mainCategory = category?.split(',')[0].trim();
@@ -48,7 +34,7 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
     return defaultAnimation.animation;
   }, [category]);
   
-  const colors = useMemo(() => getCategoryColors(category), [category]);
+  const colors = useMemo(() => getColorsFromCategory(category), [category]);
 
   const baseCircleClass = 'absolute rounded-full bg-gradient-to-br filter blur-xl transition-all duration-1000';
   const animationPlayState = isPlaying ? 'running' : 'paused';
