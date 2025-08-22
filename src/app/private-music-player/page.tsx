@@ -24,6 +24,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { useMusic } from '@/context/MusicContext';
 import type { TrackMetadata } from '@/lib/db';
 import { MusicVisualizer } from '@/components/MusicVisualizer';
+import { Slider } from '@/components/ui/slider';
 
 
 const translations = {
@@ -283,44 +284,53 @@ export default function PrivateMusicPlayerPage() {
           </div>
           <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
               <div className="shrink-0 space-y-4">
-                  <div className="flex justify-between items-center p-2 rounded-full bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
-                      <div className="flex items-center gap-2">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={toggleMute}>{isMuted ? <VolumeX className="h-6 w-6"/> : <Volume2 className="h-6 w-6"/>}</Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
-                        </Tooltip>
-                        <div className="flex flex-col items-center">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}><ChevronUp className="h-4 w-4"/></Button>
-                          <div className="w-1 h-8 bg-muted-foreground/20 rounded-full my-1 relative">
+                  
+                <div className="w-full px-2 space-y-2">
+                    <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
+                    <div className="flex justify-between text-xs text-muted-foreground font-mono">
+                        <span>{formatDuration(audioRef.current?.currentTime)}</span>
+                        <span>{formatDuration(currentTrack?.duration)}</span>
+                    </div>
+                </div>
+                  
+                <div className="flex justify-between items-center gap-4 p-2 rounded-full bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
+                  <div className="flex items-center gap-1">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={toggleMute}>{isMuted ? <VolumeX className="h-6 w-6"/> : <Volume2 className="h-6 w-6"/>}</Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
+                    </Tooltip>
+                    <div className="flex flex-col items-center">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}><ChevronUp className="h-4 w-4"/></Button>
+                        <div className="w-1 h-8 bg-muted-foreground/20 rounded-full my-1 relative">
                             <div className="bg-primary absolute bottom-0 left-0 right-0 rounded-full" style={{height: `${volume * 100}%`}}></div>
-                          </div>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}><ChevronDown className="h-4 w-4"/></Button>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-center gap-2 bg-background/50 p-1 rounded-full">
-                          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
-                          <Button size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
-                            {isPlaying ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={cyclePlayMode}>
-                                    {playMode === 'repeat-one' && <Repeat1 className="h-6 w-6" />}
-                                    {playMode === 'shuffle' && <Shuffle className="h-6 w-6" />}
-                                    {playMode === 'repeat' && <Repeat className="h-6 w-6" />}
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{t.playModes[playMode]}</p></TooltipContent>
-                        </Tooltip>
-                      </div>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}><ChevronDown className="h-4 w-4"/></Button>
+                    </div>
                   </div>
+                  
+                  <div className="flex items-center justify-center gap-2 bg-background/50 p-1 rounded-full">
+                      <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
+                      <Button size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
+                        {isPlaying ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
+                  </div>
+
+                  <div className="flex items-center justify-center">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={cyclePlayMode}>
+                                {playMode === 'repeat-one' && <Repeat1 className="h-6 w-6" />}
+                                {playMode === 'shuffle' && <Shuffle className="h-6 w-6" />}
+                                {playMode === 'repeat' && <Repeat className="h-6 w-6" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{t.playModes[playMode]}</p></TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
               </div>
           </div>
         </main>
