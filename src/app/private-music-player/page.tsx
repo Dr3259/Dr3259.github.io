@@ -283,9 +283,12 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
-            <div className="w-full p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg space-y-4">
-                <RhythmVisualizer />
+          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-transparent z-[2]">
+              <div className='flex-1'>
+                 <RhythmVisualizer />
+              </div>
+
+              <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
                 <div className="w-full px-2 space-y-2">
                     <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
                     <div className="flex justify-between text-xs text-muted-foreground font-mono">
@@ -302,13 +305,6 @@ export default function PrivateMusicPlayerPage() {
                         </TooltipTrigger>
                         <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
                     </Tooltip>
-                    <div className="flex flex-col items-center">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}><ChevronUp className="h-4 w-4"/></Button>
-                        <div className="w-1 h-8 bg-muted-foreground/20 rounded-full my-1 relative">
-                            <div className="bg-primary absolute bottom-0 left-0 right-0 rounded-full" style={{height: `${volume * 100}%`}}></div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}><ChevronDown className="h-4 w-4"/></Button>
-                    </div>
                   </div>
                   
                   <div className="flex items-center justify-center gap-2 bg-background/50 p-1 rounded-full">
@@ -368,3 +364,4 @@ export default function PrivateMusicPlayerPage() {
     </>
   );
 }
+
