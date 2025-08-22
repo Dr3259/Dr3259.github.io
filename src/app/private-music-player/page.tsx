@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, type TrackMetadata, type TrackWithContent } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +46,7 @@ const translations = {
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
     trackDeleted: '歌曲已删除',
     trackExists: (title: string) => `歌曲 "${title}" 已存在，已跳过。`,
+    importing: '导入中...'
   },
   'en': {
     pageTitle: 'Private Music Player',
@@ -69,6 +70,7 @@ const translations = {
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
     trackDeleted: 'Track deleted',
     trackExists: (title: string) => `Track "${title}" already exists. Skipped.`,
+    importing: 'Importing...'
   }
 };
 
@@ -92,6 +94,7 @@ export default function PrivateMusicPlayerPage() {
   const [volume, setVolume] = useState(0.75);
   const [isMuted, setIsMuted] = useState(false);
   const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
+  const [importingTracks, setImportingTracks] = useState<string[]>([]);
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,49 +170,58 @@ export default function PrivateMusicPlayerPage() {
       }
   }, [currentTrackIndex, tracks.length, playTrack]);
 
-  const processAndSaveFile = (file: File) => {
+  const processAndSaveFile = async (file: File) => {
     const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg'];
-    if (!supportedTypes.includes(file.type) && !file.name.match(/\.(flac|mp3|wav|ogg)$/i)) {
+    const fileExtensionMatch = file.name.match(/\.(flac|mp3|wav|ogg)$/i);
+    if (!supportedTypes.includes(file.type) && !fileExtensionMatch) {
       return;
     }
-
+  
     const trackTitle = file.name.replace(/\.[^/.]+$/, "");
-    const isDuplicate = tracks.some(track => track.title === trackTitle);
-
-    if (isDuplicate) {
-        toast({ title: t.trackExists(trackTitle), variant: 'default', duration: 3000 });
-        return;
+    if (tracks.some(track => track.title === trackTitle)) {
+      toast({ title: t.trackExists(trackTitle), variant: 'default', duration: 3000 });
+      return;
     }
-    
+  
+    setImportingTracks(prev => [...prev, trackTitle]);
+  
     const reader = new FileReader();
     reader.onload = async (e) => {
+      try {
         const content = e.target?.result as string;
-        
-        const tempAudio = document.createElement('audio');
-        tempAudio.src = content;
-        tempAudio.onloadedmetadata = async () => {
-            const trackId = `track-${Date.now()}-${Math.random()}`; // Add random to avoid collision in fast loops
-            const newTrack: TrackWithContent = {
-              id: trackId,
-              title: trackTitle,
-              type: file.type,
-              duration: tempAudio.duration,
-              content: content,
-            };
-
-            try {
-              await saveTrack(newTrack);
-              setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration }]);
-              toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
-            } catch (error) {
-              console.error("Failed to save track", error);
-              toast({ title: `Error saving ${newTrack.title}`, variant: 'destructive' });
-            }
-        }
+  
+        const duration = await new Promise<number>((resolve, reject) => {
+            const tempAudio = document.createElement('audio');
+            tempAudio.src = content;
+            tempAudio.onloadedmetadata = () => resolve(tempAudio.duration);
+            tempAudio.onerror = () => reject(new Error("Failed to load audio metadata."));
+        });
+  
+        const trackId = `track-${Date.now()}-${Math.random()}`;
+        const newTrack: TrackWithContent = {
+          id: trackId,
+          title: trackTitle,
+          type: file.type,
+          duration: duration,
+          content: content,
+        };
+  
+        await saveTrack(newTrack);
+        setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration }]);
+        toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
+      } catch (error) {
+        console.error("Failed to process or save track", error);
+        toast({ title: `Error importing ${trackTitle}`, variant: 'destructive' });
+      } finally {
+        setImportingTracks(prev => prev.filter(t => t !== trackTitle));
+      }
     };
+  
     reader.onerror = () => {
-        toast({ title: t.importError, variant: 'destructive' });
+      toast({ title: t.importError, variant: 'destructive' });
+      setImportingTracks(prev => prev.filter(t => t !== trackTitle));
     }
+  
     reader.readAsDataURL(file);
   };
 
@@ -427,7 +439,12 @@ export default function PrivateMusicPlayerPage() {
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
             <ScrollArea className="flex-1 -mx-4">
               <div className="px-4">
-                {tracks.length > 0 ? (
+                {tracks.length === 0 && importingTracks.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-20">
+                    <Music className="h-12 w-12 mx-auto mb-4" />
+                    <p>{t.noTracks}</p>
+                  </div>
+                ) : (
                   <ul className="space-y-2">
                     {tracks.map((track, index) => (
                       <li key={track.id} 
@@ -442,12 +459,16 @@ export default function PrivateMusicPlayerPage() {
                         </Button>
                       </li>
                     ))}
+                    {importingTracks.map(title => (
+                       <li key={title} className="p-3 rounded-md flex justify-between items-center opacity-60">
+                         <div>
+                            <p className="font-medium text-sm truncate" title={title}>{title}</p>
+                            <p className="text-xs text-muted-foreground">{t.importing}</p>
+                         </div>
+                         <Loader2 className="h-4 w-4 animate-spin" />
+                       </li>
+                    ))}
                   </ul>
-                ) : (
-                  <div className="text-center text-muted-foreground py-20">
-                    <Music className="h-12 w-12 mx-auto mb-4" />
-                    <p>{t.noTracks}</p>
-                  </div>
                 )}
               </div>
             </ScrollArea>
