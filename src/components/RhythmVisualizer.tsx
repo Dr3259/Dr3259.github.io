@@ -20,6 +20,12 @@ const getTagColorHsl = (tagName: string | null | undefined): [number, number, nu
     return [h, 70, 65]; // Hue, Saturation, Base Lightness
 };
 
+const getMultipleTagColorsHsl = (categories: string | null | undefined): ([number, number, number] | null)[] => {
+    if (!categories) return [null];
+    const categoryList = categories.split(',').map(c => c.trim()).filter(Boolean);
+    return categoryList.slice(0, 2).map(cat => getTagColorHsl(cat)); // Take first two for gradient
+}
+
 
 export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,7 +55,6 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
                 source.connect(analyserRef.current!);
                 analyserRef.current!.connect(audioContextRef.current.destination);
             } catch (error) {
-                // This can happen if the source is already connected.
                 if (error instanceof DOMException && error.name === 'InvalidStateError') {
                     console.warn("Audio source already connected.");
                 } else {
@@ -78,19 +83,27 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       const barWidth = (canvas.width / bufferLength) * 2.5;
       let x = 0;
 
-      const firstCategory = currentTrack?.category?.split(',')[0].trim();
-      const baseHsl = getTagColorHsl(firstCategory);
+      const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] / 2; // Scale down for aesthetics
+        const barHeight = dataArray[i] / 2;
         
         let color;
-        if (baseHsl) {
-            const [h, s, lBase] = baseHsl;
-            const lightness = Math.max(25, Math.min(85, lBase - 20 + (barHeight / 128) * 40));
-            color = `hsl(${h}, ${s}%, ${lightness}%)`;
+        if (hslColors.length > 0 && hslColors[0]) {
+            const gradient = canvasCtx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+            
+            hslColors.forEach((hsl, index) => {
+                 if (hsl) {
+                    const [h, s, lBase] = hsl;
+                    const lightness = Math.max(25, Math.min(85, lBase - 20 + (barHeight / 128) * 40));
+                    const stopColor = `hsl(${h}, ${s}%, ${lightness}%)`;
+                    // If only one color, use it for the whole gradient. Otherwise, distribute stops.
+                    const stopPosition = hslColors.length > 1 ? index / (hslColors.length - 1) : 0;
+                    gradient.addColorStop(stopPosition, stopColor);
+                 }
+            });
+            color = gradient;
         } else {
-            // Fallback color using CSS variables for theme consistency
             const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
             const opacity = Math.max(0.3, Math.min(1, (barHeight / 128) * 0.8 + 0.2));
             color = `hsla(${primaryColor}, ${opacity})`;
@@ -144,4 +157,3 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
 
   return <canvas ref={canvasRef} className={cn("w-full h-full", className)} />;
 };
-
