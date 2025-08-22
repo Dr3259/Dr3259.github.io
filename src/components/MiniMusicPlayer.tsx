@@ -13,7 +13,7 @@ export const MiniMusicPlayer = () => {
     const pathname = usePathname();
     const router = useRouter();
     const playerRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 20, y: 20 });
+    const [position, setPosition] = useState({ x: 20, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
@@ -96,34 +96,37 @@ export const MiniMusicPlayer = () => {
     return (
         <div
             ref={playerRef}
-            className="fixed z-[101] flex items-center gap-2 p-2 rounded-full bg-background/80 backdrop-blur-md shadow-2xl border cursor-move transition-opacity duration-300"
+            className="fixed z-[101] flex items-center gap-2 p-2 rounded-full bg-rose-100/80 dark:bg-rose-900/80 backdrop-blur-lg shadow-xl border border-rose-200 dark:border-rose-700/50 cursor-move transition-opacity duration-300"
             style={{ 
                 left: `${position.x}px`, 
                 top: `${position.y}px`,
-                touchAction: 'none' // prevent scrolling on mobile
+                touchAction: 'none'
             }}
             onMouseDown={handleMouseDown}
         >
             <button 
                 onClick={handleIconClick}
-                className="flex items-center justify-center h-10 w-10 bg-primary/20 rounded-full animate-pulse cursor-pointer hover:bg-primary/30 transition-colors"
+                className={cn(
+                    "flex items-center justify-center h-10 w-10 bg-rose-200 dark:bg-rose-800/50 rounded-full cursor-pointer hover:bg-rose-300/70 dark:hover:bg-rose-800 transition-colors",
+                    isPlaying && "animate-[bounce_2s_ease-in-out_infinite]"
+                )}
                 aria-label="Go to Music Player"
             >
-                <Music className="h-5 w-5 text-primary" />
+                <Music className="h-5 w-5 text-rose-600 dark:text-rose-300" />
             </button>
 
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handlePrevTrack} disabled={!canSkip}>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-rose-700 dark:text-rose-200 hover:bg-rose-200/50 dark:hover:bg-rose-800/60" onClick={handlePrevTrack} disabled={!canSkip}>
                 <SkipBack className="h-5 w-5" />
             </Button>
-            <Button size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handlePlayPause}>
+            <Button size="icon" className="h-10 w-10 rounded-full cursor-pointer bg-rose-500 hover:bg-rose-600 dark:bg-rose-600 dark:hover:bg-rose-500 text-white" onClick={handlePlayPause}>
                 {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handleNextTrack} disabled={!canSkip}>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-rose-700 dark:text-rose-200 hover:bg-rose-200/50 dark:hover:bg-rose-800/60" onClick={handleNextTrack} disabled={!canSkip}>
                 <SkipForward className="h-5 w-5" />
             </Button>
             
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={closePlayer}>
-                <X className="h-5 w-5 text-muted-foreground" />
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-rose-500 dark:text-rose-400 hover:bg-rose-200/50 dark:hover:bg-rose-800/60" onClick={closePlayer}>
+                <X className="h-5 w-5" />
             </Button>
         </div>
     );
