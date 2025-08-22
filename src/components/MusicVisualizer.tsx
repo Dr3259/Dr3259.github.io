@@ -33,28 +33,29 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
 
   const baseCircleClass = 'absolute rounded-full bg-gradient-to-br filter blur-xl transition-all duration-1000';
   const playingCircleClass = isPlaying ? 'opacity-50 dark:opacity-30' : 'opacity-10 dark:opacity-5';
+  const animationPlayState = isPlaying ? 'running' : 'paused';
   
   return (
-    <div className="absolute inset-0 overflow-hidden bg-transparent -z-10">
+    <div className="absolute inset-0 overflow-hidden bg-transparent z-0">
        <div
         className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '24rem', height: '24rem', top: '-5rem', left: '-5rem', backgroundColor: 'var(--color-blue-300)', animationDelay: '0s', animationPlayState: isPlaying ? 'running' : 'paused' }}
+        style={{ width: '24rem', height: '24rem', top: '-5rem', left: '-5rem', backgroundColor: 'var(--color-blue-300)', animationDelay: '0s', animationPlayState }}
       />
       <div
         className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '18rem', height: '18rem', bottom: '-15%', right: '5%', backgroundColor: 'var(--color-purple-300)', animationDelay: '-2s', animationPlayState: isPlaying ? 'running' : 'paused' }}
+        style={{ width: '18rem', height: '18rem', bottom: '-15%', right: '5%', backgroundColor: 'var(--color-purple-300)', animationDelay: '-2s', animationPlayState }}
       />
       <div
         className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '14rem', height: '14rem', top: '15%', right: '10%', backgroundColor: 'var(--color-pink-300)', animationDelay: '-4s', animationPlayState: isPlaying ? 'running' : 'paused' }}
+        style={{ width: '14rem', height: '14rem', top: '15%', right: '10%', backgroundColor: 'var(--color-pink-300)', animationDelay: '-4s', animationPlayState }}
       />
       <div
         className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '12rem', height: '12rem', bottom: '20%', left: '15%', backgroundColor: 'var(--color-green-300)', animationDelay: '-6s', animationPlayState: isPlaying ? 'running' : 'paused' }}
+        style={{ width: '12rem', height: '12rem', bottom: '20%', left: '15%', backgroundColor: 'var(--color-green-300)', animationDelay: '-6s', animationPlayState }}
       />
        <div
         className={cn(baseCircleClass, playingCircleClass, animationClass, 'hidden md:block')}
-        style={{ width: '20rem', height: '20rem', top: '40%', left: '30%', backgroundColor: 'var(--color-yellow-200)', animationDelay: '-8s', animationPlayState: isPlaying ? 'running' : 'paused' }}
+        style={{ width: '20rem', height: '20rem', top: '40%', left: '30%', backgroundColor: 'var(--color-yellow-200)', animationDelay: '-8s', animationPlayState }}
       />
     </div>
   );
