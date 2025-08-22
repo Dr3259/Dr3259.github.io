@@ -8,9 +8,7 @@ import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Slider } from "@/components/ui/slider";
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +24,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { useMusic } from '@/context/MusicContext';
 import type { TrackMetadata } from '@/lib/db';
 import { MusicVisualizer } from '@/components/MusicVisualizer';
+import { Slider } from '@/components/ui/slider';
 
 
 const translations = {
@@ -225,7 +224,7 @@ export default function PrivateMusicPlayerPage() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative isolate">
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category?.split(',')[0].trim() || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
@@ -286,7 +285,7 @@ export default function PrivateMusicPlayerPage() {
           <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
               <div className="shrink-0 space-y-4">
                   <div className="space-y-2">
-                      <Slider value={[progress]} onValueChange={handleProgressChange} max={100} step={1} disabled={!currentTrack}/>
+                      <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={1} disabled={!currentTrack}/>
                       <div className="flex justify-between text-xs text-muted-foreground">
                           <span>{formatDuration(audioRef.current?.currentTime)}</span>
                           <span>{formatDuration(currentTrack?.duration)}</span>
