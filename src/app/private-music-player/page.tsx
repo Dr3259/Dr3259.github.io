@@ -271,7 +271,6 @@ export default function PrivateMusicPlayerPage() {
     const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
     const fileExtensionMatch = file.name.match(/\.(flac|mp3|wav|ogg)$/i);
     
-    // Loosen type checking a bit; mpeg is common for mp3
     const isSupported = supportedTypes.includes(file.type) || fileExtensionMatch;
 
     if (!isSupported) {
@@ -303,13 +302,15 @@ export default function PrivateMusicPlayerPage() {
           };
       });
 
+      const arrayBuffer = await file.arrayBuffer();
+
       const trackId = `track-${Date.now()}-${Math.random()}`;
       const newTrack: TrackWithContent = {
         id: trackId,
         title: trackTitle,
         type: file.type,
         duration: duration,
-        content: file,
+        content: arrayBuffer,
         category: null,
       };
 
@@ -446,13 +447,24 @@ export default function PrivateMusicPlayerPage() {
     const trackToUpdate = tracks.find(t => t.id === trackId);
     if (!trackToUpdate) return;
     
-    const updatedTrackMetadata = { ...trackToUpdate, category: newCategory };
-    await saveTrack({ ...updatedTrackMetadata, content: new File([], "") }); // saving with dummy file content, only metadata is updated
+    // We need to fetch the content to re-save it
+    const trackWithContent = await getTrackContent(trackId);
+    if (!trackWithContent) {
+        console.error("Could not find track content to update category.");
+        return;
+    }
     
-    setTracks(prev => prev.map(t => (t.id === trackId ? updatedTrackMetadata : t)));
+    const updatedTrack: TrackWithContent = {
+        ...trackWithContent,
+        category: newCategory
+    };
+    await saveTrack(updatedTrack);
+    
+    const updatedMetadata = { ...trackToUpdate, category: newCategory };
+    setTracks(prev => prev.map(t => (t.id === trackId ? updatedMetadata : t)));
     
     if (currentTrack?.id === trackId) {
-      setCurrentTrack(updatedTrackMetadata);
+      setCurrentTrack(updatedMetadata);
     }
     
     setEditingTrack(null);
