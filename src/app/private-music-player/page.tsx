@@ -28,6 +28,7 @@ const translations = {
     deleteTrack: '删除歌曲',
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
     trackDeleted: '歌曲已删除',
+    trackExists: (title: string) => `歌曲 "${title}" 已存在，已跳过。`,
   },
   'en': {
     pageTitle: 'Private Music Player',
@@ -44,6 +45,7 @@ const translations = {
     deleteTrack: 'Delete track',
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
     trackDeleted: 'Track deleted',
+    trackExists: (title: string) => `Track "${title}" already exists. Skipped.`,
   }
 };
 
@@ -119,7 +121,7 @@ export default function PrivateMusicPlayerPage() {
           audioRef.current.play().catch(e => console.error("Audio play failed:", e));
           setIsPlaying(true);
       }
-  }, [currentTrack, isPlaying, playTrack, tracks.length]);
+  }, [currentTrack, isPlaying, playTrack, tracks]);
 
   const handleNextTrack = useCallback(() => {
       const nextIndex = currentTrackIndex + 1;
@@ -146,6 +148,14 @@ export default function PrivateMusicPlayerPage() {
     if (!supportedTypes.includes(file.type) && !file.name.match(/\.(flac|mp3|wav|ogg)$/i)) {
       return;
     }
+
+    const trackTitle = file.name.replace(/\.[^/.]+$/, "");
+    const isDuplicate = tracks.some(track => track.title === trackTitle);
+
+    if (isDuplicate) {
+        toast({ title: t.trackExists(trackTitle), variant: 'default', duration: 3000 });
+        return;
+    }
     
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -157,7 +167,7 @@ export default function PrivateMusicPlayerPage() {
             const trackId = `track-${Date.now()}-${Math.random()}`; // Add random to avoid collision in fast loops
             const newTrack: TrackWithContent = {
               id: trackId,
-              title: file.name.replace(/\.[^/.]+$/, ""),
+              title: trackTitle,
               type: file.type,
               duration: tempAudio.duration,
               content: content,
