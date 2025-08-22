@@ -111,7 +111,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         try {
             const trackWithContent = await getTrackContent(trackMeta.id);
             if (trackWithContent && audioRef.current) {
-                const blob = trackWithContent.content;
+                const blob = new Blob([trackWithContent.content], { type: trackWithContent.type });
                 const objectUrl = URL.createObjectURL(blob);
                 currentObjectUrl.current = objectUrl;
 
@@ -232,6 +232,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 };
             });
 
+            const arrayBuffer = await file.arrayBuffer();
+
             const trackId = `track-${Date.now()}-${Math.random()}`;
             const newTrack: TrackWithContent = {
                 id: trackId,
@@ -239,7 +241,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 artist: artist,
                 type: file.type,
                 duration: duration,
-                content: file, // Store the Blob/File directly
+                content: arrayBuffer,
                 category: null,
             };
 
@@ -444,3 +446,5 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
 };
+
+    
