@@ -32,7 +32,7 @@ export interface TrackMetadata {
 }
 
 export interface TrackWithContent extends TrackMetadata {
-    content: File; // Changed from string (Data URI) to File object
+    content: Blob; // Changed from File to Blob for wider compatibility
 }
 
 
@@ -129,6 +129,8 @@ export async function saveTrack(track: TrackWithContent): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([MUSIC_STORE_NAME], 'readwrite');
     const store = transaction.objectStore(MUSIC_STORE_NAME);
+    // When saving, if content is a File, it's fine as File is a subclass of Blob.
+    // If it's a plain object that needs to be reconstructed, it should be done before saving.
     const request = store.put(track);
 
     request.onsuccess = () => resolve();
@@ -144,6 +146,8 @@ export async function getTrackContent(id: string): Promise<TrackWithContent | un
     const request = store.get(id);
 
     request.onsuccess = () => {
+      // The object retrieved from IndexedDB for a Blob/File is a plain object.
+      // We don't reconstruct it here, but the consumer of this function must.
       resolve(request.result as TrackWithContent | undefined);
     };
     request.onerror = () => reject(request.error);

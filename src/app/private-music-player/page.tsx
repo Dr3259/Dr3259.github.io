@@ -188,7 +188,8 @@ export default function PrivateMusicPlayerPage() {
     try {
         const trackWithContent = await getTrackContent(trackMeta.id);
         if (trackWithContent) {
-            const objectUrl = URL.createObjectURL(trackWithContent.content);
+            const blob = new Blob([trackWithContent.content], { type: trackWithContent.type });
+            const objectUrl = URL.createObjectURL(blob);
             currentObjectUrl.current = objectUrl;
 
             setCurrentTrack(trackMeta);
