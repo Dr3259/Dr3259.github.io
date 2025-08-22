@@ -224,7 +224,7 @@ export default function PrivateMusicPlayerPage() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative isolate">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category?.split(',')[0].trim() || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
@@ -291,9 +291,9 @@ export default function PrivateMusicPlayerPage() {
                           <span>{formatDuration(currentTrack?.duration)}</span>
                       </div>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center p-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
                       <div className="flex items-center justify-start w-1/3">
-                          <div className="flex items-center gap-2 p-1 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
+                          <div className="flex items-center gap-2">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleMute}>{isMuted ? <VolumeX className="h-5 w-5"/> : <Volume2 className="h-5 w-5"/>}</Button>
@@ -309,7 +309,7 @@ export default function PrivateMusicPlayerPage() {
                             </div>
                           </div>
                       </div>
-                      <div className="flex items-center justify-center gap-2 p-1 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
+                      <div className="flex items-center justify-center gap-2">
                           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
                           <Button size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
                             {isPlaying ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
@@ -317,7 +317,7 @@ export default function PrivateMusicPlayerPage() {
                           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
                       </div>
                       <div className="flex items-center justify-end w-1/3">
-                         <div className="flex items-center justify-center p-1 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
+                         <div className="flex items-center justify-center">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={cyclePlayMode}>
