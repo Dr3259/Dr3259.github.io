@@ -128,6 +128,15 @@ export default function PrivateMusicPlayerPage() {
       setCurrentLanguage(browserLang);
     }
     getTracksMetadata().then(setTracks).catch(console.error);
+
+    // Cleanup audio when the component unmounts
+    return () => {
+        const audio = audioRef.current;
+        if (audio) {
+            audio.pause();
+            audio.src = '';
+        }
+    }
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
