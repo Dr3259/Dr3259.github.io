@@ -94,30 +94,53 @@
 
 /* Animation Keyframes for Music Visualizer */
 @keyframes gentle-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
 }
 
 @keyframes energetic-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
 }
 
 @keyframes slow-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Static classes for animations */
+.animate-gentle-float {
+  animation: gentle-float 8s ease-in-out infinite;
+}
+.animate-energetic-pulse-fast {
+  animation: energetic-pulse 2s ease-in-out infinite;
+}
+.animate-energetic-pulse-normal {
+  animation: energetic-pulse 2.5s ease-in-out infinite;
+}
+.animate-energetic-pulse-slow {
+  animation: energetic-pulse 3s ease-in-out infinite;
+}
+.animate-slow-spin-fast {
+  animation: slow-spin 20s linear infinite;
+}
+.animate-slow-spin-slow {
+  animation: slow-spin 30s linear infinite;
+}
+.animate-gentle-float-study {
+  animation: gentle-float 12s ease-in-out infinite;
+}
+.animate-gentle-float-love {
+  animation: gentle-float 10s ease-in-out infinite;
+}
+.animate-gentle-float-healing {
+  animation: gentle-float 15s ease-in-out infinite;
+}
+.animate-default-float {
+  animation: gentle-float 10s ease-in-out infinite;
+}
+
+
+.animation-paused {
+  animation-play-state: paused;
 }
