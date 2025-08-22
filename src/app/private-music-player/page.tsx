@@ -624,7 +624,7 @@ export default function PrivateMusicPlayerPage() {
                                 {track.category && <Badge variant="secondary" className="h-4 px-1.5 text-xs">{track.category}</Badge>}
                             </div>
                         </div>
-                        <div className="flex items-center gap-1 mr-[-8px]">
+                        <div className="flex items-center gap-1">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
