@@ -6,13 +6,14 @@ import { useMusic } from '@/context/MusicContext';
 import { Button } from './ui/button';
 import { Music, Play, Pause, X, SkipBack, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export const MiniMusicPlayer = () => {
     const { tracks, currentTrack, isPlaying, handlePlayPause, handleNextTrack, handlePrevTrack, closePlayer } = useMusic();
     const pathname = usePathname();
+    const router = useRouter();
     const playerRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 20, y: 0 });
+    const [position, setPosition] = useState({ x: 20, y: 20 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
@@ -80,6 +81,11 @@ export const MiniMusicPlayer = () => {
         setIsDragging(true);
         dragStartPos.current = { x: e.clientX, y: e.clientY };
     };
+    
+    const handleIconClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.push('/private-music-player');
+    };
 
     if (!isVisible) {
         return null;
@@ -98,9 +104,13 @@ export const MiniMusicPlayer = () => {
             }}
             onMouseDown={handleMouseDown}
         >
-            <div className="flex items-center justify-center h-10 w-10 bg-primary/20 rounded-full animate-pulse">
+            <button 
+                onClick={handleIconClick}
+                className="flex items-center justify-center h-10 w-10 bg-primary/20 rounded-full animate-pulse cursor-pointer hover:bg-primary/30 transition-colors"
+                aria-label="Go to Music Player"
+            >
                 <Music className="h-5 w-5 text-primary" />
-            </div>
+            </button>
 
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handlePrevTrack} disabled={!canSkip}>
                 <SkipBack className="h-5 w-5" />
