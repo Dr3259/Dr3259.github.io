@@ -32,7 +32,7 @@ export interface TrackMetadata {
 }
 
 export interface TrackWithContent extends TrackMetadata {
-    content: ArrayBuffer; // Use ArrayBuffer for robust storage
+    content: ArrayBuffer;
 }
 
 

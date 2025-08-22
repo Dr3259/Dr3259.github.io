@@ -278,13 +278,22 @@ export default function PrivateMusicPlayerPage() {
       return;
     }
   
-    const trackTitle = file.name.replace(/\.[^/.]+$/, "");
-    if (tracks.some(track => track.title === trackTitle)) {
-      toast({ title: t.trackExists(trackTitle), variant: 'default', duration: 3000 });
+    const fileName = file.name.replace(/\.[^/.]+$/, "");
+    let title = fileName;
+    let artist: string | undefined = undefined;
+
+    const parts = fileName.split(' - ');
+    if (parts.length > 1) {
+        artist = parts[0].trim();
+        title = parts.slice(1).join(' - ').trim();
+    }
+    
+    if (tracks.some(track => track.title === title && track.artist === artist)) {
+      toast({ title: t.trackExists(fileName), variant: 'default', duration: 3000 });
       return;
     }
   
-    setImportingTracks(prev => [...prev, trackTitle]);
+    setImportingTracks(prev => [...prev, fileName]);
   
     try {
       const tempAudioForDuration = document.createElement('audio');
@@ -307,7 +316,8 @@ export default function PrivateMusicPlayerPage() {
       const trackId = `track-${Date.now()}-${Math.random()}`;
       const newTrack: TrackWithContent = {
         id: trackId,
-        title: trackTitle,
+        title: title,
+        artist: artist,
         type: file.type,
         duration: duration,
         content: arrayBuffer,
@@ -315,14 +325,14 @@ export default function PrivateMusicPlayerPage() {
       };
 
       await saveTrack(newTrack);
-      setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
-      toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
+      setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, artist: newTrack.artist, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
+      toast({ title: t.importSuccess(fileName), duration: 2000 });
 
     } catch (error) {
       console.error("Failed to process or save track", error);
-      toast({ title: `Error importing ${trackTitle}`, variant: 'destructive' });
+      toast({ title: `Error importing ${fileName}`, variant: 'destructive' });
     } finally {
-      setImportingTracks(prev => prev.filter(t => t !== trackTitle));
+      setImportingTracks(prev => prev.filter(t => t !== fileName));
     }
   };
 
@@ -608,12 +618,13 @@ export default function PrivateMusicPlayerPage() {
                           className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20" : "hover:bg-accent/50")}>
                         <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate" title={track.title}>{track.title}</p>
+                            <p className="text-xs text-muted-foreground truncate" title={track.artist}>{track.artist}</p>
                             <div className='flex items-center space-x-2 mt-1'>
                                 <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
                                 {track.category && <Badge variant="secondary" className="h-4 px-1.5 text-xs">{track.category}</Badge>}
                             </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-1 mr-[-8px]">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
@@ -655,7 +666,8 @@ export default function PrivateMusicPlayerPage() {
               </div>
               <div className="shrink-0 space-y-4">
                   <div className="text-center">
-                      <h3 className="text-xl font-semibold">{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
+                      <h3 className="text-xl font-semibold truncate" title={currentTrack?.title}>{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
+                      {currentTrack?.artist && <p className="text-sm text-muted-foreground mt-1" title={currentTrack.artist}>{currentTrack.artist}</p>}
                       {currentTrack?.category && <p className="text-sm text-muted-foreground mt-1">{currentTrack.category}</p>}
                   </div>
                   <div className="space-y-2">
