@@ -223,7 +223,8 @@ export default function PrivateMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0">
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
-            <ScrollArea className="flex-1 -mx-4 px-4">
+            <ScrollArea className="flex-1 -mx-4">
+                <div className='px-4'>
                 {isLoading ? (
                   <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -250,10 +251,10 @@ export default function PrivateMusicPlayerPage() {
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center gap-1 mr-[-8px]">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity mr-[-8px]">
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
                                         <FileEdit className="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
@@ -261,7 +262,7 @@ export default function PrivateMusicPlayerPage() {
                             </Tooltip>
                              <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
@@ -281,6 +282,7 @@ export default function PrivateMusicPlayerPage() {
                     ))}
                   </ul>
                 )}
+                </div>
             </ScrollArea>
           </div>
           <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20">
@@ -371,3 +373,4 @@ export default function PrivateMusicPlayerPage() {
     </>
   );
 }
+
