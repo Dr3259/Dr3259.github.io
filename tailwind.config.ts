@@ -1,4 +1,8 @@
+
 import type {Config} from 'tailwindcss';
+import {
+  animation
+} from 'tailwindcss/defaultTheme';
 
 export default {
   darkMode: ['class'],
@@ -116,6 +120,7 @@ export default {
         },
       },
       animation: {
+        ...animation,
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'gentle-float': 'gentle-float var(--animation-duration, 8s) ease-in-out infinite',
