@@ -22,7 +22,16 @@ export const MiniMusicPlayer = () => {
     const hasBeenPositioned = useRef(false);
 
     useEffect(() => {
-        if (playerRef.current && !hasBeenPositioned.current) {
+        if (currentTrack && pathname !== '/private-music-player') {
+            setIsVisible(true);
+        } else {
+            setIsVisible(false);
+        }
+    }, [currentTrack, pathname]);
+
+
+    useEffect(() => {
+        if (isVisible && playerRef.current && !hasBeenPositioned.current) {
             try {
                 const savedPosition = localStorage.getItem(LOCAL_STORAGE_POSITION_KEY);
                 if (savedPosition) {
@@ -34,13 +43,12 @@ export const MiniMusicPlayer = () => {
                         setPosition({ x: clampedX, y: clampedY });
                     }
                 } else {
-                    // Set initial centered position if no saved position exists
+                    // Set initial centered position as no saved position exists
                     const initialX = (window.innerWidth - playerRef.current.offsetWidth) / 2;
                     setPosition({ x: initialX, y: 10 });
                 }
             } catch (e) {
-                console.error("Failed to parse mini player position from localStorage", e);
-                // Fallback to centered position on error
+                console.error("Failed to parse or set mini player position from localStorage", e);
                 if (playerRef.current) {
                     const initialX = (window.innerWidth - playerRef.current.offsetWidth) / 2;
                     setPosition({ x: initialX, y: 10 });
@@ -48,16 +56,8 @@ export const MiniMusicPlayer = () => {
             }
             hasBeenPositioned.current = true;
         }
-    }, [isVisible]); // Recalculate if it becomes visible and hasn't been positioned
+    }, [isVisible]);
 
-
-    useEffect(() => {
-        if (currentTrack && pathname !== '/private-music-player') {
-            setIsVisible(true);
-        } else {
-            setIsVisible(false);
-        }
-    }, [currentTrack, pathname]);
     
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -80,7 +80,9 @@ export const MiniMusicPlayer = () => {
         };
 
         const handleMouseUp = () => {
-            setIsDragging(false);
+            if (isDragging) {
+                setIsDragging(false);
+            }
         };
     
         if (isDragging) {
@@ -99,7 +101,6 @@ export const MiniMusicPlayer = () => {
     }, [isDragging]);
 
     useEffect(() => {
-        // Save position to localStorage when it's not being dragged anymore and it has been positioned
         if (!isDragging && hasBeenPositioned.current) {
             try {
                 localStorage.setItem(LOCAL_STORAGE_POSITION_KEY, JSON.stringify(position));
@@ -134,7 +135,7 @@ export const MiniMusicPlayer = () => {
             ref={playerRef}
             className={cn(
                 "fixed z-[101] flex items-center gap-2 p-2 rounded-full bg-purple-100/80 dark:bg-purple-900/80 backdrop-blur-lg shadow-xl border border-purple-200 dark:border-purple-700/50 cursor-move transition-opacity duration-300",
-                !hasBeenPositioned.current && "opacity-0" // Hide while position is being calculated
+                !hasBeenPositioned.current && "opacity-0"
             )}
             style={{ 
                 left: `${position.x}px`, 
