@@ -1,7 +1,7 @@
 
 
 const DB_NAME = 'WeekGlanceDB';
-const DB_VERSION = 2; // Increment version for schema change
+const DB_VERSION = 2; // Keep at version 2 as per codebase state
 const BOOK_STORE_NAME = 'books';
 const MUSIC_STORE_NAME = 'musicTracks';
 
@@ -47,12 +47,45 @@ function openDB(): Promise<IDBDatabase> {
 
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => {
-      reject(request.error);
+    request.onerror = (event) => {
+      const error = (event.target as IDBOpenDBRequest).error;
+      console.error("Database error: ", error);
+
+      // Specific handling for version error
+      if (error && error.name === 'VersionError') {
+        console.warn("Attempting to fix database VersionError by deleting and reloading.");
+        // Close any potential open connection before deleting
+        if (db) {
+          db.close();
+          db = null;
+        }
+        const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+        deleteRequest.onsuccess = () => {
+          console.log("Database deleted successfully. Reloading page.");
+          window.location.reload();
+        };
+        deleteRequest.onerror = (deleteEvent) => {
+          console.error("Error deleting database: ", (deleteEvent.target as IDBOpenDBRequest).error);
+          reject(new Error("Failed to delete and reset the database. Please clear site data manually."));
+        };
+        deleteRequest.onblocked = () => {
+          console.error("Database deletion blocked. Please close other tabs of this app and reload.");
+          reject(new Error("Database reset blocked. Please close other tabs of this app and reload."));
+        };
+      } else {
+        reject(request.error);
+      }
     };
 
     request.onsuccess = () => {
       db = request.result;
+      
+      // Ensure the onclose event is handled to prevent zombie connections
+      db.onclose = () => {
+        console.log('Database connection closed.');
+        db = null;
+      };
+
       resolve(db);
     };
 
