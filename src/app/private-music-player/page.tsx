@@ -228,7 +228,7 @@ export default function PrivateMusicPlayerPage() {
 
         <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
-          <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
+          <div className="w-full md:w-1/4 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
             <ScrollArea className="flex-1 -mx-4">
                 <ul className="space-y-2 p-px px-4">
@@ -284,8 +284,8 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
-              <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg mb-4">
+          <div className="w-full md:w-3/4 flex flex-col justify-end p-6 bg-transparent z-[2]">
+              <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
                 <div className="w-full px-2 space-y-2">
                     <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
                     <div className="flex justify-between text-xs text-muted-foreground font-mono">
