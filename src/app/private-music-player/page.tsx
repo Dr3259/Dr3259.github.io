@@ -183,7 +183,7 @@ export default function PrivateMusicPlayerPage() {
     <>
     <TooltipProvider>
       <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-        <header className="w-full p-4 border-b flex justify-between items-center shrink-0 z-10 bg-background/80 backdrop-blur-sm">
+        <header className="w-full p-4 border-b flex justify-between items-center shrink-0 z-20 bg-background/80 backdrop-blur-sm">
           <Link href="/rest" passHref>
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -221,9 +221,9 @@ export default function PrivateMusicPlayerPage() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative isolate">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category?.split(',')[0].trim() || null} />
-          <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-10 bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
+          <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
             <ScrollArea className="flex-1 -mx-4">
                 <ul className="space-y-2 p-px px-4">
@@ -279,7 +279,7 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20 z-10">
+          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20 z-[2]">
               <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
                       <Music className={cn("h-48 w-48 text-primary/20 transition-all", isPlaying && "text-primary/40")} />
