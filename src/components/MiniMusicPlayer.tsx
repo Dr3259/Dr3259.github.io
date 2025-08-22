@@ -4,12 +4,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMusic } from '@/context/MusicContext';
 import { Button } from './ui/button';
-import { Music, Play, Pause, X } from 'lucide-react';
+import { Music, Play, Pause, X, SkipBack, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 
 export const MiniMusicPlayer = () => {
-    const { currentTrack, isPlaying, handlePlayPause, closePlayer } = useMusic();
+    const { tracks, currentTrack, isPlaying, handlePlayPause, handleNextTrack, handlePrevTrack, closePlayer } = useMusic();
     const pathname = usePathname();
     const playerRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 20, y: 0 });
@@ -83,6 +83,8 @@ export const MiniMusicPlayer = () => {
         return null;
     }
 
+    const canSkip = tracks.length > 1;
+
     return (
         <div
             ref={playerRef}
@@ -98,8 +100,14 @@ export const MiniMusicPlayer = () => {
                 <Music className="h-5 w-5 text-primary" />
             </div>
 
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handlePrevTrack} disabled={!canSkip}>
+                <SkipBack className="h-5 w-5" />
+            </Button>
             <Button size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handlePlayPause}>
                 {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={handleNextTrack} disabled={!canSkip}>
+                <SkipForward className="h-5 w-5" />
             </Button>
             
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer" onClick={closePlayer}>
