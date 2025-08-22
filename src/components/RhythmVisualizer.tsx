@@ -80,7 +80,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       analyser.getByteFrequencyData(dataArray);
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       
-      const barWidth = (canvas.width / bufferLength) * 2.5;
+      const barWidth = (canvas.width / bufferLength) * 1.5;
       let x = 0;
 
       const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
@@ -89,17 +89,23 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
         const barHeight = dataArray[i] / 2;
         
         let color;
-        if (hslColors.length > 0 && hslColors[0]) {
+        const activeColors = hslColors.filter(c => c !== null) as [number, number, number][];
+
+        if (activeColors.length > 0) {
             const gradient = canvasCtx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
             
-            hslColors.forEach((hsl, index) => {
+            activeColors.forEach((hsl, index) => {
                  if (hsl) {
                     const [h, s, lBase] = hsl;
                     const lightness = Math.max(25, Math.min(85, lBase - 20 + (barHeight / 128) * 40));
                     const stopColor = `hsl(${h}, ${s}%, ${lightness}%)`;
                     // If only one color, use it for the whole gradient. Otherwise, distribute stops.
-                    const stopPosition = hslColors.length > 1 ? index / (hslColors.length - 1) : 0;
+                    const stopPosition = activeColors.length > 1 ? index / (activeColors.length - 1) : 0;
                     gradient.addColorStop(stopPosition, stopColor);
+                    if (activeColors.length === 1) { // If only one color, add a brighter stop for a 3D effect
+                         const brighterStopColor = `hsl(${h}, ${s}%, ${Math.min(95, lightness + 15)}%)`;
+                         gradient.addColorStop(1, brighterStopColor);
+                    }
                  }
             });
             color = gradient;
