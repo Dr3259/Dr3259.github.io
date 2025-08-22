@@ -15,18 +15,19 @@ export const MiniMusicPlayer = () => {
     const pathname = usePathname();
     const router = useRouter();
     const playerRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: -9999, y: -9999 }); // Start off-screen
+    const [position, setPosition] = useState({ x: 0, y: 10 }); // Default initial position
     const [isDragging, setIsDragging] = useState(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
+    const hasBeenPositioned = useRef(false);
 
     useEffect(() => {
-        if (playerRef.current) {
+        if (playerRef.current && !hasBeenPositioned.current) {
             try {
                 const savedPosition = localStorage.getItem(LOCAL_STORAGE_POSITION_KEY);
                 if (savedPosition) {
                     const parsedPosition = JSON.parse(savedPosition);
-                    if (typeof parsedPosition.x === 'number' && typeof parsedPosition.y === 'number') {
+                     if (typeof parsedPosition.x === 'number' && typeof parsedPosition.y === 'number') {
                         // Clamp to screen bounds on load
                         const clampedX = Math.max(0, Math.min(parsedPosition.x, window.innerWidth - playerRef.current.offsetWidth));
                         const clampedY = Math.max(0, Math.min(parsedPosition.y, window.innerHeight - playerRef.current.offsetHeight));
@@ -45,8 +46,9 @@ export const MiniMusicPlayer = () => {
                     setPosition({ x: initialX, y: 10 });
                 }
             }
+            hasBeenPositioned.current = true;
         }
-    }, []);
+    }, [isVisible]); // Recalculate if it becomes visible and hasn't been positioned
 
 
     useEffect(() => {
@@ -97,8 +99,8 @@ export const MiniMusicPlayer = () => {
     }, [isDragging]);
 
     useEffect(() => {
-        // Save position to localStorage when it's not being dragged anymore
-        if (!isDragging && position.x !== -9999) { // Don't save initial off-screen position
+        // Save position to localStorage when it's not being dragged anymore and it has been positioned
+        if (!isDragging && hasBeenPositioned.current) {
             try {
                 localStorage.setItem(LOCAL_STORAGE_POSITION_KEY, JSON.stringify(position));
             } catch (e) {
@@ -132,7 +134,7 @@ export const MiniMusicPlayer = () => {
             ref={playerRef}
             className={cn(
                 "fixed z-[101] flex items-center gap-2 p-2 rounded-full bg-purple-100/80 dark:bg-purple-900/80 backdrop-blur-lg shadow-xl border border-purple-200 dark:border-purple-700/50 cursor-move transition-opacity duration-300",
-                position.x === -9999 && "opacity-0" // Hide while position is being calculated
+                !hasBeenPositioned.current && "opacity-0" // Hide while position is being calculated
             )}
             style={{ 
                 left: `${position.x}px`, 
