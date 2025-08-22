@@ -80,7 +80,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       analyser.getByteFrequencyData(dataArray);
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       
-      const barWidth = (canvas.width / bufferLength) * 1.5;
+      const barWidth = (canvas.width / bufferLength);
       let x = 0;
 
       const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
