@@ -4,13 +4,14 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2 } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, type TrackMetadata, type TrackWithContent } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from "@/components/ui/slider";
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EditTrackModal } from '@/components/EditTrackModal';
 
 
 const translations = {
@@ -43,10 +45,19 @@ const translations = {
     importError: '导入失败，请确保文件是 .flac, .mp3, .wav, .ogg 格式。',
     importSuccess: (title: string) => `成功导入: ${title}`,
     deleteTrack: '删除歌曲',
+    editTrack: '编辑信息',
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
     trackDeleted: '歌曲已删除',
     trackExists: (title: string) => `歌曲 "${title}" 已存在，已跳过。`,
-    importing: '导入中...'
+    importing: '导入中...',
+    editTrackModal: {
+        title: '编辑歌曲信息',
+        description: '在这里修改歌曲的分类。',
+        categoryLabel: '分类',
+        categoryPlaceholder: '例如：古典, 摇滚, 学习用',
+        saveButton: '保存',
+        cancelButton: '取消',
+    },
   },
   'en': {
     pageTitle: 'Private Music Player',
@@ -67,10 +78,19 @@ const translations = {
     importError: 'Import failed. Please ensure it is a .flac, .mp3, .wav, or .ogg file.',
     importSuccess: (title: string) => `Successfully imported: ${title}`,
     deleteTrack: 'Delete track',
+    editTrack: 'Edit info',
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
     trackDeleted: 'Track deleted',
     trackExists: (title: string) => `Track "${title}" already exists. Skipped.`,
-    importing: 'Importing...'
+    importing: 'Importing...',
+    editTrackModal: {
+        title: 'Edit Track Info',
+        description: 'Modify the category for this track.',
+        categoryLabel: 'Category',
+        categoryPlaceholder: 'E.g. Classical, Rock, Study',
+        saveButton: 'Save',
+        cancelButton: 'Cancel',
+    },
   }
 };
 
@@ -95,6 +115,7 @@ export default function PrivateMusicPlayerPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
   const [importingTracks, setImportingTracks] = useState<string[]>([]);
+  const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -204,10 +225,11 @@ export default function PrivateMusicPlayerPage() {
           type: file.type,
           duration: duration,
           content: content,
+          category: null,
         };
   
         await saveTrack(newTrack);
-        setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration }]);
+        setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
         toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
       } catch (error) {
         console.error("Failed to process or save track", error);
@@ -338,6 +360,23 @@ export default function PrivateMusicPlayerPage() {
     }
   }, [isMuted]);
 
+  const handleSaveTrackCategory = async (trackId: string, newCategory: string | null) => {
+    const trackContent = await getTrackContent(trackId);
+    if (!trackContent) return;
+
+    const updatedTrack: TrackWithContent = { ...trackContent, category: newCategory };
+    await saveTrack(updatedTrack);
+
+    setTracks(prev => prev.map(t => t.id === trackId ? { ...t, category: newCategory } : t));
+    
+    if (currentTrack?.id === trackId) {
+        setCurrentTrack(updatedTrack);
+    }
+    
+    setEditingTrack(null);
+  };
+
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -450,13 +489,21 @@ export default function PrivateMusicPlayerPage() {
                       <li key={track.id} 
                           onClick={() => playTrack(index)} 
                           className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20" : "hover:bg-accent/50")}>
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate" title={track.title}>{track.title}</p>
-                            <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
+                            <div className='flex items-center space-x-2 mt-1'>
+                                <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
+                                {track.category && <Badge variant="secondary" className="h-4 px-1.5 text-xs">{track.category}</Badge>}
+                            </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
+                                <FileEdit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
                       </li>
                     ))}
                     {importingTracks.map(title => (
@@ -482,6 +529,7 @@ export default function PrivateMusicPlayerPage() {
               <div className="shrink-0 space-y-4">
                   <div className="text-center">
                       <h3 className="text-xl font-semibold">{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
+                      {currentTrack?.category && <p className="text-sm text-muted-foreground mt-1">{currentTrack.category}</p>}
                   </div>
                   <div className="space-y-2">
                       <Slider value={[progress]} onValueChange={handleProgressChange} max={100} step={1} disabled={!currentTrack}/>
@@ -528,6 +576,14 @@ export default function PrivateMusicPlayerPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <EditTrackModal
+        isOpen={!!editingTrack}
+        onClose={() => setEditingTrack(null)}
+        onSave={handleSaveTrackCategory}
+        track={editingTrack}
+        translations={t.editTrackModal}
+       />
     </>
   );
 }

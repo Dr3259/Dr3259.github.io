@@ -28,6 +28,7 @@ export interface TrackMetadata {
     album?: string;
     duration?: number;
     type: string; // e.g., 'audio/flac'
+    category?: string | null;
 }
 
 export interface TrackWithContent extends TrackMetadata {
@@ -158,7 +159,7 @@ export async function getTracksMetadata(): Promise<TrackMetadata[]> {
 
         request.onsuccess = () => {
             const allTracks: TrackWithContent[] = request.result;
-            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration }) => ({ id, title, type, artist, album, duration }));
+            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category }) => ({ id, title, type, artist, album, duration, category }));
             resolve(metadata);
         };
         request.onerror = () => reject(request.error);
