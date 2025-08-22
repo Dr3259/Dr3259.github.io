@@ -32,7 +32,7 @@ export interface TrackMetadata {
 }
 
 export interface TrackWithContent extends TrackMetadata {
-    content: string; // Data URI
+    content: File; // Changed from string (Data URI) to File object
 }
 
 

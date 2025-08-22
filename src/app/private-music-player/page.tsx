@@ -124,7 +124,7 @@ export default function PrivateMusicPlayerPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [tracks, setTracks] = useState<TrackMetadata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTrack, setCurrentTrack] = useState<TrackWithContent | null>(null);
+  const [currentTrack, setCurrentTrack] = useState<TrackMetadata | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -140,6 +140,7 @@ export default function PrivateMusicPlayerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const currentObjectUrl = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -162,23 +163,35 @@ export default function PrivateMusicPlayerPage() {
             audio.pause();
             audio.src = '';
         }
+        if (currentObjectUrl.current) {
+            URL.revokeObjectURL(currentObjectUrl.current);
+        }
     }
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
   
   const playTrack = useCallback(async (index: number) => {
+    if (currentObjectUrl.current) {
+        URL.revokeObjectURL(currentObjectUrl.current);
+        currentObjectUrl.current = null;
+    }
+
     if (index < 0 || index >= tracks.length) {
       setCurrentTrack(null);
       setCurrentTrackIndex(-1);
       setIsPlaying(false);
       return;
     }
+
     const trackMeta = tracks[index];
     try {
-        const trackContent = await getTrackContent(trackMeta.id);
-        if (trackContent) {
-            setCurrentTrack(trackContent);
+        const trackWithContent = await getTrackContent(trackMeta.id);
+        if (trackWithContent) {
+            const objectUrl = URL.createObjectURL(trackWithContent.content);
+            currentObjectUrl.current = objectUrl;
+
+            setCurrentTrack(trackMeta);
             setCurrentTrackIndex(index);
             
             if(playMode === 'shuffle' && (playHistory.length === 0 || playHistory[playHistory.length -1] !== index)) {
@@ -186,7 +199,7 @@ export default function PrivateMusicPlayerPage() {
             }
 
             if(audioRef.current) {
-                audioRef.current.src = trackContent.content;
+                audioRef.current.src = objectUrl;
                 audioRef.current.play().then(() => {
                   setIsPlaying(true);
                 }).catch(e => {
@@ -254,9 +267,14 @@ export default function PrivateMusicPlayerPage() {
   }, [currentTrackIndex, tracks.length, playTrack, playMode, playHistory]);
 
   const processAndSaveFile = async (file: File) => {
-    const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg'];
+    const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
     const fileExtensionMatch = file.name.match(/\.(flac|mp3|wav|ogg)$/i);
-    if (!supportedTypes.includes(file.type) && !fileExtensionMatch) {
+    
+    // Loosen type checking a bit; mpeg is common for mp3
+    const isSupported = supportedTypes.includes(file.type) || fileExtensionMatch;
+
+    if (!isSupported) {
+      console.warn(`Unsupported file type: ${file.name} (${file.type})`);
       return;
     }
   
@@ -268,45 +286,42 @@ export default function PrivateMusicPlayerPage() {
   
     setImportingTracks(prev => [...prev, trackTitle]);
   
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const content = e.target?.result as string;
-  
-        const duration = await new Promise<number>((resolve, reject) => {
-            const tempAudio = document.createElement('audio');
-            tempAudio.src = content;
-            tempAudio.onloadedmetadata = () => resolve(tempAudio.duration);
-            tempAudio.onerror = () => reject(new Error("Failed to load audio metadata."));
-        });
-  
-        const trackId = `track-${Date.now()}-${Math.random()}`;
-        const newTrack: TrackWithContent = {
-          id: trackId,
-          title: trackTitle,
-          type: file.type,
-          duration: duration,
-          content: content,
-          category: null,
-        };
-  
-        await saveTrack(newTrack);
-        setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
-        toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
-      } catch (error) {
-        console.error("Failed to process or save track", error);
-        toast({ title: `Error importing ${trackTitle}`, variant: 'destructive' });
-      } finally {
-        setImportingTracks(prev => prev.filter(t => t !== trackTitle));
-      }
-    };
-  
-    reader.onerror = () => {
-      toast({ title: t.importError, variant: 'destructive' });
+    try {
+      const tempAudioForDuration = document.createElement('audio');
+      const tempUrl = URL.createObjectURL(file);
+      tempAudioForDuration.src = tempUrl;
+
+      const duration = await new Promise<number>((resolve, reject) => {
+          tempAudioForDuration.onloadedmetadata = () => {
+              resolve(tempAudioForDuration.duration);
+              URL.revokeObjectURL(tempUrl); 
+          };
+          tempAudioForDuration.onerror = () => {
+              reject(new Error("Failed to load audio metadata."));
+              URL.revokeObjectURL(tempUrl);
+          };
+      });
+
+      const trackId = `track-${Date.now()}-${Math.random()}`;
+      const newTrack: TrackWithContent = {
+        id: trackId,
+        title: trackTitle,
+        type: file.type,
+        duration: duration,
+        content: file,
+        category: null,
+      };
+
+      await saveTrack(newTrack);
+      setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
+      toast({ title: t.importSuccess(newTrack.title), duration: 2000 });
+
+    } catch (error) {
+      console.error("Failed to process or save track", error);
+      toast({ title: `Error importing ${trackTitle}`, variant: 'destructive' });
+    } finally {
       setImportingTracks(prev => prev.filter(t => t !== trackTitle));
     }
-  
-    reader.readAsDataURL(file);
   };
 
 
@@ -366,6 +381,10 @@ export default function PrivateMusicPlayerPage() {
         audioRef.current.pause();
         audioRef.current.src = "";
     }
+    if (currentObjectUrl.current) {
+        URL.revokeObjectURL(currentObjectUrl.current);
+        currentObjectUrl.current = null;
+    }
     setIsPlaying(false);
     setCurrentTrack(null);
     setCurrentTrackIndex(-1);
@@ -423,16 +442,16 @@ export default function PrivateMusicPlayerPage() {
   }, [isMuted]);
 
   const handleSaveTrackCategory = async (trackId: string, newCategory: string | null) => {
-    const trackContent = await getTrackContent(trackId);
-    if (!trackContent) return;
-
-    const updatedTrack: TrackWithContent = { ...trackContent, category: newCategory };
-    await saveTrack(updatedTrack);
-
-    setTracks(prev => prev.map(t => t.id === trackId ? { ...t, category: newCategory } : t));
+    const trackToUpdate = tracks.find(t => t.id === trackId);
+    if (!trackToUpdate) return;
+    
+    const updatedTrackMetadata = { ...trackToUpdate, category: newCategory };
+    await saveTrack({ ...updatedTrackMetadata, content: new File([], "") }); // saving with dummy file content, only metadata is updated
+    
+    setTracks(prev => prev.map(t => (t.id === trackId ? updatedTrackMetadata : t)));
     
     if (currentTrack?.id === trackId) {
-        setCurrentTrack(updatedTrack);
+      setCurrentTrack(updatedTrackMetadata);
     }
     
     setEditingTrack(null);
