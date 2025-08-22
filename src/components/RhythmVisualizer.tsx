@@ -81,13 +81,15 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       analyser.getByteFrequencyData(dataArray);
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       
-      const barWidth = canvas.width / bufferLength;
+      const barWidth = (canvas.width / bufferLength);
       let x = 0;
 
       const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] / 2;
+        // Apply a scaling factor to reduce the height of low-frequency bars
+        const heightAdjustmentFactor = 0.6 + (i / bufferLength) * 0.4; // Factor from 0.6 (bass) to 1.0 (treble)
+        const barHeight = (dataArray[i] * heightAdjustmentFactor) / 2;
         
         let color;
         const activeColors = hslColors.filter(c => c !== null) as [number, number, number][];
@@ -120,7 +122,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
         canvasCtx.fillStyle = color;
         canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
-        x += barWidth + 1;
+        x += barWidth;
       }
 
       if (isPlaying) {
