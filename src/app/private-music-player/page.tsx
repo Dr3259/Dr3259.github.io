@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, Volume1, Volume, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -140,6 +140,21 @@ const getTagColor = (tagName: string): string => {
     const h = hash % 360;
     return `hsl(${h}, 70%, 85%)`; 
 };
+
+// A new component to dynamically render the volume icon
+const VolumeIcon = ({ volume, isMuted }: { volume: number; isMuted: boolean }) => {
+    if (isMuted || volume === 0) {
+        return <VolumeX className="h-6 w-6" />;
+    }
+    if (volume < 0.33) {
+        return <Volume className="h-6 w-6" />;
+    }
+    if (volume < 0.66) {
+        return <Volume1 className="h-6 w-6" />;
+    }
+    return <Volume2 className="h-6 w-6" />;
+};
+
 
 export default function PrivateMusicPlayerPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -304,7 +319,7 @@ export default function PrivateMusicPlayerPage() {
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={toggleMute}>{isMuted ? <VolumeX className="h-6 w-6"/> : <Volume2 className="h-6 w-6"/>}</Button>
+                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={toggleMute}><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
                         </TooltipTrigger>
                         <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
                     </Tooltip>
@@ -373,4 +388,3 @@ export default function PrivateMusicPlayerPage() {
     </>
   );
 }
-
