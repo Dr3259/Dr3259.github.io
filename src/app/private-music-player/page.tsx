@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -70,7 +70,9 @@ const translations = {
       repeat: "列表循环",
       'repeat-one': "单曲循环",
       shuffle: "随机播放",
-    }
+    },
+    volumeUp: '增大音量',
+    volumeDown: '减小音量',
   },
   'en': {
     pageTitle: 'Private Music Player',
@@ -113,7 +115,9 @@ const translations = {
       repeat: "Repeat All",
       'repeat-one': "Repeat One",
       shuffle: "Shuffle",
-    }
+    },
+    volumeUp: 'Volume Up',
+    volumeDown: 'Volume Down',
   }
 };
 
@@ -157,7 +161,6 @@ export default function PrivateMusicPlayerPage() {
     handleNextTrack,
     handlePrevTrack,
     handleProgressChange,
-    handleVolumeChange,
     toggleMute,
     handleFileImport,
     handleFolderImport,
@@ -165,6 +168,7 @@ export default function PrivateMusicPlayerPage() {
     handleClearPlaylist,
     handleSaveTrackMeta,
     cyclePlayMode,
+    handleVolumeAdjust,
   } = useMusic();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -221,7 +225,7 @@ export default function PrivateMusicPlayerPage() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative isolate">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category?.split(',')[0].trim() || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
@@ -279,10 +283,7 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-transparent z-[2]">
-              <div className="flex-1 flex items-center justify-center">
-                  {/* This space is intentionally left blank for the visualizer to be the main focus */}
-              </div>
+          <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
               <div className="shrink-0 space-y-4">
                   <div className="space-y-2">
                       <Slider value={[progress]} onValueChange={handleProgressChange} max={100} step={1} disabled={!currentTrack}/>
@@ -299,7 +300,13 @@ export default function PrivateMusicPlayerPage() {
                             </TooltipTrigger>
                             <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
                         </Tooltip>
-                        <Slider value={[isMuted ? 0 : volume * 100]} onValueChange={handleVolumeChange} max={100} step={1} className="w-24"/>
+                        <div className="flex flex-col items-center">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}><ChevronUp className="h-4 w-4"/></Button>
+                          <div className="w-1 h-8 bg-muted-foreground/20 rounded-full my-1 relative">
+                            <div className="bg-primary absolute bottom-0 left-0 right-0 rounded-full" style={{height: `${volume * 100}%`}}></div>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}><ChevronDown className="h-4 w-4"/></Button>
+                        </div>
                       </div>
                       <div className="flex items-center justify-center gap-4">
                           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>

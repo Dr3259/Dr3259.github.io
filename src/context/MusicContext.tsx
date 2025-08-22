@@ -25,7 +25,7 @@ interface MusicContextType {
     handleNextTrack: () => void;
     handlePrevTrack: () => void;
     handleProgressChange: (value: number[]) => void;
-    handleVolumeChange: (value: number[]) => void;
+    handleVolumeAdjust: (amount: number) => void;
     toggleMute: () => void;
     handleFileImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleFolderImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -47,6 +47,7 @@ export const useMusic = () => {
 };
 
 const LOCAL_STORAGE_PLAY_MODE_KEY = 'weekglance_play_mode_v1';
+const LOCAL_STORAGE_VOLUME_KEY = 'weekglance_volume_v1';
 
 export const MusicProvider = ({ children }: { children: ReactNode }) => {
     const [tracks, setTracks] = useState<TrackMetadata[]>([]);
@@ -68,16 +69,16 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     // Initial load
     useEffect(() => {
         const savedPlayMode = localStorage.getItem(LOCAL_STORAGE_PLAY_MODE_KEY) as PlayMode;
-        if (savedPlayMode) {
-            setPlayMode(savedPlayMode);
-        }
+        if (savedPlayMode) setPlayMode(savedPlayMode);
+        
+        const savedVolume = localStorage.getItem(LOCAL_STORAGE_VOLUME_KEY);
+        if (savedVolume) setVolume(parseFloat(savedVolume));
         
         getTracksMetadata()
             .then(setTracks)
             .catch(console.error)
             .finally(() => setIsLoading(false));
         
-        // This creates a single audio element for the entire app
         if (!audioRef.current) {
             (audioRef as React.MutableRefObject<HTMLAudioElement>).current = new Audio();
         }
@@ -88,17 +89,19 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 audio.pause();
                 audio.src = '';
             }
-            if (currentObjectUrl.current) {
-                URL.revokeObjectURL(currentObjectUrl.current);
-            }
+            if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
         }
     }, []);
     
-    const playTrack = useCallback(async (index: number) => {
-        if (currentObjectUrl.current) {
-            URL.revokeObjectURL(currentObjectUrl.current);
-            currentObjectUrl.current = null;
+    // Set audio element volume when component loads or volume state changes
+    useEffect(() => {
+        if(audioRef.current) {
+            audioRef.current.volume = volume;
         }
+    }, [volume]);
+    
+    const playTrack = useCallback(async (index: number) => {
+        if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
 
         if (index < 0 || index >= tracks.length) {
             setCurrentTrack(null);
@@ -123,9 +126,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 audioRef.current.src = objectUrl;
-                audioRef.current.play().then(() => {
-                    setIsPlaying(true);
-                }).catch(e => {
+                audioRef.current.play().catch(e => {
                     console.error("Audio play failed:", e)
                     setIsPlaying(false);
                 });
@@ -141,13 +142,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             return;
         };
         
-        if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-        } else {
-            audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-            setIsPlaying(true);
-        }
+        if (isPlaying) audioRef.current.pause();
+        else audioRef.current.play().catch(e => console.error("Audio play failed:", e));
     }, [currentTrack, isPlaying, playTrack, tracks]);
 
     const handleNextTrack = useCallback(() => {
@@ -155,9 +151,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
         if (playMode === 'shuffle') {
             let nextIndex;
-            if (tracks.length === 1) {
-                nextIndex = 0;
-            } else {
+            if (tracks.length === 1) nextIndex = 0;
+            else {
                 do {
                     nextIndex = Math.floor(Math.random() * tracks.length);
                 } while (nextIndex === currentTrackIndex);
@@ -190,19 +185,13 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
     const processAndSaveFile = async (file: File) => {
         const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
-        const fileExtensionMatch = file.name.match(/\.(flac|mp3|wav|ogg)$/i);
-        
-        const isSupported = supportedTypes.includes(file.type) || fileExtensionMatch;
-
-        if (!isSupported) {
+        if (!supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
             console.warn(`Unsupported file type: ${file.name} (${file.type})`);
             return;
         }
     
         const fileName = file.name.replace(/\.[^/.]+$/, "");
-        let title = fileName;
-        let artist: string | undefined = undefined;
-
+        let title = fileName, artist: string | undefined = undefined;
         const parts = fileName.split(' - ');
         if (parts.length > 1) {
             artist = parts[0].trim();
@@ -222,31 +211,20 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             tempAudioForDuration.src = tempUrl;
 
             const duration = await new Promise<number>((resolve, reject) => {
-                tempAudioForDuration.onloadedmetadata = () => {
-                    resolve(tempAudioForDuration.duration);
-                    URL.revokeObjectURL(tempUrl); 
-                };
-                tempAudioForDuration.onerror = () => {
-                    reject(new Error("Failed to load audio metadata."));
-                    URL.revokeObjectURL(tempUrl);
-                };
-            });
+                tempAudioForDuration.onloadedmetadata = () => resolve(tempAudioForDuration.duration);
+                tempAudioForDuration.onerror = () => reject(new Error("Failed to load audio metadata."));
+            }).finally(() => URL.revokeObjectURL(tempUrl));
 
             const arrayBuffer = await file.arrayBuffer();
+            const blobContent = new Blob([arrayBuffer], { type: file.type });
 
             const trackId = `track-${Date.now()}-${Math.random()}`;
             const newTrack: TrackWithContent = {
-                id: trackId,
-                title: title,
-                artist: artist,
-                type: file.type,
-                duration: duration,
-                content: arrayBuffer,
-                category: null,
+                id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null,
             };
 
             await saveTrack(newTrack);
-            setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, artist: newTrack.artist, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
+            setTracks(prev => [...prev, { id: newTrack.id, title, artist, type: file.type, duration, category: null }]);
             toast({ title: `Successfully imported: ${fileName}`, duration: 2000 });
 
         } catch (error) {
@@ -306,10 +284,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.pause();
             audioRef.current.src = "";
         }
-        if (currentObjectUrl.current) {
-            URL.revokeObjectURL(currentObjectUrl.current);
-            currentObjectUrl.current = null;
-        }
+        if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
         setIsPlaying(false);
         setCurrentTrack(null);
         setCurrentTrackIndex(-1);
@@ -330,19 +305,19 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
-    const handleVolumeChange = (value: number[]) => {
-        if(audioRef.current) {
-            const newVolume = value[0] / 100;
-            audioRef.current.volume = newVolume;
-            setVolume(newVolume);
-            if (newVolume > 0 && isMuted) setIsMuted(false);
-            if (newVolume === 0 && !isMuted) setIsMuted(true);
-        }
-    }
+    const handleVolumeAdjust = useCallback((amount: number) => {
+        if (!audioRef.current) return;
+        const newVolume = Math.max(0, Math.min(1, audioRef.current.volume + amount));
+        audioRef.current.volume = newVolume;
+        setVolume(newVolume);
+        localStorage.setItem(LOCAL_STORAGE_VOLUME_KEY, String(newVolume));
+        if (newVolume > 0 && isMuted) setIsMuted(false);
+        if (newVolume === 0 && !isMuted) setIsMuted(true);
+    }, [isMuted]);
   
     const toggleMute = () => {
         if(!audioRef.current) return;
-        const newMuted = !isMuted;
+        const newMuted = !audioRef.current.muted;
         audioRef.current.muted = newMuted;
         setIsMuted(newMuted);
     }
@@ -354,12 +329,10 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         const updatedTrack: TrackWithContent = { ...trackToUpdate, ...meta };
         await saveTrack(updatedTrack);
         
-        const updatedMetadata = { ...updatedTrack, content: undefined } as unknown as TrackMetadata;
+        const updatedMetadata: TrackMetadata = { id: updatedTrack.id, title: updatedTrack.title, artist: updatedTrack.artist, type: updatedTrack.type, duration: updatedTrack.duration, category: updatedTrack.category };
         setTracks(prev => prev.map(t => (t.id === trackId ? updatedMetadata : t)));
         
-        if (currentTrack?.id === trackId) {
-          setCurrentTrack(updatedMetadata);
-        }
+        if (currentTrack?.id === trackId) setCurrentTrack(updatedMetadata);
     };
   
     const cyclePlayMode = () => {
@@ -376,10 +349,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.pause();
             audioRef.current.src = '';
         }
-        if (currentObjectUrl.current) {
-            URL.revokeObjectURL(currentObjectUrl.current);
-            currentObjectUrl.current = null;
-        }
+        if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
         setIsPlaying(false);
         setCurrentTrack(null);
         setCurrentTrackIndex(-1);
@@ -390,9 +360,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         if (!audio) return;
         
         const updateProgress = () => {
-            if(audio.duration > 0) {
-                setProgress((audio.currentTime / audio.duration) * 100);
-            }
+            if(audio.duration > 0) setProgress((audio.currentTime / audio.duration) * 100);
         };
         const onEnded = () => {
             if (playMode === 'repeat-one') {
@@ -407,44 +375,29 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         audio.addEventListener('ended', onEnded);
         audio.addEventListener('play', () => setIsPlaying(true));
         audio.addEventListener('pause', () => setIsPlaying(false));
+        audio.addEventListener('volumechange', () => {
+            if (audioRef.current) {
+                setVolume(audioRef.current.volume);
+                setIsMuted(audioRef.current.muted);
+            }
+        });
         
         return () => {
             audio.removeEventListener('timeupdate', updateProgress);
             audio.removeEventListener('ended', onEnded);
             audio.removeEventListener('play', () => setIsPlaying(true));
             audio.removeEventListener('pause', () => setIsPlaying(false));
+            audio.removeEventListener('volumechange', () => {});
         };
     }, [handleNextTrack, playMode]);
 
     const value = {
-        tracks,
-        currentTrack,
-        currentTrackIndex,
-        isPlaying,
-        progress,
-        volume,
-        isMuted,
-        playMode,
-        isLoading,
-        importingTracks,
-        audioRef,
-        playTrack,
-        handlePlayPause,
-        handleNextTrack,
-        handlePrevTrack,
-        handleProgressChange,
-        handleVolumeChange,
-        toggleMute,
-        handleFileImport,
-        handleFolderImport,
-        handleDeleteTrack,
-        handleClearPlaylist,
-        handleSaveTrackMeta,
-        cyclePlayMode,
-        closePlayer,
+        tracks, currentTrack, currentTrackIndex, isPlaying, progress, volume, isMuted, playMode,
+        isLoading, importingTracks, audioRef, playTrack, handlePlayPause, handleNextTrack,
+        handlePrevTrack, handleProgressChange, handleVolumeAdjust, toggleMute, handleFileImport,
+        handleFolderImport, handleDeleteTrack, handleClearPlaylist, handleSaveTrackMeta,
+        cyclePlayMode, closePlayer,
     };
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
 };
-
-    
