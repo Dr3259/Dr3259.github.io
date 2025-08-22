@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, type TrackMetadata, type TrackWithContent } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const translations = {
@@ -59,6 +60,11 @@ const translations = {
         saveButton: '保存',
         cancelButton: '取消',
     },
+    playModes: {
+      repeat: "列表循环",
+      'repeat-one': "单曲循环",
+      shuffle: "随机播放",
+    }
   },
   'en': {
     pageTitle: 'Private Music Player',
@@ -93,10 +99,18 @@ const translations = {
         saveButton: 'Save',
         cancelButton: 'Cancel',
     },
+    playModes: {
+      repeat: "Repeat All",
+      'repeat-one': "Repeat One",
+      shuffle: "Shuffle",
+    }
   }
 };
 
 type LanguageKey = keyof typeof translations;
+type PlayMode = 'repeat' | 'repeat-one' | 'shuffle';
+
+const LOCAL_STORAGE_PLAY_MODE_KEY = 'weekglance_play_mode_v1';
 
 const formatDuration = (seconds: number | undefined) => {
     if (seconds === undefined || isNaN(seconds)) return '0:00';
@@ -119,6 +133,8 @@ export default function PrivateMusicPlayerPage() {
   const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
   const [importingTracks, setImportingTracks] = useState<string[]>([]);
   const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
+  const [playMode, setPlayMode] = useState<PlayMode>('repeat');
+  const [playHistory, setPlayHistory] = useState<number[]>([]);
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,13 +145,17 @@ export default function PrivateMusicPlayerPage() {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
+      
+      const savedPlayMode = localStorage.getItem(LOCAL_STORAGE_PLAY_MODE_KEY) as PlayMode;
+      if (savedPlayMode) {
+        setPlayMode(savedPlayMode);
+      }
     }
     getTracksMetadata()
       .then(setTracks)
       .catch(console.error)
       .finally(() => setIsLoading(false));
 
-    // Cleanup audio when the component unmounts
     return () => {
         const audio = audioRef.current;
         if (audio) {
@@ -160,16 +180,25 @@ export default function PrivateMusicPlayerPage() {
         if (trackContent) {
             setCurrentTrack(trackContent);
             setCurrentTrackIndex(index);
-            setIsPlaying(true);
+            
+            if(playMode === 'shuffle' && (playHistory.length === 0 || playHistory[playHistory.length -1] !== index)) {
+                setPlayHistory(prev => [...prev, index]);
+            }
+
             if(audioRef.current) {
                 audioRef.current.src = trackContent.content;
-                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+                audioRef.current.play().then(() => {
+                  setIsPlaying(true);
+                }).catch(e => {
+                  console.error("Audio play failed:", e)
+                  setIsPlaying(false);
+                });
             }
         }
     } catch (e) {
         console.error("Failed to play track", e);
     }
-  }, [tracks]);
+  }, [tracks, playMode, playHistory]);
 
   const handlePlayPause = useCallback(() => {
       if (!currentTrack || !audioRef.current) {
@@ -187,24 +216,42 @@ export default function PrivateMusicPlayerPage() {
   }, [currentTrack, isPlaying, playTrack, tracks]);
 
   const handleNextTrack = useCallback(() => {
-      const nextIndex = currentTrackIndex + 1;
-      if(nextIndex < tracks.length) {
-          playTrack(nextIndex);
-      } else {
-          // loop back to the beginning
-          playTrack(0);
-      }
-  }, [currentTrackIndex, tracks.length, playTrack]);
+    if (tracks.length === 0) return;
+
+    if (playMode === 'shuffle') {
+        let nextIndex;
+        if (tracks.length === 1) {
+            nextIndex = 0;
+        } else {
+            do {
+                nextIndex = Math.floor(Math.random() * tracks.length);
+            } while (nextIndex === currentTrackIndex);
+        }
+        playTrack(nextIndex);
+        return;
+    }
+
+    const nextIndex = (currentTrackIndex + 1) % tracks.length;
+    playTrack(nextIndex);
+  }, [currentTrackIndex, tracks.length, playTrack, playMode]);
   
   const handlePrevTrack = useCallback(() => {
-      const prevIndex = currentTrackIndex - 1;
-      if (prevIndex >= 0) {
-          playTrack(prevIndex);
-      } else {
-          // loop to the end
-          playTrack(tracks.length - 1);
+      if (tracks.length === 0) return;
+
+      if (playMode === 'shuffle') {
+        if (playHistory.length > 1) { // Check if there's a history to go back to
+          const newHistory = [...playHistory];
+          newHistory.pop(); // Remove current track
+          const prevIndex = newHistory.pop(); // Get previous track
+          setPlayHistory(newHistory);
+          if(prevIndex !== undefined) playTrack(prevIndex);
+        }
+        return;
       }
-  }, [currentTrackIndex, tracks.length, playTrack]);
+
+      const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+      playTrack(prevIndex);
+  }, [currentTrackIndex, tracks.length, playTrack, playMode, playHistory]);
 
   const processAndSaveFile = async (file: File) => {
     const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg'];
@@ -390,6 +437,15 @@ export default function PrivateMusicPlayerPage() {
     
     setEditingTrack(null);
   };
+  
+  const cyclePlayMode = () => {
+    const modes: PlayMode[] = ['repeat', 'repeat-one', 'shuffle'];
+    const currentIndex = modes.indexOf(playMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const newMode = modes[nextIndex];
+    setPlayMode(newMode);
+    localStorage.setItem(LOCAL_STORAGE_PLAY_MODE_KEY, newMode);
+  };
 
 
   useEffect(() => {
@@ -397,7 +453,15 @@ export default function PrivateMusicPlayerPage() {
     if (!audio) return;
     
     const updateProgress = () => setProgress((audio.currentTime / audio.duration) * 100);
-    const onEnded = () => handleNextTrack();
+    
+    const onEnded = () => {
+        if (playMode === 'repeat-one') {
+            audio.currentTime = 0;
+            audio.play();
+        } else {
+            handleNextTrack();
+        }
+    };
 
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('ended', onEnded);
@@ -406,7 +470,7 @@ export default function PrivateMusicPlayerPage() {
       audio.removeEventListener('timeupdate', updateProgress);
       audio.removeEventListener('ended', onEnded);
     };
-  }, [handleNextTrack]);
+  }, [handleNextTrack, playMode]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -449,6 +513,7 @@ export default function PrivateMusicPlayerPage() {
 
   return (
     <>
+    <TooltipProvider>
       <div className="flex flex-col h-screen bg-background text-foreground">
         <header className="w-full p-4 border-b flex justify-between items-center shrink-0">
           <Link href="/rest" passHref>
@@ -517,12 +582,22 @@ export default function PrivateMusicPlayerPage() {
                             </div>
                         </div>
                         <div className="flex items-center">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
-                                <FileEdit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
+                                        <FileEdit className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{t.editTrack}</p></TooltipContent>
+                            </Tooltip>
+                             <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{t.deleteTrack}</p></TooltipContent>
+                            </Tooltip>
                         </div>
                       </li>
                     ))}
@@ -540,7 +615,7 @@ export default function PrivateMusicPlayerPage() {
               </div>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-between p-6">
+          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20">
               <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
                       <Music className={cn("h-48 w-48 text-primary/20 transition-all", isPlaying && "text-primary/40 animate-pulse")} />
@@ -560,7 +635,12 @@ export default function PrivateMusicPlayerPage() {
                   </div>
                   <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2 w-1/3">
-                        <Button variant="ghost" size="icon" onClick={toggleMute}>{isMuted ? <VolumeX className="h-5 w-5"/> : <Volume2 className="h-5 w-5"/>}</Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={toggleMute}>{isMuted ? <VolumeX className="h-5 w-5"/> : <Volume2 className="h-5 w-5"/>}</Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
+                        </Tooltip>
                         <Slider value={[isMuted ? 0 : volume * 100]} onValueChange={handleVolumeChange} max={100} step={1} className="w-24"/>
                       </div>
                       <div className="flex items-center justify-center gap-4">
@@ -570,13 +650,25 @@ export default function PrivateMusicPlayerPage() {
                           </Button>
                           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
                       </div>
-                      <div className="w-1/3"></div>
+                      <div className="w-1/3 flex justify-end">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={cyclePlayMode}>
+                                    {playMode === 'repeat-one' && <Repeat1 className="h-5 w-5" />}
+                                    {playMode === 'shuffle' && <Shuffle className="h-5 w-5" />}
+                                    {playMode === 'repeat' && <Repeat className="h-5 w-5" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{t.playModes[playMode]}</p></TooltipContent>
+                        </Tooltip>
+                      </div>
                   </div>
               </div>
           </div>
         </main>
         <audio ref={audioRef} />
       </div>
+      </TooltipProvider>
       <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
