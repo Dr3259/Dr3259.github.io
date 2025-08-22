@@ -50,6 +50,7 @@ const translations = {
     trackDeleted: '歌曲已删除',
     trackExists: (title: string) => `歌曲 "${title}" 已存在，已跳过。`,
     importing: '导入中...',
+    loadingLibrary: '正在加载您的音乐库...',
     editTrackModal: {
         title: '编辑歌曲信息',
         description: '在这里修改歌曲的分类。',
@@ -83,6 +84,7 @@ const translations = {
     trackDeleted: 'Track deleted',
     trackExists: (title: string) => `Track "${title}" already exists. Skipped.`,
     importing: 'Importing...',
+    loadingLibrary: 'Loading your music library...',
     editTrackModal: {
         title: 'Edit Track Info',
         description: 'Modify the category for this track.',
@@ -107,6 +109,7 @@ const formatDuration = (seconds: number | undefined) => {
 export default function PrivateMusicPlayerPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [tracks, setTracks] = useState<TrackMetadata[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<TrackWithContent | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -127,7 +130,10 @@ export default function PrivateMusicPlayerPage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    getTracksMetadata().then(setTracks).catch(console.error);
+    getTracksMetadata()
+      .then(setTracks)
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
 
     // Cleanup audio when the component unmounts
     return () => {
@@ -487,7 +493,12 @@ export default function PrivateMusicPlayerPage() {
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
             <ScrollArea className="flex-1 -mx-4">
               <div className="px-4">
-                {tracks.length === 0 && importingTracks.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                    <p>{t.loadingLibrary}</p>
+                  </div>
+                ) : tracks.length === 0 && importingTracks.length === 0 ? (
                   <div className="text-center text-muted-foreground py-20">
                     <Music className="h-12 w-12 mx-auto mb-4" />
                     <p>{t.noTracks}</p>
