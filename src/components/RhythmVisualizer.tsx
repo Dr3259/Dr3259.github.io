@@ -110,9 +110,10 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
             });
             color = gradient;
         } else {
-            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+            // Fallback to primary theme color
+            const primaryColorHslString = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
             const opacity = Math.max(0.3, Math.min(1, (barHeight / 128) * 0.8 + 0.2));
-            color = `hsla(${primaryColor}, ${opacity})`;
+            color = `hsla(${primaryColorHslString}, ${opacity})`;
         }
 
         canvasCtx.fillStyle = color;
