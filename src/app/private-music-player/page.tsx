@@ -25,6 +25,7 @@ import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMusic } from '@/context/MusicContext';
 import type { TrackMetadata } from '@/lib/db';
+import { MusicVisualizer } from '@/components/MusicVisualizer';
 
 
 const translations = {
@@ -181,8 +182,8 @@ export default function PrivateMusicPlayerPage() {
   return (
     <>
     <TooltipProvider>
-      <div className="flex flex-col h-screen bg-background text-foreground">
-        <header className="w-full p-4 border-b flex justify-between items-center shrink-0">
+      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+        <header className="w-full p-4 border-b flex justify-between items-center shrink-0 z-10 bg-background/80 backdrop-blur-sm">
           <Link href="/rest" passHref>
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -220,67 +221,68 @@ export default function PrivateMusicPlayerPage() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col md:flex-row min-h-0">
-          <div className="w-full md:w-1/3 border-r p-4 flex flex-col">
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+          <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category?.split(',')[0].trim() || null} />
+          <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-10 bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
             <ScrollArea className="flex-1 -mx-4">
-                <div className='px-4'>
-                {isLoading ? (
-                  <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                    <p>{t.loadingLibrary}</p>
-                  </div>
-                ) : tracks.length === 0 && importingTracks.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-20">
-                    <Music className="h-12 w-12 mx-auto mb-4" />
-                    <p>{t.noTracks}</p>
-                  </div>
-                ) : (
-                  <ul className="space-y-2 p-px">
-                    {tracks.map((track, index) => (
-                      <li key={track.id} 
-                          onClick={() => playTrack(index)} 
-                          className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20" : "hover:bg-accent/50")}>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate" title={track.title}>{track.title}</p>
-                            <p className="text-xs text-muted-foreground truncate" title={track.artist}>{track.artist}</p>
-                            <div className='flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1'>
-                                <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
-                                {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => (
-                                    <span key={cat} className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ marginRight: '-8px' }}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
-                                        <FileEdit className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{t.editTrack}</p></TooltipContent>
-                            </Tooltip>
-                        </div>
-                      </li>
-                    ))}
-                    {importingTracks.map(title => (
-                       <li key={title} className="p-3 rounded-md flex justify-between items-center opacity-60">
-                         <div>
-                            <p className="font-medium text-sm truncate" title={title}>{title}</p>
-                            <p className="text-xs text-muted-foreground">{t.importing}</p>
-                         </div>
-                         <Loader2 className="h-4 w-4 animate-spin" />
-                       </li>
-                    ))}
-                  </ul>
-                )}
-                </div>
+                <ul className="space-y-2 p-px px-4">
+                  {isLoading ? (
+                    <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                      <p>{t.loadingLibrary}</p>
+                    </div>
+                  ) : tracks.length === 0 && importingTracks.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-20">
+                      <Music className="h-12 w-12 mx-auto mb-4" />
+                      <p>{t.noTracks}</p>
+                    </div>
+                  ) : (
+                    <>
+                      {tracks.map((track, index) => (
+                        <li key={track.id} 
+                            onClick={() => playTrack(index)} 
+                            className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20" : "hover:bg-accent/50")}>
+                          <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate" title={track.title}>{track.title}</p>
+                              <p className="text-xs text-muted-foreground truncate" title={track.artist}>{track.artist}</p>
+                              <div className='flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1'>
+                                  <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
+                                  {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => (
+                                      <span key={cat} className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
+                                  ))}
+                              </div>
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ marginRight: '-8px' }}>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
+                                          <FileEdit className="h-4 w-4" />
+                                      </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>{t.editTrack}</p></TooltipContent>
+                              </Tooltip>
+                          </div>
+                        </li>
+                      ))}
+                      {importingTracks.map(title => (
+                         <li key={title} className="p-3 rounded-md flex justify-between items-center opacity-60">
+                           <div>
+                              <p className="font-medium text-sm truncate" title={title}>{title}</p>
+                              <p className="text-xs text-muted-foreground">{t.importing}</p>
+                           </div>
+                           <Loader2 className="h-4 w-4 animate-spin" />
+                         </li>
+                      ))}
+                    </>
+                  )}
+                </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20">
+          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20 z-10">
               <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                      <Music className={cn("h-48 w-48 text-primary/20 transition-all", isPlaying && "text-primary/40 animate-pulse")} />
+                      <Music className={cn("h-48 w-48 text-primary/20 transition-all", isPlaying && "text-primary/40")} />
                   </div>
               </div>
               <div className="shrink-0 space-y-4">
