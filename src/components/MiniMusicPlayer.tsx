@@ -8,26 +8,41 @@ import { Music, Play, Pause, X, SkipBack, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 
+const LOCAL_STORAGE_POSITION_KEY = 'weekglance_mini_player_position_v1';
+
 export const MiniMusicPlayer = () => {
     const { tracks, currentTrack, isPlaying, handlePlayPause, handleNextTrack, handlePrevTrack, closePlayer } = useMusic();
     const pathname = usePathname();
     const router = useRouter();
     const playerRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [position, setPosition] = useState({ x: 0, y: 10 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Set initial position once window is available on the client
         if (playerRef.current) {
-            const initialX = (window.innerWidth - playerRef.current.offsetWidth) / 2;
-            setPosition({ x: initialX, y: 10 });
+            let initialX = (window.innerWidth - playerRef.current.offsetWidth) / 2;
+            let initialY = 10;
+            
+            try {
+                const savedPosition = localStorage.getItem(LOCAL_STORAGE_POSITION_KEY);
+                if (savedPosition) {
+                    const parsedPosition = JSON.parse(savedPosition);
+                    // Basic validation to ensure it's within reasonable bounds
+                    if (typeof parsedPosition.x === 'number' && typeof parsedPosition.y === 'number') {
+                        initialX = Math.max(0, Math.min(parsedPosition.x, window.innerWidth - playerRef.current.offsetWidth));
+                        initialY = Math.max(0, Math.min(parsedPosition.y, window.innerHeight - playerRef.current.offsetHeight));
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse mini player position from localStorage", e);
+            }
+            setPosition({ x: initialX, y: initialY });
         }
     }, []);
 
     useEffect(() => {
-        // Only show if there's a track and we are NOT on the main player page
         if (currentTrack && pathname !== '/private-music-player') {
             setIsVisible(true);
         } else {
@@ -46,7 +61,6 @@ export const MiniMusicPlayer = () => {
             const newX = prevPos.x + dx;
             const newY = prevPos.y + dy;
             
-            // Clamp position to be within viewport
             const clampedX = Math.max(0, Math.min(newX, window.innerWidth - playerRef.current!.offsetWidth));
             const clampedY = Math.max(0, Math.min(newY, window.innerHeight - playerRef.current!.offsetHeight));
 
@@ -75,9 +89,19 @@ export const MiniMusicPlayer = () => {
         };
     }, [isDragging]);
 
+    useEffect(() => {
+        // Save position to localStorage when it's not being dragged anymore
+        if (!isDragging) {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_POSITION_KEY, JSON.stringify(position));
+            } catch (e) {
+                console.error("Failed to save mini player position to localStorage", e);
+            }
+        }
+    }, [isDragging, position]);
+
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        // Prevent dragging when clicking on buttons
         if ((e.target as HTMLElement).closest('button')) {
           return;
         }
