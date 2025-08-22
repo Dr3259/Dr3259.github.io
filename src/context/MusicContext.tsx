@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
@@ -437,3 +438,4 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
+};
