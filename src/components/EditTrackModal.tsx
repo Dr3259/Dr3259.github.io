@@ -203,20 +203,18 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                 </div>
             </div>
         </div>
-        <DialogFooter className="sm:justify-between">
+        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
             {onDelete && (
-                <Button type="button" variant="destructive" onClick={handleDeleteClick} className="mr-auto">
+                <Button type="button" variant="destructive" onClick={handleDeleteClick} className="mt-2 sm:mt-0">
                     Delete
                 </Button>
             )}
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                {translations.cancelButton}
-              </Button>
-              <Button type="button" onClick={handleSaveClick}>
-                {translations.saveButton}
-              </Button>
-            </div>
+            <Button type="button" variant="outline" onClick={onClose} className="mt-2 sm:mt-0">
+              {translations.cancelButton}
+            </Button>
+            <Button type="button" onClick={handleSaveClick} className="mt-2 sm:mt-0">
+              {translations.saveButton}
+            </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
