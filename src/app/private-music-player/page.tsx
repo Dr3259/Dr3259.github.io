@@ -279,22 +279,11 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-muted/20 z-[2]">
+          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-transparent z-[2]">
               <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                      <Music className={cn("h-48 w-48 text-primary/20 transition-all", isPlaying && "text-primary/40")} />
-                  </div>
+                  {/* This space is intentionally left blank for the visualizer to be the main focus */}
               </div>
               <div className="shrink-0 space-y-4">
-                  <div className="text-center">
-                      <h3 className="text-xl font-semibold truncate" title={currentTrack?.title}>{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
-                      {currentTrack?.artist && <p className="text-sm text-muted-foreground mt-1" title={currentTrack.artist}>{currentTrack.artist}</p>}
-                       <div className="flex justify-center items-center flex-wrap gap-2 mt-2">
-                         {currentTrack?.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => (
-                           <span key={cat} className="text-xs rounded-full px-2.5 py-1" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
-                         ))}
-                       </div>
-                  </div>
                   <div className="space-y-2">
                       <Slider value={[progress]} onValueChange={handleProgressChange} max={100} step={1} disabled={!currentTrack}/>
                       <div className="flex justify-between text-xs text-muted-foreground">
