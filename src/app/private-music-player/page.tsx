@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -284,8 +284,8 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
-              <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
+          <div className="w-full md:w-1/2 flex flex-col justify-end p-6 bg-transparent z-[2]">
+              <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg mb-4">
                 <div className="w-full px-2 space-y-2">
                     <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
                     <div className="flex justify-between text-xs text-muted-foreground font-mono">
