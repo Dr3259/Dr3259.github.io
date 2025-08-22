@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -295,10 +295,10 @@ export default function PrivateMusicPlayerPage() {
                 </div>
                   
                 <div className="flex justify-between items-center gap-4">
-                  <div className="flex items-center justify-start gap-1">
+                  <div className="flex items-center justify-start gap-1 w-1/3 group">
                      <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => handleVolumeAdjust(-0.05)}><ChevronDown className="h-5 w-5"/></Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleVolumeAdjust(-0.05)}><ChevronDown className="h-5 w-5"/></Button>
                         </TooltipTrigger>
                         <TooltipContent><p>{t.volumeDown}</p></TooltipContent>
                     </Tooltip>
@@ -310,7 +310,7 @@ export default function PrivateMusicPlayerPage() {
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => handleVolumeAdjust(0.05)}><ChevronUp className="h-5 w-5"/></Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleVolumeAdjust(0.05)}><ChevronUp className="h-5 w-5"/></Button>
                         </TooltipTrigger>
                         <TooltipContent><p>{t.volumeUp}</p></TooltipContent>
                     </Tooltip>
@@ -324,7 +324,7 @@ export default function PrivateMusicPlayerPage() {
                       <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
                   </div>
 
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-end w-1/3">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={cyclePlayMode}>
@@ -374,4 +374,3 @@ export default function PrivateMusicPlayerPage() {
   );
 }
 
-    
