@@ -23,40 +23,64 @@ const animationConfig: Record<string, { animation: string }> = {
 
 const defaultAnimation = { animation: 'animate-default-float' };
 
+const getCategoryColors = (category: string | null): string[] => {
+    if (!category) return ['hsl(var(--primary))'];
+    
+    const categories = category.split(',').map(c => c.trim()).filter(Boolean);
+    const colors = categories.map(cat => {
+        let hash = 0;
+        for (let i = 0; i < cat.length; i++) {
+            hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const h = hash % 360;
+        return `hsl(${h}, 70%, 60%)`;
+    });
+    
+    return colors.length > 0 ? colors : ['hsl(var(--primary))'];
+};
+
 export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, category }) => {
   const animationClass = useMemo(() => {
-    if (category && animationConfig[category]) {
-      return animationConfig[category].animation;
+    const mainCategory = category?.split(',')[0].trim();
+    if (mainCategory && animationConfig[mainCategory]) {
+      return animationConfig[mainCategory].animation;
     }
     return defaultAnimation.animation;
   }, [category]);
+  
+  const colors = useMemo(() => getCategoryColors(category), [category]);
 
   const baseCircleClass = 'absolute rounded-full bg-gradient-to-br filter blur-xl transition-all duration-1000';
-  const playingCircleClass = isPlaying ? 'opacity-50 dark:opacity-30' : 'opacity-10 dark:opacity-5';
   const animationPlayState = isPlaying ? 'running' : 'paused';
+  const playingCircleClass = isPlaying ? 'opacity-50 dark:opacity-30' : 'opacity-10 dark:opacity-5';
+
+  const orbs = [
+      { size: '24rem', top: '-5rem', left: '-5rem', delay: '0s', color: colors[0] },
+      { size: '18rem', bottom: '-15%', right: '5%', delay: '-2s', color: colors[1] || colors[0] },
+      { size: '14rem', top: '15%', right: '10%', delay: '-4s', color: colors[0] },
+      { size: '12rem', bottom: '20%', left: '15%', delay: '-6s', color: colors[1] || colors[0] },
+      { size: '20rem', top: '40%', left: '30%', delay: '-8s', className: 'hidden md:block', color: colors[0] },
+  ];
   
   return (
     <div className="absolute inset-0 overflow-hidden bg-transparent z-0">
-       <div
-        className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '24rem', height: '24rem', top: '-5rem', left: '-5rem', backgroundColor: 'var(--color-blue-300)', animationDelay: '0s', animationPlayState }}
-      />
-      <div
-        className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '18rem', height: '18rem', bottom: '-15%', right: '5%', backgroundColor: 'var(--color-purple-300)', animationDelay: '-2s', animationPlayState }}
-      />
-      <div
-        className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '14rem', height: '14rem', top: '15%', right: '10%', backgroundColor: 'var(--color-pink-300)', animationDelay: '-4s', animationPlayState }}
-      />
-      <div
-        className={cn(baseCircleClass, playingCircleClass, animationClass)}
-        style={{ width: '12rem', height: '12rem', bottom: '20%', left: '15%', backgroundColor: 'var(--color-green-300)', animationDelay: '-6s', animationPlayState }}
-      />
-       <div
-        className={cn(baseCircleClass, playingCircleClass, animationClass, 'hidden md:block')}
-        style={{ width: '20rem', height: '20rem', top: '40%', left: '30%', backgroundColor: 'var(--color-yellow-200)', animationDelay: '-8s', animationPlayState }}
-      />
+       {orbs.map((orb, index) => (
+         <div
+            key={index}
+            className={cn(baseCircleClass, playingCircleClass, animationClass, orb.className)}
+            style={{ 
+                width: orb.size, 
+                height: orb.size, 
+                top: orb.top, 
+                left: orb.left, 
+                bottom: orb.bottom,
+                right: orb.right,
+                backgroundColor: orb.color, 
+                animationDelay: orb.delay, 
+                animationPlayState: animationPlayState as React.CSSProperties['animationPlayState']
+            }}
+          />
+       ))}
     </div>
   );
 };

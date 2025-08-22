@@ -284,7 +284,7 @@ export default function PrivateMusicPlayerPage() {
                 </ul>
             </ScrollArea>
           </div>
-          <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
+          <div className="w-full md:w-1/2 flex flex-col justify-between p-6 bg-transparent z-[2]">
               <div className='flex-1 flex flex-col justify-end mb-4'>
                  <RhythmVisualizer />
               </div>
@@ -365,4 +365,3 @@ export default function PrivateMusicPlayerPage() {
     </>
   );
 }
-

@@ -81,7 +81,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
       analyser.getByteFrequencyData(dataArray);
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       
-      const barWidth = (canvas.width / bufferLength);
+      const barWidth = canvas.width / bufferLength;
       let x = 0;
 
       const hslColors = getMultipleTagColorsHsl(currentTrack?.category);
@@ -90,7 +90,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
         const distanceFromCenter = Math.abs(i - bufferLength / 2);
         const normalizedDistance = distanceFromCenter / (bufferLength / 2);
         // Create a parabolic scaling factor: 1 at the center, dropping to ~0.2 at the edges.
-        const scalingFactor = Math.max(0.2, 1 - Math.pow(normalizedDistance, 2));
+        const scalingFactor = Math.max(0.2, 1 - Math.pow(normalizedDistance, 2) * 0.8);
 
         const barHeight = (dataArray[i] * scalingFactor) / 2;
         
@@ -166,5 +166,5 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
     };
   }, [isPlaying, audioRef, currentTrack]);
 
-  return <canvas ref={canvasRef} className={cn("w-full h-full", className)} />;
+  return <canvas ref={canvasRef} className={cn("w-full h-24", className)} />;
 };
