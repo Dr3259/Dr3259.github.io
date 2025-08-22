@@ -250,6 +250,36 @@ export default function PrivateMusicPlayerPage() {
     };
   }, [handleNextTrack]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
+        return;
+      }
+
+      switch (event.key) {
+        case ' ':
+          event.preventDefault();
+          handlePlayPause();
+          break;
+        case 'ArrowRight':
+          handleNextTrack();
+          break;
+        case 'ArrowLeft':
+          handlePrevTrack();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handlePlayPause, handleNextTrack, handlePrevTrack]);
+
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
