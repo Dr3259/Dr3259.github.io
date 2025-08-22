@@ -126,6 +126,15 @@ const formatDuration = (seconds: number | undefined) => {
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
 };
 
+const getTagColor = (tagName: string): string => {
+    let hash = 0;
+    for (let i = 0; i < tagName.length; i++) {
+        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = hash % 360;
+    return `hsl(${h}, 70%, 85%)`; 
+};
+
 export default function PrivateMusicPlayerPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
@@ -235,9 +244,11 @@ export default function PrivateMusicPlayerPage() {
                         <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate" title={track.title}>{track.title}</p>
                             <p className="text-xs text-muted-foreground truncate" title={track.artist}>{track.artist}</p>
-                            <div className='flex items-center space-x-2 mt-1'>
+                            <div className='flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1'>
                                 <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
-                                {track.category && <Badge variant="secondary" className="h-4 px-1.5 text-xs">{track.category}</Badge>}
+                                {track.category?.split(', ').map(cat => (
+                                    <span key={cat} className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
+                                ))}
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -284,7 +295,11 @@ export default function PrivateMusicPlayerPage() {
                   <div className="text-center">
                       <h3 className="text-xl font-semibold truncate" title={currentTrack?.title}>{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
                       {currentTrack?.artist && <p className="text-sm text-muted-foreground mt-1" title={currentTrack.artist}>{currentTrack.artist}</p>}
-                      {currentTrack?.category && <p className="text-sm text-muted-foreground mt-1">{currentTrack.category}</p>}
+                       <div className="flex justify-center items-center flex-wrap gap-2 mt-2">
+                         {currentTrack?.category?.split(', ').map(cat => (
+                           <span key={cat} className="text-xs rounded-full px-2.5 py-1" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
+                         ))}
+                       </div>
                   </div>
                   <div className="space-y-2">
                       <Slider value={[progress]} onValueChange={handleProgressChange} max={100} step={1} disabled={!currentTrack}/>
