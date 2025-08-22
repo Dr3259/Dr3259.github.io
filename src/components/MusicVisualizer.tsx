@@ -8,54 +8,59 @@ interface MusicVisualizerProps {
   category: string | null;
 }
 
-const animationMap: Record<string, string> = {
-    'Pop': 'animate-[energetic-pulse_3s_ease-in-out_infinite]',
-    'Rock': 'animate-[energetic-pulse_2s_ease-in-out_infinite]',
-    'Hip-Hop': 'animate-[energetic-pulse_2.5s_ease-in-out_infinite]',
-    'Electronic': 'animate-[slow-spin_20s_linear_infinite]',
-    'Classical': 'animate-[gentle-float_8s_ease-in-out_infinite]',
-    'Niche': 'animate-[slow-spin_30s_linear_infinite]',
-    'Study': 'animate-[gentle-float_12s_ease-in-out_infinite]',
-    'Love': 'animate-[gentle-float_10s_ease-in-out_infinite]',
-    'Healing': 'animate-[gentle-float_15s_ease-in-out_infinite]',
-    'Motivational': 'animate-[energetic-pulse_3s_ease-in-out_infinite]',
+const animationConfig: Record<string, { animation: string, duration: string }> = {
+    'Pop': { animation: 'energetic-pulse', duration: '3s' },
+    'Rock': { animation: 'energetic-pulse', duration: '2s' },
+    'Hip-Hop': { animation: 'energetic-pulse', duration: '2.5s' },
+    'Electronic': { animation: 'slow-spin', duration: '20s' },
+    'Classical': { animation: 'gentle-float', duration: '8s' },
+    'Niche': { animation: 'slow-spin', duration: '30s' },
+    'Study': { animation: 'gentle-float', duration: '12s' },
+    'Love': { animation: 'gentle-float', duration: '10s' },
+    'Healing': { animation: 'gentle-float', duration: '15s' },
+    'Motivational': { animation: 'energetic-pulse', duration: '3s' },
 };
 
-const defaultAnimation = 'animate-[gentle-float_10s_ease-in-out_infinite]';
+const defaultAnimation = { animation: 'gentle-float', duration: '10s' };
 
 export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, category }) => {
-  const animationClass = useMemo(() => {
-    if (!isPlaying) return 'paused';
-    if (category && animationMap[category]) {
-      return animationMap[category];
+  const getAnimationProperties = (cat: string | null) => {
+    if (cat && animationConfig[cat]) {
+      return animationConfig[cat];
     }
     return defaultAnimation;
-  }, [isPlaying, category]);
+  };
+  
+  const animationProps = useMemo(() => getAnimationProperties(category), [category]);
+  const animationClass = `animate-${animationProps.animation}`;
+  const animationDurationStyle = { '--animation-duration': animationProps.duration } as React.CSSProperties;
 
   const baseCircleClass = 'absolute rounded-full bg-gradient-to-br filter blur-xl transition-all duration-1000';
   const playingCircleClass = isPlaying ? 'opacity-50 dark:opacity-30' : 'opacity-10 dark:opacity-5';
+  const pausedAnimationClass = isPlaying ? '' : 'animation-paused';
+
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-background -z-10">
       <div
-        className={cn(baseCircleClass, playingCircleClass, 'w-64 h-64 top-[-10%] left-[-5%]', 'from-blue-300 to-cyan-300', animationClass)}
-        style={{ animationDelay: '0s' }}
+        className={cn(baseCircleClass, playingCircleClass, animationClass, pausedAnimationClass)}
+        style={{ ...animationDurationStyle, animationDelay: '0s', '--from-color': '#93c5fd', '--to-color': '#67e8f9' }}
       />
       <div
-        className={cn(baseCircleClass, playingCircleClass, 'w-72 h-72 bottom-[-15%] right-[5%]', 'from-purple-300 to-indigo-300', animationClass)}
-        style={{ animationDelay: '-2s' }}
+        className={cn(baseCircleClass, playingCircleClass, animationClass, pausedAnimationClass, 'w-72 h-72 bottom-[-15%] right-[5%]', 'from-purple-300 to-indigo-300')}
+        style={{ ...animationDurationStyle, animationDelay: '-2s' }}
       />
       <div
-        className={cn(baseCircleClass, playingCircleClass, 'w-56 h-56 top-[15%] right-[10%]', 'from-pink-300 to-red-300', animationClass)}
-        style={{ animationDelay: '-4s' }}
+        className={cn(baseCircleClass, playingCircleClass, animationClass, pausedAnimationClass, 'w-56 h-56 top-[15%] right-[10%]', 'from-pink-300 to-red-300')}
+        style={{ ...animationDurationStyle, animationDelay: '-4s' }}
       />
       <div
-        className={cn(baseCircleClass, playingCircleClass, 'w-48 h-48 bottom-[20%] left-[15%]', 'from-green-300 to-teal-300', animationClass)}
-        style={{ animationDelay: '-6s' }}
+        className={cn(baseCircleClass, playingCircleClass, animationClass, pausedAnimationClass, 'w-48 h-48 bottom-[20%] left-[15%]', 'from-green-300 to-teal-300')}
+        style={{ ...animationDurationStyle, animationDelay: '-6s' }}
       />
        <div
-        className={cn(baseCircleClass, playingCircleClass, 'w-80 h-80 top-[40%] left-[30%] hidden md:block', 'from-yellow-200 to-orange-300', animationClass)}
-        style={{ animationDelay: '-8s' }}
+        className={cn(baseCircleClass, playingCircleClass, animationClass, pausedAnimationClass, 'w-80 h-80 top-[40%] left-[30%] hidden md:block', 'from-yellow-200 to-orange-300')}
+        style={{ ...animationDurationStyle, animationDelay: '-8s' }}
       />
     </div>
   );
