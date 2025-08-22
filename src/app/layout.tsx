@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"; // Import Toaster
+import { MusicProvider } from '@/context/MusicContext';
+import { MiniMusicPlayer } from '@/components/MiniMusicPlayer';
 
 export const metadata: Metadata = {
   title: '周览',
@@ -34,8 +36,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Toaster />
+        <MusicProvider>
+          {children}
+          <MiniMusicPlayer />
+          <Toaster />
+        </MusicProvider>
       </body>
     </html>
   );

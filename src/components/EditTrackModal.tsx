@@ -18,11 +18,15 @@ import type { TrackMetadata } from '@/lib/db';
 interface EditTrackModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (trackId: string, category: string | null) => void;
+  onSave: (trackId: string, meta: { title: string, artist: string | undefined, category: string | null }) => void;
   track: TrackMetadata | null;
   translations: {
     title: string;
     description: string;
+    titleLabel: string;
+    titlePlaceholder: string;
+    artistLabel: string;
+    artistPlaceholder: string;
     categoryLabel: string;
     categoryPlaceholder: string;
     saveButton: string;
@@ -37,17 +41,25 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
   track,
   translations,
 }) => {
+  const [title, setTitle] = useState('');
+  const [artist, setArtist] = useState('');
   const [category, setCategory] = useState('');
 
   useEffect(() => {
     if (isOpen && track) {
+      setTitle(track.title || '');
+      setArtist(track.artist || '');
       setCategory(track.category || '');
     }
   }, [isOpen, track]);
 
   const handleSaveClick = () => {
-    if (track) {
-      onSave(track.id, category.trim() || null);
+    if (track && title.trim()) {
+      onSave(track.id, {
+          title: title.trim(),
+          artist: artist.trim() || undefined,
+          category: category.trim() || null
+      });
     }
   };
 
@@ -69,9 +81,25 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
+             <div>
+                <Label htmlFor="track-title">{translations.titleLabel}</Label>
+                <Input
+                    id="track-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={translations.titlePlaceholder}
+                    autoComplete="off"
+                />
+            </div>
             <div>
-                <p className="text-sm font-medium text-muted-foreground">Track Title</p>
-                <p className="text-base font-semibold truncate" title={track.title}>{track.title}</p>
+                <Label htmlFor="track-artist">{translations.artistLabel}</Label>
+                <Input
+                    id="track-artist"
+                    value={artist}
+                    onChange={(e) => setArtist(e.target.value)}
+                    placeholder={translations.artistPlaceholder}
+                    autoComplete="off"
+                />
             </div>
             <div>
                 <Label htmlFor="track-category">{translations.categoryLabel}</Label>

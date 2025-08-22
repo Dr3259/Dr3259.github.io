@@ -18,7 +18,7 @@ export interface BookMetadata {
 }
 
 export interface BookWithContent extends BookMetadata {
-  content: string; // Data URI
+  content: ArrayBuffer;
 }
 
 export interface TrackMetadata {
@@ -32,7 +32,7 @@ export interface TrackMetadata {
 }
 
 export interface TrackWithContent extends TrackMetadata {
-    content: ArrayBuffer;
+    content: Blob; // Store as Blob
 }
 
 

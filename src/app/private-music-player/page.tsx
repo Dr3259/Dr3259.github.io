@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, type TrackMetadata, type TrackWithContent } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from "@/components/ui/slider";
@@ -24,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useMusic } from '@/context/MusicContext';
+import type { TrackMetadata } from '@/lib/db';
 
 
 const translations = {
@@ -59,6 +60,10 @@ const translations = {
         categoryPlaceholder: '例如：古典, 摇滚, 学习用',
         saveButton: '保存',
         cancelButton: '取消',
+        artistLabel: '艺术家',
+        artistPlaceholder: '例如：周杰伦',
+        titleLabel: '标题',
+        titlePlaceholder: '例如：青花瓷',
     },
     playModes: {
       repeat: "列表循环",
@@ -93,11 +98,15 @@ const translations = {
     loadingLibrary: 'Loading your music library...',
     editTrackModal: {
         title: 'Edit Track Info',
-        description: 'Modify the category for this track.',
+        description: 'Modify the metadata for this track.',
         categoryLabel: 'Category',
         categoryPlaceholder: 'E.g. Classical, Rock, Study',
         saveButton: 'Save',
         cancelButton: 'Cancel',
+        artistLabel: 'Artist',
+        artistPlaceholder: 'E.g. John Doe',
+        titleLabel: 'Title',
+        titlePlaceholder: 'E.g. My Great Song',
     },
     playModes: {
       repeat: "Repeat All",
@@ -108,9 +117,6 @@ const translations = {
 };
 
 type LanguageKey = keyof typeof translations;
-type PlayMode = 'repeat' | 'repeat-one' | 'shuffle';
-
-const LOCAL_STORAGE_PLAY_MODE_KEY = 'weekglance_play_mode_v1';
 
 const formatDuration = (seconds: number | undefined) => {
     if (seconds === undefined || isNaN(seconds)) return '0:00';
@@ -122,436 +128,46 @@ const formatDuration = (seconds: number | undefined) => {
 
 export default function PrivateMusicPlayerPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [tracks, setTracks] = useState<TrackMetadata[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentTrack, setCurrentTrack] = useState<TrackMetadata | null>(null);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(0.75);
-  const [isMuted, setIsMuted] = useState(false);
   const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
-  const [importingTracks, setImportingTracks] = useState<string[]>([]);
   const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
-  const [playMode, setPlayMode] = useState<PlayMode>('repeat');
-  const [playHistory, setPlayHistory] = useState<number[]>([]);
 
-  const { toast } = useToast();
+  const {
+    tracks,
+    currentTrack,
+    isPlaying,
+    progress,
+    volume,
+    isMuted,
+    isLoading,
+    importingTracks,
+    playMode,
+    audioRef,
+    playTrack,
+    handlePlayPause,
+    handleNextTrack,
+    handlePrevTrack,
+    handleProgressChange,
+    handleVolumeChange,
+    toggleMute,
+    handleFileImport,
+    handleFolderImport,
+    handleDeleteTrack,
+    handleClearPlaylist,
+    handleSaveTrackMeta,
+    cyclePlayMode,
+  } = useMusic();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const currentObjectUrl = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
-      
-      const savedPlayMode = localStorage.getItem(LOCAL_STORAGE_PLAY_MODE_KEY) as PlayMode;
-      if (savedPlayMode) {
-        setPlayMode(savedPlayMode);
-      }
-    }
-    getTracksMetadata()
-      .then(setTracks)
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
-
-    return () => {
-        const audio = audioRef.current;
-        if (audio) {
-            audio.pause();
-            audio.src = '';
-        }
-        if (currentObjectUrl.current) {
-            URL.revokeObjectURL(currentObjectUrl.current);
-        }
     }
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
-  
-  const playTrack = useCallback(async (index: number) => {
-    if (currentObjectUrl.current) {
-        URL.revokeObjectURL(currentObjectUrl.current);
-        currentObjectUrl.current = null;
-    }
-
-    if (index < 0 || index >= tracks.length) {
-      setCurrentTrack(null);
-      setCurrentTrackIndex(-1);
-      setIsPlaying(false);
-      return;
-    }
-
-    const trackMeta = tracks[index];
-    try {
-        const trackWithContent = await getTrackContent(trackMeta.id);
-        if (trackWithContent) {
-            const blob = new Blob([trackWithContent.content], { type: trackWithContent.type });
-            const objectUrl = URL.createObjectURL(blob);
-            currentObjectUrl.current = objectUrl;
-
-            setCurrentTrack(trackMeta);
-            setCurrentTrackIndex(index);
-            
-            if(playMode === 'shuffle' && (playHistory.length === 0 || playHistory[playHistory.length -1] !== index)) {
-                setPlayHistory(prev => [...prev, index]);
-            }
-
-            if(audioRef.current) {
-                audioRef.current.src = objectUrl;
-                audioRef.current.play().then(() => {
-                  setIsPlaying(true);
-                }).catch(e => {
-                  console.error("Audio play failed:", e)
-                  setIsPlaying(false);
-                });
-            }
-        }
-    } catch (e) {
-        console.error("Failed to play track", e);
-    }
-  }, [tracks, playMode, playHistory]);
-
-  const handlePlayPause = useCallback(() => {
-      if (!currentTrack || !audioRef.current) {
-          if(tracks.length > 0) playTrack(0);
-          return;
-      };
-      
-      if (isPlaying) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-      } else {
-          audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-          setIsPlaying(true);
-      }
-  }, [currentTrack, isPlaying, playTrack, tracks]);
-
-  const handleNextTrack = useCallback(() => {
-    if (tracks.length === 0) return;
-
-    if (playMode === 'shuffle') {
-        let nextIndex;
-        if (tracks.length === 1) {
-            nextIndex = 0;
-        } else {
-            do {
-                nextIndex = Math.floor(Math.random() * tracks.length);
-            } while (nextIndex === currentTrackIndex);
-        }
-        playTrack(nextIndex);
-        return;
-    }
-
-    const nextIndex = (currentTrackIndex + 1) % tracks.length;
-    playTrack(nextIndex);
-  }, [currentTrackIndex, tracks.length, playTrack, playMode]);
-  
-  const handlePrevTrack = useCallback(() => {
-      if (tracks.length === 0) return;
-
-      if (playMode === 'shuffle') {
-        if (playHistory.length > 1) { // Check if there's a history to go back to
-          const newHistory = [...playHistory];
-          newHistory.pop(); // Remove current track
-          const prevIndex = newHistory.pop(); // Get previous track
-          setPlayHistory(newHistory);
-          if(prevIndex !== undefined) playTrack(prevIndex);
-        }
-        return;
-      }
-
-      const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
-      playTrack(prevIndex);
-  }, [currentTrackIndex, tracks.length, playTrack, playMode, playHistory]);
-
-  const processAndSaveFile = async (file: File) => {
-    const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
-    const fileExtensionMatch = file.name.match(/\.(flac|mp3|wav|ogg)$/i);
-    
-    const isSupported = supportedTypes.includes(file.type) || fileExtensionMatch;
-
-    if (!isSupported) {
-      console.warn(`Unsupported file type: ${file.name} (${file.type})`);
-      return;
-    }
-  
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
-    let title = fileName;
-    let artist: string | undefined = undefined;
-
-    const parts = fileName.split(' - ');
-    if (parts.length > 1) {
-        artist = parts[0].trim();
-        title = parts.slice(1).join(' - ').trim();
-    }
-    
-    if (tracks.some(track => track.title === title && track.artist === artist)) {
-      toast({ title: t.trackExists(fileName), variant: 'default', duration: 3000 });
-      return;
-    }
-  
-    setImportingTracks(prev => [...prev, fileName]);
-  
-    try {
-      const tempAudioForDuration = document.createElement('audio');
-      const tempUrl = URL.createObjectURL(file);
-      tempAudioForDuration.src = tempUrl;
-
-      const duration = await new Promise<number>((resolve, reject) => {
-          tempAudioForDuration.onloadedmetadata = () => {
-              resolve(tempAudioForDuration.duration);
-              URL.revokeObjectURL(tempUrl); 
-          };
-          tempAudioForDuration.onerror = () => {
-              reject(new Error("Failed to load audio metadata."));
-              URL.revokeObjectURL(tempUrl);
-          };
-      });
-
-      const arrayBuffer = await file.arrayBuffer();
-
-      const trackId = `track-${Date.now()}-${Math.random()}`;
-      const newTrack: TrackWithContent = {
-        id: trackId,
-        title: title,
-        artist: artist,
-        type: file.type,
-        duration: duration,
-        content: arrayBuffer,
-        category: null,
-      };
-
-      await saveTrack(newTrack);
-      setTracks(prev => [...prev, { id: newTrack.id, title: newTrack.title, artist: newTrack.artist, type: newTrack.type, duration: newTrack.duration, category: newTrack.category }]);
-      toast({ title: t.importSuccess(fileName), duration: 2000 });
-
-    } catch (error) {
-      console.error("Failed to process or save track", error);
-      toast({ title: `Error importing ${fileName}`, variant: 'destructive' });
-    } finally {
-      setImportingTracks(prev => prev.filter(t => t !== fileName));
-    }
-  };
-
-
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    for (let i = 0; i < files.length; i++) {
-        processAndSaveFile(files[i]);
-    }
-    
-    if(fileInputRef.current) fileInputRef.current.value = '';
-  };
-  
-  const handleFolderImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    for (let i = 0; i < files.length; i++) {
-        processAndSaveFile(files[i]);
-    }
-
-    if(folderInputRef.current) folderInputRef.current.value = '';
-  };
-
-  const handleDeleteTrack = async (trackId: string, trackTitle: string) => {
-    if (window.confirm(t.deleteConfirmation(trackTitle))) {
-        try {
-            await deleteTrack(trackId);
-            const newTracks = tracks.filter(t => t.id !== trackId);
-            setTracks(newTracks);
-
-            if (currentTrack?.id === trackId) {
-                if (audioRef.current) audioRef.current.pause();
-                const nextIndexToPlay = currentTrackIndex;
-                if (newTracks.length === 0) {
-                     setCurrentTrack(null);
-                     setCurrentTrackIndex(-1);
-                     setIsPlaying(false);
-                } else if(nextIndexToPlay >= newTracks.length) {
-                    playTrack(0);
-                } else {
-                    playTrack(nextIndexToPlay);
-                }
-            } else if (currentTrackIndex > newTracks.findIndex(t => t.id === currentTrack?.id)) {
-                setCurrentTrackIndex(currentTrackIndex - 1);
-            }
-            toast({ title: t.trackDeleted });
-        } catch (error) {
-            console.error("Failed to delete track", error);
-        }
-    }
-  };
-
-  const handleClearPlaylist = async () => {
-    if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-    }
-    if (currentObjectUrl.current) {
-        URL.revokeObjectURL(currentObjectUrl.current);
-        currentObjectUrl.current = null;
-    }
-    setIsPlaying(false);
-    setCurrentTrack(null);
-    setCurrentTrackIndex(-1);
-
-    try {
-        await Promise.all(tracks.map(track => deleteTrack(track.id)));
-        setTracks([]);
-        toast({ title: t.playlistCleared, duration: 2000 });
-    } catch (error) {
-        console.error("Failed to clear playlist", error);
-        toast({ title: "Error clearing playlist", variant: "destructive" });
-    }
-  };
-  
-  const handleProgressChange = (value: number[]) => {
-      if(audioRef.current && currentTrack?.duration) {
-          audioRef.current.currentTime = (value[0] / 100) * currentTrack.duration;
-          setProgress(value[0]);
-      }
-  }
-
-  const handleVolumeChange = (value: number[]) => {
-      if(audioRef.current) {
-          const newVolume = value[0] / 100;
-          audioRef.current.volume = newVolume;
-          setVolume(newVolume);
-          if (newVolume > 0 && isMuted) setIsMuted(false);
-          if (newVolume === 0 && !isMuted) setIsMuted(true);
-      }
-  }
-  
-  const toggleMute = () => {
-      if(!audioRef.current) return;
-      if(isMuted) {
-          audioRef.current.volume = volume > 0 ? volume : 0.5;
-          setVolume(volume > 0 ? volume : 0.5);
-          setIsMuted(false);
-      } else {
-          audioRef.current.volume = 0;
-          setIsMuted(true);
-      }
-  }
-
-  const handleVolumeAdjust = useCallback((amount: number) => {
-    if (!audioRef.current) return;
-    const newVolume = Math.max(0, Math.min(1, audioRef.current.volume + amount));
-    audioRef.current.volume = newVolume;
-    setVolume(newVolume);
-    if (newVolume > 0 && isMuted) {
-        setIsMuted(false);
-    }
-    if (newVolume === 0 && !isMuted) {
-        setIsMuted(true);
-    }
-  }, [isMuted]);
-
-  const handleSaveTrackCategory = async (trackId: string, newCategory: string | null) => {
-    const trackToUpdate = tracks.find(t => t.id === trackId);
-    if (!trackToUpdate) return;
-    
-    // We need to fetch the content to re-save it
-    const trackWithContent = await getTrackContent(trackId);
-    if (!trackWithContent) {
-        console.error("Could not find track content to update category.");
-        return;
-    }
-    
-    const updatedTrack: TrackWithContent = {
-        ...trackWithContent,
-        category: newCategory
-    };
-    await saveTrack(updatedTrack);
-    
-    const updatedMetadata = { ...trackToUpdate, category: newCategory };
-    setTracks(prev => prev.map(t => (t.id === trackId ? updatedMetadata : t)));
-    
-    if (currentTrack?.id === trackId) {
-      setCurrentTrack(updatedMetadata);
-    }
-    
-    setEditingTrack(null);
-  };
-  
-  const cyclePlayMode = () => {
-    const modes: PlayMode[] = ['repeat', 'repeat-one', 'shuffle'];
-    const currentIndex = modes.indexOf(playMode);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    const newMode = modes[nextIndex];
-    setPlayMode(newMode);
-    localStorage.setItem(LOCAL_STORAGE_PLAY_MODE_KEY, newMode);
-  };
-
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
-    const updateProgress = () => setProgress((audio.currentTime / audio.duration) * 100);
-    
-    const onEnded = () => {
-        if (playMode === 'repeat-one') {
-            audio.currentTime = 0;
-            audio.play();
-        } else {
-            handleNextTrack();
-        }
-    };
-
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('ended', onEnded);
-    
-    return () => {
-      audio.removeEventListener('timeupdate', updateProgress);
-      audio.removeEventListener('ended', onEnded);
-    };
-  }, [handleNextTrack, playMode]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
-        return;
-      }
-
-      switch (event.key) {
-        case ' ':
-          event.preventDefault();
-          handlePlayPause();
-          break;
-        case 'ArrowRight':
-          handleNextTrack();
-          break;
-        case 'ArrowLeft':
-          handlePrevTrack();
-          break;
-        case 'ArrowUp':
-          event.preventDefault();
-          handleVolumeAdjust(0.05);
-          break;
-        case 'ArrowDown':
-          event.preventDefault();
-          handleVolumeAdjust(-0.05);
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handlePlayPause, handleNextTrack, handlePrevTrack, handleVolumeAdjust]);
-
 
   return (
     <>
@@ -710,7 +326,6 @@ export default function PrivateMusicPlayerPage() {
               </div>
           </div>
         </main>
-        <audio ref={audioRef} />
       </div>
       </TooltipProvider>
       <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
@@ -736,7 +351,7 @@ export default function PrivateMusicPlayerPage() {
       <EditTrackModal
         isOpen={!!editingTrack}
         onClose={() => setEditingTrack(null)}
-        onSave={handleSaveTrackCategory}
+        onSave={handleSaveTrackMeta}
         track={editingTrack}
         translations={t.editTrackModal}
        />
