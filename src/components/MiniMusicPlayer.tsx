@@ -15,7 +15,7 @@ export const MiniMusicPlayer = () => {
     const pathname = usePathname();
     const router = useRouter();
     const playerRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 0, y: 10 }); // Default initial position
+    const [position, setPosition] = useState({ x: 0, y: 10 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
@@ -43,14 +43,14 @@ export const MiniMusicPlayer = () => {
                         setPosition({ x: clampedX, y: clampedY });
                     }
                 } else {
-                    // Set initial centered position as no saved position exists
-                    const initialX = (window.innerWidth - playerRef.current.offsetWidth) / 2;
+                    // Set initial position to top-right with margin
+                    const initialX = window.innerWidth - playerRef.current.offsetWidth - 10;
                     setPosition({ x: initialX, y: 10 });
                 }
             } catch (e) {
                 console.error("Failed to parse or set mini player position from localStorage", e);
                 if (playerRef.current) {
-                    const initialX = (window.innerWidth - playerRef.current.offsetWidth) / 2;
+                    const initialX = window.innerWidth - playerRef.current.offsetWidth - 10;
                     setPosition({ x: initialX, y: 10 });
                 }
             }
