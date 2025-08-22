@@ -15,6 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { TrackMetadata } from '@/lib/db';
 import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { PenSquare, Tags } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 interface EditTrackModalProps {
   isOpen: boolean;
@@ -144,68 +148,89 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card">
+      <DialogContent className="sm:max-w-xl bg-card">
         <DialogHeader>
           <DialogTitle>{translations.title}</DialogTitle>
           <DialogDescription>
             {translations.description}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-4">
-             <div>
-                <Label htmlFor="track-title">{translations.titleLabel}</Label>
-                <Input
-                    id="track-title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={translations.titlePlaceholder}
-                    autoComplete="off"
-                />
-            </div>
-            <div>
-                <Label htmlFor="track-artist">{translations.artistLabel}</Label>
-                <Input
-                    id="track-artist"
-                    value={artist}
-                    onChange={(e) => setArtist(e.target.value)}
-                    placeholder={translations.artistPlaceholder}
-                    autoComplete="off"
-                />
-            </div>
-            <div className="space-y-2">
-                <Label>{typeLabel}</Label>
-                <div className="flex flex-wrap gap-2">
-                    {Object.keys(typesToRender).map(key => (
-                         <Badge
-                            key={key}
-                            variant={selectedType === key ? "default" : "secondary"}
-                            onClick={() => handleTypeClick(key)}
-                            className="cursor-pointer"
-                        >
-                            {key}
-                        </Badge>
-                    ))}
+        
+        <div className="py-2 space-y-6">
+            {/* Metadata Section */}
+            <div className='space-y-4'>
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <PenSquare className="h-4 w-4" />
+                    <span>Metadata</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="track-title">{translations.titleLabel}</Label>
+                        <Input
+                            id="track-title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder={translations.titlePlaceholder}
+                            autoComplete="off"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="track-artist">{translations.artistLabel}</Label>
+                        <Input
+                            id="track-artist"
+                            value={artist}
+                            onChange={(e) => setArtist(e.target.value)}
+                            placeholder={translations.artistPlaceholder}
+                            autoComplete="off"
+                        />
+                    </div>
                 </div>
             </div>
-            <div className="space-y-2">
-                <Label>{purposeLabel}</Label>
-                <div className="flex flex-wrap gap-2">
-                    {Object.keys(purposesToRender).map(key => (
-                         <Badge
-                            key={key}
-                            variant={selectedPurposes.has(key) ? "default" : "secondary"}
-                            onClick={() => handlePurposeClick(key)}
-                            className="cursor-pointer"
-                        >
-                            {key}
-                        </Badge>
-                    ))}
+
+            <Separator />
+            
+            {/* Categories Section */}
+            <div className="space-y-4">
+                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Tags className="h-4 w-4" />
+                    <span>Categories</span>
+                </div>
+                <div className="space-y-3">
+                    <Label className="text-xs text-muted-foreground">{typeLabel} (Select one)</Label>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.keys(typesToRender).map(key => (
+                            <Badge
+                                key={key}
+                                variant={selectedType === key ? "default" : "secondary"}
+                                onClick={() => handleTypeClick(key)}
+                                className="cursor-pointer text-sm py-1 px-3"
+                            >
+                                {key}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-3">
+                    <Label className="text-xs text-muted-foreground">{purposeLabel} (Select multiple)</Label>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.keys(purposesToRender).map(key => (
+                            <Badge
+                                key={key}
+                                variant={selectedPurposes.has(key) ? "default" : "secondary"}
+                                onClick={() => handlePurposeClick(key)}
+                                className="cursor-pointer text-sm py-1 px-3"
+                            >
+                                {key}
+                            </Badge>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
-        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+
+        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
             {onDelete && (
-                <Button type="button" variant="destructive" onClick={handleDeleteClick} className="mt-2 sm:mt-0">
+                <Button type="button" variant="destructive" onClick={handleDeleteClick} className="mt-2 sm:mt-0 sm:mr-auto">
                     Delete
                 </Button>
             )}
