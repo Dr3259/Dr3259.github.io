@@ -25,6 +25,7 @@ import { useMusic } from '@/context/MusicContext';
 import type { TrackMetadata } from '@/lib/db';
 import { MusicVisualizer } from '@/components/MusicVisualizer';
 import { Slider } from '@/components/ui/slider';
+import { RhythmVisualizer } from '@/components/RhythmVisualizer';
 
 
 const translations = {
@@ -283,8 +284,8 @@ export default function PrivateMusicPlayerPage() {
             </ScrollArea>
           </div>
           <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
-              <div className="shrink-0 space-y-4">
-                  
+            <div className="w-full p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg space-y-4">
+                <RhythmVisualizer />
                 <div className="w-full px-2 space-y-2">
                     <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
                     <div className="flex justify-between text-xs text-muted-foreground font-mono">
@@ -293,8 +294,8 @@ export default function PrivateMusicPlayerPage() {
                     </div>
                 </div>
                   
-                <div className="flex justify-between items-center gap-4 p-2 rounded-full bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
-                  <div className="flex items-center gap-1">
+                <div className="flex justify-between items-center gap-4">
+                  <div className="flex items-center justify-start gap-1">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={toggleMute}>{isMuted ? <VolumeX className="h-6 w-6"/> : <Volume2 className="h-6 w-6"/>}</Button>
@@ -318,7 +319,7 @@ export default function PrivateMusicPlayerPage() {
                       <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
                   </div>
 
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-end">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={cyclePlayMode}>
