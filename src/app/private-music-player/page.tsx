@@ -277,7 +277,7 @@ export default function PrivateMusicPlayerPage() {
                   {tracks.map((track, index) => (
                     <li key={track.id} 
                         onClick={() => playTrack(index)} 
-                        className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20 text-primary-foreground" : "hover:bg-accent/50")}>
+                        className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20" : "hover:bg-accent/50")}>
                       <div>
                           <p className="font-medium text-sm truncate" title={track.title}>{track.title}</p>
                           <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
