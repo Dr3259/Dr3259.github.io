@@ -251,7 +251,7 @@ export default function PrivateMusicPlayerPage() {
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity mr-[-8px]">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ marginRight: '-8px' }}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => {e.stopPropagation(); setEditingTrack(track);}}>
@@ -259,14 +259,6 @@ export default function PrivateMusicPlayerPage() {
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{t.editTrack}</p></TooltipContent>
-                            </Tooltip>
-                             <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => {e.stopPropagation(); handleDeleteTrack(track.id, track.title);}}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{t.deleteTrack}</p></TooltipContent>
                             </Tooltip>
                         </div>
                       </li>
@@ -367,10 +359,10 @@ export default function PrivateMusicPlayerPage() {
         isOpen={!!editingTrack}
         onClose={() => setEditingTrack(null)}
         onSave={handleSaveTrackMeta}
+        onDelete={handleDeleteTrack}
         track={editingTrack}
         translations={t.editTrackModal}
        />
     </>
   );
 }
-

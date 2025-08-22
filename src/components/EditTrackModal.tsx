@@ -15,12 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { TrackMetadata } from '@/lib/db';
 import { Badge } from './ui/badge';
-import { cn } from '@/lib/utils';
 
 interface EditTrackModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (trackId: string, meta: { title: string, artist: string | undefined, category: string | null }) => void;
+  onDelete?: (trackId: string, trackTitle: string) => void;
   track: TrackMetadata | null;
   translations: {
     title: string;
@@ -30,7 +30,7 @@ interface EditTrackModalProps {
     artistLabel: string;
     artistPlaceholder: string;
     categoryLabel: string;
-    categoryPlaceholder: string; // This can be repurposed or removed
+    categoryPlaceholder: string;
     saveButton: string;
     cancelButton: string;
   };
@@ -60,6 +60,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   track,
   translations,
 }) => {
@@ -69,7 +70,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPurposes, setSelectedPurposes] = useState<Set<string>>(new Set());
 
-  const isChinese = '流行' in CATEGORY_TYPES_ZH; // Simple check for language context
+  const isChinese = '流行' in CATEGORY_TYPES_ZH;
 
   useEffect(() => {
     if (isOpen && track) {
@@ -101,6 +102,13 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
             artist: artist.trim() || undefined,
             category: finalCategories.length > 0 ? finalCategories.join(', ') : null
         });
+        onClose();
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (track && onDelete) {
+        onDelete(track.id, track.title);
         onClose();
     }
   };
@@ -195,13 +203,20 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                 </div>
             </div>
         </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            {translations.cancelButton}
-          </Button>
-          <Button type="button" onClick={handleSaveClick}>
-            {translations.saveButton}
-          </Button>
+        <DialogFooter className="sm:justify-between">
+            {onDelete && (
+                <Button type="button" variant="destructive" onClick={handleDeleteClick} className="mr-auto">
+                    Delete
+                </Button>
+            )}
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {translations.cancelButton}
+              </Button>
+              <Button type="button" onClick={handleSaveClick}>
+                {translations.saveButton}
+              </Button>
+            </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
