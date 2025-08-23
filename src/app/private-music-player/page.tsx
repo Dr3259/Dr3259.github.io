@@ -8,7 +8,7 @@ import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from '@/lib/utils';
+import { cn, getTagColor, getHighContrastTextColor } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,7 @@ import { useMusic } from '@/context/MusicContext';
 import type { TrackMetadata } from '@/lib/db';
 import { MusicVisualizer } from '@/components/MusicVisualizer';
 import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
 
 
 const translations = {
@@ -130,15 +131,6 @@ const formatDuration = (seconds: number | undefined) => {
     const min = Math.floor(floorSeconds / 60);
     const sec = floorSeconds % 60;
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-};
-
-const getTagColor = (tagName: string): string => {
-    let hash = 0;
-    for (let i = 0; i < tagName.length; i++) {
-        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = hash % 360;
-    return `hsl(${h}, 70%, 85%)`; 
 };
 
 // A new component to dynamically render the volume icon
@@ -300,9 +292,20 @@ export default function PrivateMusicPlayerPage() {
                               <p className="text-xs text-muted-foreground truncate" title={track.artist}>{track.artist}</p>
                               <div className='flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1'>
                                   <p className="text-xs text-muted-foreground">{formatDuration(track.duration)}</p>
-                                  {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => (
-                                      <span key={cat} className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: getTagColor(cat) }}>{cat}</span>
-                                  ))}
+                                  {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
+                                      const bgColor = getTagColor(cat);
+                                      const textColor = getHighContrastTextColor(bgColor);
+                                      return (
+                                          <Badge
+                                              key={cat}
+                                              variant="secondary"
+                                              className="border-transparent"
+                                              style={{ backgroundColor: bgColor, color: textColor }}
+                                          >
+                                              {cat}
+                                          </Badge>
+                                      )
+                                  })}
                               </div>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ marginRight: '-8px' }}>
