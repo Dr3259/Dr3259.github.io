@@ -18,6 +18,7 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { PenSquare, Tags } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
 
 
 interface EditTrackModalProps {
@@ -199,31 +200,43 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                 <div className="space-y-3">
                     <Label className="text-xs text-muted-foreground">{typeLabel} (Select one)</Label>
                     <div className="flex flex-wrap gap-2">
-                        {Object.keys(typesToRender).map(key => (
-                            <Badge
-                                key={key}
-                                variant={selectedType === key ? "default" : "secondary"}
-                                onClick={() => handleTypeClick(key)}
-                                className="cursor-pointer text-sm py-1 px-3"
-                            >
-                                {key}
-                            </Badge>
-                        ))}
+                        {Object.keys(typesToRender).map(key => {
+                            const isSelected = selectedType === key;
+                            const bgColor = isSelected ? getTagColor(key) : undefined;
+                            const textColor = isSelected ? getHighContrastTextColor(bgColor!) : undefined;
+                            return (
+                                <Badge
+                                    key={key}
+                                    variant={isSelected ? "default" : "secondary"}
+                                    onClick={() => handleTypeClick(key)}
+                                    className="cursor-pointer text-sm py-1 px-3 border-transparent"
+                                    style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
+                                >
+                                    {key}
+                                </Badge>
+                            )
+                        })}
                     </div>
                 </div>
                 <div className="space-y-3">
                     <Label className="text-xs text-muted-foreground">{purposeLabel} (Select multiple)</Label>
                     <div className="flex flex-wrap gap-2">
-                        {Object.keys(purposesToRender).map(key => (
-                            <Badge
-                                key={key}
-                                variant={selectedPurposes.has(key) ? "default" : "secondary"}
-                                onClick={() => handlePurposeClick(key)}
-                                className="cursor-pointer text-sm py-1 px-3"
-                            >
-                                {key}
-                            </Badge>
-                        ))}
+                        {Object.keys(purposesToRender).map(key => {
+                             const isSelected = selectedPurposes.has(key);
+                             const bgColor = isSelected ? getTagColor(key) : undefined;
+                             const textColor = isSelected ? getHighContrastTextColor(bgColor!) : undefined;
+                             return (
+                                <Badge
+                                    key={key}
+                                    variant={isSelected ? "default" : "secondary"}
+                                    onClick={() => handlePurposeClick(key)}
+                                    className="cursor-pointer text-sm py-1 px-3 border-transparent"
+                                    style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
+                                >
+                                    {key}
+                                </Badge>
+                            )
+                        })}
                     </div>
                 </div>
             </div>
