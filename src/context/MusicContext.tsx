@@ -183,69 +183,84 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         playTrack(prevIndex);
     }, [currentTrackIndex, tracks, playTrack, playMode, playHistory]);
 
-    const processAndSaveFile = async (file: File) => {
-        const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
-        if (!supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
-            console.warn(`Unsupported file type: ${file.name} (${file.type})`);
-            return;
-        }
-    
-        const fileName = file.name.replace(/\.[^/.]+$/, "");
-        let title = fileName, artist: string | undefined = undefined;
-        const parts = fileName.split(' - ');
-        if (parts.length > 1) {
-            artist = parts[0].trim();
-            title = parts.slice(1).join(' - ').trim();
+    const processFiles = async (files: FileList) => {
+        setImportingTracks(['loading']); // Show a generic loading indicator
+        
+        const processFile = (file: File): Promise<TrackWithContent | null> => {
+            return new Promise(async (resolve) => {
+                const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
+                if (!supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
+                    console.warn(`Unsupported file type: ${file.name} (${file.type})`);
+                    resolve(null);
+                    return;
+                }
+
+                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                let title = fileName, artist: string | undefined = undefined;
+                const parts = fileName.split(' - ');
+                if (parts.length > 1) {
+                    artist = parts[0].trim();
+                    title = parts.slice(1).join(' - ').trim();
+                }
+
+                if (tracks.some(track => track.title === title && track.artist === artist)) {
+                    toast({ title: `Track "${fileName}" already exists. Skipped.`, variant: 'default', duration: 3000 });
+                    resolve(null);
+                    return;
+                }
+
+                try {
+                    const tempAudioForDuration = document.createElement('audio');
+                    const tempUrl = URL.createObjectURL(file);
+                    tempAudioForDuration.src = tempUrl;
+
+                    const duration = await new Promise<number>((res, rej) => {
+                        tempAudioForDuration.onloadedmetadata = () => res(tempAudioForDuration.duration);
+                        tempAudioForDuration.onerror = () => rej(new Error("Failed to load audio metadata."));
+                    }).finally(() => URL.revokeObjectURL(tempUrl));
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    const blobContent = new Blob([arrayBuffer], { type: file.type });
+                    const trackId = `track-${Date.now()}-${Math.random()}`;
+                    
+                    resolve({
+                        id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null,
+                    });
+
+                } catch (error) {
+                    console.error(`Failed to process or save track: ${fileName}`, error);
+                    toast({ title: `Error importing ${fileName}`, variant: 'destructive' });
+                    resolve(null);
+                }
+            });
+        };
+
+        const newTracksPromises = Array.from(files).map(processFile);
+        const newTracks = (await Promise.all(newTracksPromises)).filter((track): track is TrackWithContent => track !== null);
+
+        if (newTracks.length > 0) {
+            for (const track of newTracks) {
+                await saveTrack(track);
+            }
+            const newMetadata = newTracks.map(({ id, title, artist, type, duration, category }) => ({ id, title, artist, type, duration, category }));
+            setTracks(prev => [...prev, ...newMetadata]);
+            toast({ title: `Successfully imported ${newTracks.length} new track(s).`, duration: 3000 });
         }
         
-        if (tracks.some(track => track.title === title && track.artist === artist)) {
-            toast({ title: `Track "${fileName}" already exists. Skipped.`, variant: 'default', duration: 3000 });
-            return;
-        }
-    
-        setImportingTracks(prev => [...prev, fileName]);
-    
-        try {
-            const tempAudioForDuration = document.createElement('audio');
-            const tempUrl = URL.createObjectURL(file);
-            tempAudioForDuration.src = tempUrl;
-
-            const duration = await new Promise<number>((resolve, reject) => {
-                tempAudioForDuration.onloadedmetadata = () => resolve(tempAudioForDuration.duration);
-                tempAudioForDuration.onerror = () => reject(new Error("Failed to load audio metadata."));
-            }).finally(() => URL.revokeObjectURL(tempUrl));
-
-            const arrayBuffer = await file.arrayBuffer();
-            const blobContent = new Blob([arrayBuffer], { type: file.type });
-
-            const trackId = `track-${Date.now()}-${Math.random()}`;
-            const newTrack: TrackWithContent = {
-                id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null,
-            };
-
-            await saveTrack(newTrack);
-            setTracks(prev => [...prev, { id: newTrack.id, title, artist, type: file.type, duration, category: null }]);
-            toast({ title: `Successfully imported: ${fileName}`, duration: 2000 });
-
-        } catch (error) {
-            console.error("Failed to process or save track", error);
-            toast({ title: `Error importing ${fileName}`, variant: 'destructive' });
-        } finally {
-            setImportingTracks(prev => prev.filter(t => t !== fileName));
-        }
+        setImportingTracks([]); // Clear loading indicator
     };
     
     const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files) return;
-        Array.from(files).forEach(processAndSaveFile);
+        processFiles(files);
         event.target.value = '';
     };
   
     const handleFolderImport = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files) return;
-        Array.from(files).forEach(processAndSaveFile);
+        processFiles(files);
         event.target.value = '';
     };
 
