@@ -43,6 +43,7 @@ const translations = {
     cancelClear: '取消',
     playlistCleared: '播放列表已清空',
     playlistTitle: '播放列表',
+    totalTracks: (count: number) => `(${count} 首)`,
     nowPlaying: '正在播放',
     nothingPlaying: '暂无播放',
     noTracks: '您的音乐库是空的。',
@@ -88,6 +89,7 @@ const translations = {
     cancelClear: 'Cancel',
     playlistCleared: 'Playlist cleared',
     playlistTitle: 'Playlist',
+    totalTracks: (count: number) => `(${count})`,
     nowPlaying: 'Now Playing',
     nothingPlaying: 'Nothing Playing',
     noTracks: 'Your music library is empty.',
@@ -189,6 +191,8 @@ export default function PrivateMusicPlayerPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const playlistContainerRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -198,6 +202,18 @@ export default function PrivateMusicPlayerPage() {
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
+
+  useEffect(() => {
+    if (currentTrack) {
+        const trackElement = document.getElementById(`track-item-${currentTrack.id}`);
+        if(trackElement) {
+            trackElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }
+  }, [currentTrack]);
 
   return (
     <>
@@ -244,8 +260,14 @@ export default function PrivateMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
-            <h2 className="text-lg font-semibold mb-4 flex items-center"><ListMusic className="mr-2 h-5 w-5" /> {t.playlistTitle}</h2>
-            <ScrollArea className="flex-1 -mx-4">
+            <h2 className="text-lg font-semibold mb-4 flex items-baseline">
+                <ListMusic className="mr-2 h-5 w-5 shrink-0" />
+                <span>{t.playlistTitle}</span>
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                    {t.totalTracks(tracks.length)}
+                </span>
+            </h2>
+            <ScrollArea className="flex-1 -mx-4" ref={playlistContainerRef}>
                 <ul className="space-y-2 p-px px-4">
                   {isLoading ? (
                     <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
@@ -260,7 +282,8 @@ export default function PrivateMusicPlayerPage() {
                   ) : (
                     <>
                       {tracks.map((track, index) => (
-                        <li key={track.id} 
+                        <li key={track.id}
+                            id={`track-item-${track.id}`}
                             onClick={() => playTrack(index)} 
                             className={cn("p-3 rounded-md flex justify-between items-center cursor-pointer transition-colors group", currentTrack?.id === track.id ? "bg-primary/20" : "hover:bg-accent/50")}>
                           <div className="flex-1 min-w-0">
