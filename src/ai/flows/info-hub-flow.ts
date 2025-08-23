@@ -9,7 +9,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { defineTool } from 'genkit/tool';
 
 const ResearchTopicInputSchema = z.object({
   topic: z.string().describe('The topic for the AI to research.'),
@@ -34,7 +33,7 @@ const ResearchTopicOutputSchema = z.object({
 export type ResearchTopicOutput = z.infer<typeof ResearchTopicOutputSchema>;
 
 // Gemini's built-in tool for web search
-const googleSearchTool = defineTool(
+const googleSearchTool = ai.defineTool(
   {
     name: 'googleSearch',
     description: 'A tool to search Google.',
