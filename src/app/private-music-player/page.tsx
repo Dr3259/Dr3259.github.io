@@ -209,7 +209,6 @@ export default function PrivateMusicPlayerPage() {
             const trackRect = trackElement.getBoundingClientRect();
             const containerRect = scrollContainer.getBoundingClientRect();
             
-            // Check if the track element is fully or partially outside the visible area of the container
             const isVisible = trackRect.top >= containerRect.top && trackRect.bottom <= containerRect.bottom;
 
             if (!isVisible) {
@@ -268,14 +267,14 @@ export default function PrivateMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
-            <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold">
-                <ListMusic className="h-5 w-5 shrink-0" />
-                <span className="flex-1 min-w-0 truncate">
-                  {t.playlistTitle}
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    {t.totalTracks(tracks.length)}
-                  </span>
+            <h2 className="flex items-center mb-4 text-lg font-semibold leading-none">
+              <ListMusic className="h-5 w-5 mr-2 shrink-0" />
+              <span>
+                {t.playlistTitle}
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  {t.totalTracks(tracks.length)}
                 </span>
+              </span>
             </h2>
             <ScrollArea className="flex-1 -mx-4" ref={scrollAreaRef}>
                 <ul className="space-y-2 p-px px-4">
