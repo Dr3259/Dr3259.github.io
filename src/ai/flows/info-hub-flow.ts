@@ -108,12 +108,12 @@ const researchAgent = ai.defineFlow(
         } else {
             // Existing Topic Research Logic
             const { output } = await ai.generate({
-                prompt: `You are a world-class research assistant. Your goal is to provide a clear, concise, and accurate summary of the requested topic, based on real-time web search results.
+                prompt: `You are a world-class research assistant. Your goal is to provide a clear, concise, and accurate summary of the requested topic, based on real-time web search results. The topic might be a general query or a request to find information about specific content online, such as from a WeChat Official Account or Video Channel.
 
                 Topic to research: ${input.topic}
 
                 Instructions:
-                1.  Perform a web search using the provided search tool to gather up-to-date information on the topic.
+                1.  Perform a web search using the provided search tool to gather up-to-date information on the topic. Be creative in your search queries to find the most relevant public information.
                 2.  Analyze the search results to identify the most relevant and reliable sources.
                 3.  Synthesize the information from these sources into a well-structured summary.
                 4.  List the key sources you used, providing their titles and URLs.
