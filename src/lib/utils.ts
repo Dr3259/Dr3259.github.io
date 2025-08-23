@@ -63,6 +63,7 @@ export const getHighContrastTextColor = (bgColor: string): 'black' | 'white' => 
   // Logic for HEX colors
   if (bgColor.startsWith('#')) {
     const hex = bgColor.replace('#', '');
+    if (hex.length < 6) return 'black';
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
@@ -123,10 +124,14 @@ export const getHslColorsFromCategory = (categories: string | null | undefined):
     const categoryList = categories.split(',').map(c => c.trim()).filter(Boolean);
     if(categoryList.length === 0) return [null];
     
-    return categoryList.slice(0, 2).map(cat => {
+    return categoryList.map(cat => {
         const hexColor = PREDEFINED_TAG_COLORS[cat];
         if (hexColor) {
-           return hexToHsl(hexColor);
+           const hsl = hexToHsl(hexColor);
+           if (hsl) {
+               // Return HSL with fixed saturation and lightness for harmony
+               return [hsl[0], 70, 65]; 
+           }
         }
         // Fallback for custom tags
         let hash = 0;

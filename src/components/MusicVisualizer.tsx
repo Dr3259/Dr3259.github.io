@@ -2,7 +2,7 @@
 "use client";
 import React, { useMemo, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { getColorsFromCategory } from '@/lib/utils';
+import { getHslColorsFromCategory } from '@/lib/utils';
 
 
 interface MusicVisualizerProps {
@@ -45,10 +45,26 @@ interface Orb {
 }
 
 const generateOrbs = (count: number): Orb[] => {
+    const quadrants = [
+        { top: [-10, 30], left: [-10, 30] },   // Top-left
+        { top: [-10, 30], left: [60, 90] },    // Top-right
+        { top: [60, 90], left: [60, 90] },     // Bottom-right
+        { top: [60, 90], left: [-10, 30] },    // Bottom-left
+        { top: [25, 55], left: [25, 55] },     // Center
+    ];
+    
+    // Shuffle quadrants to randomize orb placement
+    for (let i = quadrants.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quadrants[i], quadrants[j]] = [quadrants[j], quadrants[i]];
+    }
+
     return Array.from({ length: count }, (_, i) => {
-        const size = Math.random() * 20 + 10; // 10rem to 30rem
-        const top = Math.random() * 100 - 10; // -10% to 90%
-        const left = Math.random() * 100 - 10; // -10% to 90%
+        const quadrant = quadrants[i % quadrants.length];
+        
+        const size = Math.random() * 15 + 15; // 15rem to 30rem
+        const top = Math.random() * (quadrant.top[1] - quadrant.top[0]) + quadrant.top[0];
+        const left = Math.random() * (quadrant.left[1] - quadrant.left[0]) + quadrant.left[0];
         const delay = `-${Math.random() * 10}s`;
         
         return {
@@ -66,7 +82,6 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
   const [orbs, setOrbs] = useState<Orb[]>([]);
 
   useEffect(() => {
-    // Generate new orb positions when the category (song) changes
     setOrbs(generateOrbs(5));
   }, [category]);
 
@@ -79,9 +94,7 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
     return defaultAnimation.animation;
   }, [category]);
   
-  const colors = useMemo(() => getColorsFromCategory(category), [category]);
-  const hasColors = colors.length > 0 && colors[0] !== 'hsl(var(--primary))';
-
+  const colors = useMemo(() => getHslColorsFromCategory(category), [category]);
 
   const baseCircleClass = 'absolute rounded-full bg-gradient-to-br filter blur-xl transition-all duration-1000';
   const animationPlayState = isPlaying ? 'running' : 'paused';
@@ -90,7 +103,9 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
   return (
     <div className="absolute inset-0 overflow-hidden bg-transparent z-0">
        {orbs.map((orb, index) => {
-         const color = hasColors ? colors[index % colors.length] : 'hsl(var(--primary))';
+         const hslColor = colors[index % colors.length];
+         const colorStyle = hslColor ? `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2]}%)` : 'hsl(var(--primary))';
+         
          return (
              <div
                 key={index}
@@ -100,7 +115,7 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
                     height: orb.size, 
                     top: orb.top, 
                     left: orb.left, 
-                    backgroundColor: color, 
+                    backgroundColor: colorStyle,
                     animationDelay: orb.delay, 
                     animationPlayState: animationPlayState as React.CSSProperties['animationPlayState']
                 }}
