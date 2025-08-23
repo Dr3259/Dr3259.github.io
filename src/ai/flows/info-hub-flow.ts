@@ -121,14 +121,17 @@ const researchAgent = ai.defineFlow(
             } catch (error: any) {
                 console.warn(`URL processing failed: ${error.message}. Falling back to web search.`);
                 // Fallback to web search if direct fetching/parsing fails
-                return ai.generate({
+                const { output } = await ai.generate({
                     prompt: `I was unable to directly access the URL: ${input.topic}. Please perform a web search about this URL or its content. Summarize what it is, what it's about, and who might have created it. Provide a summary and any sources you find.`,
                     tools: [googleSearchTool],
                     output: { schema: ResearchTopicOutputSchema },
-                }).then(result => {
-                    if (!result.output) throw new Error('Fallback search did not return a valid output.');
-                    return result.output;
                 });
+                
+                if (!output) throw new Error('Fallback search did not return a valid output.');
+                if (!output.metadata?.title) {
+                  output.metadata = { ...output.metadata, title: input.topic };
+                }
+                return output;
             }
         } else {
             // General topic research logic
@@ -164,3 +167,5 @@ export async function researchTopic(
 ): Promise<ResearchTopicOutput> {
   return researchAgent(input);
 }
+
+    

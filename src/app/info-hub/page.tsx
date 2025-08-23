@@ -180,7 +180,7 @@ export default function InfoHubPage() {
                 />
                 <Button type="submit" size="lg" className="h-12 px-5" disabled={isLoading || !topic.trim()}>
                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                    <span className="hidden sm:inline">{t.generateButton}</span>
+                    <span className="sr-only sm:not-sr-only sm:ml-2">{t.generateButton}</span>
                 </Button>
             </form>
             <div className="flex justify-end">
@@ -301,7 +301,7 @@ export default function InfoHubPage() {
                                             onClick={() => handleSelectHistory(item)}
                                             className={cn(
                                                 "w-full text-left p-2 rounded-md text-sm truncate",
-                                                activeResult?.id === item.id ? "bg-primary/20 text-primary-foreground" : "hover:bg-accent"
+                                                activeResult?.id === item.id ? "bg-primary/20 text-primary-foreground font-semibold" : "hover:bg-accent"
                                             )}
                                             title={item.topic}
                                         >
@@ -324,3 +324,5 @@ export default function InfoHubPage() {
     </div>
   );
 }
+
+    
