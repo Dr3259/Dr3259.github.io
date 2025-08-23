@@ -126,7 +126,7 @@ export const MiniMusicPlayer = () => {
         <div
             ref={playerRef}
             className={cn(
-                "fixed z-[101] flex items-center gap-2 p-2 rounded-full bg-purple-100/80 dark:bg-purple-900/80 backdrop-blur-lg shadow-xl border border-purple-200 dark:border-purple-700/50 cursor-move transition-opacity duration-300",
+                "fixed z-[101] flex items-center gap-2 p-2 rounded-full bg-accent/80 backdrop-blur-lg shadow-xl border border-primary/20 cursor-move transition-opacity duration-300",
                 !hasBeenPositioned.current && "opacity-0"
             )}
             style={{ 
@@ -139,25 +139,25 @@ export const MiniMusicPlayer = () => {
             <button 
                 onClick={handleIconClick}
                 className={cn(
-                    "flex items-center justify-center h-10 w-10 bg-purple-200 dark:bg-purple-800/50 rounded-full cursor-pointer hover:bg-purple-300/70 dark:hover:bg-purple-800 transition-colors",
+                    "flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full cursor-pointer hover:bg-primary/20 transition-colors",
                     isPlaying && "animate-[bounce_2s_ease-in-out_infinite]"
                 )}
                 aria-label="Go to Music Player"
             >
-                <Music className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+                <Music className="h-5 w-5 text-primary" />
             </button>
 
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-purple-700 dark:text-purple-200 hover:bg-purple-200/50 dark:hover:bg-purple-800/60" onClick={handlePrevTrack} disabled={!canSkip}>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-primary/80 hover:text-primary hover:bg-primary/10" onClick={handlePrevTrack} disabled={!canSkip}>
                 <SkipBack className="h-5 w-5" />
             </Button>
-            <Button size="icon" className="h-10 w-10 rounded-full cursor-pointer bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 text-white" onClick={handlePlayPause}>
+            <Button size="icon" className="h-10 w-10 rounded-full cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handlePlayPause}>
                 {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-purple-700 dark:text-purple-200 hover:bg-purple-200/50 dark:hover:bg-purple-800/60" onClick={handleNextTrack} disabled={!canSkip}>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-primary/80 hover:text-primary hover:bg-primary/10" onClick={handleNextTrack} disabled={!canSkip}>
                 <SkipForward className="h-5 w-5" />
             </Button>
             
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-purple-500 dark:text-purple-400 hover:bg-purple-200/50 dark:hover:bg-purple-800/60" onClick={closePlayer}>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full cursor-pointer text-muted-foreground hover:text-foreground hover:bg-primary/10" onClick={closePlayer}>
                 <X className="h-5 w-5" />
             </Button>
         </div>
