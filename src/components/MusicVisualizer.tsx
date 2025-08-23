@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { getColorsFromCategory } from '@/lib/utils';
 
@@ -36,7 +36,41 @@ const animationConfig: Record<string, { animation: string }> = {
 
 const defaultAnimation = { animation: 'animate-default-float' };
 
+interface Orb {
+  size: string;
+  top: string;
+  left: string;
+  delay: string;
+  className?: string;
+}
+
+const generateOrbs = (count: number): Orb[] => {
+    return Array.from({ length: count }, (_, i) => {
+        const size = Math.random() * 20 + 10; // 10rem to 30rem
+        const top = Math.random() * 100 - 10; // -10% to 90%
+        const left = Math.random() * 100 - 10; // -10% to 90%
+        const delay = `-${Math.random() * 10}s`;
+        
+        return {
+            size: `${size}rem`,
+            top: `${top}%`,
+            left: `${left}%`,
+            delay: delay,
+            className: i > 3 ? 'hidden md:block' : '', // Hide extra orbs on mobile
+        };
+    });
+};
+
+
 export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, category }) => {
+  const [orbs, setOrbs] = useState<Orb[]>([]);
+
+  useEffect(() => {
+    // Generate new orb positions when the category (song) changes
+    setOrbs(generateOrbs(5));
+  }, [category]);
+
+
   const animationClass = useMemo(() => {
     const mainCategory = category?.split(',')[0].trim();
     if (mainCategory && animationConfig[mainCategory]) {
@@ -52,14 +86,6 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
   const baseCircleClass = 'absolute rounded-full bg-gradient-to-br filter blur-xl transition-all duration-1000';
   const animationPlayState = isPlaying ? 'running' : 'paused';
   const playingCircleClass = isPlaying ? 'opacity-50 dark:opacity-30' : 'opacity-10 dark:opacity-5';
-
-  const orbs = [
-      { size: '24rem', top: '-5rem', left: '-5rem', delay: '0s'},
-      { size: '18rem', bottom: '-15%', right: '5%', delay: '-2s'},
-      { size: '14rem', top: '15%', right: '10%', delay: '-4s'},
-      { size: '12rem', bottom: '20%', left: '15%', delay: '-6s'},
-      { size: '20rem', top: '40%', left: '30%', delay: '-8s', className: 'hidden md:block'},
-  ];
   
   return (
     <div className="absolute inset-0 overflow-hidden bg-transparent z-0">
@@ -74,8 +100,6 @@ export const MusicVisualizer: React.FC<MusicVisualizerProps> = ({ isPlaying, cat
                     height: orb.size, 
                     top: orb.top, 
                     left: orb.left, 
-                    bottom: orb.bottom,
-                    right: orb.right,
                     backgroundColor: color, 
                     animationDelay: orb.delay, 
                     animationPlayState: animationPlayState as React.CSSProperties['animationPlayState']
