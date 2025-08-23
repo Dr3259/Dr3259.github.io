@@ -6,15 +6,31 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Rss, Loader2, Sparkles, Link as LinkIcon, Send, ClipboardPaste } from 'lucide-react';
+import { ArrowLeft, Rss, Loader2, Sparkles, Link as LinkIcon, Send, ClipboardPaste, Trash2, History, PanelLeft, X } from 'lucide-react';
 import { researchTopic, type ResearchTopicOutput } from '@/ai/flows/info-hub-flow';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+import type { HistoryItem } from '@/lib/types';
+import { format, isToday, isYesterday, isWithinInterval, subDays } from 'date-fns';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const translations = {
   'zh-CN': {
     pageTitle: '聚合信息',
-    pageSubtitle: '输入一个话题或粘贴一个链接，AI 将为您搜索并生成一份摘要报告。',
+    pageSubtitle: '输入话题或粘贴链接，AI 为您生成摘要报告。',
     backButton: '返回休闲驿站',
-    inputPlaceholder: '例如：最新的 AI 技术进展 或 https://...',
+    inputPlaceholder: '例如：最新的AI技术进展 或 https://...',
     generateButton: '生成报告',
     generating: '正在生成中...',
     summaryTitle: 'AI 生成的摘要',
@@ -22,7 +38,17 @@ const translations = {
     errorTitle: '出错了',
     errorDescription: '生成报告时遇到问题，请稍后重试。',
     initialPrompt: '对什么好奇？让 AI 为您探索。',
-    pasteFromClipboard: '从剪贴板粘贴'
+    pasteFromClipboard: '从剪贴板粘贴',
+    historyTitle: '历史记录',
+    clearHistory: '清空历史',
+    clearHistoryConfirmTitle: '确定要清空所有历史记录吗？',
+    clearHistoryConfirmDesc: '此操作无法撤销。',
+    today: '今天',
+    yesterday: '昨天',
+    previous7Days: '过去7天',
+    older: '更早',
+    confirm: '确认',
+    cancel: '取消',
   },
   'en': {
     pageTitle: 'Info Hub',
@@ -36,7 +62,17 @@ const translations = {
     errorTitle: 'An Error Occurred',
     errorDescription: 'There was a problem generating the report. Please try again later.',
     initialPrompt: 'What are you curious about? Let the AI explore for you.',
-    pasteFromClipboard: 'Paste from Clipboard'
+    pasteFromClipboard: 'Paste from Clipboard',
+    historyTitle: 'History',
+    clearHistory: 'Clear History',
+    clearHistoryConfirmTitle: 'Are you sure you want to clear all history?',
+    clearHistoryConfirmDesc: 'This action cannot be undone.',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    previous7Days: 'Previous 7 Days',
+    older: 'Older',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
   }
 };
 
@@ -46,14 +82,24 @@ export default function InfoHubPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<ResearchTopicOutput | null>(null);
+  const [activeResult, setActiveResult] = useState<HistoryItem | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useLocalStorage<HistoryItem[]>('infoHubHistory_v2', []);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
+    const handleResize = () => {
+        if (window.innerWidth < 768) {
+            setIsSidebarOpen(false);
+        }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial check
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
@@ -63,12 +109,20 @@ export default function InfoHubPage() {
     if (!topic.trim() || isLoading) return;
 
     setIsLoading(true);
-    setResult(null);
+    setActiveResult(null);
     setError(null);
 
     try {
       const response = await researchTopic({ topic });
-      setResult(response);
+      const newHistoryItem: HistoryItem = {
+        id: Date.now().toString(),
+        topic: topic,
+        result: response,
+        timestamp: new Date().toISOString(),
+      };
+      setHistory(prev => [newHistoryItem, ...prev]);
+      setActiveResult(newHistoryItem);
+      setTopic('');
     } catch (err: any) {
       console.error("Error researching topic:", err);
       setError(err.message || t.errorDescription);
@@ -81,34 +135,39 @@ export default function InfoHubPage() {
     try {
         if (navigator.clipboard?.readText) {
             const text = await navigator.clipboard.readText();
-            if (text) {
-                setTopic(text);
-            }
+            if (text) setTopic(text);
         }
     } catch (err) {
         console.error('Failed to read clipboard contents: ', err);
     }
   }, []);
+  
+  const handleSelectHistory = (item: HistoryItem) => {
+    setActiveResult(item);
+    setError(null);
+    setIsLoading(false);
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
+  };
+  
+  const groupedHistory = useMemo(() => {
+    const now = new Date();
+    const groups: { [key: string]: HistoryItem[] } = {
+        [t.today]: [], [t.yesterday]: [], [t.previous7Days]: [], [t.older]: []
+    };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
-      <header className="w-full max-w-2xl mb-6 sm:mb-8">
-        <Link href="/rest" passHref>
-            <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backButton}
-            </Button>
-        </Link>
-      </header>
+    history.forEach(item => {
+        const itemDate = new Date(item.timestamp);
+        if (isToday(itemDate)) groups[t.today].push(item);
+        else if (isYesterday(itemDate)) groups[t.yesterday].push(item);
+        else if (isWithinInterval(itemDate, { start: subDays(now, 7), end: now })) groups[t.previous7Days].push(item);
+        else groups[t.older].push(item);
+    });
 
-      <main className="w-full max-w-2xl flex flex-col items-center flex-grow gap-8">
-        <div className="text-center">
-          <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary mb-2">
-            {t.pageTitle}
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">{t.pageSubtitle}</p>
-        </div>
+    return groups;
+  }, [history, t]);
 
+  const MainContent = () => (
+    <div className="flex-1 flex flex-col items-center gap-6 p-4 sm:p-8">
         <div className="w-full space-y-3">
             <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
                 <Input 
@@ -120,12 +179,8 @@ export default function InfoHubPage() {
                     disabled={isLoading}
                 />
                 <Button type="submit" size="lg" className="h-12 px-5" disabled={isLoading || !topic.trim()}>
-                    {isLoading ? (
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ) : (
-                        <Send className="mr-2 h-5 w-5" />
-                    )}
-                    {t.generateButton}
+                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    <span className="hidden sm:inline">{t.generateButton}</span>
                 </Button>
             </form>
             <div className="flex justify-end">
@@ -145,40 +200,34 @@ export default function InfoHubPage() {
             )}
             {error && (
                 <Card className="w-full bg-destructive/10 border-destructive/30">
-                    <CardHeader>
-                        <CardTitle className="text-destructive">{t.errorTitle}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p>{t.errorDescription}</p>
-                        <p className="text-xs mt-2 text-destructive/80">{error}</p>
-                    </CardContent>
+                    <CardHeader><CardTitle className="text-destructive">{t.errorTitle}</CardTitle></CardHeader>
+                    <CardContent><p>{error}</p></CardContent>
                 </Card>
             )}
 
-            {!isLoading && !result && !error && (
+            {!isLoading && !activeResult && !error && (
                  <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full py-20 bg-card/50 rounded-xl border border-dashed">
                     <Rss className="h-16 w-16 mb-4 text-primary/50" />
                     <p className="max-w-xs text-lg">{t.initialPrompt}</p>
                 </div>
             )}
 
-            {result && (
+            {activeResult && !isLoading && !error && (
                 <div className="space-y-6 animate-in fade-in-50">
+                    {activeResult.result.metadata?.title && (
+                        <h2 className="text-2xl font-semibold text-primary">{activeResult.result.metadata.title}</h2>
+                    )}
                     <Card>
-                        <CardHeader>
-                            <CardTitle>{t.summaryTitle}</CardTitle>
-                        </CardHeader>
+                        <CardHeader><CardTitle>{t.summaryTitle}</CardTitle></CardHeader>
                         <CardContent className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
-                            {result.summary.split('\n').map((line, i) => <p key={i} className="my-2">{line}</p>)}
+                            {activeResult.result.summary.split('\n').map((line, i) => <p key={i} className="my-2">{line}</p>)}
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader>
-                            <CardTitle>{t.sourcesTitle}</CardTitle>
-                        </CardHeader>
+                        <CardHeader><CardTitle>{t.sourcesTitle}</CardTitle></CardHeader>
                         <CardContent>
                             <ul className="space-y-3">
-                                {result.sources.map((source, index) => (
+                                {activeResult.result.sources.map((source, index) => (
                                     <li key={index} className="text-sm">
                                         <a href={source.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline underline-offset-4 break-all">
                                            <LinkIcon className="h-4 w-4 shrink-0"/>
@@ -192,7 +241,86 @@ export default function InfoHubPage() {
                 </div>
             )}
         </div>
-      </main>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <header className="w-full py-4 px-4 sm:px-8 flex justify-between items-center border-b">
+        <Link href="/rest" passHref>
+            <Button variant="outline" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t.backButton}
+            </Button>
+        </Link>
+        <h1 className="text-xl sm:text-2xl font-headline font-semibold text-primary hidden sm:block">
+            {t.pageTitle}
+        </h1>
+        <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+            <History className="h-5 w-5" />
+        </Button>
+      </header>
+      
+      <div className="flex flex-1 overflow-hidden">
+        <aside className={cn(
+            "flex-col w-full md:w-80 border-r bg-card/50 overflow-y-auto transition-transform duration-300 ease-in-out md:flex",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full",
+            "absolute md:relative z-10 md:z-0 h-full"
+        )}>
+            <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="text-lg font-semibold flex items-center gap-2"><History className="h-5 w-5"/>{t.historyTitle}</h2>
+                <div className="flex items-center">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={history.length === 0}><Trash2 className="h-4 w-4"/></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t.clearHistoryConfirmTitle}</AlertDialogTitle>
+                          <AlertDialogDescription>{t.clearHistoryConfirmDesc}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => setHistory([])}>{t.confirm}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden" onClick={() => setIsSidebarOpen(false)}><X className="h-4 w-4"/></Button>
+                </div>
+            </div>
+            <ScrollArea className="flex-1">
+                <div className="p-2">
+                {Object.entries(groupedHistory).map(([groupName, items]) => (
+                    items.length > 0 && (
+                        <div key={groupName} className="mb-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground px-2 py-1">{groupName}</h3>
+                            <ul className="space-y-1">
+                                {items.map(item => (
+                                    <li key={item.id}>
+                                        <button 
+                                            onClick={() => handleSelectHistory(item)}
+                                            className={cn(
+                                                "w-full text-left p-2 rounded-md text-sm truncate",
+                                                activeResult?.id === item.id ? "bg-primary/20 text-primary-foreground" : "hover:bg-accent"
+                                            )}
+                                            title={item.topic}
+                                        >
+                                           {item.result.metadata?.title || item.topic}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )
+                ))}
+                </div>
+            </ScrollArea>
+        </aside>
+        
+        <main className="flex-1 overflow-y-auto">
+            <MainContent />
+        </main>
+      </div>
     </div>
   );
 }
