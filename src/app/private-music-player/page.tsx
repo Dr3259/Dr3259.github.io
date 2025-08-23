@@ -48,7 +48,7 @@ const translations = {
     nothingPlaying: '暂无播放',
     noTracks: '您的音乐库是空的。',
     importError: '导入失败，请确保文件是 .flac, .mp3, .wav, .ogg 格式。',
-    importSuccess: (title: string) => `成功导入: ${title}`,
+    importSuccess: (count: number) => `成功导入 ${count} 首新歌曲。`,
     deleteTrack: '删除歌曲',
     editTrack: '编辑信息',
     deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
@@ -94,7 +94,7 @@ const translations = {
     nothingPlaying: 'Nothing Playing',
     noTracks: 'Your music library is empty.',
     importError: 'Import failed. Please ensure it is a .flac, .mp3, .wav, or .ogg file.',
-    importSuccess: (title: string) => `Successfully imported: ${title}`,
+    importSuccess: (count: number) => `Successfully imported ${count} new track(s).`,
     deleteTrack: 'Delete track',
     editTrack: 'Edit info',
     deleteConfirmation: (title: string) => `Are you sure you want to delete "${title}"?`,
@@ -260,11 +260,13 @@ export default function PrivateMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
-            <h2 className="text-lg font-semibold mb-4 flex items-baseline">
+            <h2 className="text-lg font-semibold mb-4 flex items-center">
                 <ListMusic className="mr-2 h-5 w-5 shrink-0" />
-                <span>{t.playlistTitle}</span>
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                    {t.totalTracks(tracks.length)}
+                <span>
+                    {t.playlistTitle}
+                    <span className="text-sm font-normal text-muted-foreground ml-2">
+                        {t.totalTracks(tracks.length)}
+                    </span>
                 </span>
             </h2>
             <ScrollArea className="flex-1 -mx-4" ref={playlistContainerRef}>
