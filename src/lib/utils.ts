@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -125,6 +126,11 @@ export const getHslColorsFromCategory = (categories: string | null | undefined):
     if(categoryList.length === 0) return [null];
     
     return categoryList.map(cat => {
+        // Special case for Rock music for a better dark visual effect
+        if (cat === '摇滚' || cat === 'Rock') {
+            return [270, 20, 20]; // A low-saturation, low-lightness dark purple
+        }
+    
         const hexColor = PREDEFINED_TAG_COLORS[cat];
         if (hexColor) {
            const hsl = hexToHsl(hexColor);
