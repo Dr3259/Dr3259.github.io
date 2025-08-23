@@ -129,8 +129,12 @@ export const getHslColorsFromCategory = (categories: string | null | undefined):
         if (hexColor) {
            const hsl = hexToHsl(hexColor);
            if (hsl) {
-               // Return HSL with fixed saturation and lightness for harmony
-               return [hsl[0], 70, 65]; 
+                // If the color is very dark (like black), use its original HSL values.
+                // Otherwise, use a fixed saturation and lightness for harmony.
+                if (hsl[2] < 10) { 
+                    return hsl; // Use original HSL for very dark colors
+                }
+                return [hsl[0], 70, 65]; 
            }
         }
         // Fallback for custom tags
