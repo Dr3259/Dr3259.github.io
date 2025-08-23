@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical, Plane } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ const translations = {
       library: { title: '个人图书馆', description: '管理您的阅读列表和笔记。', icon: Library, path: '/personal-library' },
       cinema: { title: '个人电影院', description: '收藏和追踪您想看的电影。', icon: Film, path: '/personal-cinema' },
       music: { title: '私人音乐播放器', description: '创建和聆听您的专属歌单。', icon: Music, path: '/private-music-player' },
+      travelGuide: { title: '旅行攻略', description: '探索世界，规划你的下一次冒险。', icon: Plane, path: '/travel-guide' },
       websites: { title: '精品网站推荐', description: '发现有趣和实用的网站。', icon: Globe, path: '/recommended-websites' },
       legal: { title: '法律普及', description: '了解与生活相关的法律常识。', icon: Scale, path: '/legal-info' },
       personality: { title: '人格测试', description: '探索和了解真实的自我。', icon: Brain, path: '/personality-test' },
@@ -47,6 +48,7 @@ const translations = {
       library: { title: 'Personal Library', description: 'Manage your reading lists and notes.', icon: Library, path: '/personal-library' },
       cinema: { title: 'Personal Cinema', description: 'Collect and track movies you want to watch.', icon: Film, path: '/personal-cinema' },
       music: { title: 'Private Music Player', description: 'Create and listen to your exclusive playlists.', icon: Music, path: '/private-music-player' },
+      travelGuide: { title: 'Travel Guide', description: 'Explore the world and plan your next adventure.', icon: Plane, path: '/travel-guide' },
       websites: { title: 'Recommended Websites', description: 'Discover interesting and useful websites.', icon: Globe, path: '/recommended-websites' },
       legal: { title: 'Legal Info', description: 'Learn about legal knowledge relevant to daily life.', icon: Scale, path: '/legal-info' },
       personality: { title: 'Personality Test', description: 'Explore and understand your true self.', icon: Brain, path: '/personality-test' },
