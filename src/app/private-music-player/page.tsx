@@ -25,8 +25,6 @@ import { useMusic } from '@/context/MusicContext';
 import type { TrackMetadata } from '@/lib/db';
 import { MusicVisualizer } from '@/components/MusicVisualizer';
 import { Slider } from '@/components/ui/slider';
-import { RhythmVisualizer } from '@/components/RhythmVisualizer';
-import { Separator } from '@/components/ui/separator';
 
 
 const translations = {
@@ -191,8 +189,6 @@ export default function PrivateMusicPlayerPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
-  const playlistContainerRef = useRef<HTMLDivElement>(null);
-
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -215,6 +211,7 @@ export default function PrivateMusicPlayerPage() {
     }
   }, [currentTrack]);
 
+
   return (
     <>
     <TooltipProvider>
@@ -228,7 +225,7 @@ export default function PrivateMusicPlayerPage() {
           </Link>
           <h1 className="text-xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
           <div>
-            <input type="file" accept="audio/flac,audio/mp3,audio/wav,audio/ogg" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
+            <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
             <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...{webkitdirectory: "", directory: ""}} />
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -260,7 +257,7 @@ export default function PrivateMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
           <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
+            <h2 className="text-lg font-semibold mb-4 flex items-baseline">
                 <ListMusic className="mr-2 h-5 w-5 shrink-0" />
                 <span>
                     {t.playlistTitle}
@@ -269,7 +266,7 @@ export default function PrivateMusicPlayerPage() {
                     </span>
                 </span>
             </h2>
-            <ScrollArea className="flex-1 -mx-4" ref={playlistContainerRef}>
+            <ScrollArea className="flex-1 -mx-4">
                 <ul className="space-y-2 p-px px-4">
                   {isLoading ? (
                     <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
@@ -310,15 +307,14 @@ export default function PrivateMusicPlayerPage() {
                           </div>
                         </li>
                       ))}
-                      {importingTracks.map(title => (
-                         <li key={title} className="p-3 rounded-md flex justify-between items-center opacity-60">
+                      {importingTracks.length > 0 && (
+                         <li className="p-3 rounded-md flex justify-between items-center opacity-60">
                            <div>
-                              <p className="font-medium text-sm truncate" title={title}>{title}</p>
-                              <p className="text-xs text-muted-foreground">{t.importing}</p>
+                              <p className="font-medium text-sm truncate">{t.importing}</p>
                            </div>
                            <Loader2 className="h-4 w-4 animate-spin" />
                          </li>
-                      ))}
+                      )}
                     </>
                   )}
                 </ul>
