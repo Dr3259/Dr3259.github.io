@@ -150,20 +150,54 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         if (tracks.length === 0) return;
 
         if (playMode === 'shuffle') {
-            let nextIndex;
-            if (tracks.length === 1) nextIndex = 0;
-            else {
-                do {
-                    nextIndex = Math.floor(Math.random() * tracks.length);
-                } while (nextIndex === currentTrackIndex);
+            if (tracks.length <= 1) {
+                playTrack(0);
+                return;
             }
-            playTrack(nextIndex);
+
+            const currentArtist = currentTrack?.artist;
+            
+            // Create a list of potential next tracks (different artist, not the current song)
+            const potentialNextTracks = tracks.map((track, index) => ({ track, index }))
+                .filter(({ track, index }) => {
+                    // Always exclude the current track
+                    if (index === currentTrackIndex) return false;
+                    // If the current track has no artist, any other track is valid
+                    if (!currentArtist) return true;
+                    // Otherwise, the artists must be different
+                    return track.artist !== currentArtist;
+                });
+
+            let trackToPlayIndex: number;
+
+            if (potentialNextTracks.length > 0) {
+                // If we found tracks from other artists, pick one randomly
+                const randomIndex = Math.floor(Math.random() * potentialNextTracks.length);
+                trackToPlayIndex = potentialNextTracks[randomIndex].index;
+            } else {
+                // Fallback: If all other songs are from the same artist, or there's only one artist.
+                // Just pick a random song that is not the current one.
+                const fallbackTracks = tracks
+                    .map((track, index) => index)
+                    .filter(index => index !== currentTrackIndex);
+
+                if (fallbackTracks.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * fallbackTracks.length);
+                    trackToPlayIndex = fallbackTracks[randomIndex];
+                } else {
+                    // This should only happen if there's only one song total, handled at the start.
+                    trackToPlayIndex = currentTrackIndex; 
+                }
+            }
+
+            playTrack(trackToPlayIndex);
             return;
         }
 
+        // Default 'repeat' logic
         const nextIndex = (currentTrackIndex + 1) % tracks.length;
         playTrack(nextIndex);
-    }, [currentTrackIndex, tracks, playTrack, playMode]);
+    }, [currentTrackIndex, tracks, playTrack, playMode, currentTrack]);
   
     const handlePrevTrack = useCallback(() => {
         if (tracks.length === 0) return;
@@ -454,3 +488,5 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
 };
+
+    
