@@ -10,6 +10,9 @@ export const getColorsFromCategory = (category: string | null): string[] => {
     
     const categories = category.split(',').map(c => c.trim()).filter(Boolean);
     const colors = categories.map(cat => {
+        if (cat.toLowerCase() === 'emo') {
+            return `hsl(260, 50%, 40%)`; // A deep, moody purple for "emo"
+        }
         let hash = 0;
         for (let i = 0; i < cat.length; i++) {
             hash = cat.charCodeAt(i) + ((hash << 5) - hash);
@@ -27,6 +30,9 @@ export const getHslColorsFromCategory = (categories: string | null | undefined):
     if(categoryList.length === 0) return [null];
     
     return categoryList.slice(0, 2).map(cat => {
+        if (cat.toLowerCase() === 'emo') {
+            return [260, 50, 45]; // HSL for deep purple: Hue, Saturation, Base Lightness
+        }
         let hash = 0;
         for (let i = 0; i < cat.length; i++) {
             hash = cat.charCodeAt(i) + ((hash << 5) - hash);

@@ -54,6 +54,7 @@ const CATEGORY_PURPOSES_EN = {
     'Love': '恋爱',
     'Healing': '治愈',
     'Motivational': '励志',
+    'emo': 'emo',
 };
 
 const CATEGORY_TYPES_ZH = Object.fromEntries(Object.entries(CATEGORY_TYPES_EN).map(([k, v]) => [v, k]));
