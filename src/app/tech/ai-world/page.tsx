@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Search, Globe, Filter, Building, ChevronDown, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -8,23 +9,15 @@ import { NewsCard } from '@/components/news-card';
 import { newsUpdates, type NewsUpdate } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
-import { Sidebar, SidebarContent, SidebarHeader, SidebarProvider, SidebarSection, SidebarItem } from '@/components/ui/sidebar-pro';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-
+import Link from 'next/link';
 
 export default function AiWorldPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('date');
   const [selectedCountry, setSelectedCountry] = useState('所有国家');
   const [selectedCategory, setSelectedCategory] = useState('所有类别');
   const [selectedPricing, setSelectedPricing] = useState('所有价格');
-  const [open, setOpen] = useState(false);
 
   const { countries, countryCounts } = useMemo(() => {
     const countryCounts = newsUpdates.reduce((acc, update) => {
@@ -79,17 +72,12 @@ export default function AiWorldPage() {
 
   }, [filteredUpdates]);
   
-  const companiesInSelectedCountry = useMemo(() => {
-      if(selectedCountry === '所有国家') return [];
-      return Object.keys(groupedByCountryAndCompany[selectedCountry] || {}).sort();
-  }, [selectedCountry, groupedByCountryAndCompany]);
-
   const renderContent = () => {
     if (filteredUpdates.length === 0) {
       return (
-        <div className="text-center py-16">
+        <div className="text-center py-24">
           <p className="text-xl font-medium text-foreground">未找到任何模型</p>
-          <p className="text-muted-foreground">请尝试调整您的搜索或筛选条件。</p>
+          <p className="text-muted-foreground mt-2">请尝试调整您的搜索或筛选条件。</p>
         </div>
       );
     }
@@ -99,26 +87,26 @@ export default function AiWorldPage() {
         : [selectedCountry];
 
     return (
-        <div className="space-y-16">
+        <div className="space-y-20">
         {countriesToRender.map(country => (
             <div key={country}>
-            <h2 className="text-3xl font-bold mb-8 pb-3 border-b-2 border-primary flex items-center">
-                {country} <span className="text-lg text-muted-foreground ml-2">({Object.values(groupedByCountryAndCompany[country]).flat().length})</span>
-            </h2>
-            <div className="space-y-12">
-              {Object.keys(groupedByCountryAndCompany[country]).sort((a,b) => groupedByCountryAndCompany[country][b].length - groupedByCountryAndCompany[country][a].length).map(company => (
-                <section key={company}>
-                  <h3 className="text-2xl font-semibold mb-6 pb-2 border-b border-border flex items-center">
-                    <Building className="mr-3 h-5 w-5 text-muted-foreground"/> {company}
-                  </h3>
-                  <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {groupedByCountryAndCompany[country][company].map((update) => (
-                      <NewsCard key={update.id} news={update} />
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
+              <h2 className="text-3xl font-bold mb-10 pb-4 border-b-2 border-primary flex items-center">
+                  {country} <span className="text-lg text-muted-foreground ml-3">({Object.values(groupedByCountryAndCompany[country]).flat().length})</span>
+              </h2>
+              <div className="space-y-12">
+                {Object.keys(groupedByCountryAndCompany[country]).sort((a,b) => groupedByCountryAndCompany[country][b].length - groupedByCountryAndCompany[country][a].length).map(company => (
+                  <section key={company}>
+                    <h3 className="text-2xl font-semibold mb-6 pb-2 border-b border-border/80 flex items-center">
+                      <Building className="mr-3 h-5 w-5 text-muted-foreground"/> {company}
+                    </h3>
+                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {groupedByCountryAndCompany[country][company].map((update) => (
+                        <NewsCard key={update.id} news={update} />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
             </div>
         ))}
         </div>
@@ -127,90 +115,91 @@ export default function AiWorldPage() {
 
 
   return (
-    <SidebarProvider>
-        <div className="min-h-screen bg-background text-foreground font-body flex">
-            <Sidebar className="w-72 border-r bg-background/80 backdrop-blur-sm">
-                <SidebarHeader>
-                    <div className="p-4 flex items-center gap-3">
-                         <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
-                            <Globe className="w-6 h-6 text-primary" />
-                        </div>
-                        <h1 className="text-xl font-semibold">全球AI观察</h1>
+    <div className="min-h-screen bg-background text-foreground font-body">
+      <div className="relative w-full">
+         <header className="sticky top-0 z-40 w-full border-b bg-background/90 backdrop-blur-sm">
+            <div className="container mx-auto flex h-16 items-center px-4">
+                <Link href="/tech" className="mr-6 flex items-center space-x-2">
+                    <Globe className="h-6 w-6 text-primary" />
+                    <span className="font-bold hidden sm:inline-block">全球AI观察</span>
+                </Link>
+                <nav className="flex-1">
+                    {/* Add nav items here if needed */}
+                </nav>
+                 <Link href="/compare" passHref>
+                    <Button variant="outline" className="hidden sm:flex">
+                      维度对比
+                    </Button>
+                </Link>
+            </div>
+         </header>
+        
+        <main className="container mx-auto px-4">
+            <section className="py-20 text-center">
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-400 text-transparent bg-clip-text">
+                    全球AI观察
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mt-6">
+                    探索全球AI模型、产品与公司，抹平全球AI信息差。
+                </p>
+            </section>
+            
+            <div className="sticky top-[65px] z-30 bg-background/80 backdrop-blur-md py-6 mb-12">
+                 <div className="space-y-4 max-w-5xl mx-auto">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                          type="search"
+                          placeholder="按关键字、公司、描述搜索..."
+                          className="w-full pl-10 h-12 text-base rounded-lg shadow-sm"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                </SidebarHeader>
-                <SidebarContent className="p-4">
-                     <div className="space-y-3">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                            type="search"
-                            placeholder="搜索..."
-                            className="w-full pl-9 h-9 text-sm rounded-md"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                          <SelectTrigger className="h-11 text-base rounded-lg">
+                            <SelectValue placeholder="所有国家" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map(country => (
+                              <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="h-9 text-sm rounded-md">
-                                <SelectValue placeholder="所有类别" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categories.map(category => (
-                                <SelectItem key={category} value={category}>{category}</SelectItem>
-                                ))}
-                            </SelectContent>
+                          <SelectTrigger className="h-11 text-base rounded-lg">
+                            <SelectValue placeholder="所有类别" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map(category => (
+                              <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                         <Select value={selectedPricing} onValueChange={setSelectedPricing}>
-                            <SelectTrigger className="h-9 text-sm rounded-md">
-                                <SelectValue placeholder="所有价格" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pricings.map(pricing => (
-                                <SelectItem key={pricing} value={pricing}>{pricing}</SelectItem>
-                                ))}
-                            </SelectContent>
+                          <SelectTrigger className="h-11 text-base rounded-lg">
+                            <SelectValue placeholder="所有价格" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pricings.map(pricing => (
+                              <SelectItem key={pricing} value={pricing}>{pricing}</SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                     </div>
+                 </div>
+            </div>
 
-                    <Separator className="my-4" />
-
-                    <h2 className="text-sm font-semibold text-muted-foreground px-2 mb-2">国家/地区</h2>
-                    <ScrollArea className="h-[calc(100vh-320px)]">
-                        <nav className="space-y-1 pr-2">
-                        {countries.map(country => (
-                            <Button
-                            key={country}
-                            variant={selectedCountry === country ? 'secondary' : 'ghost'}
-                            className="w-full justify-start h-9"
-                            onClick={() => setSelectedCountry(country)}
-                            >
-                            <span className="flex-1 truncate text-left">{country}</span>
-                            <span className="text-xs text-muted-foreground">
-                                {country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0}
-                            </span>
-                            </Button>
-                        ))}
-                        </nav>
-                    </ScrollArea>
-                </SidebarContent>
-            </Sidebar>
-
-            <main className="flex-1 overflow-y-auto">
-                 <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b p-4">
-                    <div className="container mx-auto flex items-center justify-between">
-                         <div className="text-lg font-medium">
-                            {selectedCountry === '所有国家' ? '所有国家' : selectedCountry}
-                         </div>
-                    </div>
-                </header>
-                <div className="container mx-auto px-4 py-8 md:py-12">
-                    {renderContent()}
-                </div>
-                 <footer className="text-center py-6 text-sm text-muted-foreground border-t bg-card mt-16">
-                    <p>&copy; {new Date().getFullYear()} 全球AI观察. 版权所有.</p>
-                </footer>
-            </main>
-        </div>
-    </SidebarProvider>
+            <div className="max-w-7xl mx-auto">
+              {renderContent()}
+            </div>
+        </main>
+      </div>
+      
+      <footer className="text-center py-8 text-sm text-muted-foreground border-t bg-card mt-16">
+          <p>&copy; {new Date().getFullYear()} 全球AI观察. 版权所有.</p>
+      </footer>
+    </div>
   );
 }
