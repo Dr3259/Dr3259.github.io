@@ -28,7 +28,7 @@ const translations = {
       music: { title: '私人音乐播放器', description: '创建和聆听您的专属歌单。', icon: Music, path: '/private-music-player' },
       travelGuide: { title: '旅行攻略', description: '探索世界，规划你的下一次冒险。', icon: Plane, path: '/travel-guide' },
       infoHub: { title: '聚合信息', description: '汇集 你感兴趣的 热点、新闻和实用资讯。', icon: Rss, path: '/info-hub' },
-      websites: { title: '宝藏网站', description: '发现有趣和实用的网站。', icon: Globe, path: '/recommended-websites' },
+      websites: { title: '网络宝藏', description: '发现有趣和实用的网站。', icon: Globe, path: '/recommended-websites' },
       legal: { title: '法律普及', description: '了解与生活相关的法律常识。', icon: Scale, path: '/legal-info' },
       personality: { title: '人格测试', description: '探索和了解真实的自我。', icon: Brain, path: '/personality-test' },
     }
