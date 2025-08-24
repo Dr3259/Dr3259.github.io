@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Github, Star, TrendingUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, TrendingUp, Loader2 } from 'lucide-react';
 import { scrapeGitHubTrending, type GithubTrendingRepo, type GithubTrendingParams } from '@/ai/flows/github-trending-flow';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

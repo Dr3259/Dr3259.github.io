@@ -47,7 +47,7 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
   async ({ timespan }) => {
     try {
       const url = `https://github.com/trending?since=${timespan}`;
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: { 'Accept-Language': 'en-US,en;q=0.9' }});
       if (!response.ok) {
         throw new Error(`Failed to fetch GitHub trending page: ${response.statusText}`);
       }
@@ -60,7 +60,8 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
         const repoElement = $(element);
         
         const repoName = repoElement.find('h2 a').attr('href')?.substring(1).trim() || '';
-        const description = repoElement.find('p.col-9').text().trim() || '';
+        // Use a more specific selector for the description
+        const description = repoElement.find('p').text().trim() || '';
         const language = repoElement.find('span[itemprop="programmingLanguage"]').text().trim() || 'N/A';
         
         const starElement = repoElement.find('a[href$="/stargazers"]');
@@ -96,3 +97,4 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
     }
   }
 );
+
