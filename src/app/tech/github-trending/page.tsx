@@ -112,7 +112,7 @@ export default function GitHubTrendingPage() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {trendingRepos.map((repo) => (
-          <Card key={repo.rank} className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
+          <Card key={repo.rank} className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 bg-card/60 backdrop-blur-lg">
              <a href={repo.url} target="_blank" rel="noopener noreferrer" className="flex flex-col h-full">
                 <CardHeader>
                     <div className="flex justify-between items-start gap-4">
