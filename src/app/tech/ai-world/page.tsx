@@ -17,7 +17,6 @@ const translations = {
     companies: {
         google: {
             name: 'Google',
-            logo: 'https://placehold.co/40x40.png?text=G',
             products: [
                 { name: 'Gemini Family', description: '谷歌最强大的多模态大模型家族，包括Pro、Flash和Advanced版本。' },
                 { name: 'Gemma', description: '基于Gemini研究和技术构建的轻量级、一流的开放模型系列。' },
@@ -26,7 +25,6 @@ const translations = {
         },
         openai: {
             name: 'OpenAI',
-            logo: 'https://placehold.co/40x40.png?text=O',
             products: [
                 { name: 'GPT Series (3.5, 4, 4o)', description: '业界领先的语言模型，驱动了ChatGPT和众多API应用。' },
                 { name: 'Sora', description: '一个能够根据文本指令创建逼真和富有想象力场景的AI模型。' },
@@ -35,7 +33,6 @@ const translations = {
         },
         anthropic: {
             name: 'Anthropic',
-            logo: 'https://placehold.co/40x40.png?text=A',
             products: [
                 { name: 'Claude 3 Family', description: '一系列模型（Haiku, Sonnet, Opus），在性能、速度和成本之间取得平衡。' },
                 { name: 'Constitutional AI', description: '一种训练方法，旨在使AI系统更有帮助、更无害、更诚实。' },
@@ -51,7 +48,6 @@ const translations = {
      companies: {
         google: {
             name: 'Google',
-            logo: 'https://placehold.co/40x40.png?text=G',
             products: [
                 { name: 'Gemini Family', description: 'Google\'s most capable multimodal models, including Pro, Flash, and Advanced.' },
                 { name: 'Gemma', description: 'A family of lightweight, state-of-the-art open models built from Gemini research.' },
@@ -60,7 +56,6 @@ const translations = {
         },
         openai: {
             name: 'OpenAI',
-            logo: 'https://placehold.co/40x40.png?text=O',
             products: [
                 { name: 'GPT Series (3.5, 4, 4o)', description: 'Industry-leading language models that power ChatGPT and numerous API applications.' },
                 { name: 'Sora', description: 'An AI model that can create realistic and imaginative scenes from text instructions.' },
@@ -69,7 +64,6 @@ const translations = {
         },
         anthropic: {
             name: 'Anthropic',
-            logo: 'https://placehold.co/40x40.png?text=A',
             products: [
                 { name: 'Claude 3 Family', description: 'A series of models (Haiku, Sonnet, Opus) balancing intelligence, speed, and cost.' },
                 { name: 'Constitutional AI', description: 'A training approach to make AI systems helpful, harmless, and honest.' },
@@ -116,7 +110,9 @@ export default function AiWorldPage() {
            {Object.values(t.companies).map((company) => (
              <section key={company.name}>
                 <h2 className="flex items-center text-2xl font-semibold text-foreground mb-4">
-                    <Image src={company.logo} alt={`${company.name} logo`} width={32} height={32} className="rounded-full mr-3" data-ai-hint="company logo" />
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mr-3 text-lg font-bold text-foreground">
+                        {company.name.charAt(0)}
+                    </div>
                     {t.productsBy(company.name)}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
