@@ -129,7 +129,7 @@ export default function AiWorldPage() {
   return (
     <SidebarProvider>
         <div className="min-h-screen bg-background text-foreground font-body flex">
-            <Sidebar className="w-72 border-r">
+            <Sidebar className="w-72 border-r bg-background/80 backdrop-blur-sm">
                 <SidebarHeader>
                     <div className="p-4 flex items-center gap-3">
                          <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -139,19 +139,19 @@ export default function AiWorldPage() {
                     </div>
                 </SidebarHeader>
                 <SidebarContent className="p-4">
-                     <div className="space-y-4">
+                     <div className="space-y-3">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                             type="search"
                             placeholder="搜索..."
-                            className="w-full pl-9 h-10 text-sm rounded-lg"
+                            className="w-full pl-9 h-9 text-sm rounded-md"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
                         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="h-10 text-sm rounded-lg">
+                            <SelectTrigger className="h-9 text-sm rounded-md">
                                 <SelectValue placeholder="所有类别" />
                             </SelectTrigger>
                             <SelectContent>
@@ -161,7 +161,7 @@ export default function AiWorldPage() {
                             </SelectContent>
                         </Select>
                         <Select value={selectedPricing} onValueChange={setSelectedPricing}>
-                            <SelectTrigger className="h-10 text-sm rounded-lg">
+                            <SelectTrigger className="h-9 text-sm rounded-md">
                                 <SelectValue placeholder="所有价格" />
                             </SelectTrigger>
                             <SelectContent>
@@ -172,7 +172,7 @@ export default function AiWorldPage() {
                         </Select>
                     </div>
 
-                    <Separator className="my-6" />
+                    <Separator className="my-4" />
 
                     <h2 className="text-sm font-semibold text-muted-foreground px-2 mb-2">国家/地区</h2>
                     <ScrollArea className="h-[calc(100vh-320px)]">
@@ -214,18 +214,3 @@ export default function AiWorldPage() {
     </SidebarProvider>
   );
 }
-
-// A new component for the sidebar UI. I've named it sidebar-pro to avoid conflicts.
-const SidebarPro = ({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) => {
-  return (
-    <aside className={cn('w-72 flex-col border-r', className)}>
-      {children}
-    </aside>
-  );
-};
