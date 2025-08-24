@@ -1,24 +1,26 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Search, Globe, Filter, Building, Briefcase } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { NewsCard } from '@/components/news-card';
 import { newsUpdates, type NewsUpdate } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function AiWorldPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('所有国家');
   const [selectedCategory, setSelectedCategory] = useState('所有类别');
   const [selectedPricing, setSelectedPricing] = useState('所有价格');
+  const [isHeaderStuck, setIsHeaderStuck] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
 
   const { countries, countryCounts } = useMemo(() => {
     const countryCounts = newsUpdates.reduce((acc, update) => {
@@ -53,7 +55,9 @@ export default function AiWorldPage() {
   }, [searchTerm, selectedCountry, selectedCategory, selectedPricing]);
 
   const groupedByCountryAndCompany = useMemo(() => {
-    const grouped = filteredUpdates.reduce((acc, update) => {
+    const activeUpdates = filteredUpdates.filter(update => update.status !== 'Deprecated');
+    
+    const grouped = activeUpdates.reduce((acc, update) => {
       if (!acc[update.country]) {
         acc[update.country] = {};
       }
@@ -77,6 +81,23 @@ export default function AiWorldPage() {
 
   }, [filteredUpdates]);
   
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+        ([e]) => setIsHeaderStuck(e.intersectionRatio < 1),
+        { threshold: [1] }
+    );
+
+    if (sentinelRef.current) {
+        observer.observe(sentinelRef.current);
+    }
+
+    return () => {
+        if (sentinelRef.current) {
+            observer.unobserve(sentinelRef.current);
+        }
+    };
+  }, []);
+
   const renderContent = () => {
     if (filteredUpdates.length === 0) {
       return (
@@ -89,7 +110,7 @@ export default function AiWorldPage() {
     
     const countriesToRender = selectedCountry === '所有国家' 
         ? Object.keys(groupedByCountryAndCompany).sort((a,b) => Object.values(groupedByCountryAndCompany[b]).flatMap(c => c.updates).length - Object.values(groupedByCountryAndCompany[a]).flatMap(c => c.updates).length) 
-        : [selectedCountry];
+        : (groupedByCountryAndCompany[selectedCountry] ? [selectedCountry] : []);
 
     return (
         <div className="space-y-20">
@@ -158,75 +179,63 @@ export default function AiWorldPage() {
           </p>
         </div>
       </header>
+      
+      <div ref={sentinelRef} className="h-px"></div>
+      <div className={cn(
+          "sticky top-0 z-40 transition-shadow",
+          isHeaderStuck && "shadow-lg"
+      )}>
+          <div className="bg-background/80 backdrop-blur-sm">
+            <div className="container mx-auto px-4">
+                <div className="flex flex-col md:flex-row items-center gap-4 py-4">
+                    <div className="relative w-full md:flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="按关键字、公司、描述搜索..."
+                            className="w-full pl-10 h-11 text-base rounded-lg bg-background/70"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 md:flex-initial gap-4 w-full md:w-auto">
+                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                            <SelectTrigger className="h-11 text-base rounded-lg bg-background/70 w-full">
+                                <SelectValue placeholder="所有国家" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {countries.map(country => (
+                                    <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="h-11 text-base rounded-lg bg-background/70 w-full">
+                                <SelectValue placeholder="所有类别" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categories.map(category => (
+                                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={selectedPricing} onValueChange={setSelectedPricing}>
+                            <SelectTrigger className="h-11 text-base rounded-lg bg-background/70 w-full">
+                                <SelectValue placeholder="所有价格" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {pricings.map(pricing => (
+                                    <SelectItem key={pricing} value={pricing}>{pricing}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
+          </div>
+      </div>
         
       <main className="container mx-auto px-4 py-12">
-        <div className="mb-12 max-w-5xl mx-auto">
-            <Accordion type="single" collapsible className="w-full bg-card rounded-xl border shadow-sm">
-                <AccordionItem value="filters" className="border-b-0">
-                    <AccordionTrigger className="p-4 sm:p-6 text-base font-medium hover:no-underline">
-                        <div className="flex items-center gap-3">
-                            <Filter className="h-5 w-5 text-muted-foreground" />
-                            <span>搜索或筛选</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <div className="space-y-6 px-4 sm:px-6 pb-6">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                <Input
-                                    type="search"
-                                    placeholder="按关键字、公司、描述搜索..."
-                                    className="w-full pl-10 h-11 text-base rounded-lg"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                                    <SelectTrigger className="h-11 text-base rounded-lg">
-                                        <SelectValue placeholder="所有国家" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {countries.map(country => (
-                                            <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                                    <SelectTrigger className="h-11 text-base rounded-lg">
-                                        <SelectValue placeholder="所有类别" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map(category => (
-                                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <Select value={selectedPricing} onValueChange={setSelectedPricing}>
-                                    <SelectTrigger className="h-11 text-base rounded-lg">
-                                        <SelectValue placeholder="所有价格" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {pricings.map(pricing => (
-                                            <SelectItem key={pricing} value={pricing}>{pricing}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex justify-end">
-                                <Link href="/compare" passHref>
-                                    <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                                       <Briefcase className="mr-2 h-4 w-4"/>
-                                       切换到维度对比视图
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-        </div>
-
         <div className="max-w-5xl mx-auto">
             {renderContent()}
         </div>
@@ -238,3 +247,4 @@ export default function AiWorldPage() {
     </div>
   );
 }
+
