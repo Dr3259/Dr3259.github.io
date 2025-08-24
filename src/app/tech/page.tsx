@@ -23,7 +23,7 @@ const translations = {
     items: {
       languageRankings: { title: '开发语言排行榜', description: '查看最新的编程语言流行趋势。', icon: BarChart3, path: '/tech/language-rankings' },
       githubTrending: { title: 'GitHub趋势榜', description: '洞察开源世界的持久度与潜力股。', icon: Github, path: '/tech/github-trending' },
-      aiWorld: { title: 'AI 世界', description: '探索全球顶尖AI公司的旗舰产品。', icon: BrainCircuit, path: '/tech/ai-world' },
+      aiWorld: { title: 'AI 世界', description: '探索全球AI模型、产品与公司，抹平全球AI信息差。', icon: BrainCircuit, path: '/tech/ai-world' },
     }
   },
   'en': {
@@ -39,7 +39,7 @@ const translations = {
     items: {
       languageRankings: { title: 'Language Rankings', description: 'Check out the latest trends in programming languages.', icon: BarChart3, path: '/tech/language-rankings' },
       githubTrending: { title: 'GitHub Trending', description: 'Insights into open source persistence and potential.', icon: Github, path: '/tech/github-trending' },
-      aiWorld: { title: 'AI World', description: 'Explore flagship products from top global AI companies.', icon: BrainCircuit, path: '/tech/ai-world' },
+      aiWorld: { title: 'AI World', description: 'Explore global AI models, products, and companies to bridge the information gap.', icon: BrainCircuit, path: '/tech/ai-world' },
     }
   }
 };
