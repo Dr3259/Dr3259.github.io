@@ -4,9 +4,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Star, TrendingUp, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardDescription, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Star, TrendingUp, Loader2, GitBranch } from 'lucide-react';
 import { scrapeGitHubTrending, type GithubTrendingRepo, type GithubTrendingParams } from '@/ai/flows/github-trending-flow';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,7 +15,6 @@ const translations = {
     pageTitle: 'GitHub 趋势榜',
     pageSubtitle: '洞察开源世界的持久度与潜力股',
     backButton: '返回科技主页',
-    rank: '排名',
     language: '语言',
     repository: '项目',
     description: '描述',
@@ -28,12 +26,12 @@ const translations = {
     loading: '正在加载趋势数据...',
     error: '加载数据失败，请稍后重试。',
     noDescription: '暂无描述',
+    viewOnGithub: '在 GitHub 上查看',
   },
   'en': {
     pageTitle: 'GitHub Trending',
     pageSubtitle: 'Insights into open source persistence and potential',
     backButton: 'Back to Tech Home',
-    rank: 'Rank',
     language: 'Language',
     repository: 'Repository',
     description: 'Description',
@@ -45,6 +43,7 @@ const translations = {
     loading: 'Loading trending data...',
     error: 'Failed to load data. Please try again later.',
     noDescription: 'No description provided',
+    viewOnGithub: 'View on GitHub',
   }
 };
 
@@ -89,12 +88,70 @@ export default function GitHubTrendingPage() {
     setActiveTab(value as Timespan);
   };
   
-  const renderGainedStarsHeader = () => {
+  const renderGainedStarsLabel = () => {
     if (activeTab === 'daily') return t.gainedStars(t.daily);
     if (activeTab === 'weekly') return t.gainedStars(t.weekly);
     if (activeTab === 'monthly') return t.gainedStars(t.monthly);
     return 'Gained';
   }
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="ml-4 text-muted-foreground">{t.loading}</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div className="text-center text-destructive py-10">{error}</div>;
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {trendingRepos.map((repo) => (
+          <Card key={repo.rank} className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
+             <a href={repo.url} target="_blank" rel="noopener noreferrer" className="flex flex-col h-full">
+                <CardHeader>
+                    <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                            <CardDescription>#{repo.rank}</CardDescription>
+                            <CardTitle className="text-xl hover:text-primary hover:underline underline-offset-2">
+                               {repo.repoName}
+                            </CardTitle>
+                        </div>
+                        {repo.language !== 'N/A' && (
+                             <div className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md">{repo.language}</div>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        {repo.description || <span className="italic">{t.noDescription}</span>}
+                    </p>
+                </CardContent>
+                <div className="p-6 pt-4 mt-auto">
+                   <div className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <Star className="h-4 w-4 text-amber-500"/>
+                            <span className="font-semibold text-foreground">{repo.stars}</span>
+                            <span>{t.stars}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-green-600 font-semibold">
+                            <TrendingUp className="h-4 w-4"/>
+                            <span>{repo.starsToday}</span>
+                            <span>{renderGainedStarsLabel()}</span>
+                        </div>
+                   </div>
+                </div>
+            </a>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
@@ -115,72 +172,17 @@ export default function GitHubTrendingPage() {
             <p className="text-muted-foreground">{t.pageSubtitle}</p>
         </div>
 
-        <Card className="w-full shadow-lg">
-            <CardHeader>
-                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 max-w-sm mx-auto">
-                        <TabsTrigger value="daily">{t.daily}</TabsTrigger>
-                        <TabsTrigger value="weekly">{t.weekly}</TabsTrigger>
-                        <TabsTrigger value="monthly">{t.monthly}</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-            </CardHeader>
-            <CardContent>
-                {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="ml-4 text-muted-foreground">{t.loading}</p>
-                    </div>
-                ) : error ? (
-                    <div className="text-center text-destructive py-10">
-                        {error}
-                    </div>
-                ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[50px]">#</TableHead>
-                                <TableHead>{t.repository}</TableHead>
-                                <TableHead className="hidden md:table-cell">{t.description}</TableHead>
-                                <TableHead>{t.language}</TableHead>
-                                <TableHead className="text-right min-w-[120px]">{t.stars}</TableHead>
-                                <TableHead className="text-right min-w-[120px]">{renderGainedStarsHeader()}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {trendingRepos.map((repo) => (
-                                <TableRow key={repo.rank}>
-                                    <TableCell className="font-medium">{repo.rank}</TableCell>
-                                    <TableCell className="font-semibold">
-                                        <a href={repo.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline underline-offset-2">
-                                            {repo.repoName}
-                                        </a>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell text-muted-foreground text-xs max-w-xs truncate" title={repo.description || t.noDescription}>
-                                      {repo.description || <span className="italic">{t.noDescription}</span>}
-                                    </TableCell>
-                                    <TableCell>{repo.language}</TableCell>
-                                    <TableCell className="text-right">
-                                      <div className="flex items-center justify-end gap-1">
-                                        <Star className="h-3 w-3 text-amber-500"/>
-                                        {repo.stars}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-medium">
-                                      <div className="flex items-center justify-end gap-1 text-green-600">
-                                        <TrendingUp className="h-3 w-3"/>
-                                        {repo.starsToday}
-                                      </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                )}
-            </CardContent>
-        </Card>
+        <div className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 max-w-sm mx-auto mb-8">
+                    <TabsTrigger value="daily">{t.daily}</TabsTrigger>
+                    <TabsTrigger value="weekly">{t.weekly}</TabsTrigger>
+                    <TabsTrigger value="monthly">{t.monthly}</TabsTrigger>
+                </TabsList>
+            </Tabs>
+            {renderContent()}
+        </div>
       </main>
     </div>
   );
 }
-
