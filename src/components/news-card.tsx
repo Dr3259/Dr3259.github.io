@@ -35,7 +35,7 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
   return (
     <div className="bg-card border rounded-xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
       <a href={news.link} target="_blank" rel="noopener noreferrer" className="flex flex-col h-full group">
-        <div className="relative w-full h-40">
+        <div className="relative w-full h-40 bg-muted">
           <Image
             src={news.logo}
             alt={news.title}
@@ -73,5 +73,3 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
     </div>
   );
 };
-
-    

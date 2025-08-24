@@ -148,21 +148,9 @@ export default function AiWorldPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
-      <header className="relative border-b py-24 sm:py-32 text-center overflow-hidden bg-slate-900">
-         <div className="absolute inset-0 z-0">
-            <Image
-                src="https://placehold.co/1920x1080.png"
-                alt="AI World background"
-                fill
-                style={{ objectFit: 'cover' }}
-                className="opacity-20"
-                data-ai-hint="abstract technology"
-                priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-        </div>
+      <header className="py-20 sm:py-28 text-center bg-background">
         <div className="container mx-auto px-4 relative z-10">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-br from-primary to-foreground/80 bg-clip-text text-transparent">
             ai 世界
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mt-6">
@@ -173,7 +161,7 @@ export default function AiWorldPage() {
         
       <main className="container mx-auto px-4 py-12">
         <div className="mb-12 max-w-5xl mx-auto">
-            <Accordion type="single" collapsible className="w-full bg-card/50 rounded-xl border shadow-sm">
+            <Accordion type="single" collapsible className="w-full bg-card rounded-xl border shadow-sm">
                 <AccordionItem value="filters" className="border-b-0">
                     <AccordionTrigger className="p-4 sm:p-6 text-base font-medium hover:no-underline">
                         <div className="flex items-center gap-3">
