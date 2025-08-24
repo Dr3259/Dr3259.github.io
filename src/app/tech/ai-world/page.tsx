@@ -191,7 +191,7 @@ export default function AiWorldPage() {
           "sticky top-0 z-40 transition-shadow",
           isHeaderStuck && "shadow-lg"
       )}>
-          <div className="bg-background/80 backdrop-blur-sm">
+        <div className="bg-background/80 backdrop-blur-sm border-b">
             <div className="container mx-auto px-4">
                 <div className="flex flex-col md:flex-row items-center gap-4 py-4">
                     <div className="relative w-full md:flex-1">
@@ -238,13 +238,14 @@ export default function AiWorldPage() {
                     </div>
                 </div>
             </div>
-          </div>
-        
+        </div>
+      </div>
+      
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
             {renderContent()}
         </div>
       </main>
     </div>
-  );
+  )
 }
