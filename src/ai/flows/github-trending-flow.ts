@@ -15,6 +15,8 @@ import * as cheerio from 'cheerio';
 const GithubTrendingParamsSchema = z.object({
   timespan: z.enum(['daily', 'weekly', 'monthly']).default('daily')
     .describe('The time period for which to fetch trending repositories.'),
+  language: z.enum(['zh-CN', 'en']).default('en')
+    .describe('The requested language for the description.'),
 });
 export type GithubTrendingParams = z.infer<typeof GithubTrendingParamsSchema>;
 
@@ -38,13 +40,22 @@ export async function scrapeGitHubTrending(
   return scrapeGitHubTrendingFlow(input);
 }
 
+const translationPrompt = ai.definePrompt({
+    name: 'translateForGithubTrending',
+    input: { schema: z.string() },
+    output: { schema: z.string() },
+    prompt: `Translate the following English text to simplified Chinese. Output only the translated text, without any introductory phrases. Preserve any emojis in the original text.
+    
+    English Text: "{{input}}"`,
+});
+
 const scrapeGitHubTrendingFlow = ai.defineFlow(
   {
     name: 'scrapeGitHubTrendingFlow',
     inputSchema: GithubTrendingParamsSchema,
     outputSchema: GithubTrendingOutputSchema,
   },
-  async ({ timespan }) => {
+  async ({ timespan, language }) => {
     try {
       const url = `https://github.com/trending?since=${timespan}`;
       const response = await fetch(url, { headers: { 'Accept-Language': 'en-US,en;q=0.9' }});
@@ -60,7 +71,6 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
         const repoElement = $(element);
         
         const repoName = repoElement.find('h2 a').attr('href')?.substring(1).trim() || '';
-        // Use a more specific selector for the description
         const description = repoElement.find('p').text().trim() || '';
         const language = repoElement.find('span[itemprop="programmingLanguage"]').text().trim() || 'N/A';
         
@@ -88,8 +98,31 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
       if (trendingRepos.length === 0) {
         throw new Error('Could not parse any repositories from the GitHub trending page. The website structure may have changed.');
       }
+      
+      let finalRepos = trendingRepos;
 
-      return trendingRepos.slice(0, 20); // Return top 20
+      // Apply translation if language is Chinese
+      if (language === 'zh-CN') {
+         const translationPromises = finalRepos.map(async (repo) => {
+            if (typeof repo.description === 'string' && repo.description.trim() !== '') {
+                const response = await translationPrompt(repo.description);
+                if (response.text) {
+                    return { ...repo, description: response.text };
+                }
+            }
+            return repo;
+        });
+        finalRepos = await Promise.all(translationPromises);
+      }
+
+      // Slice the results based on the timespan
+      if (timespan === 'daily') {
+        return finalRepos.slice(0, 20);
+      } else if (timespan === 'weekly') {
+        return finalRepos.slice(0, 15);
+      } else { // monthly
+        return finalRepos.slice(0, 10);
+      }
 
     } catch (error: any) {
       console.error('Error in scrapeGitHubTrendingFlow:', error);
@@ -97,4 +130,3 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
     }
   }
 );
-
