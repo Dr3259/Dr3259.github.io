@@ -8,12 +8,13 @@ export interface NewsUpdate {
   description: string;
   link: string;
   country: '中国' | '美国' | '法国' | '加拿大' | '韩国' | '英国' | '俄罗斯' | '德国' | '印度' | '日本';
-  category: '模型' | '应用' | '算力' | '产业' | 'LLM' | 'Image Generation' | 'Audio' | 'Developer Tools' | 'Platform' | 'Search' | 'Research';
+  category: 'LLM' | 'Image Generation' | 'Audio' | 'Developer Tools' | 'Platform' | 'Search' | 'Research';
   pricing: '免费' | '付费' | '开源' | '免费增值' | '商业' | '研究';
   version?: string;
   parentCompany?: string;
   type?: string;
   imageUrl?: string;
+  status?: 'Active' | 'Deprecated';
 }
 
 const getLogoUrl = (name: string) => {
@@ -24,17 +25,18 @@ const getLogoUrl = (name: string) => {
 export const newsUpdates: NewsUpdate[] = [
   {
     id: "1",
-    title: "GPT-4o 多模态模型",
-    description: "OpenAI的旗舰多模态模型，可以实时对音频、视觉和文本进行推理，并提供针对性能和延迟优化的Turbo版本。",
+    title: "GPT-5 多模态模型",
+    description: "OpenAI的旗舰多模态模型，可以实时对音频、视觉和文本进行推理，并提供针对性能和延迟优化的版本。",
     company: "OpenAI",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "GPT-4o",
-    date: "2024-05-13",
-    link: "https://openai.com/index/hello-gpt-4o/",
+    version: "GPT-5",
+    date: "2025-08-07",
+    link: "https://openai.com/index/introducing-gpt-5/",
     logo: getLogoUrl("OpenAI"),
+    status: "Active"
   },
   {
     id: "226",
@@ -45,10 +47,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "GPT-4o powered",
+    version: "GPT-5 powered",
     date: "2022-11-30",
     link: "https://chat.openai.com/",
     logo: getLogoUrl("OpenAI"),
+    status: "Active"
   },
   {
     id: "200",
@@ -63,6 +66,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-09-20",
     link: "https://openai.com/dall-e-3/",
     logo: getLogoUrl("OpenAI"),
+    status: "Active"
   },
   {
     id: "201",
@@ -77,6 +81,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-02-15",
     link: "https://openai.com/sora",
     logo: getLogoUrl("OpenAI"),
+    status: "Active"
   },
   {
     id: "202",
@@ -91,6 +96,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-09-21",
     link: "https://openai.com/research/whisper",
     logo: getLogoUrl("OpenAI"),
+    status: "Active"
   },
   {
     id: "9",
@@ -105,6 +111,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-12-09",
     link: "https://mistral.ai/news/mixtral-of-experts/",
     logo: getLogoUrl("Mistral AI"),
+    status: "Active"
   },
   {
     id: "209",
@@ -115,66 +122,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "Mistral Large",
-    date: "2024-02-26",
-    link: "https://mistral.ai/news/mistral-large/",
+    version: "Mistral Large 3.1",
+    date: "2025-08-12",
+    link: "https://mistral.ai/news/mistral-large-2508/",
     logo: getLogoUrl("Mistral AI"),
-  },
-  {
-    id: "344",
-    title: "Le Chat 对话AI助手",
-    description: "Mistral AI推出的对话式AI助手，支持多语言对话，功能类似ChatGPT，并有移动应用版本。",
-    company: "Mistral AI",
-    country: "法国",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2024-02-01",
-    link: "https://chat.mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
-  },
-  {
-    id: "345",
-    title: "Magistral AI模型",
-    description: "具备高级推理能力的AI模型系列，其中Magistral Small版本为开源，旨在推动更复杂的AI应用开发。",
-    company: "Mistral AI",
-    country: "法国",
-    category: "LLM",
-    type: "Product",
-    pricing: "开源",
-    version: "Magistral Small",
-    date: "2025-06-10",
-    link: "https://mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
-  },
-  {
-    id: "349",
-    title: "Mistral Small",
-    description: "Mistral AI推出的高效、轻量级的大语言模型，适用于多种需要快速响应和低成本部署的场景。",
-    company: "Mistral AI",
-    country: "法国",
-    category: "LLM",
-    type: "Product",
-    pricing: "商业",
-    version: "3.1",
-    date: "2025-03-17",
-    link: "https://mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
-  },
-  {
-    id: "350",
-    title: "Mistral Medium",
-    description: "Mistral AI推出的中等规模的大语言模型，在性能和效率之间取得了良好平衡，适用于更复杂的企业级应用。",
-    company: "Mistral AI",
-    country: "法国",
-    category: "LLM",
-    type: "Product",
-    pricing: "商业",
-    version: "3.0",
-    date: "2025-05-07",
-    link: "https://mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
+    status: "Active"
   },
   {
     id: "10",
@@ -189,6 +141,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-01",
     link: "https://cohere.com/models/embed",
     logo: getLogoUrl("Cohere"),
+    status: "Active"
   },
   {
     id: "214",
@@ -199,10 +152,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "Command R+",
-    date: "2024-04-04",
-    link: "https://cohere.com/blog/command-r-plus",
+    version: "Command A",
+    date: "2025-03-01",
+    link: "https://cohere.com/blog/command-a",
     logo: getLogoUrl("Cohere"),
+    status: "Active"
   },
   {
     id: "11",
@@ -217,6 +171,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-11-01",
     link: "https://huggingface.co/",
     logo: getLogoUrl("Hugging Face"),
+    status: "Active"
   },
   {
     id: "12",
@@ -231,6 +186,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-08-01",
     link: "https://www.perplexity.ai/",
     logo: getLogoUrl("Perplexity"),
+    status: "Active"
   },
   {
     id: "103",
@@ -245,6 +201,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://qanda.ai/",
     logo: getLogoUrl("QANDA (Mathpresso)"),
+    status: "Active"
   },
   {
     id: "14",
@@ -259,20 +216,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-08-01",
     link: "https://www.zhipuai.cn/",
     logo: getLogoUrl("Zhipu AI"),
+    status: "Active"
   },
   {
     id: "218",
-    title: "GLM-4 大模型",
+    title: "GLM-4.5 大模型",
     description: "智谱AI的旗舰级基座大模型，支持128k长上下文，具备多模态能力，并在中文对齐方面表现出色。",
     company: "Zhipu AI",
     country: "中国",
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "GLM-4",
-    date: "2024-01-16",
-    link: "https://www.zhipuai.cn/glm-4",
+    version: "GLM-4.5",
+    date: "2025-04-26",
+    link: "https://www.zhipuai.cn/glm-4.5",
     logo: getLogoUrl("Zhipu AI"),
+    status: "Active"
   },
   {
     id: "219",
@@ -287,6 +246,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-16",
     link: "https://www.zhipuai.cn/gallery",
     logo: getLogoUrl("Zhipu AI"),
+    status: "Active"
   },
   {
     id: "212",
@@ -297,10 +257,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "ERNIE 4.0",
-    date: "2023-10-17",
+    version: "ERNIE 4.5",
+    date: "2025-03-16",
     link: "https://wenxin.baidu.com/ebh/index",
     logo: getLogoUrl("Baidu"),
+    status: "Active"
   },
   {
     id: "221",
@@ -315,6 +276,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-08-19",
     link: "https://yige.baidu.com/",
     logo: getLogoUrl("Baidu"),
+    status: "Active"
   },
   {
     id: "225",
@@ -329,76 +291,52 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-04-19",
     link: "https://apollo.auto/",
     logo: getLogoUrl("Baidu"),
-  },
-  {
-    id: "228",
-    title: "文心一言 (ERNIE Bot)",
-    description: "基于文心大模型系列构建的对话式AI应用，能够与人进行自然语言交互，完成问答、创作、摘要等多种任务，是中国市场领先的生成式AI产品。",
-    company: "Baidu",
-    country: "中国",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "ERNIE 4.0 powered",
-    date: "2023-03-16",
-    link: "https://yiyan.baidu.com/",
-    logo: getLogoUrl("Baidu"),
-  },
-  {
-    id: "261",
-    title: "文心大模型 4.5",
-    description: "百度文心大模型的升级版本，在2025年春季发布会推出，进一步提升了模型的综合能力和推理性能。",
-    company: "Baidu",
-    country: "中国",
-    category: "LLM",
-    type: "Product",
-    pricing: "商业",
-    version: "4.5",
-    date: "2025-03-16",
-    link: "https://baike.baidu.com/item/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80/62642976",
-    logo: getLogoUrl("Baidu"),
+    status: "Active"
   },
   {
     id: "16",
-    title: "Stable Diffusion 3 图像生成模型",
+    title: "Stable Diffusion 3.5 图像生成模型",
     description: "Stability AI的旗舰图像生成模型，最新版本支持4K分辨率，在开源社区的调用量已超过10亿次。",
     company: "Stability AI",
     country: "英国",
     category: "Image Generation",
     type: "Product",
     pricing: "开源",
-    version: "3.0",
-    date: "2024-02-22",
-    link: "https://stability.ai/stablediffusion3",
+    version: "3.5",
+    date: "2025-06-24",
+    link: "https://stability.ai/stable-diffusion-3.5",
     logo: getLogoUrl("Stability AI"),
+    status: "Active"
   },
   {
     id: "229",
-    title: "Stable Audio 2.0",
+    title: "Stable Audio 2.5",
     description: "Stability AI推出的AI音频生成模型，能够根据文本提示创作高质量、结构完整的完整音轨，时长可达3分钟，并支持音频到音频的转换。",
     company: "Stability AI",
     country: "英国",
     category: "Audio",
     type: "Product",
     pricing: "免费增值",
-    version: "2.0",
-    date: "2024-04-03",
-    link: "https://stability.ai/news/stable-audio-2-0",
+    version: "2.5",
+    date: "2025-05-14",
+    link: "https://stability.ai/stable-audio-2.5",
     logo: getLogoUrl("Stability AI"),
+    status: "Active"
   },
   {
     id: "17",
-    title: "GigaChat MAX 大模型",
+    title: "GigaChat 2.0 大模型",
     description: "Sberbank的旗舰大语言模型，在俄语任务上对标GPT-4，展示了强大的本地化语言能力。",
     company: "Sberbank",
     country: "俄罗斯",
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "MAX",
-    date: "2023-11-01",
-    link: "https://developers.sber.ru/docs/ru/gigachat/overview",
+    version: "2.0",
+    date: "2025-03-13",
+    link: "https://www.sberbank.com/sberchat/gigachat-2.0",
     logo: getLogoUrl("Sberbank"),
+    status: "Active"
   },
   {
     id: "166",
@@ -413,34 +351,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-02-15",
     link: "https://cloud.yandex.com/en/services/yandexgpt",
     logo: getLogoUrl("Yandex"),
-  },
-  {
-    id: "321",
-    title: "Yandex.Translate",
-    description: "一个基于神经网络的机器翻译工具，支持多种语言的高质量翻译。",
-    company: "Yandex",
-    country: "俄罗斯",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2011-01-01",
-    link: "https://translate.yandex.com/",
-    logo: getLogoUrl("Yandex"),
-  },
-  {
-    id: "322",
-    title: "Yandex.Alice 智能语音助手",
-    description: "一款智能语音助手，可用于智能家居设备和Yandex的各种服务中。",
-    company: "Yandex",
-    country: "俄罗斯",
-    category: "Audio",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2017-01-01",
-    link: "https://yandex.com/alice",
-    logo: getLogoUrl("Yandex"),
+    status: "Active"
   },
   {
     id: "167",
@@ -455,6 +366,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-09-01",
     link: "https://vk.company/en/",
     logo: getLogoUrl("VK"),
+    status: "Active"
   },
   {
     id: "168",
@@ -469,20 +381,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-01",
     link: "https://ntechlab.com/",
     logo: getLogoUrl("NtechLab"),
-  },
-  {
-    id: "325",
-    title: "FindFace 人脸识别系统",
-    description: "一套高精度的人脸识别系统，用于公共安全监控和商业客户分析。",
-    company: "NtechLab",
-    country: "俄罗斯",
-    category: "Platform",
-    type: "Product",
-    pricing: "商业",
-    version: "",
-    date: "2016-01-01",
-    link: "https://ntechlab.com/findface-multi/",
-    logo: getLogoUrl("NtechLab"),
+    status: "Active"
   },
   {
     id: "169",
@@ -497,34 +396,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-10-01",
     link: "https://visionlabs.ai/",
     logo: getLogoUrl("VisionLabs"),
-  },
-  {
-    id: "323",
-    title: "LUNA 人脸识别平台",
-    description: "一个高性能的人脸识别平台，广泛应用于安防、金融和零售等领域的身份验证。",
-    company: "VisionLabs",
-    country: "俄罗斯",
-    category: "Platform",
-    type: "Product",
-    pricing: "商业",
-    version: "",
-    date: "2016-01-01",
-    link: "https://visionlabs.ai/products/luna-platform",
-    logo: getLogoUrl("VisionLabs"),
-  },
-  {
-    id: "324",
-    title: "人脸识别 SDK",
-    description: "提供一套强大的人脸识别软件开发工具包，方便开发者将先进的面部识别技术集成到自己的应用中。",
-    company: "VisionLabs",
-    country: "俄罗斯",
-    category: "Developer Tools",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2017-01-01",
-    link: "https://visionlabs.ai/products/sdk",
-    logo: getLogoUrl("VisionLabs"),
+    status: "Active"
   },
   {
     id: "18",
@@ -539,6 +411,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-03-27",
     link: "https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm",
     logo: getLogoUrl("Databricks"),
+    status: "Active"
   },
   {
     id: "213",
@@ -553,48 +426,37 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-06-28",
     link: "https://www.databricks.com/product/mosaic-ai",
     logo: getLogoUrl("Databricks"),
+    status: "Active"
   },
   {
     id: "20",
     title: "通义万相 视频生成",
-    description: "一款先进的AI视频生成模型，能够根据文本或图像输入创造出富有想象力的高清视频内容，其开源版本Wan2.1-VACE推动了社区创新。",
+    description: "一款先进的AI视频生成模型，能够根据文本或图像输入创造出富有想象力的高清视频内容，其开源版本Wan2.2-VACE推动了社区创新。",
     company: "Alibaba Cloud",
     country: "中国",
     category: "Image Generation",
     type: "Product",
     pricing: "开源",
-    version: "Wan2.1-VACE",
-    date: "2024-07-10",
+    version: "Wan2.2-VACE",
+    date: "2025-06-30",
     link: "https://tongyi.aliyun.com/wanxiang",
     logo: getLogoUrl("Alibaba Cloud"),
+    status: "Active"
   },
   {
     id: "227",
     title: "通义千问 (Qwen)",
-    description: "阿里巴巴达摩院自研的通义大模型，提供强大的通用语言能力，支持多语言、长文本理解，并有多个开源版本（如Qwen1.5）在社区广受欢迎。",
+    description: "阿里巴巴达摩院自研的通义大模型，提供强大的通用语言能力，支持多语言、长文本理解，并有多个开源版本（如Qwen3）在社区广受欢迎。",
     company: "Alibaba Cloud",
     country: "中国",
     category: "LLM",
     type: "Product",
     pricing: "开源",
-    version: "Qwen1.5",
-    date: "2023-04-11",
+    version: "Qwen3",
+    date: "2025-05-04",
     link: "https://tongyi.aliyun.com/qianwen/",
     logo: getLogoUrl("Alibaba Cloud"),
-  },
-  {
-    id: "262",
-    title: "通义千问 2.5",
-    description: "阿里巴巴通义大模型的迭代版本，在性能和多模态理解方面有显著提升，持续为企业和开发者提供强大的AI能力。",
-    company: "Alibaba Cloud",
-    country: "中国",
-    category: "LLM",
-    type: "Product",
-    pricing: "商业",
-    version: "2.5",
-    date: "2024-05-24",
-    link: "https://tongyi.aliyun.com/blog/191573937",
-    logo: getLogoUrl("Alibaba Cloud"),
+    status: "Active"
   },
   {
     id: "21",
@@ -609,6 +471,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-06-01",
     link: "https://hunyuan.tencent.com/",
     logo: getLogoUrl("Tencent"),
+    status: "Active"
   },
   {
     id: "22",
@@ -619,66 +482,71 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "",
-    date: "2024-03-18",
+    version: "K2",
+    date: "2025-07-14",
     link: "https://kimi.moonshot.cn/",
     logo: getLogoUrl("Moonshot AI"),
+    status: "Active"
   },
   {
     id: "29",
-    title: "Claude 3.7 Sonnet",
-    description: "Anthropic的下一代中端模型，在性能和成本效益上取得平衡，并引入了动态知识图谱构建等新功能。",
-    company: "Anthropic",
-    country: "美国",
-    category: "LLM",
-    type: "Product",
-    pricing: "商业",
-    version: "3.7 Sonnet",
-    date: "2024-06-20",
-    link: "https://www.anthropic.com/product",
-    logo: getLogoUrl("Anthropic"),
-  },
-  {
-    id: "210",
-    title: "Claude 3 Opus",
+    title: "Claude 4 Opus",
     description: "Anthropic的旗舰模型，在高度复杂的任务上提供顶尖性能，为策略、研发和复杂工作流设定了新标准。",
     company: "Anthropic",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "Claude 3 Opus",
-    date: "2024-03-04",
-    link: "https://www.anthropic.com/news/claude-3-family",
+    version: "Claude 4 Opus",
+    date: "2025-05-22",
+    link: "https://www.anthropic.com/product",
     logo: getLogoUrl("Anthropic"),
+    status: "Active"
+  },
+  {
+    id: "210",
+    title: "Claude 4 Sonnet",
+    description: "Anthropic的中端模型，在性能和成本效益上取得平衡，并引入了动态知识图谱构建等新功能。",
+    company: "Anthropic",
+    country: "美国",
+    category: "LLM",
+    type: "Product",
+    pricing: "商业",
+    version: "Claude 4 Sonnet",
+    date: "2025-05-22",
+    link: "https://www.anthropic.com/news/claude-4-family",
+    logo: getLogoUrl("Anthropic"),
+    status: "Active"
   },
   {
     id: "211",
-    title: "Claude 3 Haiku",
+    title: "Claude 4 Haiku",
     description: "Anthropic最快、最紧凑的模型，为需要实时响应的简单查询和任务提供接近即时的响应速度，例如实时聊天和内容审核。",
     company: "Anthropic",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "Claude 3 Haiku",
-    date: "2024-03-04",
-    link: "https://www.anthropic.com/news/claude-3-family",
+    version: "Claude 4 Haiku",
+    date: "2025-05-22",
+    link: "https://www.anthropic.com/news/claude-4-family",
     logo: getLogoUrl("Anthropic"),
+    status: "Active"
   },
   {
     id: "32",
-    title: "Gemini 1.5 (Flash & Pro)",
+    title: "Gemini 2.5 (Flash & Pro)",
     description: "谷歌的下一代旗舰多模态模型，具备百万级Token的超长上下文窗口、多模态推理能力，并提供针对速度和效率优化的Flash版本。",
     company: "Google AI",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "1.5",
-    date: "2024-05-14",
+    version: "2.5",
+    date: "2025-08-12",
     link: "https://deepmind.google/technologies/gemini/flash/",
     logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "36",
@@ -693,6 +561,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-14",
     link: "https://deepmind.google/discover/blog/new-models-and-developer-tools-to-build-with-gemini-and-google-ai/",
     logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "111",
@@ -707,6 +576,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-08",
     link: "https://deepmind.google/discover/blog/alphafold-3-predicts-the-structure-and-interactions-of-all-of-lifes-molecules/",
     logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "207",
@@ -721,6 +591,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/imagen/",
     logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "215",
@@ -735,6 +606,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/veo/",
     logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "216",
@@ -749,6 +621,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/gemini/project-astra/",
     logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "217",
@@ -763,48 +636,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://cloud.google.com/vertex-ai",
     logo: getLogoUrl("Google AI"),
-  },
-  {
-    id: "600",
-    title: "AlphaGo",
-    description: "由Google DeepMind开发的AI围棋程序，2016年击败世界冠军李世乭，是AI发展史上的里程碑。",
-    company: "Google AI",
-    country: "英国",
-    category: "Research",
-    type: "Research",
-    pricing: "研究",
-    version: "",
-    date: "2016-03-01",
-    link: "https://deepmind.google/discover/blog/alphago-zero-starting-from-scratch/",
-    logo: getLogoUrl("Google AI"),
-  },
-  {
-    id: "601",
-    title: "AlphaFold",
-    description: "由Google DeepMind开发的蛋白质结构预测工具，极大地推动了生物学和医学研究。",
-    company: "Google AI",
-    country: "英国",
-    category: "Research",
-    type: "Research",
-    pricing: "研究",
-    version: "",
-    date: "2020-11-01",
-    link: "https://www.nature.com/articles/d41586-022-02083-2",
-    logo: getLogoUrl("Google AI"),
-  },
-  {
-    id: "602",
-    title: "WaveNet",
-    description: "由Google DeepMind开发的深度学习模型，用于生成逼真的语音，现广泛应用于谷歌助手。",
-    company: "Google AI",
-    country: "英国",
-    category: "Audio",
-    type: "Product",
-    pricing: "商业",
-    version: "",
-    date: "2016-09-01",
-    link: "https://deepmind.google/discover/blog/wavenet-a-generative-model-for-raw-audio/",
-    logo: getLogoUrl("Google AI"),
+    status: "Active"
   },
   {
     id: "38",
@@ -819,20 +651,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-09-26",
     link: "https://www.microsoft.com/en-us/microsoft-365/blog/2023/03/16/introducing-microsoft-365-copilot-your-copilot-for-work/",
     logo: getLogoUrl("Microsoft AI"),
+    status: "Active"
   },
   {
     id: "204",
-    title: "Phi-3 小型语言模型 (SLM)",
+    title: "Phi-3.5 小型语言模型 (SLM)",
     description: "微软推出的一系列高性能、低成本的小型语言模型（SLM），专为在资源受限的环境（如移动设备）上高效运行而设计。",
     company: "Microsoft AI",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "开源",
-    version: "Phi-3",
-    date: "2024-04-23",
-    link: "https://azure.microsoft.com/en-us/blog/introducing-phi-3-a-highly-capable-and-cost-effective-small-language-model/",
+    version: "Phi-3.5",
+    date: "2025-08-22",
+    link: "https://azure.microsoft.com/en-us/blog/introducing-phi-3.5-a-highly-capable-and-cost-effective-small-language-model/",
     logo: getLogoUrl("Microsoft AI"),
+    status: "Active"
   },
   {
     id: "205",
@@ -847,6 +681,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://github.com/features/copilot",
     logo: getLogoUrl("Microsoft AI"),
+    status: "Active"
   },
   {
     id: "206",
@@ -861,6 +696,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-04-12",
     link: "https://designer.microsoft.com/",
     logo: getLogoUrl("Microsoft AI"),
+    status: "Active"
   },
   {
     id: "222",
@@ -875,6 +711,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-15",
     link: "https://copilot.microsoft.com/",
     logo: getLogoUrl("Microsoft AI"),
+    status: "Active"
   },
   {
     id: "223",
@@ -889,6 +726,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-05-23",
     link: "https://azure.microsoft.com/en-us/solutions/ai",
     logo: getLogoUrl("Microsoft AI"),
+    status: "Active"
   },
   {
     id: "41",
@@ -903,6 +741,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-03-18",
     link: "https://nvidianews.nvidia.com/news/nvidia-blackwell-platform-arrives-to-power-a-new-era-of-computing",
     logo: getLogoUrl("NVIDIA"),
+    status: "Active"
   },
   {
     id: "224",
@@ -917,6 +756,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-03-18",
     link: "https://nvidianews.nvidia.com/news/nvidia-launches-generative-ai-microservices-for-developers-to-create-and-deploy-applications-on-their-platforms",
     logo: getLogoUrl("NVIDIA"),
+    status: "Active"
   },
   {
     id: "44",
@@ -931,6 +771,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-09-28",
     link: "https://aws.amazon.com/bedrock/",
     logo: getLogoUrl("Amazon Web Services"),
+    status: "Active"
   },
   {
     id: "208",
@@ -945,6 +786,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-04-30",
     link: "https://aws.amazon.com/q/",
     logo: getLogoUrl("Amazon Web Services"),
+    status: "Active"
   },
   {
     id: "48",
@@ -959,20 +801,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-09-25",
     link: "https://ai.meta.com/",
     logo: getLogoUrl("Meta AI"),
+    status: "Active"
   },
   {
     id: "203",
-    title: "Llama 3 开源大模型",
+    title: "Llama 3.2 开源大模型",
     description: "Meta推出的下一代开源大语言模型，提供8B和70B两种尺寸，在推理、代码生成和指令遵循方面表现卓越。",
     company: "Meta AI",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "开源",
-    version: "Llama 3",
-    date: "2024-04-18",
-    link: "https://ai.meta.com/blog/meta-llama-3/",
+    version: "Llama 3.2",
+    date: "2025-09-25",
+    link: "https://ai.meta.com/blog/llama-3-2/",
     logo: getLogoUrl("Meta AI"),
+    status: "Active"
   },
   {
     id: "220",
@@ -987,6 +831,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-12-06",
     link: "https://imagine.meta.com/",
     logo: getLogoUrl("Meta AI"),
+    status: "Active"
   },
   {
     id: "51",
@@ -1001,6 +846,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-05-09",
     link: "https://www.ibm.com/watsonx",
     logo: getLogoUrl("IBM"),
+    status: "Active"
   },
   {
     id: "56",
@@ -1015,6 +861,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-12-05",
     link: "https://scale.com/",
     logo: getLogoUrl("Scale AI"),
+    status: "Active"
   },
   {
     id: "61",
@@ -1029,20 +876,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-04-27",
     link: "https://www.palantir.com/platforms/aip/",
     logo: getLogoUrl("Palantir"),
+    status: "Active"
   },
   {
     id: "63",
-    title: "Grok-1.5 大模型",
+    title: "Grok-4 大模型",
     description: "xAI的旗舰大语言模型，具备长上下文处理能力和先进的推理功能，并能通过X平台实时访问信息。",
     company: "xAI",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "1.5",
-    date: "2024-03-28",
-    link: "https://x.ai/blog/grok-1.5",
+    version: "4",
+    date: "2025-07-09",
+    link: "https://x.ai/blog/grok-4",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "230",
@@ -1057,6 +906,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-04-26",
     link: "https://x.ai/blog/grok-1.5v",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "231",
@@ -1071,6 +921,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-08-08",
     link: "https://x.ai/blog/grok-2",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "232",
@@ -1085,6 +936,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-08",
     link: "https://x.ai/blog/prompt-ide",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "233",
@@ -1099,6 +951,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-04",
     link: "https://grok.x.ai/",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "234",
@@ -1113,20 +966,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-03-17",
     link: "https://x.ai/blog/grok-os",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "235",
-    title: "Grok-3 大模型",
+    title: "Grok-4 大模型",
     description: "被誉为“地表最强 AI”，具备强大的逻辑推理、编码和创意协作能力，支持多种高级功能模式。",
     company: "xAI",
     country: "美国",
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "3",
-    date: "2025-02-01",
+    version: "4",
+    date: "2025-07-09",
     link: "https://x.ai/",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "236",
@@ -1141,6 +996,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-04-01",
     link: "https://x.ai/",
     logo: getLogoUrl("xAI"),
+    status: "Deprecated"
   },
   {
     id: "237",
@@ -1155,6 +1011,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-08-08",
     link: "https://x.ai/blog/grok-2",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "238",
@@ -1169,6 +1026,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-04-01",
     link: "https://x.ai/",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "239",
@@ -1183,6 +1041,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-10-01",
     link: "https://x.ai/api",
     logo: getLogoUrl("xAI"),
+    status: "Active"
   },
   {
     id: "78",
@@ -1197,20 +1056,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://aleph-alpha.com/aleph-alpha-launches-phariaai-the-enterprise-grade-operating-system-for-generative-ai-combining-future-proof-sovereign-design-with-llm-explainability-and-compliance/",
     logo: getLogoUrl("Aleph Alpha"),
-  },
-  {
-    id: "301",
-    title: "Creance AI合规工具",
-    description: "与PwC合作开发的AI合规工具，可自动化处理复杂的法规分析和文档生成，提高企业合规效率。",
-    company: "Aleph Alpha",
-    country: "德国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2024-01-01",
-    link: "https://aleph-alpha.com/",
-    logo: getLogoUrl("Aleph Alpha"),
+    status: "Active"
   },
   {
     id: "79",
@@ -1225,20 +1071,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.deepl.com/pro/write",
     logo: getLogoUrl("DeepL"),
-  },
-  {
-    id: "300",
-    title: "DeepL 翻译器",
-    description: "基于神经网络的机器翻译工具，支持多种语言的高质量翻译，是全球领先的翻译服务之一。",
-    company: "DeepL",
-    country: "德国",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2017-08-29",
-    link: "https://www.deepl.com/translator",
-    logo: getLogoUrl("DeepL"),
+    status: "Active"
   },
   {
     id: "83",
@@ -1253,6 +1086,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-15",
     link: "https://www.mech-mind.com/news/news/002.html",
     logo: getLogoUrl("Mech-Mind Robotics"),
+    status: "Active"
   },
   {
     id: "87",
@@ -1267,6 +1101,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-02-15",
     link: "https://olakrutrim.com/",
     logo: getLogoUrl("Krutrim AI"),
+    status: "Active"
   },
   {
     id: "88",
@@ -1281,6 +1116,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-12-21",
     link: "https://sarvam.ai/",
     logo: getLogoUrl("Sarvam AI"),
+    status: "Active"
   },
   {
     id: "89",
@@ -1295,6 +1131,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://www.haptik.ai/",
     logo: getLogoUrl("Haptik"),
+    status: "Active"
   },
   {
     id: "91",
@@ -1309,20 +1146,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-07-01",
     link: "https://darktrace.com/platform",
     logo: getLogoUrl("Darktrace"),
-  },
-  {
-    id: "613",
-    title: "Cyber AI Platform",
-    description: "Darktrace开发的AI系统，用于实时检测和响应网络威胁，Antigena是其自主响应模块。",
-    company: "Darktrace",
-    country: "英国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2013-01-01",
-    link: "https://darktrace.com/",
-    logo: getLogoUrl("Darktrace"),
+    status: "Active"
   },
   {
     id: "92",
@@ -1337,20 +1161,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-17",
     link: "https://www.synthesia.io/",
     logo: getLogoUrl("Synthesia"),
-  },
-  {
-    id: "604",
-    title: "Synthesia Platform",
-    description: "通过文本输入生成带有AI化身和配音的逼真视频，应用于企业培训、营销和客户沟通。",
-    company: "Synthesia",
-    country: "英国",
-    category: "Image Generation",
-    type: "Product",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.synthesia.io/",
-    logo: getLogoUrl("Synthesia"),
+    status: "Active"
   },
   {
     id: "93",
@@ -1365,20 +1176,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.benevolent.com/benevolent-platform",
     logo: getLogoUrl("BenevolentAI"),
-  },
-  {
-    id: "606",
-    title: "BenAI Engine",
-    description: "BenevolentAI开发的AI驱动药物发现平台，通过数据分析识别潜在药物靶点。",
-    company: "BenevolentAI",
-    country: "英国",
-    category: "Platform",
-    type: "Service",
-    pricing: "研究",
-    version: "",
-    date: "2018-01-01",
-    link: "https://www.benevolent.com/",
-    logo: getLogoUrl("BenevolentAI"),
+    status: "Active"
   },
   {
     id: "94",
@@ -1393,6 +1191,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-08-25",
     link: "https://www.dataiku.com/",
     logo: getLogoUrl("Dataiku"),
+    status: "Active"
   },
   {
     id: "95",
@@ -1407,6 +1206,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.shift-technology.com/",
     logo: getLogoUrl("Shift Technology"),
+    status: "Active"
   },
   {
     id: "96",
@@ -1421,6 +1221,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://owkin.com/",
     logo: getLogoUrl("OWKIN"),
+    status: "Active"
   },
   {
     id: "97",
@@ -1435,6 +1236,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-01",
     link: "https://www.lighton.ai/",
     logo: getLogoUrl("LightOn"),
+    status: "Active"
   },
   {
     id: "98",
@@ -1449,6 +1251,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.algolia.com/",
     logo: getLogoUrl("Algolia"),
+    status: "Active"
   },
   {
     id: "99",
@@ -1463,6 +1266,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://www.samsungsds.com/",
     logo: getLogoUrl("Samsung SDS"),
+    status: "Active"
   },
   {
     id: "100",
@@ -1477,6 +1281,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.doosanrobotics.com/",
     logo: getLogoUrl("Doosan Robotics"),
+    status: "Active"
   },
   {
     id: "101",
@@ -1491,6 +1296,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://www.lunit.io/products/lunit-insight-mmg",
     logo: getLogoUrl("Lunit"),
+    status: "Active"
   },
   {
     id: "102",
@@ -1501,10 +1307,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "开源",
-    version: "",
-    date: "2023-12-14",
+    version: "Pro 2",
+    date: "2025-07-10",
     link: "https://upstage.ai/solar",
     logo: getLogoUrl("Upstage"),
+    status: "Active"
   },
   {
     id: "104",
@@ -1519,6 +1326,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.mindbridge.ai/",
     logo: getLogoUrl("MindBridge AI"),
+    status: "Active"
   },
   {
     id: "105",
@@ -1533,6 +1341,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.coveo.com/",
     logo: getLogoUrl("Coveo"),
+    status: "Active"
   },
   {
     id: "106",
@@ -1547,20 +1356,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-04-23",
     link: "https://www.sensetime.com/cn/product-business#llm",
     logo: getLogoUrl("SenseTime"),
-  },
-  {
-    id: "263",
-    title: "书生 (INTERN) 2.5",
-    description: "商汤科技推出的多模态大模型，专注于理解和生成复杂的视觉和语言内容，是其AI基础设施的核心组成部分。",
-    company: "SenseTime",
-    country: "中国",
-    category: "LLM",
-    type: "Product",
-    pricing: "研究",
-    version: "2.5",
-    date: "2023-03-01",
-    link: "https://www.sensetime.com/cn/product-business#llm",
-    logo: getLogoUrl("SenseTime"),
+    status: "Active"
   },
   {
     id: "107",
@@ -1575,6 +1371,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-30",
     link: "https://xinghuo.xfyun.cn/",
     logo: getLogoUrl("iFlytek"),
+    status: "Active"
   },
   {
     id: "108",
@@ -1589,6 +1386,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-06-15",
     link: "https://www.baichuan-ai.com/",
     logo: getLogoUrl("Baichuan Intelligent Technology"),
+    status: "Active"
   },
   {
     id: "109",
@@ -1599,24 +1397,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "开源",
-    version: "",
-    date: "2024-04-01",
+    version: "V3.1",
+    date: "2025-08-21",
     link: "https://www.deepseek.com/",
     logo: getLogoUrl("DeepSeek"),
-  },
-  {
-    id: "264",
-    title: "DeepSeek-R1 大模型",
-    description: "深度求索推出的大语言模型，因其卓越的性能和开源特性在2025年受到广泛关注，迅速在开发者社区中流行。",
-    company: "DeepSeek",
-    country: "中国",
-    category: "LLM",
-    type: "Product",
-    pricing: "开源",
-    version: "R1",
-    date: "2025-01-10",
-    link: "https://www.deepseek.com/",
-    logo: getLogoUrl("DeepSeek"),
+    status: "Active"
   },
   {
     id: "110",
@@ -1631,34 +1416,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-08-18",
     link: "https://www.doubao.com/",
     logo: getLogoUrl("ByteDance"),
-  },
-  {
-    id: "265",
-    title: "猫箱 (Cat Box)",
-    description: "字节跳动旗下的一款AI聊天和内容创作工具，以其独特的互动体验在年轻用户中广受欢迎。",
-    company: "ByteDance",
-    country: "中国",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2025-01-01",
-    link: "https://www.doubao.com/",
-    logo: getLogoUrl("ByteDance"),
-  },
-  {
-    id: "266",
-    title: "即梦AI (JiMeng AI)",
-    description: "字节跳动推出的AI图像和视频生成应用，凭借其强大的创作能力和易用性，在2025年实现了惊人的下载量。",
-    company: "ByteDance",
-    country: "中国",
-    category: "Image Generation",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2025-01-01",
-    link: "https://www.doubao.com/",
-    logo: getLogoUrl("ByteDance"),
+    status: "Active"
   },
   {
     id: "115",
@@ -1673,6 +1431,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.coreweave.com/",
     logo: getLogoUrl("CoreWeave"),
+    status: "Active"
   },
   {
     id: "116",
@@ -1687,20 +1446,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.anduril.com/lattice/",
     logo: getLogoUrl("Anduril"),
+    status: "Active"
   },
   {
     id: "117",
-    title: "Figure 02 人形机器人",
+    title: "Figure 03 人形机器人",
     description: "一款具备语音对话和灵巧操作能力的人形机器人，设计用于在制造业等环境中执行体力劳动任务。",
     company: "Figure AI",
     country: "美国",
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "02",
-    date: "2024-03-13",
+    version: "03",
+    date: "2025-06-07",
     link: "https://www.figure.ai/",
     logo: getLogoUrl("Figure AI"),
+    status: "Active"
   },
   {
     id: "118",
@@ -1715,6 +1476,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://crusoe.ai/",
     logo: getLogoUrl("Crusoe"),
+    status: "Active"
   },
   {
     id: "119",
@@ -1729,6 +1491,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.harvey.ai/",
     logo: getLogoUrl("Harvey"),
+    status: "Active"
   },
   {
     id: "120",
@@ -1743,6 +1506,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.abridge.com/",
     logo: getLogoUrl("Abridge"),
+    status: "Active"
   },
   {
     id: "121",
@@ -1753,10 +1517,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
-    version: "",
-    date: "2021-01-01",
+    version: "Gen-4",
+    date: "2025-03-31",
     link: "https://runwayml.com/",
     logo: getLogoUrl("Runway"),
+    status: "Active"
   },
   {
     id: "123",
@@ -1771,6 +1536,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-15",
     link: "https://arxiv.org/abs/2405.09350",
     logo: getLogoUrl("Stanford University"),
+    status: "Active"
   },
   {
     id: "124",
@@ -1781,10 +1547,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
-    date: "2023-01-01",
+    version: "Brain",
+    date: "2025-07-29",
     link: "https://www.skild.ai/",
     logo: getLogoUrl("Skild AI"),
+    status: "Active"
   },
   {
     id: "125",
@@ -1799,6 +1566,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://writer.com/",
     logo: getLogoUrl("Writer"),
+    status: "Active"
   },
   {
     id: "127",
@@ -1813,20 +1581,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://helsing.ai/",
     logo: getLogoUrl("Helsing"),
-  },
-  {
-    id: "307",
-    title: "Helsing 国防AI平台",
-    description: "一个专为国防和国家安全领域构建的AI软件平台，旨在通过实时数据处理和智能分析提升决策速度和准确性。",
-    company: "Helsing",
-    country: "德国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2021-01-01",
-    link: "https://helsing.ai/",
-    logo: getLogoUrl("Helsing"),
+    status: "Active"
   },
   {
     id: "128",
@@ -1842,6 +1597,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.kuka.com/",
     logo: getLogoUrl("KUKA"),
+    status: "Active"
   },
   {
     id: "129",
@@ -1856,6 +1612,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.franka.de/",
     logo: getLogoUrl("Franka Robotics"),
+    status: "Active"
   },
   {
     id: "130",
@@ -1870,6 +1627,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-09-01",
     link: "https://www.sap.com/products/artificial-intelligence/joule.html",
     logo: getLogoUrl("SAP"),
+    status: "Active"
   },
   {
     id: "131",
@@ -1884,6 +1642,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.bosch.com/",
     logo: getLogoUrl("Bosch"),
+    status: "Active"
   },
   {
     id: "132",
@@ -1898,6 +1657,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.photoroom.com/",
     logo: getLogoUrl("Photoroom"),
+    status: "Active"
   },
   {
     id: "133",
@@ -1908,38 +1668,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "HyperCLOVA X",
-    date: "2023-08-24",
+    version: "HyperCLOVA X Think",
+    date: "2025-06-30",
     link: "https://www.navercloud.com/product/ai/hyperclovaX",
     logo: getLogoUrl("Naver"),
-  },
-  {
-    id: "351",
-    title: "CLOVA AI Platform",
-    description: "NAVER的AI平台，提供语音识别、图像识别、自然语言处理等多种功能，为开发者和企业提供强大的AI能力。",
-    company: "Naver",
-    country: "韩国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2017-01-01",
-    link: "https://clova.ai/",
-    logo: getLogoUrl("Naver"),
-  },
-  {
-    id: "352",
-    title: "Papago 翻译",
-    description: "由NAVER开发的AI翻译应用，利用神经网络技术提供高质量的多语言翻译服务。",
-    company: "Naver",
-    country: "韩国",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2016-01-01",
-    link: "https://papago.naver.com/",
-    logo: getLogoUrl("Naver"),
+    status: "Active"
   },
   {
     id: "134",
@@ -1954,34 +1687,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-10-18",
     link: "https://www.kakaobrain.com/en/products/karlo",
     logo: getLogoUrl("Kakao Brain"),
-  },
-  {
-    id: "354",
-    title: "Kakao Brain AI研究",
-    description: "Kakao的AI研究部门，专注于开发前沿的AI技术，包括超大规模语言模型和图像生成技术。",
-    company: "Kakao Brain",
-    country: "韩国",
-    category: "Research",
-    type: "Research",
-    pricing: "研究",
-    version: "",
-    date: "2017-01-01",
-    link: "https://www.kakaobrain.com/",
-    logo: getLogoUrl("Kakao Brain"),
-  },
-  {
-    id: "353",
-    title: "Kakao i 智能助手",
-    description: "Kakao的智能语音助手，深度集成于Kakao Talk等应用中，提供信息查询、设备控制等服务。",
-    company: "Kakao",
-    country: "韩国",
-    category: "LLM",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2017-01-01",
-    link: "https://www.kakao.com/service/Kakaoi",
-    logo: getLogoUrl("Kakao"),
+    status: "Active"
   },
   {
     id: "135",
@@ -1992,24 +1698,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "Exaone",
-    date: "2022-12-01",
+    version: "Exaone 4.0",
+    date: "2025-07-15",
     link: "https://www.lgresearch.ai/en/exaone",
     logo: getLogoUrl("LG AI Research"),
-  },
-  {
-    id: "357",
-    title: "LG ThinQ 智能平台",
-    description: "LG电子的AI平台，用于智能家居和家电，通过学习用户习惯提供个性化的设备体验和主动服务。",
-    company: "LG Electronics",
-    country: "韩国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2018-01-01",
-    link: "https://www.lg.com/global/thinq",
-    logo: getLogoUrl("LG Electronics"),
+    status: "Active"
   },
   {
     id: "136",
@@ -2024,34 +1717,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-11-01",
     link: "https://www.sapeon.com/en",
     logo: getLogoUrl("SK Telecom"),
-  },
-  {
-    id: "358",
-    title: "NUGU 智能音箱",
-    description: "SK Telecom的智能语音助手和音箱，提供音乐播放、信息查询、导航等多种服务。",
-    company: "SK Telecom",
-    country: "韩国",
-    category: "Audio",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2016-01-01",
-    link: "https://www.nugu.co.kr/",
-    logo: getLogoUrl("SK Telecom"),
-  },
-  {
-    id: "359",
-    title: "T-Map AI导航",
-    description: "韩国领先的AI导航系统，利用实时交通数据和机器学习算法提供最优路线规划。",
-    company: "SK Telecom",
-    country: "韩国",
-    category: "Platform",
-    type: "Service",
-    pricing: "免费增值",
-    version: "",
-    date: "2017-01-01",
-    link: "https://www.tmap.co.kr/",
-    logo: getLogoUrl("SK Telecom"),
+    status: "Active"
   },
   {
     id: "137",
@@ -2066,6 +1732,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://rebellions.ai/en/",
     logo: getLogoUrl("Rebellion"),
+    status: "Active"
   },
   {
     id: "138",
@@ -2080,6 +1747,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://www.moloco.com/",
     logo: getLogoUrl("Moloco"),
+    status: "Active"
   },
   {
     id: "139",
@@ -2094,6 +1762,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://riiid.co/",
     logo: getLogoUrl("Riiid"),
+    status: "Active"
   },
   {
     id: "140",
@@ -2108,6 +1777,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://supertone.ai/",
     logo: getLogoUrl("Supertone"),
+    status: "Active"
   },
   {
     id: "141",
@@ -2122,6 +1792,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://www.selvasai.com/en/service/aivoice-recognition",
     logo: getLogoUrl("SELVAS AI"),
+    status: "Active"
   },
   {
     id: "142",
@@ -2136,6 +1807,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.ada.cx/",
     logo: getLogoUrl("Ada"),
+    status: "Active"
   },
   {
     id: "143",
@@ -2150,6 +1822,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://www.deepgenomics.com/",
     logo: getLogoUrl("Deep Genomics"),
+    status: "Active"
   },
   {
     id: "144",
@@ -2164,6 +1837,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-05-16",
     link: "https://www.sanctuary.ai/",
     logo: getLogoUrl("Sanctuary AI"),
+    status: "Active"
   },
   {
     id: "145",
@@ -2174,10 +1848,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "Grayskull",
-    date: "2022-01-01",
+    version: "Wormhole",
+    date: "2025-07-25",
     link: "https://tenstorrent.com/",
     logo: getLogoUrl("Tenstorrent"),
+    status: "Active"
   },
   {
     id: "146",
@@ -2188,10 +1863,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
-    date: "2023-12-01",
+    version: "Mini",
+    date: "2025-06-23",
     link: "https://www.corover.ai/bharatgpt",
     logo: getLogoUrl("CoRover.ai"),
+    status: "Active"
   },
   {
     id: "147",
@@ -2206,6 +1882,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://sigtuple.com/",
     logo: getLogoUrl("SigTuple"),
+    status: "Active"
   },
   {
     id: "148",
@@ -2220,34 +1897,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.flutura.com/",
     logo: getLogoUrl("Flutura"),
+    status: "Active"
   },
   {
     id: "149",
-    title: "LINGO-1 自动驾驶模型",
+    title: "LINGO-2 自动驾驶模型",
     description: "一款创新的自动驾驶模型，能够结合自然语言指令来理解复杂的驾驶场景，显著降低事故率。",
     company: "Wayve",
     country: "英国",
     category: "Platform",
     type: "Service",
     pricing: "研究",
-    version: "",
-    date: "2024-01-01",
+    version: "LINGO-2",
+    date: "2025-04-17",
     link: "https://wayve.ai/",
     logo: getLogoUrl("Wayve"),
-  },
-  {
-    id: "603",
-    title: "AV2.0 Platform",
-    description: "Wayve开发的端到端深度学习自动驾驶系统，使用摄像头和传感器进行环境感知和导航。",
-    company: "Wayve",
-    country: "英国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2019-01-01",
-    link: "https://wayve.ai/",
-    logo: getLogoUrl("Wayve"),
+    status: "Active"
   },
   {
     id: "151",
@@ -2262,6 +1927,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://tractable.ai/",
     logo: getLogoUrl("Tractable"),
+    status: "Active"
   },
   {
     id: "152",
@@ -2276,34 +1942,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-05-01",
     link: "https://matlantis.com/",
     logo: getLogoUrl("Preferred Networks"),
-  },
-  {
-    id: "400",
-    title: "PaintsChainer 漫画自动着色工具",
-    description: "一个利用深度学习自动为黑白漫画线稿上色的工具，极大地提高了漫画家的创作效率。",
-    company: "Preferred Networks",
-    country: "日本",
-    category: "Image Generation",
-    type: "Product",
-    pricing: "免费增值",
-    version: "",
-    date: "2017-01-01",
-    link: "https://paintschainer.preferred.tech/",
-    logo: getLogoUrl("Preferred Networks"),
-  },
-  {
-    id: "401",
-    title: "Chainer 开源深度学习框架",
-    description: "一个强大而灵活的开源深度学习框架，以其“Define-by-Run”方案而闻名，简化了复杂神经网络的构建。",
-    company: "Preferred Networks",
-    country: "日本",
-    category: "Developer Tools",
-    type: "Product",
-    pricing: "开源",
-    version: "",
-    date: "2015-01-01",
-    link: "https://chainer.org/",
-    logo: getLogoUrl("Preferred Networks"),
+    status: "Active"
   },
   {
     id: "153",
@@ -2318,6 +1957,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-03-20",
     link: "https://sakana.ai/",
     logo: getLogoUrl("Sakana AI"),
+    status: "Active"
   },
   {
     id: "154",
@@ -2332,6 +1972,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.mujin-corp.com/",
     logo: getLogoUrl("Mujin"),
+    status: "Active"
   },
   {
     id: "155",
@@ -2346,6 +1987,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://abejainc.com/",
     logo: getLogoUrl("ABEJA"),
+    status: "Active"
   },
   {
     id: "156",
@@ -2360,6 +2002,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://rinna.co.jp/",
     logo: getLogoUrl("Rinna"),
+    status: "Active"
   },
   {
     id: "157",
@@ -2374,6 +2017,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://global.toyota/",
     logo: getLogoUrl("Toyota"),
+    status: "Active"
   },
   {
     id: "158",
@@ -2388,6 +2032,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.softbankrobotics.com/",
     logo: getLogoUrl("SoftBank Robotics"),
+    status: "Active"
   },
   {
     id: "159",
@@ -2402,6 +2047,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://cinnamon.ai/",
     logo: getLogoUrl("Cinnamon AI"),
+    status: "Active"
   },
   {
     id: "160",
@@ -2416,6 +2062,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://autify.com/",
     logo: getLogoUrl("Autify"),
+    status: "Active"
   },
   {
     id: "161",
@@ -2430,6 +2077,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-10-01",
     link: "https://leapmind.io/",
     logo: getLogoUrl("LeapMind"),
+    status: "Active"
   },
   {
     id: "162",
@@ -2444,6 +2092,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-01",
     link: "https://www.nec.com/",
     logo: getLogoUrl("NEC"),
+    status: "Active"
   },
   {
     id: "163",
@@ -2458,6 +2107,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-05-01",
     link: "https://www.mitsubishielectric.com/",
     logo: getLogoUrl("Mitsubishi Electric"),
+    status: "Active"
   },
   {
     id: "164",
@@ -2472,6 +2122,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-01",
     link: "https://www.hitachi.com/",
     logo: getLogoUrl("Hitachi"),
+    status: "Active"
   },
   {
     id: "165",
@@ -2482,10 +2133,26 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Audio",
     type: "Product",
     pricing: "免费增值",
-    version: "",
-    date: "2023-01-23",
+    version: "EVI 3",
+    date: "2025-07-17",
     link: "https://elevenlabs.io/",
     logo: getLogoUrl("ElevenLabs"),
+    status: "Active"
+  },
+  {
+    id: "228",
+    title: "文心一言 (ERNIE Bot)",
+    description: "基于文心大模型系列构建的对话式AI应用，能够与人进行自然语言交互，完成问答、创作、摘要等多种任务，是中国市场领先的生成式AI产品。",
+    company: "Baidu",
+    country: "中国",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "ERNIE 5",
+    date: "2025-08-21",
+    link: "https://yiyan.baidu.com/",
+    logo: getLogoUrl("Baidu"),
+    status: "Active"
   },
   {
     id: "240",
@@ -2500,6 +2167,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://cursor.sh/",
     logo: getLogoUrl("Anysphere"),
+    status: "Active"
   },
   {
     id: "241",
@@ -2510,10 +2178,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
-    date: "2021-01-01",
-    link: "https://hume.ai/",
+    version: "EVI 3",
+    date: "2025-07-17",
+    link: "https://www.hume.ai/",
     logo: getLogoUrl("Hume AI"),
+    status: "Active"
   },
   {
     id: "242",
@@ -2528,6 +2197,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://soundful.com/",
     logo: getLogoUrl("Soundful"),
+    status: "Active"
   },
   {
     id: "243",
@@ -2542,6 +2212,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://groq.com/",
     logo: getLogoUrl("Groq"),
+    status: "Active"
   },
   {
     id: "244",
@@ -2552,10 +2223,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
-    date: "2015-01-01",
+    version: "WSE-3",
+    date: "2025-02-24",
     link: "https://www.cerebras.net/",
     logo: getLogoUrl("Cerebras Systems"),
+    status: "Active"
   },
   {
     id: "245",
@@ -2570,6 +2242,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://sambanova.ai/",
     logo: getLogoUrl("SambaNova Systems"),
+    status: "Active"
   },
   {
     id: "246",
@@ -2584,6 +2257,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2012-01-01",
     link: "https://h2o.ai/",
     logo: getLogoUrl("H2O.ai"),
+    status: "Active"
   },
   {
     id: "247",
@@ -2598,6 +2272,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://instabase.com/",
     logo: getLogoUrl("Instabase"),
+    status: "Active"
   },
   {
     id: "248",
@@ -2612,6 +2287,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://www.tempus.com/",
     logo: getLogoUrl("Tempus"),
+    status: "Active"
   },
   {
     id: "249",
@@ -2626,6 +2302,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://frame.ai/",
     logo: getLogoUrl("Frame AI"),
+    status: "Active"
   },
   {
     id: "250",
@@ -2640,6 +2317,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.overjet.ai/",
     logo: getLogoUrl("Overjet"),
+    status: "Active"
   },
   {
     id: "251",
@@ -2650,10 +2328,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
-    date: "2017-01-01",
+    version: "Voice",
+    date: "2025-03-25",
     link: "https://forethought.ai/",
     logo: getLogoUrl("Forethought"),
+    status: "Active"
   },
   {
     id: "252",
@@ -2668,6 +2347,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.nexterarobotics.com/",
     logo: getLogoUrl("Nextera Robotics"),
+    status: "Active"
   },
   {
     id: "253",
@@ -2682,6 +2362,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://www.freenome.com/",
     logo: getLogoUrl("Freenome"),
+    status: "Active"
   },
   {
     id: "254",
@@ -2692,10 +2373,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
-    version: "",
-    date: "2021-01-01",
+    version: "Gen-4",
+    date: "2025-03-31",
     link: "https://www.midjourney.com/",
     logo: getLogoUrl("Midjourney"),
+    status: "Active"
   },
   {
     id: "255",
@@ -2706,10 +2388,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Product",
     pricing: "免费增值",
-    version: "",
-    date: "2018-01-01",
+    version: "Autodesigner 2.0",
+    date: "2025-06-12",
     link: "https://uizard.io/",
     logo: getLogoUrl("Uizard"),
+    status: "Active"
   },
   {
     id: "256",
@@ -2724,6 +2407,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2011-01-01",
     link: "https://www.vectra.ai/",
     logo: getLogoUrl("Vectra AI"),
+    status: "Active"
   },
   {
     id: "257",
@@ -2738,6 +2422,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://mostly.ai/",
     logo: getLogoUrl("MOSTLY AI"),
+    status: "Active"
   },
   {
     id: "258",
@@ -2752,6 +2437,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-01",
     link: "https://www.deepnight.ai/",
     logo: getLogoUrl("DeepNight"),
+    status: "Active"
   },
   {
     id: "259",
@@ -2766,6 +2452,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-01",
     link: "https://www.atla.ai/",
     logo: getLogoUrl("Atla"),
+    status: "Active"
   },
   {
     id: "260",
@@ -2780,6 +2467,97 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://insitro.com/",
     logo: getLogoUrl("Insitro"),
+    status: "Active"
+  },
+  {
+    id: "261",
+    title: "文心大模型 4.5",
+    description: "百度文心大模型的升级版本，在2025年春季发布会推出，进一步提升了模型的综合能力和推理性能。",
+    company: "Baidu",
+    country: "中国",
+    category: "LLM",
+    type: "Product",
+    pricing: "商业",
+    version: "5",
+    date: "2025-08-21",
+    link: "https://baike.baidu.com/item/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80/62642976",
+    logo: getLogoUrl("Baidu"),
+    status: "Active"
+  },
+  {
+    id: "262",
+    title: "通义千问 2.5",
+    description: "阿里巴巴通义大模型的迭代版本，在性能和多模态理解方面有显著提升，持续为企业和开发者提供强大的AI能力。",
+    company: "Alibaba Cloud",
+    country: "中国",
+    category: "LLM",
+    type: "Product",
+    pricing: "商业",
+    version: "2.5",
+    date: "2024-05-24",
+    link: "https://tongyi.aliyun.com/blog/191573937",
+    logo: getLogoUrl("Alibaba Cloud"),
+    status: "Active"
+  },
+  {
+    id: "263",
+    title: "书生 (INTERN) 2.5",
+    description: "商汤科技推出的多模态大模型，专注于理解和生成复杂的视觉和语言内容，是其AI基础设施的核心组成部分。",
+    company: "SenseTime",
+    country: "中国",
+    category: "LLM",
+    type: "Product",
+    pricing: "研究",
+    version: "2.5",
+    date: "2023-03-01",
+    link: "https://www.sensetime.com/cn/product-business#llm",
+    logo: getLogoUrl("SenseTime"),
+    status: "Active"
+  },
+  {
+    id: "264",
+    title: "DeepSeek-R1 大模型",
+    description: "深度求索推出的大语言模型，因其卓越的性能和开源特性在2025年受到广泛关注，迅速在开发者社区中流行。",
+    company: "DeepSeek",
+    country: "中国",
+    category: "LLM",
+    type: "Product",
+    pricing: "开源",
+    version: "R1",
+    date: "2025-01-10",
+    link: "https://www.deepseek.com/",
+    logo: getLogoUrl("DeepSeek"),
+    status: "Active"
+  },
+  {
+    id: "265",
+    title: "猫箱 (Cat Box)",
+    description: "字节跳动旗下的一款AI聊天和内容创作工具，以其独特的互动体验在年轻用户中广受欢迎。",
+    company: "ByteDance",
+    country: "中国",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2025-01-01",
+    link: "https://www.doubao.com/",
+    logo: getLogoUrl("ByteDance"),
+    status: "Active"
+  },
+  {
+    id: "266",
+    title: "即梦AI (JiMeng AI)",
+    description: "字节跳动推出的AI图像和视频生成应用，凭借其强大的创作能力和易用性，在2025年实现了惊人的下载量。",
+    company: "ByteDance",
+    country: "中国",
+    category: "Image Generation",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2025-01-01",
+    link: "https://www.doubao.com/",
+    logo: getLogoUrl("ByteDance"),
+    status: "Active"
   },
   {
     id: "267",
@@ -2790,10 +2568,11 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
-    date: "2018-10-10",
+    version: "910D",
+    date: "2025-06-24",
     link: "https://www.huawei.com/cn/tech-for-all/intelligent-world/ai",
     logo: getLogoUrl("Huawei"),
+    status: "Active"
   },
   {
     id: "268",
@@ -2808,6 +2587,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://www.megvii.com/",
     logo: getLogoUrl("Megvii"),
+    status: "Active"
   },
   {
     id: "269",
@@ -2822,6 +2602,37 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-05-09",
     link: "https://www.yitutech.com/",
     logo: getLogoUrl("Yitu Technology"),
+    status: "Active"
+  },
+  {
+    id: "300",
+    title: "DeepL 翻译器",
+    description: "基于神经网络的机器翻译工具，支持多种语言的高质量翻译，是全球领先的翻译服务之一。",
+    company: "DeepL",
+    country: "德国",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2017-08-29",
+    link: "https://www.deepl.com/translator",
+    logo: getLogoUrl("DeepL"),
+    status: "Active"
+  },
+  {
+    id: "301",
+    title: "Creance AI合规工具",
+    description: "与PwC合作开发的AI合规工具，可自动化处理复杂的法规分析和文档生成，提高企业合规效率。",
+    company: "Aleph Alpha",
+    country: "德国",
+    category: "Platform",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2024-01-01",
+    link: "https://aleph-alpha.com/",
+    logo: getLogoUrl("Aleph Alpha"),
+    status: "Active"
   },
   {
     id: "302",
@@ -2836,6 +2647,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://parloa.com/",
     logo: getLogoUrl("Parloa"),
+    status: "Active"
   },
   {
     id: "303",
@@ -2850,6 +2662,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://n8n.io/",
     logo: getLogoUrl("N8n"),
+    status: "Active"
   },
   {
     id: "304",
@@ -2864,6 +2677,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://arago.co/",
     logo: getLogoUrl("Arago"),
+    status: "Active"
   },
   {
     id: "305",
@@ -2878,6 +2692,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2010-01-01",
     link: "https://www.acrolinx.com/",
     logo: getLogoUrl("Acrolinx"),
+    status: "Active"
   },
   {
     id: "306",
@@ -2892,6 +2707,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://omnius.com/",
     logo: getLogoUrl("omni:us"),
+    status: "Active"
+  },
+  {
+    id: "307",
+    title: "Helsing 国防AI平台",
+    description: "一个专为国防和国家安全领域构建的AI软件平台，旨在通过实时数据处理和智能分析提升决策速度和准确性。",
+    company: "Helsing",
+    country: "德国",
+    category: "Platform",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2021-01-01",
+    link: "https://helsing.ai/",
+    logo: getLogoUrl("Helsing"),
+    status: "Active"
   },
   {
     id: "308",
@@ -2906,6 +2737,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://www.volocopter.com/",
     logo: getLogoUrl("Volocopter"),
+    status: "Active"
   },
   {
     id: "309",
@@ -2920,6 +2752,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.coachhub.com/",
     logo: getLogoUrl("CoachHub"),
+    status: "Active"
   },
   {
     id: "310",
@@ -2934,6 +2767,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.quantum-systems.com/",
     logo: getLogoUrl("Quantum-Systems"),
+    status: "Active"
   },
   {
     id: "311",
@@ -2948,6 +2782,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://cartagon.com/",
     logo: getLogoUrl("cartagon.ai"),
+    status: "Active"
   },
   {
     id: "312",
@@ -2962,6 +2797,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.tado.com/",
     logo: getLogoUrl("tado°"),
+    status: "Active"
   },
   {
     id: "313",
@@ -2976,6 +2812,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://www.konux.com/",
     logo: getLogoUrl("KONUX"),
+    status: "Active"
   },
   {
     id: "314",
@@ -2990,6 +2827,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.langdock.com/",
     logo: getLogoUrl("Langdock"),
+    status: "Active"
   },
   {
     id: "315",
@@ -3004,6 +2842,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://nect.com/",
     logo: getLogoUrl("Nect"),
+    status: "Active"
   },
   {
     id: "316",
@@ -3018,6 +2857,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://ada.com/",
     logo: getLogoUrl("Ada Health"),
+    status: "Active"
   },
   {
     id: "317",
@@ -3032,6 +2872,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2024-01-01",
     link: "https://www.piya.ai/",
     logo: getLogoUrl("PIYA AI"),
+    status: "Active"
   },
   {
     id: "318",
@@ -3046,6 +2887,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-01-01",
     link: "https://www.piya.ai/",
     logo: getLogoUrl("PIYA AI"),
+    status: "Active"
   },
   {
     id: "319",
@@ -3060,6 +2902,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://capsula.ai/",
     logo: getLogoUrl("Capsula"),
+    status: "Active"
   },
   {
     id: "320",
@@ -3074,6 +2917,82 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://example.com",
     logo: getLogoUrl("Stardawn AI"),
+    status: "Active"
+  },
+  {
+    id: "321",
+    title: "Yandex.Translate",
+    description: "一个基于神经网络的机器翻译工具，支持多种语言的高质量翻译。",
+    company: "Yandex",
+    country: "俄罗斯",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2011-01-01",
+    link: "https://translate.yandex.com/",
+    logo: getLogoUrl("Yandex"),
+    status: "Active"
+  },
+  {
+    id: "322",
+    title: "Yandex.Alice 智能语音助手",
+    description: "一款智能语音助手，可用于智能家居设备和Yandex的各种服务中。",
+    company: "Yandex",
+    country: "俄罗斯",
+    category: "Audio",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2017-01-01",
+    link: "https://yandex.com/alice",
+    logo: getLogoUrl("Yandex"),
+    status: "Active"
+  },
+  {
+    id: "323",
+    title: "LUNA 人脸识别平台",
+    description: "一个高性能的人脸识别平台，广泛应用于安防、金融和零售等领域的身份验证。",
+    company: "VisionLabs",
+    country: "俄罗斯",
+    category: "Platform",
+    type: "Product",
+    pricing: "商业",
+    version: "",
+    date: "2016-01-01",
+    link: "https://visionlabs.ai/products/luna-platform",
+    logo: getLogoUrl("VisionLabs"),
+    status: "Active"
+  },
+  {
+    id: "324",
+    title: "人脸识别 SDK",
+    description: "提供一套强大的人脸识别软件开发工具包，方便开发者将先进的面部识别技术集成到自己的应用中。",
+    company: "VisionLabs",
+    country: "俄罗斯",
+    category: "Developer Tools",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2017-01-01",
+    link: "https://visionlabs.ai/products/sdk",
+    logo: getLogoUrl("VisionLabs"),
+    status: "Active"
+  },
+  {
+    id: "325",
+    title: "FindFace 人脸识别系统",
+    description: "一套高精度的人脸识别系统，用于公共安全监控和商业客户分析。",
+    company: "NtechLab",
+    country: "俄罗斯",
+    category: "Platform",
+    type: "Product",
+    pricing: "商业",
+    version: "",
+    date: "2016-01-01",
+    link: "https://ntechlab.com/findface-multi/",
+    logo: getLogoUrl("NtechLab"),
+    status: "Active"
   },
   {
     id: "326",
@@ -3088,6 +3007,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.sberbank.com/ai",
     logo: getLogoUrl("Sberbank"),
+    status: "Active"
   },
   {
     id: "327",
@@ -3102,6 +3022,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://cognitivepilot.com/",
     logo: getLogoUrl("Cognitive Pilot"),
+    status: "Active"
   },
   {
     id: "328",
@@ -3116,6 +3037,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "1993-01-01",
     link: "https://pdf.abbyy.com/finereader-pdf/",
     logo: getLogoUrl("Abbyy"),
+    status: "Active"
   },
   {
     id: "329",
@@ -3130,6 +3052,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.abbyy.com/vantage/",
     logo: getLogoUrl("Abbyy"),
+    status: "Active"
   },
   {
     id: "330",
@@ -3144,6 +3067,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://prisma-ai.com/",
     logo: getLogoUrl("Prisma Labs"),
+    status: "Active"
   },
   {
     id: "331",
@@ -3158,6 +3082,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://example.com",
     logo: getLogoUrl("AIPort"),
+    status: "Active"
   },
   {
     id: "332",
@@ -3172,6 +3097,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://datamonsters.co/",
     logo: getLogoUrl("Data Monsters"),
+    status: "Active"
   },
   {
     id: "333",
@@ -3186,6 +3112,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://neurodatalab.com/",
     logo: getLogoUrl("Neurodata Lab"),
+    status: "Active"
   },
   {
     id: "334",
@@ -3200,6 +3127,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://botkin.ai/en/",
     logo: getLogoUrl("Botkin.AI"),
+    status: "Active"
   },
   {
     id: "335",
@@ -3214,6 +3142,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://intento.ai/",
     logo: getLogoUrl("Intento"),
+    status: "Active"
   },
   {
     id: "336",
@@ -3228,6 +3157,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://neuro-trend.ru/",
     logo: getLogoUrl("Neurotrend"),
+    status: "Active"
   },
   {
     id: "337",
@@ -3242,6 +3172,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://smartengines.com/",
     logo: getLogoUrl("Smart Engines"),
+    status: "Active"
   },
   {
     id: "338",
@@ -3256,6 +3187,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://robocv.ru/en/",
     logo: getLogoUrl("RoboCV"),
+    status: "Active"
   },
   {
     id: "339",
@@ -3270,6 +3202,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://geosplit.ru/en/",
     logo: getLogoUrl("Geosplit"),
+    status: "Active"
   },
   {
     id: "340",
@@ -3284,6 +3217,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://example.com",
     logo: getLogoUrl("Eywa Kitchen"),
+    status: "Active"
   },
   {
     id: "341",
@@ -3298,6 +3232,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://example.com",
     logo: getLogoUrl("KVINT"),
+    status: "Active"
   },
   {
     id: "342",
@@ -3312,6 +3247,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://example.com",
     logo: getLogoUrl("OhMyBet!"),
+    status: "Active"
   },
   {
     id: "343",
@@ -3326,6 +3262,37 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://vocord.com/",
     logo: getLogoUrl("Vocord"),
+    status: "Active"
+  },
+  {
+    id: "344",
+    title: "Le Chat 对话AI助手",
+    description: "Mistral AI推出的对话式AI助手，支持多语言对话，功能类似ChatGPT，并有移动应用版本。",
+    company: "Mistral AI",
+    country: "法国",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2024-02-01",
+    link: "https://chat.mistral.ai/",
+    logo: getLogoUrl("Mistral AI"),
+    status: "Active"
+  },
+  {
+    id: "345",
+    title: "Magistral AI模型",
+    description: "具备高级推理能力的AI模型系列，其中Magistral Small版本为开源，旨在推动更复杂的AI应用开发。",
+    company: "Mistral AI",
+    country: "法国",
+    category: "LLM",
+    type: "Product",
+    pricing: "开源",
+    version: "Magistral Small",
+    date: "2025-06-10",
+    link: "https://mistral.ai/",
+    logo: getLogoUrl("Mistral AI"),
+    status: "Active"
   },
   {
     id: "346",
@@ -3340,6 +3307,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-06-03",
     link: "https://www.h.ai/",
     logo: getLogoUrl("H Company"),
+    status: "Active"
   },
   {
     id: "347",
@@ -3354,6 +3322,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-01-01",
     link: "https://poolside.ai/",
     logo: getLogoUrl("Poolside"),
+    status: "Active"
   },
   {
     id: "348",
@@ -3368,6 +3337,97 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-01-01",
     link: "https://adaptive-ml.com/",
     logo: getLogoUrl("Adaptive ML"),
+    status: "Active"
+  },
+  {
+    id: "349",
+    title: "Mistral Small",
+    description: "Mistral AI推出的高效、轻量级的大语言模型，适用于多种需要快速响应和低成本部署的场景。",
+    company: "Mistral AI",
+    country: "法国",
+    category: "LLM",
+    type: "Product",
+    pricing: "商业",
+    version: "3.1",
+    date: "2025-03-17",
+    link: "https://mistral.ai/",
+    logo: getLogoUrl("Mistral AI"),
+    status: "Active"
+  },
+  {
+    id: "350",
+    title: "Mistral Medium",
+    description: "Mistral AI推出的中等规模的大语言模型，在性能和效率之间取得了良好平衡，适用于更复杂的企业级应用。",
+    company: "Mistral AI",
+    country: "法国",
+    category: "LLM",
+    type: "Product",
+    pricing: "商业",
+    version: "3.0",
+    date: "2025-05-07",
+    link: "https://mistral.ai/",
+    logo: getLogoUrl("Mistral AI"),
+    status: "Active"
+  },
+  {
+    id: "351",
+    title: "CLOVA AI Platform",
+    description: "NAVER的AI平台，提供语音识别、图像识别、自然语言处理等多种功能，为开发者和企业提供强大的AI能力。",
+    company: "Naver",
+    country: "韩国",
+    category: "Platform",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2017-01-01",
+    link: "https://clova.ai/",
+    logo: getLogoUrl("Naver"),
+    status: "Active"
+  },
+  {
+    id: "352",
+    title: "Papago 翻译",
+    description: "由NAVER开发的AI翻译应用，利用神经网络技术提供高质量的多语言翻译服务。",
+    company: "Naver",
+    country: "韩国",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2016-01-01",
+    link: "https://papago.naver.com/",
+    logo: getLogoUrl("Naver"),
+    status: "Active"
+  },
+  {
+    id: "353",
+    title: "Kakao i 智能助手",
+    description: "Kakao的智能语音助手，深度集成于Kakao Talk等应用中，提供信息查询、设备控制等服务。",
+    company: "Kakao",
+    country: "韩国",
+    category: "LLM",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2017-01-01",
+    link: "https://www.kakao.com/service/Kakaoi",
+    logo: getLogoUrl("Kakao"),
+    status: "Active"
+  },
+  {
+    id: "354",
+    title: "Kakao Brain AI研究",
+    description: "Kakao的AI研究部门，专注于开发前沿的AI技术，包括超大规模语言模型和图像生成技术。",
+    company: "Kakao Brain",
+    country: "韩国",
+    category: "Research",
+    type: "Research",
+    pricing: "研究",
+    version: "",
+    date: "2017-01-01",
+    link: "https://www.kakaobrain.com/",
+    logo: getLogoUrl("Kakao Brain"),
+    status: "Active"
   },
   {
     id: "355",
@@ -3382,6 +3442,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://www.samsung.com/global/galaxy/apps/bixby/",
     logo: getLogoUrl("Samsung Electronics"),
+    status: "Active"
   },
   {
     id: "356",
@@ -3396,6 +3457,52 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://www.smartthings.com/",
     logo: getLogoUrl("Samsung Electronics"),
+    status: "Active"
+  },
+  {
+    id: "357",
+    title: "LG ThinQ 智能平台",
+    description: "LG电子的AI平台，用于智能家居和家电，通过学习用户习惯提供个性化的设备体验和主动服务。",
+    company: "LG Electronics",
+    country: "韩国",
+    category: "Platform",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2018-01-01",
+    link: "https://www.lg.com/global/thinq",
+    logo: getLogoUrl("LG Electronics"),
+    status: "Active"
+  },
+  {
+    id: "358",
+    title: "NUGU 智能音箱",
+    description: "SK Telecom的智能语音助手和音箱，提供音乐播放、信息查询、导航等多种服务。",
+    company: "SK Telecom",
+    country: "韩国",
+    category: "Audio",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2016-01-01",
+    link: "https://www.nugu.co.kr/",
+    logo: getLogoUrl("SK Telecom"),
+    status: "Active"
+  },
+  {
+    id: "359",
+    title: "T-Map AI导航",
+    description: "韩国领先的AI导航系统，利用实时交通数据和机器学习算法提供最优路线规划。",
+    company: "SK Telecom",
+    country: "韩国",
+    category: "Platform",
+    type: "Service",
+    pricing: "免费增值",
+    version: "",
+    date: "2017-01-01",
+    link: "https://www.tmap.co.kr/",
+    logo: getLogoUrl("SK Telecom"),
+    status: "Active"
   },
   {
     id: "360",
@@ -3410,6 +3517,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://gigagenie.kt.com/",
     logo: getLogoUrl("KT Corporation"),
+    status: "Active"
   },
   {
     id: "361",
@@ -3424,6 +3532,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://www.hancom.com/en/product/ai.jsp",
     logo: getLogoUrl("Hancom"),
+    status: "Active"
   },
   {
     id: "362",
@@ -3438,6 +3547,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://www.saltlux.com/",
     logo: getLogoUrl("Saltlux"),
+    status: "Active"
   },
   {
     id: "363",
@@ -3452,6 +3562,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://waabi.ai/",
     logo: getLogoUrl("Waabi"),
+    status: "Active"
   },
   {
     id: "364",
@@ -3466,6 +3577,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://www.attabotics.com/",
     logo: getLogoUrl("Attabotics"),
+    status: "Active"
   },
   {
     id: "365",
@@ -3480,6 +3592,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://solink.com/",
     logo: getLogoUrl("Solink"),
+    status: "Active"
   },
   {
     id: "366",
@@ -3494,6 +3607,37 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2019-01-01",
     link: "https://www.brainboxai.com/",
     logo: getLogoUrl("BrainBox AI"),
+    status: "Active"
+  },
+  {
+    id: "400",
+    title: "PaintsChainer 漫画自动着色工具",
+    description: "一个利用深度学习自动为黑白漫画线稿上色的工具，极大地提高了漫画家的创作效率。",
+    company: "Preferred Networks",
+    country: "日本",
+    category: "Image Generation",
+    type: "Product",
+    pricing: "免费增值",
+    version: "",
+    date: "2017-01-01",
+    link: "https://paintschainer.preferred.tech/",
+    logo: getLogoUrl("Preferred Networks"),
+    status: "Active"
+  },
+  {
+    id: "401",
+    title: "Chainer 开源深度学习框架",
+    description: "一个强大而灵活的开源深度学习框架，以其“Define-by-Run”方案而闻名，简化了复杂神经网络的构建。",
+    company: "Preferred Networks",
+    country: "日本",
+    category: "Developer Tools",
+    type: "Product",
+    pricing: "开源",
+    version: "",
+    date: "2015-01-01",
+    link: "https://chainer.org/",
+    logo: getLogoUrl("Preferred Networks"),
+    status: "Active"
   },
   {
     id: "402",
@@ -3508,6 +3652,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://www.groovenauts.jp/magellan-blocks/",
     logo: getLogoUrl("Groovenauts"),
+    status: "Active"
   },
   {
     id: "403",
@@ -3522,6 +3667,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://smartscan.co.jp/",
     logo: getLogoUrl("SmartScan"),
+    status: "Active"
   },
   {
     id: "404",
@@ -3536,6 +3682,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.turing-motors.com/",
     logo: getLogoUrl("Turing Co., Ltd."),
+    status: "Active"
   },
   {
     id: "405",
@@ -3550,6 +3697,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://xpression.jp/",
     logo: getLogoUrl("Xpression"),
+    status: "Active"
   },
   {
     id: "406",
@@ -3564,6 +3712,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.edgematrix.com/",
     logo: getLogoUrl("EDGEMATRIX"),
+    status: "Active"
   },
   {
     id: "407",
@@ -3578,6 +3727,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://fastctl.ai/",
     logo: getLogoUrl("fastctl.ai"),
+    status: "Active"
   },
   {
     id: "408",
@@ -3592,6 +3742,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.revcomm.co.jp/",
     logo: getLogoUrl("RevComm"),
+    status: "Active"
   },
   {
     id: "409",
@@ -3606,6 +3757,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://stockmark.co.jp/",
     logo: getLogoUrl("StockMark"),
+    status: "Active"
   },
   {
     id: "500",
@@ -3620,6 +3772,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://www.persistent.com/industries/healthcare/population-health-management/",
     logo: getLogoUrl("Persistent Systems"),
+    status: "Active"
   },
   {
     id: "501",
@@ -3634,6 +3787,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2021-01-01",
     link: "https://www.tataelxsi.com/industries/transportation/autonomous-driving",
     logo: getLogoUrl("Tata Elxsi"),
+    status: "Active"
   },
   {
     id: "502",
@@ -3649,6 +3803,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.bosch.in/our-business/industrial-technology/",
     logo: getLogoUrl("Bosch Limited"),
+    status: "Active"
   },
   {
     id: "503",
@@ -3664,6 +3819,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://www.oracle.com/industries/financial-services/analytics/fraud-detection/",
     logo: getLogoUrl("Oracle Financial Services Software Limited"),
+    status: "Active"
   },
   {
     id: "504",
@@ -3678,6 +3834,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://fractal.ai/",
     logo: getLogoUrl("Fractal Analytics"),
+    status: "Active"
   },
   {
     id: "505",
@@ -3692,6 +3849,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://arya.ai/",
     logo: getLogoUrl("Arya.ai"),
+    status: "Active"
   },
   {
     id: "506",
@@ -3706,6 +3864,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://www.madstreetden.com/",
     logo: getLogoUrl("Mad Street Den"),
+    status: "Active"
   },
   {
     id: "507",
@@ -3720,6 +3879,82 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://yellow.ai/",
     logo: getLogoUrl("Yellow.ai"),
+    status: "Active"
+  },
+  {
+    id: "600",
+    title: "AlphaGo",
+    description: "由Google DeepMind开发的AI围棋程序，2016年击败世界冠军李世乭，是AI发展史上的里程碑。",
+    company: "Google AI",
+    country: "英国",
+    category: "Research",
+    type: "Research",
+    pricing: "研究",
+    version: "",
+    date: "2016-03-01",
+    link: "https://deepmind.google/discover/blog/alphago-zero-starting-from-scratch/",
+    logo: getLogoUrl("Google AI"),
+    status: "Active"
+  },
+  {
+    id: "601",
+    title: "AlphaFold",
+    description: "由Google DeepMind开发的蛋白质结构预测工具，极大地推动了生物学和医学研究。",
+    company: "Google AI",
+    country: "英国",
+    category: "Research",
+    type: "Research",
+    pricing: "研究",
+    version: "",
+    date: "2020-11-01",
+    link: "https://www.nature.com/articles/d41586-022-02083-2",
+    logo: getLogoUrl("Google AI"),
+    status: "Active"
+  },
+  {
+    id: "602",
+    title: "WaveNet",
+    description: "由Google DeepMind开发的深度学习模型，用于生成逼真的语音，现广泛应用于谷歌助手。",
+    company: "Google AI",
+    country: "英国",
+    category: "Audio",
+    type: "Product",
+    pricing: "商业",
+    version: "",
+    date: "2016-09-01",
+    link: "https://deepmind.google/discover/blog/wavenet-a-generative-model-for-raw-audio/",
+    logo: getLogoUrl("Google AI"),
+    status: "Active"
+  },
+  {
+    id: "603",
+    title: "AV2.0 Platform",
+    description: "Wayve开发的端到端深度学习自动驾驶系统，使用摄像头和传感器进行环境感知和导航。",
+    company: "Wayve",
+    country: "英国",
+    category: "Platform",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2019-01-01",
+    link: "https://wayve.ai/",
+    logo: getLogoUrl("Wayve"),
+    status: "Active"
+  },
+  {
+    id: "604",
+    title: "Synthesia Platform",
+    description: "通过文本输入生成带有AI化身和配音的逼真视频，应用于企业培训、营销和客户沟通。",
+    company: "Synthesia",
+    country: "英国",
+    category: "Image Generation",
+    type: "Product",
+    pricing: "商业",
+    version: "",
+    date: "2020-01-01",
+    link: "https://www.synthesia.io/",
+    logo: getLogoUrl("Synthesia"),
+    status: "Active"
   },
   {
     id: "605",
@@ -3734,6 +3969,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.graphcore.ai/",
     logo: getLogoUrl("Graphcore"),
+    status: "Active"
+  },
+  {
+    id: "606",
+    title: "BenAI Engine",
+    description: "BenevolentAI开发的AI驱动药物发现平台，通过数据分析识别潜在药物靶点。",
+    company: "BenevolentAI",
+    country: "英国",
+    category: "Platform",
+    type: "Service",
+    pricing: "研究",
+    version: "",
+    date: "2018-01-01",
+    link: "https://www.benevolent.com/",
+    logo: getLogoUrl("BenevolentAI"),
+    status: "Active"
   },
   {
     id: "607",
@@ -3748,6 +3999,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://www.thoughtmachine.net/",
     logo: getLogoUrl("Thought Machine"),
+    status: "Active"
   },
   {
     id: "608",
@@ -3762,6 +4014,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://www.quantexa.com/",
     logo: getLogoUrl("Quantexa"),
+    status: "Active"
   },
   {
     id: "609",
@@ -3776,6 +4029,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://www.babylonhealth.com/",
     logo: getLogoUrl("Babylon Health"),
+    status: "Active"
   },
   {
     id: "610",
@@ -3790,6 +4044,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://beta.dreamstudio.ai/",
     logo: getLogoUrl("Stability AI"),
+    status: "Active"
   },
   {
     id: "611",
@@ -3804,6 +4059,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.evolution.ai/",
     logo: getLogoUrl("Evolution AI"),
+    status: "Active"
   },
   {
     id: "612",
@@ -3818,6 +4074,22 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://oxa.ai/",
     logo: getLogoUrl("Oxa"),
+    status: "Active"
+  },
+  {
+    id: "613",
+    title: "Cyber AI Platform",
+    description: "Darktrace开发的AI系统，用于实时检测和响应网络威胁，Antigena是其自主响应模块。",
+    company: "Darktrace",
+    country: "英国",
+    category: "Platform",
+    type: "Service",
+    pricing: "商业",
+    version: "",
+    date: "2013-01-01",
+    link: "https://darktrace.com/",
+    logo: getLogoUrl("Darktrace"),
+    status: "Active"
   },
   {
     id: "614",
@@ -3832,6 +4104,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2016-01-01",
     link: "https://igenius.ai/",
     logo: getLogoUrl("iGenius"),
+    status: "Active"
   },
   {
     id: "615",
@@ -3846,6 +4119,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2020-01-01",
     link: "https://poly.ai/",
     logo: getLogoUrl("PolyAI"),
+    status: "Active"
   },
   {
     id: "616",
@@ -3860,6 +4134,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2014-01-01",
     link: "https://www.lendable.co.uk/",
     logo: getLogoUrl("Lendable"),
+    status: "Active"
   },
   {
     id: "617",
@@ -3874,6 +4149,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://fetch.ai/",
     logo: getLogoUrl("Fetch.ai"),
+    status: "Active"
   },
   {
     id: "618",
@@ -3888,6 +4164,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://www.patsnap.com/",
     logo: getLogoUrl("Patsnap"),
+    status: "Active"
   },
   {
     id: "619",
@@ -3902,6 +4179,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2015-01-01",
     link: "https://www.signal-ai.com/",
     logo: getLogoUrl("SignalAI"),
+    status: "Active"
   },
   {
     id: "620",
@@ -3916,6 +4194,7 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2017-01-01",
     link: "https://www.dexory.com/",
     logo: getLogoUrl("Dexory"),
+    status: "Active"
   },
   {
     id: "621",
@@ -3930,7 +4209,6 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2018-01-01",
     link: "https://www.manas.ai/",
     logo: getLogoUrl("Manas AI"),
-  },
-];
-
-    
+    status: "Active"
+  }
+]
