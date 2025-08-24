@@ -8,7 +8,7 @@ import { ArrowLeft, Globe } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '精品网站推荐',
+    pageTitle: '宝藏网站',
     backButton: '返回休闲驿站',
     comingSoon: '敬请期待！此功能正在开发中。',
   },
