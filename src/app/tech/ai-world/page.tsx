@@ -95,11 +95,15 @@ export default function AiWorldPage() {
       const sortedCompanies = Object.keys(groupedByCompany).sort((a, b) => {
           const countA = groupedByCompany[a].length;
           const countB = groupedByCompany[b].length;
-          return countB - countA;
+          if(countB !== countA) return countB - countA;
+          // If counts are equal, sort by company name
+          return a.localeCompare(b);
       });
 
       const companies = sortedCompanies.map(company => {
         const updates = groupedByCompany[company];
+        // Sort updates within each company by date
+        updates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         return { company, updates };
       });
 
@@ -253,3 +257,5 @@ export default function AiWorldPage() {
     </div>
   );
 }
+
+    
