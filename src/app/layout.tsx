@@ -1,12 +1,21 @@
 import type {Metadata} from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { MusicProvider } from '@/context/MusicContext';
 import { MiniMusicPlayer } from '@/components/MiniMusicPlayer';
 
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-body',
+});
+
+
 export const metadata: Metadata = {
   title: 'ai 世界',
   description: '探索全球AI模型、产品与公司，抹平全球AI信息差。',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -17,11 +26,10 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="light">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></link>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover" />
+        <meta name="theme-color" content="#000000" />
       </head>
-      <body className="font-body antialiased">
+      <body className={`${inter.variable} font-body antialiased`}>
         <MusicProvider>
           {children}
           <MiniMusicPlayer />

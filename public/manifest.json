@@ -1,11 +1,11 @@
 {
-  "name": "周览",
+  "name": "周览 (Week Glance)",
   "short_name": "周览",
+  "description": "一款集周计划、日视图、自动记录和休闲功能于一体的生产力工具。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F0F8FF",
-  "theme_color": "#87CEEB",
-  "description": "一目了然地规划你的一周。",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/icon-192x192.png",
