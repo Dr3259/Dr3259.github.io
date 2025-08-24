@@ -143,8 +143,8 @@ export default function GitHubTrendingPage() {
                                 <TableHead>{t.repository}</TableHead>
                                 <TableHead className="hidden md:table-cell">{t.description}</TableHead>
                                 <TableHead>{t.language}</TableHead>
-                                <TableHead className="text-right">{t.stars}</TableHead>
-                                <TableHead className="text-right">{renderGainedStarsHeader()}</TableHead>
+                                <TableHead className="text-right min-w-[120px]">{t.stars}</TableHead>
+                                <TableHead className="text-right min-w-[120px]">{renderGainedStarsHeader()}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -160,13 +160,17 @@ export default function GitHubTrendingPage() {
                                       {repo.description || <span className="italic">{t.noDescription}</span>}
                                     </TableCell>
                                     <TableCell>{repo.language}</TableCell>
-                                    <TableCell className="text-right flex items-center justify-end gap-1">
-                                      <Star className="h-3 w-3 text-amber-500"/>
-                                      {repo.stars}
+                                    <TableCell className="text-right">
+                                      <div className="flex items-center justify-end gap-1">
+                                        <Star className="h-3 w-3 text-amber-500"/>
+                                        {repo.stars}
+                                      </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-green-600 flex items-center justify-end gap-1">
-                                      <TrendingUp className="h-3 w-3"/>
-                                      {repo.starsToday}
+                                    <TableCell className="text-right font-medium">
+                                      <div className="flex items-center justify-end gap-1 text-green-600">
+                                        <TrendingUp className="h-3 w-3"/>
+                                        {repo.starsToday}
+                                      </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -179,3 +183,4 @@ export default function GitHubTrendingPage() {
     </div>
   );
 }
+
