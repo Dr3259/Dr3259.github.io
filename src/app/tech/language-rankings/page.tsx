@@ -124,7 +124,7 @@ export default function LanguageRankingsPage() {
             </a>
         </div>
         
-        <Card className="w-full shadow-lg">
+        <Card className="w-full shadow-lg bg-card/60 backdrop-blur-lg">
             <CardHeader>
                 <CardTitle className="flex items-center">
                     <Info className="mr-3 h-5 w-5 text-primary/80" />
@@ -136,7 +136,7 @@ export default function LanguageRankingsPage() {
             </CardContent>
         </Card>
         
-        <Card className="w-full shadow-lg">
+        <Card className="w-full shadow-lg bg-card/60 backdrop-blur-lg">
             <CardHeader>
                 <CardTitle className="flex items-center">
                     <BarChart3 className="mr-3 h-5 w-5 text-primary/80" />
@@ -176,7 +176,7 @@ export default function LanguageRankingsPage() {
             </CardContent>
         </Card>
 
-        <Card className="w-full shadow-lg">
+        <Card className="w-full shadow-lg bg-card/60 backdrop-blur-lg">
             <CardHeader>
                 <CardTitle className="flex items-center">
                     <ClipboardList className="mr-3 h-5 w-5 text-primary/80" />
