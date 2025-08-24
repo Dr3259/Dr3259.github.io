@@ -233,18 +233,12 @@ export default function AiWorldPage() {
                 </div>
             </div>
           </div>
-      </div>
         
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
             {renderContent()}
         </div>
       </main>
-      
-      <footer className="text-center py-8 text-sm text-muted-foreground border-t bg-card mt-16">
-          <p>&copy; {new Date().getFullYear()} ai 世界. 版权所有.</p>
-      </footer>
     </div>
   );
 }
-
