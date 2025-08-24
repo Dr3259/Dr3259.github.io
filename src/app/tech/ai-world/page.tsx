@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Search, Globe, Filter, Building, Briefcase } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -144,7 +144,7 @@ export default function AiWorldPage() {
         <div className="absolute inset-0">
           <Image
             src="https://placehold.co/1200x400.png"
-            alt="AI World Hero Image"
+            alt="ai 世界 Hero Image"
             fill
             className="object-cover"
             data-ai-hint="abstract technology"
