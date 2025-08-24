@@ -33,43 +33,32 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
   const timeAgo = formatDistanceToNow(new Date(news.date), { addSuffix: true, locale: zhCN });
 
   return (
-    <div className="bg-card border rounded-xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
-      <a href={news.link} target="_blank" rel="noopener noreferrer" className="flex flex-col h-full group">
-        <div className="relative w-full h-40 bg-muted">
-          <Image
-            src={news.logo}
-            alt={news.title}
-            fill
-            style={{ objectFit: 'cover' }}
-            className="transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint="abstract technology"
-          />
-        </div>
-        <div className="p-4 flex flex-col flex-grow">
-           <div className="flex items-center gap-2 mb-3">
-             <div className="text-sm font-medium text-muted-foreground truncate" title={news.company}>{news.company}</div>
-             {news.parentCompany && <div className="text-xs text-muted-foreground/80 truncate">({news.parentCompany})</div>}
+    <a 
+      href={news.link} 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="bg-card border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden h-full group p-4"
+    >
+      <div className="flex justify-between items-start">
+          <div className="flex-1">
+              <p className="text-xs text-muted-foreground" title={formattedDate}>{timeAgo}</p>
+              <h3 className="text-base font-semibold text-foreground mt-1 group-hover:text-primary transition-colors">
+                {news.title}
+                {news.version && <span className="text-sm font-normal text-muted-foreground ml-1.5">({news.version})</span>}
+              </h3>
           </div>
-
-          <h3 className="text-base font-semibold text-foreground mb-2 flex-grow group-hover:text-primary transition-colors">
-            {news.title}
-            {news.version && <span className="text-sm font-normal text-muted-foreground ml-1.5">({news.version})</span>}
-          </h3>
-          
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{news.description}</p>
-          
-          <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t">
-            <Badge variant="secondary">{news.category}</Badge>
-            <Badge variant="outline" className={getPricingColor(news.pricing)}>
-              {news.pricing}
-            </Badge>
-             <Badge variant="outline">{news.type}</Badge>
-          </div>
-          <div className="text-xs text-muted-foreground mt-3 text-right" title={formattedDate}>
-            {timeAgo}
-          </div>
-        </div>
-      </a>
-    </div>
+          <div className="text-sm font-medium text-muted-foreground truncate shrink-0 ml-4" title={news.company}>{news.company}</div>
+      </div>
+      
+      <p className="text-sm text-muted-foreground mt-2 line-clamp-2 flex-grow">{news.description}</p>
+      
+      <div className="flex flex-wrap gap-2 mt-3">
+        <Badge variant="secondary">{news.category}</Badge>
+        <Badge variant="outline" className={getPricingColor(news.pricing)}>
+          {news.pricing}
+        </Badge>
+         <Badge variant="outline">{news.type}</Badge>
+      </div>
+    </a>
   );
 };
