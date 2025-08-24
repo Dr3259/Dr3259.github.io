@@ -23,7 +23,7 @@ const translations = {
     items: {
       languageRankings: { title: '开发语言排行榜', description: '查看最新的编程语言流行趋势。', icon: BarChart3, path: '/tech/language-rankings' },
       githubTrending: { title: 'GitHub趋势榜', description: '洞察开源世界的持久度与潜力股。', icon: Github, path: '/tech/github-trending' },
-      aiWorld: { title: 'AI 世界', description: '探索全球AI模型、产品与公司，抹平全球AI信息差。', icon: BrainCircuit, path: '/tech/ai-world' },
+      aiWorld: { title: 'ai 世界', description: '探索全球AI模型、产品与公司，抹平全球AI信息差。', icon: BrainCircuit, path: '/tech/ai-world' },
     }
   },
   'en': {

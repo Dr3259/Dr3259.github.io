@@ -5,7 +5,7 @@ import { MusicProvider } from '@/context/MusicContext';
 import { MiniMusicPlayer } from '@/components/MiniMusicPlayer';
 
 export const metadata: Metadata = {
-  title: '全球AI观察',
+  title: 'ai 世界',
   description: '探索全球AI模型、产品与公司，抹平全球AI信息差。',
 };
 

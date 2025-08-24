@@ -163,7 +163,7 @@ export default function AiWorldPage() {
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
-            全球AI观察
+            ai 世界
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mt-6">
             探索全球AI模型、产品与公司，抹平全球AI信息差。
@@ -245,7 +245,7 @@ export default function AiWorldPage() {
       </main>
       
       <footer className="text-center py-8 text-sm text-muted-foreground border-t bg-card mt-16">
-          <p>&copy; {new Date().getFullYear()} 全球AI观察. 版权所有.</p>
+          <p>&copy; {new Date().getFullYear()} ai 世界. 版权所有.</p>
       </footer>
     </div>
   );
