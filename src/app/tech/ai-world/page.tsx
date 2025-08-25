@@ -59,12 +59,12 @@ export default function AiWorldPage() {
     // Apply sorting: Country -> Company -> Date
     return filtered.sort((a, b) => {
       // 1. Sort by Country
-      const countryComparison = a.country.localeCompare(b.country);
+      const countryComparison = a.country.localeCompare(b.country, 'zh-CN');
       if (countryComparison !== 0) {
         return countryComparison;
       }
       // 2. Sort by Company
-      const companyComparison = a.company.localeCompare(b.company);
+      const companyComparison = a.company.localeCompare(b.company, 'en');
       if (companyComparison !== 0) {
         return companyComparison;
       }
