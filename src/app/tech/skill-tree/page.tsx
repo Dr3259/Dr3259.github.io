@@ -12,12 +12,8 @@ const translations = {
     pageTitle: '前端技能树',
     pageSubtitle: '一个现代Web前端开发的学习路径示例。',
     backButton: '返回科技主页',
-    coreConcepts: '核心理念',
     fundamentals: '基础',
     frameworks: '框架',
-    styling: '样式',
-    tooling: '工具',
-    backend: '后端交互',
     advanced: '高级概念',
     skills: {
       html: { name: 'HTML', desc: '网页内容的结构。' },
@@ -28,13 +24,10 @@ const translations = {
       nextjs: { name: 'Next.js', desc: '生产级的React框架。' },
       vue: { name: 'Vue.js', desc: '渐进式JavaScript框架。' },
       angular: { name: 'Angular', desc: 'Web应用平台。' },
-      tailwind: { name: 'Tailwind CSS', desc: '功能类优先的CSS框架。' },
-      sass: { name: 'Sass/SCSS', desc: 'CSS预处理器。' },
-      shadcn: { name: 'Shadcn/UI', desc: '可重用的UI组件。' },
-      vite: { name: 'Vite', desc: '下一代前端构建工具。' },
-      webpack: { name: 'Webpack', desc: '模块打包工具。' },
-      api: { name: 'REST/GraphQL', desc: '与服务器通信。' },
+      styling: { name: '样式', desc: '如 Tailwind CSS 或 Sass。' },
+      tooling: { name: '工具', desc: '如 Vite 或 Webpack。' },
       stateManagement: { name: '状态管理', desc: '如Redux或Zustand。' },
+      backend: { name: '后端交互', desc: '与REST/GraphQL API通信。' },
       testing: { name: '测试', desc: '如Jest或Cypress。' },
     },
   },
@@ -42,12 +35,8 @@ const translations = {
     pageTitle: 'Frontend Skill Tree',
     pageSubtitle: 'An example learning path for modern web frontend development.',
     backButton: 'Back to Tech Home',
-    coreConcepts: 'Core Concepts',
     fundamentals: 'Fundamentals',
     frameworks: 'Frameworks',
-    styling: 'Styling',
-    tooling: 'Tooling',
-    backend: 'Backend Interaction',
     advanced: 'Advanced Concepts',
     skills: {
       html: { name: 'HTML', desc: 'Structure of web content.' },
@@ -58,20 +47,16 @@ const translations = {
       nextjs: { name: 'Next.js', desc: 'The React Framework for Production.' },
       vue: { name: 'Vue.js', desc: 'The Progressive JavaScript Framework.' },
       angular: { name: 'Angular', desc: 'Platform for web applications.' },
-      tailwind: { name: 'Tailwind CSS', desc: 'A utility-first CSS framework.' },
-      sass: { name: 'Sass/SCSS', desc: 'CSS preprocessor.' },
-      shadcn: { name: 'Shadcn/UI', desc: 'Reusable UI components.' },
-      vite: { name: 'Vite', desc: 'Next-generation frontend tooling.' },
-      webpack: { name: 'Webpack', desc: 'A module bundler.' },
-      api: { name: 'REST/GraphQL', desc: 'Communicating with servers.' },
+      styling: { name: 'Styling', desc: 'e.g., Tailwind CSS or Sass.' },
+      tooling: { name: 'Tooling', desc: 'e.g., Vite or Webpack.' },
       stateManagement: { name: 'State Management', desc: 'e.g., Redux or Zustand.' },
+      backend: { name: 'Backend Interaction', desc: 'Communicating with REST/GraphQL APIs.' },
       testing: { name: 'Testing', desc: 'e.g., Jest or Cypress.' },
     },
   }
 };
 
 type LanguageKey = keyof typeof translations;
-type SkillKey = keyof (typeof translations)['en']['skills'];
 
 interface SkillNodeProps {
   name: string;
@@ -164,10 +149,10 @@ export default function SkillTreePage() {
           </Section>
           
           <Section title={t.advanced}>
-             <SkillNode name={t.skills.styling.name} description={t.skills.tailwind.desc} icon={Wind} level={2} />
-             <SkillNode name={t.skills.tooling.name} description={t.skills.vite.desc} icon={Settings} level={2} />
+             <SkillNode name={t.skills.styling.name} description={t.skills.styling.desc} icon={Wind} level={2} />
+             <SkillNode name={t.skills.tooling.name} description={t.skills.tooling.desc} icon={Settings} level={2} />
              <SkillNode name={t.skills.stateManagement.name} description={t.skills.stateManagement.desc} icon={Box} level={2} />
-             <SkillNode name={t.skills.backend.name} description={t.skills.api.desc} icon={Database} level={2} />
+             <SkillNode name={t.skills.backend.name} description={t.skills.backend.desc} icon={Database} level={2} />
              <SkillNode name={t.skills.testing.name} description={t.skills.testing.desc} icon={Component} level={2} />
           </Section>
         </div>
