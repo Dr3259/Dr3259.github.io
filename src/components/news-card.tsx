@@ -5,7 +5,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { type NewsUpdate } from '@/lib/data';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
 export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
@@ -30,7 +30,6 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
   };
 
   const formattedDate = format(new Date(news.date), 'yyyy-MM-dd');
-  const timeAgo = formatDistanceToNow(new Date(news.date), { addSuffix: true, locale: zhCN });
 
   return (
     <a 
@@ -41,7 +40,7 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
     >
       <div className="flex justify-between items-start">
           <div className="flex-1">
-              <p className="text-xs text-muted-foreground" title={formattedDate}>{timeAgo}</p>
+              <p className="text-xs text-muted-foreground font-mono" title={formattedDate}>{formattedDate}</p>
               <h3 className="text-base font-semibold text-foreground mt-1 group-hover:text-primary transition-colors">
                 {news.title}
                 {news.version && <span className="text-sm font-normal text-muted-foreground ml-1.5">({news.version})</span>}
