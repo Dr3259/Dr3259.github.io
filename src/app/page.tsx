@@ -371,19 +371,22 @@ interface Feature {
     onClick: () => void;
 }
 
-const FeatureButton: React.FC<{ item: Feature, isDragging: boolean }> = ({ item, isDragging }) => (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center p-3 rounded-lg hover:bg-muted transition-colors w-full group gap-1",
-        isDragging ? "cursor-grabbing" : "cursor-pointer"
-      )}
-      onClick={item.onClick}
+const FeatureButton: React.FC<{ item: Feature, isDragging: boolean, onDragStart: (e: DragEvent<HTMLDivElement>, id: string) => void; onDragEnter: (e: DragEvent<HTMLDivElement>, id: string) => void; onDragEnd: (e: DragEvent<HTMLDivElement>) => void; dragConstraints: React.RefObject<Element>; }> = ({ item, isDragging, onDragStart, onDragEnter, onDragEnd, dragConstraints }) => (
+    <motion.div
+        layout
+        draggable
+        dragConstraints={dragConstraints}
+        onDragStart={(e: any) => onDragStart(e, item.id)}
+        onDragEnter={(e: any) => onDragEnter(e, item.id)}
+        onDragEnd={(e: any) => onDragEnd(e)}
+        className={cn("flex flex-col items-center justify-center p-3 rounded-lg hover:bg-muted transition-colors w-full group gap-1", isDragging ? "cursor-grabbing" : "cursor-pointer")}
+        onClick={item.onClick}
     >
       <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
         <item.icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
       </div>
       <p className="text-xs font-medium text-center text-foreground">{item.title}</p>
-    </div>
+    </motion.div>
 );
 
 
@@ -421,6 +424,7 @@ export default function WeekGlancePage() {
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
+  const constraintsRef = useRef<HTMLDivElement>(null);
   
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [draggedOverItem, setDraggedOverItem] = useState<string | null>(null);
@@ -1050,21 +1054,18 @@ export default function WeekGlancePage() {
                   <span className="sr-only">{t.featureHub}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4">
+              <PopoverContent className="w-auto p-4" ref={constraintsRef}>
                  <div className="grid grid-cols-3 gap-4">
                   {features.map((feature) => (
-                    <motion.div
-                      key={feature.id}
-                      layout
-                      draggable
-                      dragElastic={0.2}
-                      onDragStart={(e: any) => handleDragStart(e, feature.id)}
-                      onDragEnter={(e: any) => handleDragEnter(e, feature.id)}
-                      onDragEnd={handleDragEnd}
-                      className="cursor-grab active:cursor-grabbing"
-                    >
-                      <FeatureButton item={feature} isDragging={draggedItem === feature.id} />
-                    </motion.div>
+                    <FeatureButton 
+                        key={feature.id} 
+                        item={feature} 
+                        isDragging={draggedItem === feature.id}
+                        onDragStart={handleDragStart}
+                        onDragEnter={handleDragEnter}
+                        onDragEnd={handleDragEnd}
+                        dragConstraints={constraintsRef}
+                    />
                   ))}
                  </div>
               </PopoverContent>
