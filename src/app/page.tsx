@@ -40,7 +40,7 @@ const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2'; // Changed key for new
 const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary_v2'; // Changed key for new structure
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
-const LOCAL_STORAGE_KEY_FEATURE_ORDER = 'weekGlanceFeatureOrder_v1';
+const LOCAL_STORAGE_KEY_FEATURE_ORDER = 'weekGlanceFeatureOrder_v2';
 
 
 // Keys used by DayDetailPage for its data, now structured with YYYY-MM-DD keys
@@ -371,27 +371,41 @@ interface Feature {
     onClick: () => void;
 }
 
-const FeatureButton: React.FC<{ item: Feature, isDragging: boolean }> = ({ item, isDragging }) => (
-    <Reorder.Item
-        value={item}
-        id={item.id}
-        dragListener={true} // Allow dragging from anywhere on the item
-        className={cn("relative flex aspect-square flex-col items-center justify-center rounded-lg hover:bg-muted transition-colors cursor-grab", isDragging ? "cursor-grabbing" : "cursor-grab")}
-        whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0px 10px 20px rgba(0,0,0,0.2)" }}
+const FeatureButton: React.FC<{
+  item: Feature;
+  onDragStart: (e: DragEvent<HTMLDivElement>, item: Feature) => void;
+  onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
+  onDragOver: (e: DragEvent<HTMLDivElement>) => void;
+  onDragEnter: (e: DragEvent<HTMLDivElement>, item: Feature) => void;
+  isDragging: boolean;
+  isDragOver: boolean;
+}> = ({ item, onDragStart, onDragEnd, onDragOver, onDragEnter, isDragging, isDragOver }) => (
+  <motion.div
+    layout
+    draggable
+    onDragStart={(e) => onDragStart(e as unknown as DragEvent<HTMLDivElement>, item)}
+    onDragEnd={onDragEnd}
+    onDragOver={onDragOver}
+    onDragEnter={(e) => onDragEnter(e as unknown as DragEvent<HTMLDivElement>, item)}
+    className={cn(
+      "relative flex aspect-square flex-col items-center justify-center rounded-lg hover:bg-muted transition-colors cursor-grab",
+      isDragging && "opacity-50 z-50",
+      isDragOver && "border-2 border-primary"
+    )}
+  >
+    <div
+      className="flex flex-col items-center justify-center gap-1 text-center w-full h-full p-1"
+      onClick={item.onClick}
+      style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
     >
-      <div 
-        className="flex flex-col items-center justify-center gap-1 text-center w-full h-full p-1"
-        onClick={item.onClick}
-        // Prevent click while dragging
-        style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
-      >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
-            <item.icon className="w-5 h-5 text-primary transition-transform group-hover:scale-110" />
-        </div>
-        <p className="text-xs font-medium text-center text-foreground">{item.title}</p>
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
+        <item.icon className="w-5 h-5 text-primary transition-transform group-hover:scale-110" />
       </div>
-    </Reorder.Item>
+      <p className="text-xs font-medium text-center text-foreground">{item.title}</p>
+    </div>
+  </motion.div>
 );
+
 
 
 export default function WeekGlancePage() {
@@ -429,7 +443,8 @@ export default function WeekGlancePage() {
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
   
-  const [isDragging, setIsDragging] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<Feature | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<Feature | null>(null);
 
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
@@ -440,7 +455,7 @@ export default function WeekGlancePage() {
   const handleRichButtonClick = () => router.push('/rich');
   
   const [features, setFeatures] = useState<Feature[]>([]);
-
+  
   useEffect(() => {
     const initialFeatures: Feature[] = [
         { id: 'tech', icon: Cpu, title: t.techButtonText, onClick: handleTechButtonClick },
@@ -465,11 +480,36 @@ export default function WeekGlancePage() {
     }
   }, [t]);
 
-  const handleReorder = (newOrder: Feature[]) => {
-    setFeatures(newOrder);
-    localStorage.setItem(LOCAL_STORAGE_KEY_FEATURE_ORDER, JSON.stringify(newOrder.map(f => f.id)));
-  };
 
+  const handleDragStart = (e: DragEvent<HTMLDivElement>, item: Feature) => {
+    setDraggedItem(item);
+  };
+  
+  const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    if(draggedItem && dragOverItem && draggedItem.id !== dragOverItem.id) {
+        const currentIndex = features.findIndex(item => item.id === draggedItem.id);
+        const targetIndex = features.findIndex(item => item.id === dragOverItem.id);
+
+        const newFeatures = [...features];
+        newFeatures.splice(currentIndex, 1);
+        newFeatures.splice(targetIndex, 0, draggedItem);
+        
+        setFeatures(newFeatures);
+        localStorage.setItem(LOCAL_STORAGE_KEY_FEATURE_ORDER, JSON.stringify(newFeatures.map(f => f.id)));
+    }
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+  
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+  }
+
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>, item: Feature) => {
+      if(draggedItem && draggedItem.id !== item.id) {
+          setDragOverItem(item);
+      }
+  }
 
   const clearTimeoutIfNecessary = useCallback(() => {
     if (showPreviewTimerRef.current) {
@@ -1029,21 +1069,20 @@ export default function WeekGlancePage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-2">
-                 <Reorder.Group
-                    values={features}
-                    onReorder={handleReorder}
-                    className="grid grid-cols-3 gap-2"
-                    onPointerDown={() => setIsDragging(true)}
-                    onPointerUp={() => setIsDragging(false)}
-                 >
+                 <div className="grid grid-cols-3 gap-2">
                   {features.map((feature) => (
                     <FeatureButton 
                         key={feature.id} 
                         item={feature}
-                        isDragging={isDragging}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={handleDragOver}
+                        onDragEnter={handleDragEnter}
+                        isDragging={draggedItem?.id === feature.id}
+                        isDragOver={dragOverItem?.id === feature.id}
                     />
                   ))}
-                 </Reorder.Group>
+                 </div>
               </PopoverContent>
             </Popover>
 
