@@ -29,7 +29,7 @@ export default function AiWorldPage() {
     }, {} as Record<string, number>);
 
     const sorted = Array.from(new Set(newsUpdates.map(u => u.country)))
-      .sort((a, b) => counts[b] - counts[a]);
+      .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
     
     return { countries: ['所有国家', ...sorted], countryCounts: counts };
   }, []);
@@ -40,60 +40,52 @@ export default function AiWorldPage() {
   const filteredAndSortedUpdates = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
 
-    // 1. Filter updates based on UI controls
     const filtered = newsUpdates.filter(update => {
-      const matchesSearchTerm = searchTerm === '' ||
-        update.title.toLowerCase().includes(lowercasedFilter) ||
-        update.description.toLowerCase().includes(lowercasedFilter) ||
-        update.company.toLowerCase().includes(lowercasedFilter);
-      
-      const matchesCountry = selectedCountry === '所有国家' || update.country === selectedCountry;
-      const matchesCategory = selectedCategory === '所有类别' || update.category === selectedCategory;
-      const matchesPricing = selectedPricing === '所有价格' || update.pricing === selectedPricing;
-      
-      return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
+        const releaseYear = new Date(update.date).getFullYear();
+        if (releaseYear < 2021) return false;
+
+        const matchesSearchTerm = searchTerm === '' ||
+            update.title.toLowerCase().includes(lowercasedFilter) ||
+            update.description.toLowerCase().includes(lowercasedFilter) ||
+            update.company.toLowerCase().includes(lowercasedFilter);
+        
+        const matchesCountry = selectedCountry === '所有国家' || update.country === selectedCountry;
+        const matchesCategory = selectedCategory === '所有类别' || update.category === selectedCategory;
+        const matchesPricing = selectedPricing === '所有价格' || update.pricing === selectedPricing;
+        
+        return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
     });
 
-    // 2. Group by country
     const groupedByCountry = filtered.reduce((acc, update) => {
-      (acc[update.country] = acc[update.country] || []).push(update);
-      return acc;
+        (acc[update.country] = acc[update.country] || []).push(update);
+        return acc;
     }, {} as Record<string, NewsUpdate[]>);
 
-    // 3. Sort countries by number of products
-    const sortedCountries = Object.keys(groupedByCountry).sort((a, b) => {
-      return groupedByCountry[b].length - groupedByCountry[a].length;
+    const sortedCountryNames = Object.keys(groupedByCountry).sort((a, b) => {
+        return groupedByCountry[b].length - groupedByCountry[a].length;
     });
 
-    // 4. Process each country: group by company, sort companies, then flatten
     const finalList: NewsUpdate[] = [];
-    sortedCountries.forEach(country => {
-      const countryUpdates = groupedByCountry[country];
+    sortedCountryNames.forEach(country => {
+        const countryUpdates = groupedByCountry[country];
 
-      // 4a. Group this country's updates by company
-      const groupedByCompany = countryUpdates.reduce((acc, update) => {
-        (acc[update.company] = acc[update.company] || []).push(update);
-        return acc;
-      }, {} as Record<string, NewsUpdate[]>);
+        const groupedByCompany = countryUpdates.reduce((acc, update) => {
+            (acc[update.company] = acc[update.company] || []).push(update);
+            return acc;
+        }, {} as Record<string, NewsUpdate[]>);
 
-      // 4b. Sort companies within the country by number of products
-      const sortedCompanies = Object.keys(groupedByCompany).sort((a, b) => {
-          const countComparison = groupedByCompany[b].length - groupedByCompany[a].length;
-          if (countComparison !== 0) return countComparison;
-          // As a tie-breaker, sort by company name
-          return a.localeCompare(b, 'en');
-      });
+        const sortedCompanies = Object.keys(groupedByCompany).sort((a, b) => {
+            return groupedByCompany[b].length - groupedByCompany[a].length;
+        });
 
-      // 4c. Sort updates within each company by date and add to the final list
-      sortedCompanies.forEach(company => {
-        const companyUpdates = groupedByCompany[company];
-        companyUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        finalList.push(...companyUpdates);
-      });
+        sortedCompanies.forEach(company => {
+            const companyUpdates = groupedByCompany[company];
+            companyUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            finalList.push(...companyUpdates);
+        });
     });
 
     return finalList;
-
   }, [searchTerm, selectedCountry, selectedCategory, selectedPricing]);
 
   useEffect(() => {
@@ -192,7 +184,7 @@ export default function AiWorldPage() {
             data-ai-hint="abstract technology"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-slate-900/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
@@ -204,52 +196,57 @@ export default function AiWorldPage() {
         </div>
       </header>
       
-      <div ref={filterSentinelRef} className="h-px"></div>
-       <div className={cn(
-          "sticky top-0 z-40 transition-shadow duration-300",
-          isFilterStuck ? "bg-background/80 backdrop-blur-sm shadow-lg border-b" : "bg-background"
-      )}>
-        <div className="container mx-auto px-4 py-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                <div className="relative md:col-span-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="按关键字、公司、描述搜索..."
-                        className="w-full pl-10 h-11 text-base rounded-lg bg-background/50 focus:bg-background"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                    <SelectTrigger className="h-11 text-base rounded-lg bg-background/50 focus:bg-background w-full">
-                        <SelectValue placeholder="所有国家" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {countries.map(country => (
-                            <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="h-11 text-base rounded-lg bg-background/50 focus:bg-background w-full">
-                        <SelectValue placeholder="所有类别" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {categories.map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+      <div className="container mx-auto px-4 relative z-20 -mt-8">
+        <div ref={filterSentinelRef} className="h-px"></div>
+         <div className={cn(
+            "sticky top-4 z-40 transition-all duration-300",
+            isFilterStuck && "pt-4"
+        )}>
+          <div className={cn(
+            "p-3 rounded-xl transition-all duration-300",
+            isFilterStuck ? "bg-background/80 backdrop-blur-sm shadow-lg border" : "bg-card shadow-md"
+          )}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                  <div className="relative md:col-span-2">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                          type="search"
+                          placeholder="按关键字、公司、描述搜索..."
+                          className="w-full pl-10 h-11 text-base rounded-lg bg-background/50 focus:bg-background"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                  </div>
+                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                      <SelectTrigger className="h-11 text-base rounded-lg bg-background/50 focus:bg-background w-full">
+                          <SelectValue placeholder="所有国家" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {countries.map(country => (
+                              <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="h-11 text-base rounded-lg bg-background/50 focus:bg-background w-full">
+                          <SelectValue placeholder="所有类别" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {categories.map(category => (
+                              <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+              </div>
+          </div>
         </div>
+        
+        <main className="pt-12">
+          <div className="max-w-4xl mx-auto">
+              {renderContent()}
+          </div>
+        </main>
       </div>
-      
-      <main className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-            {renderContent()}
-        </div>
-      </main>
     </div>
   )
 }
