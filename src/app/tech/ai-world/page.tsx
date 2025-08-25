@@ -25,6 +25,12 @@ const countryFlags: Record<string, string> = {
   '印度': '🇮🇳',
 };
 
+interface GroupedNews {
+    [country: string]: {
+        [company: string]: NewsUpdate[];
+    };
+}
+
 
 export default function AiWorldPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,36 +63,10 @@ export default function AiWorldPage() {
   const categories = useMemo(() => ['所有类别', ...Array.from(new Set(newsUpdates.map(u => u.category))).sort()], []);
   const pricings = useMemo(() => ['所有价格', ...Array.from(new Set(newsUpdates.map(u => u.pricing)))], []);
 
-  const filteredAndSortedUpdates = useMemo(() => {
-    let updates = newsUpdates.filter(update => new Date(update.date).getFullYear() >= 2021);
-    
-    const companyCountsByCountry: Record<string, Record<string, number>> = {};
-    updates.forEach(update => {
-        if (!companyCountsByCountry[update.country]) {
-            companyCountsByCountry[update.country] = {};
-        }
-        companyCountsByCountry[update.country][update.company] = (companyCountsByCountry[update.country][update.company] || 0) + 1;
-    });
-
-    updates.sort((a, b) => {
-        const countryCountA = countryCounts[a.country] || 0;
-        const countryCountB = countryCounts[b.country] || 0;
-        if (countryCountA !== countryCountB) {
-            return countryCountB - countryCountA;
-        }
-
-        const companyCountA = companyCountsByCountry[a.country]?.[a.company] || 0;
-        const companyCountB = companyCountsByCountry[b.country]?.[b.company] || 0;
-        if (companyCountA !== companyCountB) {
-            return companyCountB - companyCountA;
-        }
-
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    
+  const groupedAndSortedUpdates = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
 
-    return updates.filter(update => {
+    const filteredUpdates = newsUpdates.filter(update => {
         const matchesSearchTerm = searchTerm === '' ||
             update.title.toLowerCase().includes(lowercasedFilter) ||
             update.description.toLowerCase().includes(lowercasedFilter) ||
@@ -99,7 +79,38 @@ export default function AiWorldPage() {
         return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
     });
 
-  }, [searchTerm, selectedCountry, selectedCategory, selectedPricing, countryCounts]);
+    const grouped: GroupedNews = {};
+    filteredUpdates.forEach(update => {
+        if (!grouped[update.country]) {
+            grouped[update.country] = {};
+        }
+        if (!grouped[update.country][update.company]) {
+            grouped[update.country][update.company] = [];
+        }
+        grouped[update.country][update.company].push(update);
+    });
+
+    const sortedCountries = Object.keys(grouped).sort((a, b) => {
+        const countA = Object.values(grouped[a]).flat().length;
+        const countB = Object.values(grouped[b]).flat().length;
+        return countB - countA;
+    });
+
+    const finalGrouped: GroupedNews = {};
+    sortedCountries.forEach(country => {
+        const companies = grouped[country];
+        const sortedCompanies = Object.keys(companies).sort((a, b) => {
+            return companies[b].length - companies[a].length;
+        });
+        finalGrouped[country] = {};
+        sortedCompanies.forEach(company => {
+            finalGrouped[country][company] = companies[company].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        });
+    });
+
+    return finalGrouped;
+
+  }, [searchTerm, selectedCountry, selectedCategory, selectedPricing]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -130,7 +141,8 @@ export default function AiWorldPage() {
 
 
   const renderContent = () => {
-    if (filteredAndSortedUpdates.length === 0) {
+    const countries = Object.keys(groupedAndSortedUpdates);
+    if (countries.length === 0) {
       return (
         <div className="text-center py-24">
           <p className="text-xl font-medium text-foreground">未找到任何模型</p>
@@ -139,7 +151,7 @@ export default function AiWorldPage() {
       );
     }
     
-    const countryBadges = countries.filter(c => c.name !== '所有国家');
+    const countryBadges = countries.filter(c => c !== '所有国家');
 
     return (
         <div className="space-y-8">
@@ -148,44 +160,57 @@ export default function AiWorldPage() {
                 <div className="flex flex-wrap gap-2 justify-center">
                     {countryBadges.map(country => (
                         <Badge 
-                            key={country.name} 
-                            variant={selectedCountry === country.name ? "default" : "secondary"}
+                            key={country} 
+                            variant={selectedCountry === country ? "default" : "secondary"}
                             className="text-sm px-3 py-1 cursor-pointer hover:bg-primary/20 transition-colors"
-                            onClick={() => handleCountryBadgeClick(country.name)}
+                            onClick={() => handleCountryBadgeClick(country)}
                             >
-                                {country.name} ({country.count})
+                                {country} ({countryCounts[country] || 0})
                         </Badge>
                     ))}
                 </div>
             </div>
 
             <div>
-                 {filteredAndSortedUpdates.map((update, index) => {
-                     const isFirstOfCountry = index === 0 || filteredAndSortedUpdates[index - 1].country !== update.country;
-                     
-                     return (
-                         <div key={update.id}>
-                            {isFirstOfCountry && index > 0 && <Separator className="my-12" />}
-                            <div className="relative pl-6">
-                                <div className={cn("absolute left-0 top-0 h-full w-px bg-border", isFirstOfCountry ? "mt-12" : "")}></div>
-                                <div className="relative">
-                                    {isFirstOfCountry && (
-                                        <div id={`country-anchor-${update.country}`} className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
-                                            <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm text-3xl">
-                                               {countryFlags[update.country] || '🌐'}
+                 {countries.map((country, countryIndex) => (
+                    <div key={country} className="relative">
+                        {countryIndex > 0 && <Separator className="my-12" />}
+                        <div id={`country-anchor-${country}`} className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
+                            <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm text-3xl">
+                               {countryFlags[country] || '🌐'}
+                           </div>
+                        </div>
+
+                        <div className="relative pl-6">
+                             <div className="absolute left-0 top-0 h-full w-px bg-border mt-12"></div>
+                             
+                             <div className="pl-12 space-y-8">
+                                {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates]) => (
+                                    <div key={company} className="relative">
+                                         <div className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
+                                            <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
+                                               <Image 
+                                                  src={updates[0].logo}
+                                                  alt={`${company} logo`}
+                                                  width={40}
+                                                  height={40}
+                                                  className="rounded-full"
+                                                  data-ai-hint="logo"
+                                                />
                                            </div>
                                         </div>
-                                    )}
-                                    <div className="pl-12 pb-10 flex gap-4 items-start">
-                                        <div className="flex-1">
-                                          <NewsCard news={update} />
+                                        
+                                        <div className="pl-12 space-y-4">
+                                            {updates.map(update => (
+                                                <NewsCard key={update.id} news={update} />
+                                            ))}
                                         </div>
                                     </div>
-                                </div>
+                                ))}
                              </div>
-                         </div>
-                     )
-                 })}
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
