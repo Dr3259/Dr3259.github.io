@@ -176,38 +176,47 @@ export default function AiWorldPage() {
 
             <div>
                  {countries.map((country, countryIndex) => (
-                    <div key={country} className="relative">
-                        {countryIndex > 0 && <Separator className="my-12" />}
-                        <div id={`country-anchor-${country}`} className="absolute left-0 top-0 -translate-x-1/2 pt-4">
-                           <div className="z-10 flex h-12 w-12 items-center justify-center rounded-lg bg-card border-2 border-primary/50 shadow-sm text-3xl">
-                               {countryFlags[country] || '🌐'}
-                           </div>
-                        </div>
-                        <div className="pl-12">
-                           {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates], companyIndex) => (
-                                <div key={company} className="relative mt-8">
-                                     <div className="absolute left-0 top-0 pt-4 -translate-x-1/2">
-                                        <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
-                                           <Image 
-                                              src={getLogoUrl(companyUrls[company] || updates[0].link)}
-                                              alt={`${company} logo`}
-                                              width={40}
-                                              height={40}
-                                              className="rounded-full"
-                                              data-ai-hint="logo"
-                                            />
-                                       </div>
-                                    </div>
-                                    
-                                    <div className="pl-12 space-y-4">
-                                        {updates.map(update => (
-                                            <NewsCard key={update.id} news={update} />
-                                        ))}
-                                    </div>
+                    <React.Fragment key={country}>
+                        <div className="relative pt-8">
+                            <div id={`country-anchor-${country}`} className="absolute left-0 top-0 -translate-x-1/2 pt-4">
+                                <div className="z-10 flex h-12 w-12 items-center justify-center rounded-lg bg-card border-2 border-primary/50 shadow-sm text-3xl">
+                                    {countryFlags[country] || '🌐'}
                                 </div>
-                            ))}
+                            </div>
+                            <div className="pl-12">
+                                {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates], companyIndex) => (
+                                    <React.Fragment key={company}>
+                                        <div className="relative">
+                                            <div className="absolute left-0 top-0 pt-4 -translate-x-1/2">
+                                                <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
+                                                    <Image 
+                                                        src={getLogoUrl(companyUrls[company] || updates[0].link)}
+                                                        alt={`${company} logo`}
+                                                        width={40}
+                                                        height={40}
+                                                        className="rounded-full"
+                                                        data-ai-hint="logo"
+                                                        />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="pl-12 space-y-4">
+                                                {updates.map(update => (
+                                                    <NewsCard key={update.id} news={update} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {companyIndex < Object.keys(groupedAndSortedUpdates[country]).length - 1 && (
+                                            <Separator className="my-8" />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                        {countryIndex < countries.length - 1 && (
+                            <Separator className="my-12" />
+                        )}
+                    </React.Fragment>
                 ))}
             </div>
         </div>
