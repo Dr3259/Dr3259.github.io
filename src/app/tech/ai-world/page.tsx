@@ -185,9 +185,9 @@ export default function AiWorldPage() {
                         </div>
                         <div className="relative pl-12 space-y-8">
                             <div className="absolute left-0 top-0 h-full w-px bg-border mt-12"></div>
-                            {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates]) => (
+                             {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates]) => (
                                 <div key={company} className="relative">
-                                     <div className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
+                                    <div className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
                                         <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
                                            <Image 
                                               src={getLogoUrl(companyUrls[company] || updates[0].link)}
@@ -297,3 +297,5 @@ export default function AiWorldPage() {
     </div>
   )
 }
+
+    

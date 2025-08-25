@@ -2,11 +2,9 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { type NewsUpdate } from '@/lib/data';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 
 export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
   const getPricingColor = (pricing: string) => {
@@ -36,29 +34,35 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
       href={news.link} 
       target="_blank" 
       rel="noopener noreferrer" 
-      className="bg-card border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden h-full group p-4"
+      className="bg-card border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden h-full group p-5 hover:-translate-y-1"
     >
-      <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground font-mono" title={formattedDate}>{formattedDate}</p>
-              <h3 className="text-base font-semibold text-foreground mt-1 group-hover:text-primary transition-colors">
+      <div className="flex-grow flex flex-col">
+        <header className="mb-3">
+          <div className="flex justify-between items-baseline gap-4">
+              <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                 {news.title}
-                {news.version && <span className="text-sm font-normal text-muted-foreground ml-1.5">({news.version})</span>}
               </h3>
-              <p className="text-sm font-medium text-muted-foreground truncate mt-0.5" title={news.company}>{news.company}</p>
+              <p className="text-xs text-muted-foreground font-mono shrink-0" title={formattedDate}>{formattedDate}</p>
           </div>
+          <div className="flex items-baseline gap-2 mt-1">
+            <p className="text-sm font-medium text-muted-foreground" title={news.company}>{news.company}</p>
+            {news.version && <span className="text-xs font-normal text-primary/80">({news.version})</span>}
+          </div>
+        </header>
+        
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4 flex-grow">{news.description}</p>
       </div>
-      
-      <p className="text-sm text-muted-foreground mt-2 line-clamp-2 flex-grow">{news.description}</p>
-      
-      <div className="flex flex-wrap gap-2 mt-3">
+
+      <footer className="flex flex-wrap gap-2 mt-auto">
         <Badge variant="secondary">{news.category}</Badge>
         <Badge variant="outline" className={getPricingColor(news.pricing)}>
           {news.pricing}
           {news.price && <span className="ml-1.5 font-normal opacity-80">({news.price})</span>}
         </Badge>
          <Badge variant="outline">{news.type}</Badge>
-      </div>
+      </footer>
     </a>
   );
 };
+
+    
