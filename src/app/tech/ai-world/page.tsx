@@ -43,26 +43,53 @@ export default function AiWorldPage() {
 
   const { countries, countryCounts } = useMemo(() => {
     const counts = newsUpdates.reduce((acc, update) => {
-      acc[update.country] = (acc[update.country] || 0) + 1;
+      const releaseYear = new Date(update.date).getFullYear();
+      if (releaseYear >= 2021) {
+        acc[update.country] = (acc[update.country] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
-
+  
     const sorted = Array.from(new Set(newsUpdates.map(u => u.country)))
       .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
     
-    return { countries: ['所有国家', ...sorted], countryCounts: counts };
+    const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+    return { countries: [{name: '所有国家', count: totalCount}, ...sorted.map(c => ({name: c, count: counts[c] || 0}))], countryCounts: counts };
   }, []);
 
   const categories = useMemo(() => ['所有类别', ...Array.from(new Set(newsUpdates.map(u => u.category))).sort()], []);
   const pricings = useMemo(() => ['所有价格', ...Array.from(new Set(newsUpdates.map(u => u.pricing)))], []);
 
   const filteredAndSortedUpdates = useMemo(() => {
+    let updates = newsUpdates.filter(update => new Date(update.date).getFullYear() >= 2021);
+
+    const countryOrder = [...countries]
+        .filter(c => c.name !== '所有国家')
+        .sort((a, b) => b.count - a.count)
+        .map(c => c.name);
+
+    updates.sort((a, b) => {
+        const countryIndexA = countryOrder.indexOf(a.country);
+        const countryIndexB = countryOrder.indexOf(b.country);
+        if (countryIndexA !== countryIndexB) {
+            return countryIndexA - countryIndexB;
+        }
+
+        // Within the same country, sort by company product count
+        const companyACount = updates.filter(u => u.country === a.country && u.company === a.company).length;
+        const companyBCount = updates.filter(u => u.country === b.country && u.company === b.company).length;
+        if (companyACount !== companyBCount) {
+            return companyBCount - companyACount;
+        }
+
+        // Finally, sort by date
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+    
     const lowercasedFilter = searchTerm.toLowerCase();
 
-    const filtered = newsUpdates.filter(update => {
-        const releaseYear = new Date(update.date).getFullYear();
-        if (releaseYear < 2021) return false;
-
+    return updates.filter(update => {
         const matchesSearchTerm = searchTerm === '' ||
             update.title.toLowerCase().includes(lowercasedFilter) ||
             update.description.toLowerCase().includes(lowercasedFilter) ||
@@ -75,37 +102,7 @@ export default function AiWorldPage() {
         return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
     });
 
-    const groupedByCountry = filtered.reduce((acc, update) => {
-        (acc[update.country] = acc[update.country] || []).push(update);
-        return acc;
-    }, {} as Record<string, NewsUpdate[]>);
-    
-    const countryOrder = Object.keys(groupedByCountry).sort((a, b) => {
-        return groupedByCountry[b].length - groupedByCountry[a].length;
-    });
-
-    const finalList: NewsUpdate[] = [];
-    countryOrder.forEach(country => {
-        const countryUpdates = groupedByCountry[country];
-
-        const groupedByCompany = countryUpdates.reduce((acc, update) => {
-            (acc[update.company] = acc[update.company] || []).push(update);
-            return acc;
-        }, {} as Record<string, NewsUpdate[]>);
-
-        const companyOrder = Object.keys(groupedByCompany).sort((a,b) => {
-            return groupedByCompany[b].length - groupedByCompany[a].length;
-        });
-
-        companyOrder.forEach(company => {
-            const companyUpdates = groupedByCompany[company];
-            companyUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            finalList.push(...companyUpdates);
-        });
-    });
-
-    return finalList;
-  }, [searchTerm, selectedCountry, selectedCategory, selectedPricing]);
+  }, [searchTerm, selectedCountry, selectedCategory, selectedPricing, countries]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -145,7 +142,7 @@ export default function AiWorldPage() {
       );
     }
     
-    const countryBadges = countries.filter(c => c !== '所有国家');
+    const countryBadges = countries.filter(c => c.name !== '所有国家');
 
     return (
         <div className="space-y-8">
@@ -154,12 +151,12 @@ export default function AiWorldPage() {
                 <div className="flex flex-wrap gap-2 justify-center">
                     {countryBadges.map(country => (
                         <Badge 
-                            key={country} 
-                            variant={selectedCountry === country ? "default" : "secondary"}
+                            key={country.name} 
+                            variant={selectedCountry === country.name ? "default" : "secondary"}
                             className="text-sm px-3 py-1 cursor-pointer hover:bg-primary/20 transition-colors"
-                            onClick={() => handleCountryBadgeClick(country)}
+                            onClick={() => handleCountryBadgeClick(country.name)}
                             >
-                                {country} ({countryCounts[country] || 0})
+                                {country.name} ({country.count})
                         </Badge>
                     ))}
                 </div>
@@ -168,25 +165,18 @@ export default function AiWorldPage() {
             <div>
                  {filteredAndSortedUpdates.map((update, index) => {
                      const isFirstOfCountry = index === 0 || filteredAndSortedUpdates[index - 1].country !== update.country;
-                     const isFirstOfCompany = index === 0 || filteredAndSortedUpdates[index - 1].company !== update.company || isFirstOfCountry;
-
+                     
                      return (
                          <div key={update.id}>
                             {isFirstOfCountry && index > 0 && <Separator className="my-12" />}
-                            {isFirstOfCountry && (
-                                <div id={`country-anchor-${update.country}`} className="relative flex items-center gap-4 mb-8 pt-4">
-                                     <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm text-2xl">
-                                        {countryFlags[update.country] || '🌐'}
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-primary">{update.country}</h2>
-                                </div>
-                            )}
-                             <div className="relative pl-5">
-                                <div className="absolute left-5 top-0 h-full w-px bg-border -translate-x-1/2"></div>
+                            <div className="relative pl-6">
+                                <div className={cn("absolute left-0 top-0 h-full w-px bg-border", isFirstOfCountry ? "mt-12" : "")}></div>
                                 <div className="relative">
-                                    {isFirstOfCompany && (
-                                        <div className="absolute left-0 top-1.5 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-lg bg-card border shadow-sm">
-                                             <Image src={update.logo} alt={`${update.company} logo`} width={28} height={28} className="rounded-md" data-ai-hint="logo" />
+                                    {isFirstOfCountry && (
+                                        <div id={`country-anchor-${update.country}`} className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
+                                            <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm text-3xl">
+                                               {countryFlags[update.country] || '🌐'}
+                                           </div>
                                         </div>
                                     )}
                                     <div className="pl-12 pb-10">
@@ -256,7 +246,7 @@ export default function AiWorldPage() {
                       </SelectTrigger>
                       <SelectContent>
                           {countries.map(country => (
-                              <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
+                              <SelectItem key={country.name} value={country.name}>{country.name} ({country.count})</SelectItem>
                           ))}
                       </SelectContent>
                   </Select>
