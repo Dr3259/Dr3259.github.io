@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image';
 import { Search, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { newsUpdates, type NewsUpdate } from '@/lib/data';
+import { newsUpdates, companyUrls, type NewsUpdate } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -193,7 +193,7 @@ export default function AiWorldPage() {
                                          <div className="absolute left-0 bottom-0 flex items-center gap-4 -translate-x-1/2 translate-y-1/2">
                                             <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
                                                <Image 
-                                                  src={getLogoUrl(updates[0].link)}
+                                                  src={getLogoUrl(companyUrls[company] || updates[0].link)}
                                                   alt={`${company} logo`}
                                                   width={40}
                                                   height={40}
