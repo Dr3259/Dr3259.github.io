@@ -23,7 +23,7 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
-interface SkillNodeData extends d3.HierarchyPointNode<any> {
+interface SkillNodeData extends d3.HierarchyNode<any> {
     data: {
         name: string;
         description: string;
@@ -109,20 +109,20 @@ export default function SkillTreePage() {
         const marginBottom = 100;
         const marginLeft = 20;
 
-        svg.attr('viewBox', [0, 0, width, height]);
+        svg.attr('viewBox', [-width / 2, -height + 150, width, height]);
         
-        const g = svg.append("g").attr("transform", `translate(${width / 2},${height - marginBottom})`);
+        const g = svg.append("g");
 
         const root = d3.hierarchy(skillTreeData) as SkillNodeData;
-        const treeLayout = d3.tree<SkillNodeData>().size([width - marginLeft - marginRight, height - marginTop - marginBottom - 200]);
+        const treeLayout = d3.tree<any>().size([width - marginLeft - marginRight, height - marginTop - marginBottom - 250]);
         
         treeLayout(root);
 
-        // Make it a vertical tree
+        // Make it a vertical tree growing upwards
         root.descendants().forEach(d => {
             const {x, y} = d;
-            d.x = -y; // Invert y to grow upwards
-            d.y = x - (width - marginLeft - marginRight)/2;
+            d.x = -y; // Invert y to grow upwards from the bottom
+            d.y = x - (width - marginLeft - marginRight)/2; // Center the tree horizontally
         });
         
         const colorScale = d3.scaleLinear<string>()
@@ -135,11 +135,12 @@ export default function SkillTreePage() {
           .selectAll('path')
           .data(root.links())
           .join('path')
+             // Use d3.linkVertical for elbow connectors
             .attr('d', d3.linkVertical()
                 .x(d => (d as any).y)
                 .y(d => (d as any).x)
             )
-            .attr('stroke', d => colorScale(d.source.depth))
+            .attr('stroke', d => d.target.data.unlocked ? '#2563eb' : '#4b5563')
             .attr('stroke-width', d => 5 - d.source.depth * 0.8)
             .attr('stroke-opacity', 0.8);
 
@@ -182,9 +183,6 @@ export default function SkillTreePage() {
             g.attr('transform', event.transform);
         });
         
-        // Initial transform to fit the tree
-        const initialTransform = d3.zoomIdentity.translate(width / 2, height - marginBottom).scale(1);
-        svg.call(zoom.transform, initialTransform);
         svg.call(zoom);
 
     }
@@ -213,4 +211,3 @@ export default function SkillTreePage() {
     </div>
   );
 }
-
