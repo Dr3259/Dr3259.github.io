@@ -45,7 +45,7 @@ export default function AiWorldPage() {
 
   useEffect(() => {
     // Only run on the client-side
-    setHeroImage('https://picsum.photos/1200/400');
+    setHeroImage('https://placehold.co/1200x400');
   }, []);
 
 
@@ -176,18 +176,17 @@ export default function AiWorldPage() {
 
             <div>
                  {countries.map((country, countryIndex) => (
-                    <div key={country} className="relative pl-6">
+                    <div key={country} className="relative">
                         {countryIndex > 0 && <Separator className="my-12" />}
-                        <div id={`country-anchor-${country}`} className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
-                            <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm text-3xl">
+                        <div id={`country-anchor-${country}`} className="absolute left-0 top-0 -translate-x-1/2 pt-4">
+                           <div className="z-10 flex h-12 w-12 items-center justify-center rounded-lg bg-card border-2 border-primary/50 shadow-sm text-3xl">
                                {countryFlags[country] || '🌐'}
                            </div>
                         </div>
-                        <div className="relative pl-12 space-y-8">
-                            <div className="absolute left-0 top-0 h-full w-px bg-border mt-12"></div>
-                             {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates]) => (
-                                <div key={company} className="relative">
-                                    <div className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
+                        <div className="pl-12">
+                           {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates], companyIndex) => (
+                                <div key={company} className="relative mt-8">
+                                     <div className="absolute left-0 top-0 pt-4 -translate-x-1/2">
                                         <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
                                            <Image 
                                               src={getLogoUrl(companyUrls[company] || updates[0].link)}
@@ -297,5 +296,3 @@ export default function AiWorldPage() {
     </div>
   )
 }
-
-    
