@@ -33,6 +33,28 @@ interface GroupedNews {
     };
 }
 
+const applyFilters = (
+    updates: NewsUpdate[],
+    searchTerm: string,
+    country: string,
+    category: string,
+    pricing: string
+): NewsUpdate[] => {
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return updates.filter(update => {
+        const matchesSearchTerm = searchTerm === '' ||
+            update.title.toLowerCase().includes(lowercasedFilter) ||
+            update.description.toLowerCase().includes(lowercasedFilter) ||
+            update.company.toLowerCase().includes(lowercasedFilter);
+        
+        const matchesCountry = country === '所有国家' || update.country === country;
+        const matchesCategory = category === '所有类别' || update.category === category;
+        const matchesPricing = pricing === '所有价格' || update.pricing === pricing;
+        
+        return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
+    });
+};
+
 
 export default function AiWorldPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,39 +70,29 @@ export default function AiWorldPage() {
     setHeroImage('https://placehold.co/1200x400');
   }, []);
 
-
   const { countries, countryCounts } = useMemo(() => {
-    const counts = newsUpdates.reduce((acc, update) => {
+    const filteredForCounts = applyFilters(newsUpdates, searchTerm, '所有国家', selectedCategory, selectedPricing);
+    const counts = filteredForCounts.reduce((acc, update) => {
         acc[update.country] = (acc[update.country] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
   
-    const sorted = Array.from(new Set(newsUpdates.map(u => u.country)))
+    const sorted = Array.from(new Set(filteredForCounts.map(u => u.country)))
       .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
     
-    const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    const totalCount = filteredForCounts.length;
 
-    return { countries: [{name: '所有国家', count: totalCount}, ...sorted.map(c => ({name: c, count: counts[c] || 0}))], countryCounts: counts };
-  }, []);
+    return { 
+        countries: [{name: '所有国家', count: totalCount}, ...sorted.map(c => ({name: c, count: counts[c] || 0}))], 
+        countryCounts: counts 
+    };
+  }, [searchTerm, selectedCategory, selectedPricing]);
 
   const categories = useMemo(() => ['所有类别', ...Array.from(new Set(newsUpdates.map(u => u.category))).sort()], []);
   const pricings = useMemo(() => ['所有价格', ...Array.from(new Set(newsUpdates.map(u => u.pricing)))], []);
 
   const groupedAndSortedUpdates = useMemo(() => {
-    const lowercasedFilter = searchTerm.toLowerCase();
-
-    const filteredUpdates = newsUpdates.filter(update => {
-        const matchesSearchTerm = searchTerm === '' ||
-            update.title.toLowerCase().includes(lowercasedFilter) ||
-            update.description.toLowerCase().includes(lowercasedFilter) ||
-            update.company.toLowerCase().includes(lowercasedFilter);
-        
-        const matchesCountry = selectedCountry === '所有国家' || update.country === selectedCountry;
-        const matchesCategory = selectedCategory === '所有类别' || update.category === selectedCategory;
-        const matchesPricing = selectedPricing === '所有价格' || update.pricing === selectedPricing;
-        
-        return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
-    });
+    const filteredUpdates = applyFilters(newsUpdates, searchTerm, selectedCountry, selectedCategory, selectedPricing);
 
     const grouped: GroupedNews = {};
     filteredUpdates.forEach(update => {
@@ -146,8 +158,8 @@ export default function AiWorldPage() {
 
 
   const renderContent = () => {
-    const countries = Object.keys(groupedAndSortedUpdates);
-    if (countries.length === 0) {
+    const countriesWithContent = Object.keys(groupedAndSortedUpdates);
+    if (countriesWithContent.length === 0) {
       return (
         <div className="text-center py-24">
           <p className="text-xl font-medium text-foreground">未找到任何模型</p>
@@ -156,38 +168,43 @@ export default function AiWorldPage() {
       );
     }
     
-    const countryBadges = countries.filter(c => c !== '所有国家');
+    const countryBadges = countries
+      .filter(c => c.name !== '所有国家' && countryCounts[c.name] > 0)
+      .map(c => ({ name: c.name, count: countryCounts[c.name] || 0 }));
+
 
     return (
         <div className="space-y-8">
-            <div className="text-center">
-                <p className="text-muted-foreground mb-4">快速导航至国家/地区</p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                    {countryBadges.map(country => (
-                        <Badge 
-                            key={country} 
-                            variant={selectedCountry === country ? "default" : "secondary"}
-                            className="text-sm px-3 py-1 cursor-pointer hover:bg-primary/20 transition-colors"
-                            onClick={() => handleCountryBadgeClick(country)}
-                            >
-                                {country} ({countryCounts[country] || 0})
-                        </Badge>
-                    ))}
+            {countryBadges.length > 1 && (
+                <div className="text-center">
+                    <p className="text-muted-foreground mb-4">快速导航至国家/地区</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                        {countryBadges.map(country => (
+                            <Badge 
+                                key={country.name} 
+                                variant={selectedCountry === country.name ? "default" : "secondary"}
+                                className="text-sm px-3 py-1 cursor-pointer hover:bg-primary/20 transition-colors"
+                                onClick={() => handleCountryBadgeClick(country.name)}
+                                >
+                                    {country.name} ({country.count})
+                            </Badge>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="relative pl-6">
                 <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2"></div>
                 
-                {countries.map((country, countryIndex) => (
+                {countriesWithContent.map((country, countryIndex) => (
                     <div key={country} className="relative">
-                        <div id={`country-anchor-${country}`} className="absolute top-8 -left-6 -translate-x-1/2 -translate-y-1/2 z-10">
+                        <div id={`country-anchor-${country}`} className="absolute top-0 -left-6 -translate-x-1/2 z-10">
                              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-card border-2 border-primary/50 shadow-sm text-3xl">
                                 {countryFlags[country] || '🌐'}
                             </div>
                         </div>
 
-                        <div className="pt-20 pl-12 space-y-8">
+                        <div className="pt-2 pl-12 space-y-8">
                             {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates], companyIndex) => (
                                 <div key={company} className="relative">
                                     <div className="absolute top-4 -left-12 -translate-x-1/2 z-10">
@@ -207,10 +224,17 @@ export default function AiWorldPage() {
                                             <NewsCard key={update.id} news={update} />
                                         ))}
                                     </div>
+                                     {companyIndex < Object.keys(groupedAndSortedUpdates[country]).length - 1 && (
+                                        <Separator className="my-12 w-2/3 mx-auto" />
+                                     )}
                                 </div>
                             ))}
                         </div>
-                         {countryIndex < countries.length - 1 && <div className="h-16"></div>}
+                         {countryIndex < countriesWithContent.length - 1 && (
+                            <div className="my-12">
+                                <Separator />
+                            </div>
+                         )}
                     </div>
                 ))}
             </div>
@@ -300,3 +324,5 @@ export default function AiWorldPage() {
     </div>
   )
 }
+
+    
