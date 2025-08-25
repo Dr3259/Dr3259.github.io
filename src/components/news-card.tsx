@@ -55,6 +55,7 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
         <Badge variant="secondary">{news.category}</Badge>
         <Badge variant="outline" className={getPricingColor(news.pricing)}>
           {news.pricing}
+          {news.price && <span className="ml-1.5 font-normal opacity-80">({news.price})</span>}
         </Badge>
          <Badge variant="outline">{news.type}</Badge>
       </div>

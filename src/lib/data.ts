@@ -9,6 +9,7 @@ export interface NewsUpdate {
   country: '中国' | '美国' | '法国' | '加拿大' | '韩国' | '英国' | '俄罗斯' | '德国' | '印度' | '日本';
   category: 'LLM' | 'Image Generation' | 'Audio' | 'Developer Tools' | 'Platform' | 'Search' | 'Research';
   pricing: '免费' | '付费' | '开源' | '免费增值' | '商业' | '研究';
+  price?: string;
   version?: string;
   parentCompany?: string;
   type?: string;
@@ -142,6 +143,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Plus: $20/月",
     version: "GPT-5",
     date: "2025-08-07",
     link: "https://openai.com/index/introducing-gpt-5/",
@@ -156,6 +158,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Plus: $20/月",
     version: "GPT-5 powered",
     date: "2022-11-30",
     link: "https://chat.openai.com/",
@@ -170,6 +173,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
+    price: "Plus: $20/月",
     version: "DALL-E 3",
     date: "2023-09-20",
     link: "https://openai.com/dall-e-3/",
@@ -200,7 +204,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Whisper",
     date: "2022-09-21",
-    link: "https://openai.com/research/whisper",
+    link: "https://github.com/openai/whisper",
     status: "Active"
   },
   {
@@ -214,7 +218,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Mixtral 8x7B",
     date: "2023-12-09",
-    link: "https://mistral.ai/news/mixtral-of-experts/",
+    link: "https://github.com/mistralai/mistral-src",
     status: "Active"
   },
   {
@@ -226,6 +230,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "Mistral Large 3.1",
     date: "2025-08-12",
     link: "https://mistral.ai/news/mistral-large-2508/",
@@ -240,6 +245,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "商业",
+    price: "按需付费",
     version: "Embed v3",
     date: "2023-11-01",
     link: "https://cohere.com/models/embed",
@@ -254,6 +260,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "Command A",
     date: "2025-03-01",
     link: "https://cohere.com/blog/command-a",
@@ -268,6 +275,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Search",
     type: "Service",
     pricing: "免费增值",
+    price: "Pro: $20/月",
     version: "",
     date: "2022-08-01",
     link: "https://www.perplexity.ai/",
@@ -282,6 +290,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: ¥25/月",
     version: "智谱清言",
     date: "2023-08-01",
     link: "https://www.zhipuai.cn/",
@@ -296,6 +305,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "GLM-4.5",
     date: "2025-04-26",
     link: "https://www.zhipuai.cn/glm-4.5",
@@ -310,6 +320,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "CogView 3",
     date: "2024-01-16",
     link: "https://www.zhipuai.cn/gallery",
@@ -324,6 +335,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "ERNIE 4.5",
     date: "2025-03-16",
     link: "https://wenxin.baidu.com/ebh/index",
@@ -338,6 +350,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: ¥49/月",
     version: "",
     date: "2022-08-19",
     link: "https://yige.baidu.com/",
@@ -354,7 +367,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "3.5",
     date: "2025-06-24",
-    link: "https://stability.ai/stable-diffusion-3.5",
+    link: "https://github.com/Stability-AI/generative-models",
     status: "Active"
   },
   {
@@ -366,6 +379,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Audio",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: $11.99/月",
     version: "2.5",
     date: "2025-05-14",
     link: "https://stability.ai/stable-audio-2.5",
@@ -408,7 +422,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "",
     date: "2024-09-01",
     link: "https://vk.company/en/",
     status: "Active"
@@ -422,7 +435,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "Multi",
     date: "2023-11-01",
     link: "https://ntechlab.com/",
     status: "Active"
@@ -436,7 +448,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-10-01",
     link: "https://visionlabs.ai/",
     status: "Active"
@@ -452,7 +463,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "DBRX",
     date: "2024-03-27",
-    link: "https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm",
+    link: "https://github.com/databricks/dbrx",
     status: "Active"
   },
   {
@@ -464,7 +475,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-06-28",
     link: "https://www.databricks.com/product/mosaic-ai",
     status: "Active"
@@ -480,7 +490,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Wan2.2-VACE",
     date: "2025-06-30",
-    link: "https://tongyi.aliyun.com/wanxiang",
+    link: "https://github.com/modelscope/wan-2",
     status: "Active"
   },
   {
@@ -494,7 +504,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Qwen3",
     date: "2025-05-04",
-    link: "https://tongyi.aliyun.com/qianwen/",
+    link: "https://github.com/QwenLM/Qwen",
     status: "Active"
   },
   {
@@ -506,7 +516,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "T1",
     date: "2024-06-01",
     link: "https://hunyuan.tencent.com/",
     status: "Active"
@@ -520,6 +529,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: ¥20/月",
     version: "K2",
     date: "2025-07-14",
     link: "https://kimi.moonshot.cn/",
@@ -534,6 +544,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "Pro: $20/月",
     version: "Claude 4 Opus",
     date: "2025-05-22",
     link: "https://www.anthropic.com/product",
@@ -548,6 +559,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "Claude 4 Sonnet",
     date: "2025-05-22",
     link: "https://www.anthropic.com/news/claude-4-family",
@@ -562,6 +574,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "Claude 4 Haiku",
     date: "2025-05-22",
     link: "https://www.anthropic.com/news/claude-4-family",
@@ -576,6 +589,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: $20/月",
     version: "2.5",
     date: "2025-08-12",
     link: "https://deepmind.google/technologies/gemini/flash/",
@@ -590,7 +604,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "免费增值",
-    version: "",
     date: "2024-05-14",
     link: "https://deepmind.google/discover/blog/new-models-and-developer-tools-to-build-with-gemini-and-google-ai/",
     status: "Active"
@@ -618,6 +631,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "Imagen 3",
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/imagen/",
@@ -660,7 +674,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://cloud.google.com/vertex-ai",
     status: "Active"
@@ -674,6 +687,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
+    price: "企业版: $30/用户/月",
     version: "",
     date: "2023-09-26",
     link: "https://www.microsoft.com/en-us/microsoft-365/blog/2023/03/16/introducing-microsoft-365-copilot-your-copilot-for-work/",
@@ -690,7 +704,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Phi-3.5",
     date: "2025-08-22",
-    link: "https://azure.microsoft.com/en-us/blog/introducing-phi-3.5-a-highly-capable-and-cost-effective-small-language-model/",
+    link: "https://github.com/microsoft/phi",
     status: "Active"
   },
   {
@@ -702,6 +716,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "商业",
+    price: "个人: $10/月, 企业: $19/用户/月",
     version: "",
     date: "2023-01-01",
     link: "https://github.com/features/copilot",
@@ -716,7 +731,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
-    version: "",
     date: "2023-04-12",
     link: "https://designer.microsoft.com/",
     status: "Active"
@@ -730,6 +744,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: $20/月",
     version: "",
     date: "2023-11-15",
     link: "https://copilot.microsoft.com/",
@@ -744,6 +759,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
+    price: "按需付费",
     version: "",
     date: "2023-05-23",
     link: "https://azure.microsoft.com/en-us/solutions/ai",
@@ -758,7 +774,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-03-18",
     link: "https://nvidianews.nvidia.com/news/nvidia-blackwell-platform-arrives-to-power-a-new-era-of-computing",
     status: "Active"
@@ -772,7 +787,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-03-18",
     link: "https://nvidianews.nvidia.com/news/nvidia-launches-generative-ai-microservices-for-developers-to-create-and-deploy-applications-on-their-platforms",
     status: "Active"
@@ -786,6 +800,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
+    price: "按需付费",
     version: "",
     date: "2023-09-28",
     link: "https://aws.amazon.com/bedrock/",
@@ -800,6 +815,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
+    price: "$20/用户/月",
     version: "",
     date: "2024-04-30",
     link: "https://aws.amazon.com/q/",
@@ -814,7 +830,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "",
     date: "2023-09-25",
     link: "https://ai.meta.com/",
     status: "Active"
@@ -830,7 +845,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Llama 3.2",
     date: "2025-09-25",
-    link: "https://ai.meta.com/blog/llama-3-2/",
+    link: "https://github.com/meta-llama/llama3",
     status: "Active"
   },
   {
@@ -842,7 +857,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
-    version: "",
     date: "2023-12-06",
     link: "https://imagine.meta.com/",
     status: "Active"
@@ -856,7 +870,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-05-09",
     link: "https://www.ibm.com/watsonx",
     status: "Active"
@@ -870,7 +883,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-12-05",
     link: "https://scale.com/",
     status: "Active"
@@ -898,6 +910,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "Premium+ Plan",
     version: "4",
     date: "2025-07-09",
     link: "https://x.ai/blog/grok-4",
@@ -954,6 +967,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "Premium+ Plan",
     version: "",
     date: "2023-11-04",
     link: "https://grok.x.ai/",
@@ -970,7 +984,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Grok-1",
     date: "2024-03-17",
-    link: "https://x.ai/blog/grok-os",
+    link: "https://github.com/xai-org/grok-1",
     status: "Active"
   },
   {
@@ -982,6 +996,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "Premium+ Plan",
     version: "4",
     date: "2025-07-09",
     link: "https://x.ai/",
@@ -1038,6 +1053,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "商业",
+    price: "按需付费",
     version: "",
     date: "2024-10-01",
     link: "https://x.ai/api",
@@ -1052,7 +1068,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://aleph-alpha.com/aleph-alpha-launches-phariaai-the-enterprise-grade-operating-system-for-generative-ai-combining-future-proof-sovereign-design-with-llm-explainability-and-compliance/",
     status: "Active"
@@ -1066,6 +1081,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "商业",
+    price: "€8.74/用户/月",
     version: "",
     date: "2023-01-01",
     link: "https://www.deepl.com/pro/write",
@@ -1080,7 +1096,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-11-15",
     link: "https://www.mech-mind.com/news/news/002.html",
     status: "Active"
@@ -1094,7 +1109,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "Pro",
     date: "2024-02-15",
     link: "https://olakrutrim.com/",
     status: "Active"
@@ -1110,7 +1124,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "v0.1",
     date: "2023-12-21",
-    link: "https://sarvam.ai/",
+    link: "https://huggingface.co/sarvamai/OpenHathi-7B-Hi-v0.1-Base",
     status: "Active"
   },
   {
@@ -1122,7 +1136,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-07-01",
     link: "https://darktrace.com/platform",
     status: "Active"
@@ -1136,6 +1149,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
+    price: "$22/月起",
     version: "",
     date: "2024-01-17",
     link: "https://www.synthesia.io/",
@@ -1150,7 +1164,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.benevolent.com/benevolent-platform",
     status: "Active"
@@ -1164,7 +1177,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-08-25",
     link: "https://www.dataiku.com/",
     status: "Active"
@@ -1178,7 +1190,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
-    version: "",
     date: "2023-11-01",
     link: "https://www.lighton.ai/",
     status: "Active"
@@ -1192,6 +1203,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Search",
     type: "Service",
     pricing: "商业",
+    price: "$0.5/千次请求起",
     version: "",
     date: "2022-01-01",
     link: "https://www.algolia.com/",
@@ -1206,7 +1218,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://www.doosanrobotics.com/",
     status: "Active"
@@ -1220,7 +1231,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://www.lunit.io/products/lunit-insight-mmg",
     status: "Active"
@@ -1236,7 +1246,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Pro 2",
     date: "2025-07-10",
-    link: "https://upstage.ai/solar",
+    link: "https://huggingface.co/upstage",
     status: "Active"
   },
   {
@@ -1248,7 +1258,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Search",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.coveo.com/",
     status: "Active"
@@ -1276,6 +1285,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "V3.5",
     date: "2024-01-30",
     link: "https://xinghuo.xfyun.cn/",
@@ -1292,7 +1302,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "Baichuan-530B",
     date: "2023-06-15",
-    link: "https://www.baichuan-ai.com/",
+    link: "https://github.com/baichuan-inc/Baichuan2",
     status: "Active"
   },
   {
@@ -1306,7 +1316,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "V3.1",
     date: "2025-08-21",
-    link: "https://www.deepseek.com/",
+    link: "https://github.com/deepseek-ai",
     status: "Active"
   },
   {
@@ -1332,7 +1342,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.coreweave.com/",
     status: "Active"
@@ -1346,7 +1355,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://www.anduril.com/lattice/",
     status: "Active"
@@ -1374,7 +1382,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://crusoe.ai/",
     status: "Active"
@@ -1388,7 +1395,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.harvey.ai/",
     status: "Active"
@@ -1402,6 +1408,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
+    price: "Standard: $12/用户/月",
     version: "Gen-4",
     date: "2025-03-31",
     link: "https://runwayml.com/",
@@ -1416,7 +1423,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Research",
     type: "Research",
     pricing: "研究",
-    version: "",
     date: "2024-05-15",
     link: "https://arxiv.org/abs/2405.09350",
     status: "Active"
@@ -1444,7 +1450,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://writer.com/",
     status: "Active"
@@ -1473,7 +1478,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.kuka.com/",
     status: "Active"
@@ -1501,7 +1505,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-09-01",
     link: "https://www.sap.com/products/artificial-intelligence/joule.html",
     status: "Active"
@@ -1515,7 +1518,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://www.bosch.com/",
     status: "Active"
@@ -1529,6 +1531,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: €9.99/月",
     version: "v5.0",
     date: "2023-01-01",
     link: "https://www.photoroom.com/",
@@ -1557,6 +1560,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "",
     date: "2022-10-18",
     link: "https://www.kakaobrain.com/en/products/karlo",
@@ -1613,7 +1617,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://www.moloco.com/",
     status: "Active"
@@ -1627,7 +1630,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Audio",
     type: "Product",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://supertone.ai/",
     status: "Active"
@@ -1641,7 +1643,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Audio",
     type: "Product",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://www.selvasai.com/en/service/aivoice-recognition",
     status: "Active"
@@ -1655,7 +1656,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "Agent+",
     date: "2022-01-01",
     link: "https://www.ada.cx/",
     status: "Active"
@@ -1669,7 +1669,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://www.deepgenomics.com/",
     status: "Active"
@@ -1739,7 +1738,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-05-01",
     link: "https://matlantis.com/",
     status: "Active"
@@ -1753,7 +1751,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Research",
     type: "Research",
     pricing: "研究",
-    version: "",
     date: "2024-03-20",
     link: "https://sakana.ai/",
     status: "Active"
@@ -1767,7 +1764,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.mujin-corp.com/",
     status: "Active"
@@ -1781,7 +1777,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
-    version: "",
     date: "2022-01-01",
     link: "https://rinna.co.jp/",
     status: "Active"
@@ -1795,7 +1790,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "研究",
-    version: "",
     date: "2023-01-01",
     link: "https://global.toyota/",
     status: "Active"
@@ -1809,7 +1803,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://cinnamon.ai/",
     status: "Active"
@@ -1837,7 +1830,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-05-01",
     link: "https://www.nec.com/",
     status: "Active"
@@ -1851,7 +1843,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-05-01",
     link: "https://www.mitsubishielectric.com/",
     status: "Active"
@@ -1865,7 +1856,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-01-01",
     link: "https://www.hitachi.com/",
     status: "Active"
@@ -1879,6 +1869,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Audio",
     type: "Product",
     pricing: "免费增值",
+    price: "$5/月起",
     version: "EVI 3",
     date: "2025-07-17",
     link: "https://elevenlabs.io/",
@@ -1893,6 +1884,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: ¥59.9/月",
     version: "ERNIE 5",
     date: "2025-08-21",
     link: "https://yiyan.baidu.com/",
@@ -1907,6 +1899,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Product",
     pricing: "商业",
+    price: "Pro: $20/月",
     version: "",
     date: "2022-01-01",
     link: "https://cursor.sh/",
@@ -1935,6 +1928,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Audio",
     type: "Product",
     pricing: "免费增值",
+    price: "Standard: $9.99/月",
     version: "",
     date: "2021-01-01",
     link: "https://soundful.com/",
@@ -1991,6 +1985,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
+    price: "Standard: $30/月",
     version: "Gen-4",
     date: "2025-03-31",
     link: "https://www.midjourney.com/",
@@ -2005,6 +2000,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: $12/月",
     version: "Autodesigner 2.0",
     date: "2025-06-12",
     link: "https://uizard.io/",
@@ -2047,6 +2043,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "5",
     date: "2025-08-21",
     link: "https://baike.baidu.com/item/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80/62642976",
@@ -2061,6 +2058,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "2.5",
     date: "2024-05-24",
     link: "https://tongyi.aliyun.com/blog/191573937",
@@ -2091,7 +2089,7 @@ export const newsUpdates: NewsUpdate[] = [
     pricing: "开源",
     version: "R1",
     date: "2025-01-10",
-    link: "https://www.deepseek.com/",
+    link: "https://github.com/deepseek-ai",
     status: "Active"
   },
   {
@@ -2145,7 +2143,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-01-01",
     link: "https://aleph-alpha.com/",
     status: "Active"
@@ -2159,7 +2156,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://parloa.com/",
     status: "Active"
@@ -2173,7 +2169,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://helsing.ai/",
     status: "Active"
@@ -2187,7 +2182,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://cartagon.com/",
     status: "Active"
@@ -2201,7 +2195,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://www.langdock.com/",
     status: "Active"
@@ -2215,7 +2208,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2024-01-01",
     link: "https://www.piya.ai/",
     status: "Active"
@@ -2229,7 +2221,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2025-01-01",
     link: "https://www.piya.ai/",
     status: "Active"
@@ -2243,7 +2234,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://capsula.ai/",
     status: "Active"
@@ -2257,7 +2247,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://example.com",
     status: "Active"
@@ -2271,7 +2260,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://example.com",
     status: "Active"
@@ -2285,6 +2273,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "免费增值",
+    price: "Pro: €20/月",
     version: "",
     date: "2024-02-01",
     link: "https://chat.mistral.ai/",
@@ -2313,7 +2302,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2025-06-03",
     link: "https://www.h.ai/",
     status: "Active"
@@ -2327,7 +2315,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Product",
     pricing: "商业",
-    version: "",
     date: "2025-01-01",
     link: "https://poolside.ai/",
     status: "Active"
@@ -2341,7 +2328,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Developer Tools",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2025-01-01",
     link: "https://adaptive-ml.com/",
     status: "Active"
@@ -2355,6 +2341,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "3.1",
     date: "2025-03-17",
     link: "https://mistral.ai/",
@@ -2369,6 +2356,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "LLM",
     type: "Product",
     pricing: "商业",
+    price: "按需付费",
     version: "3.0",
     date: "2025-05-07",
     link: "https://mistral.ai/",
@@ -2383,7 +2371,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://waabi.ai/",
     status: "Active"
@@ -2397,7 +2384,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Product",
     pricing: "研究",
-    version: "",
     date: "2021-01-01",
     link: "https://www.turing-motors.com/",
     status: "Active"
@@ -2411,7 +2397,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://www.edgematrix.com/",
     status: "Active"
@@ -2425,7 +2410,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Search",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2021-01-01",
     link: "https://fastctl.ai/",
     status: "Active"
@@ -2439,6 +2423,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "商业",
+    price: "$22/月起",
     version: "",
     date: "2021-01-01",
     link: "https://www.synthesia.io/",
@@ -2453,7 +2438,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2022-01-01",
     link: "https://www.graphcore.ai/",
     status: "Active"
@@ -2467,6 +2451,7 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Image Generation",
     type: "Product",
     pricing: "免费增值",
+    price: "按需付费",
     version: "",
     date: "2022-01-01",
     link: "https://beta.dreamstudio.ai/",
@@ -2481,7 +2466,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://oxa.ai/",
     status: "Active"
@@ -2495,7 +2479,6 @@ export const newsUpdates: NewsUpdate[] = [
     category: "Platform",
     type: "Service",
     pricing: "商业",
-    version: "",
     date: "2023-01-01",
     link: "https://fetch.ai/",
     status: "Active"
