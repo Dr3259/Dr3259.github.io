@@ -43,11 +43,8 @@ export default function AiWorldPage() {
 
   const { countries, countryCounts } = useMemo(() => {
     const counts = newsUpdates.reduce((acc, update) => {
-      const releaseYear = new Date(update.date).getFullYear();
-      if (releaseYear >= 2021) {
         acc[update.country] = (acc[update.country] || 0) + 1;
-      }
-      return acc;
+        return acc;
     }, {} as Record<string, number>);
   
     const sorted = Array.from(new Set(newsUpdates.map(u => u.country)))
@@ -66,7 +63,6 @@ export default function AiWorldPage() {
 
     const countryOrder = [...countries]
         .filter(c => c.name !== '所有国家')
-        .sort((a, b) => b.count - a.count)
         .map(c => c.name);
 
     updates.sort((a, b) => {
@@ -207,13 +203,13 @@ export default function AiWorldPage() {
               priority
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-black/50 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight" style={{textShadow: '2px 2px 8px rgba(0,0,0,0.7)'}}>
             ai 世界
           </h1>
-          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto mt-6">
+          <p className="text-lg md:text-xl text-slate-200 max-w-3xl mx-auto mt-6" style={{textShadow: '1px 1px 4px rgba(0,0,0,0.7)'}}>
             探索全球AI模型、产品与公司，抹平全球AI信息差。
           </p>
         </div>
