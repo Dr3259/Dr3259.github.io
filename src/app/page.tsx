@@ -427,7 +427,7 @@ export default function WeekGlancePage() {
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isPreviewSuppressedByClickRef = useRef(isPreviewSuppressedByClickRef.current);
+  const isPreviewSuppressedByClickRef = useRef(false);
   
   const [isDragging, setIsDragging] = useState(false);
 
@@ -1256,5 +1256,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
-    
