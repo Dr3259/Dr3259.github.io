@@ -38,15 +38,27 @@ export const NewsCard: React.FC<{ news: NewsUpdate }> = ({ news }) => {
       rel="noopener noreferrer" 
       className="bg-card border rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden h-full group p-4"
     >
-      <div className="flex justify-between items-start">
-          <div className="flex-1">
+      <div className="flex justify-between items-start gap-4">
+          <div className="flex-shrink-0">
+             <div className="mt-1 w-10 h-10 flex-shrink-0 bg-muted rounded-full flex items-center justify-center border">
+                <Image 
+                  src={news.logo}
+                  alt={`${news.company} logo`}
+                  width={28}
+                  height={28}
+                  className="rounded-md"
+                  data-ai-hint="logo"
+                />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground font-mono" title={formattedDate}>{formattedDate}</p>
               <h3 className="text-base font-semibold text-foreground mt-1 group-hover:text-primary transition-colors">
                 {news.title}
                 {news.version && <span className="text-sm font-normal text-muted-foreground ml-1.5">({news.version})</span>}
               </h3>
+              <p className="text-sm font-medium text-muted-foreground truncate mt-0.5" title={news.company}>{news.company}</p>
           </div>
-          <div className="text-sm font-medium text-muted-foreground truncate shrink-0 ml-4" title={news.company}>{news.company}</div>
       </div>
       
       <p className="text-sm text-muted-foreground mt-2 line-clamp-2 flex-grow">{news.description}</p>

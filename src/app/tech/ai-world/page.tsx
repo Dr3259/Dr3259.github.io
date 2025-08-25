@@ -36,7 +36,6 @@ export default function AiWorldPage() {
   const [heroImage, setHeroImage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set image on client-side to prevent hydration mismatch
     setHeroImage('https://picsum.photos/1200/400');
   }, []);
 
@@ -178,16 +177,6 @@ export default function AiWorldPage() {
                                         </div>
                                     )}
                                     <div className="pl-12 pb-10 flex gap-4 items-start">
-                                        <div className="mt-5 w-10 h-10 flex-shrink-0 bg-muted rounded-full flex items-center justify-center border">
-                                            <Image 
-                                              src={update.logo}
-                                              alt={`${update.company} logo`}
-                                              width={28}
-                                              height={28}
-                                              className="rounded-md"
-                                              data-ai-hint="logo"
-                                            />
-                                        </div>
                                         <div className="flex-1">
                                           <NewsCard news={update} />
                                         </div>
