@@ -103,30 +103,45 @@ export default function SkillTreePage() {
         svg.selectAll("*").remove(); // Clear previous renders
 
         const width = 1000;
-        const height = 600;
-        const margin = { top: 20, right: 120, bottom: 20, left: 120 };
+        const height = 800;
+        const marginTop = 50;
+        const marginRight = 20;
+        const marginBottom = 100;
+        const marginLeft = 20;
 
-        svg.attr('viewBox', [-margin.left, -margin.top, width, height + margin.top + margin.bottom]);
+        svg.attr('viewBox', [0, 0, width, height]);
         
-        const g = svg.append("g");
+        const g = svg.append("g").attr("transform", `translate(${width / 2},${height - marginBottom})`);
 
         const root = d3.hierarchy(skillTreeData) as SkillNodeData;
-        const treeLayout = d3.tree<SkillNodeData>().size([height, width - margin.left - margin.right - 200]);
+        const treeLayout = d3.tree<SkillNodeData>().size([width - marginLeft - marginRight, height - marginTop - marginBottom - 200]);
         
         treeLayout(root);
+
+        // Make it a vertical tree
+        root.descendants().forEach(d => {
+            const {x, y} = d;
+            d.x = -y; // Invert y to grow upwards
+            d.y = x - (width - marginLeft - marginRight)/2;
+        });
+        
+        const colorScale = d3.scaleLinear<string>()
+          .domain([0, root.height])
+          .range(["#555", "#bbb"]);
 
         // Links
         g.append('g')
           .attr('fill', 'none')
-          .attr('stroke', '#94a3b8')
-          .attr('stroke-opacity', 0.6)
-          .attr('stroke-width', 1.5)
           .selectAll('path')
           .data(root.links())
           .join('path')
-            .attr('d', d3.linkHorizontal<any, SkillNodeData>()
-                .x(d => d.y)
-                .y(d => d.x));
+            .attr('d', d3.linkVertical()
+                .x(d => (d as any).y)
+                .y(d => (d as any).x)
+            )
+            .attr('stroke', d => colorScale(d.source.depth))
+            .attr('stroke-width', d => 5 - d.source.depth * 0.8)
+            .attr('stroke-opacity', 0.8);
 
         // Nodes
         const node = g.append('g')
@@ -136,27 +151,29 @@ export default function SkillTreePage() {
             .attr('transform', d => `translate(${d.y},${d.x})`);
 
         node.append('circle')
-            .attr('r', 6)
-            .attr('fill', d => d.data.unlocked ? '#2563eb' : '#94a3b8')
-            .attr('stroke', '#e2e8f0')
+            .attr('r', d => 12 - d.depth * 1.5)
+            .attr('fill', d => d.data.unlocked ? '#2563eb' : '#4b5563')
+            .attr('stroke', d => colorScale(d.depth))
             .attr('stroke-width', 2);
         
         node.append('text')
             .attr('dy', '0.31em')
-            .attr('x', d => d.children ? -12 : 12)
-            .attr('text-anchor', d => d.children ? 'end' : 'start')
+            .attr('y', d => d.children ? -20 : 20)
+            .attr('text-anchor', 'middle')
             .text(d => d.data.name)
             .style('fill', '#f8fafc')
-            .style('font-size', '14px');
+            .style('font-size', d => `${16 - d.depth}px`);
 
         const tooltip = d3.select(tooltipRef.current);
         
         node.on('mouseover', (event, d) => {
+            d3.select(event.currentTarget).select('circle').transition().duration(200).attr('r', d => 16 - d.depth * 1.5);
             tooltip.style('opacity', 1)
                    .html(`<strong>${d.data.name}</strong><p>${d.data.description}</p>`)
                    .style('left', (event.pageX + 15) + 'px')
                    .style('top', (event.pageY - 28) + 'px');
-        }).on('mouseout', () => {
+        }).on('mouseout', (event, d) => {
+            d3.select(event.currentTarget).select('circle').transition().duration(200).attr('r', d => 12 - d.depth * 1.5);
             tooltip.style('opacity', 0);
         });
 
@@ -164,9 +181,14 @@ export default function SkillTreePage() {
         const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (event) => {
             g.attr('transform', event.transform);
         });
+        
+        // Initial transform to fit the tree
+        const initialTransform = d3.zoomIdentity.translate(width / 2, height - marginBottom).scale(1);
+        svg.call(zoom.transform, initialTransform);
         svg.call(zoom);
+
     }
-  }, []);
+  }, [currentLanguage]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100 font-sans">
