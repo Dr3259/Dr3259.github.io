@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, type DragEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
@@ -368,27 +368,14 @@ interface FeatureButtonProps {
     icon: React.ElementType;
     title: string;
     onClick: () => void;
-    onDragStart: (e: DragEvent<HTMLDivElement>) => void;
-    onDragOver: (e: DragEvent<HTMLDivElement>) => void;
-    onDrop: (e: DragEvent<HTMLDivElement>) => void;
-    onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
-    isDraggedOver: boolean;
 }
 
-const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, onClick, onDragStart, onDragOver, onDrop, onDragEnd, isDraggedOver }) => (
+const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, onClick }) => (
     <button
         onClick={onClick}
-        draggable
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        onDragEnd={onDragEnd}
-        className={cn(
-            "flex flex-col items-center justify-center p-3 rounded-lg hover:bg-muted transition-colors w-full group gap-2 cursor-grab active:cursor-grabbing",
-            isDraggedOver && "bg-primary/20 ring-2 ring-primary"
-        )}
+        className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-muted transition-colors w-full group gap-1 cursor-pointer"
     >
-        <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+        <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
             <Icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
         </div>
         <p className="text-xs font-medium text-center text-foreground">{title}</p>
@@ -434,79 +421,17 @@ export default function WeekGlancePage() {
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
 
-  // --- Feature Hub Drag & Drop State ---
-  const [featureOrder, setFeatureOrder] = useState<string[]>(['tech', 'rich', 'health', 'rest']);
-  const draggedFeature = useRef<string | null>(null);
-  const [draggedOverFeature, setDraggedOverFeature] = useState<string | null>(null);
-
   const handleRestButtonClick = () => router.push('/rest');
   const handleHealthButtonClick = () => router.push('/health');
   const handleTechButtonClick = () => router.push('/tech');
   const handleRichButtonClick = () => router.push('/rich');
 
-  const allFeatures = useMemo(() => ({
-    tech: { id: 'tech', icon: Cpu, title: t.techButtonText, onClick: handleTechButtonClick },
-    rich: { id: 'rich', icon: Gem, title: t.richButtonText, onClick: handleRichButtonClick },
-    health: { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
-    rest: { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
-  }), [t]);
-
-  const orderedFeatures = useMemo(() => featureOrder.map(id => allFeatures[id as keyof typeof allFeatures]).filter(Boolean), [featureOrder, allFeatures]);
-
-  useEffect(() => {
-    try {
-        const savedOrder = localStorage.getItem(LOCAL_STORAGE_KEY_FEATURE_ORDER);
-        if (savedOrder) {
-            const parsedOrder = JSON.parse(savedOrder);
-            // Validate that the saved order contains all expected keys
-            const currentKeys = Object.keys(allFeatures);
-            if (parsedOrder.length === currentKeys.length && parsedOrder.every((key: string) => currentKeys.includes(key))) {
-                setFeatureOrder(parsedOrder);
-            }
-        }
-    } catch(e) { console.error("Failed to load feature order from localStorage", e); }
-  }, [allFeatures]);
-  
-  const handleDragStart = (e: DragEvent<HTMLDivElement>, id: string) => {
-    draggedFeature.current = id;
-    e.dataTransfer.effectAllowed = "move";
-  };
-  
-  const handleDragOver = (e: DragEvent<HTMLDivElement>, id: string) => {
-      e.preventDefault();
-      if (draggedFeature.current !== id) {
-          setDraggedOverFeature(id);
-      }
-  };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>, dropTargetId: string) => {
-    e.preventDefault();
-    if (!draggedFeature.current || draggedFeature.current === dropTargetId) {
-      setDraggedOverFeature(null);
-      return;
-    }
-
-    const currentIndex = featureOrder.indexOf(draggedFeature.current);
-    const targetIndex = featureOrder.indexOf(dropTargetId);
-
-    const newOrder = [...featureOrder];
-    const [removed] = newOrder.splice(currentIndex, 1);
-    newOrder.splice(targetIndex, 0, removed);
-
-    setFeatureOrder(newOrder);
-    localStorage.setItem(LOCAL_STORAGE_KEY_FEATURE_ORDER, JSON.stringify(newOrder));
-    
-    draggedFeature.current = null;
-    setDraggedOverFeature(null);
-  };
-  
-  const handleDragEnd = () => {
-    draggedFeature.current = null;
-    setDraggedOverFeature(null);
-  };
-
-  // --- End of Drag & Drop Logic ---
-
+  const features = useMemo(() => ([
+    { id: 'tech', icon: Cpu, title: t.techButtonText, onClick: handleTechButtonClick },
+    { id: 'rich', icon: Gem, title: t.richButtonText, onClick: handleRichButtonClick },
+    { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
+    { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
+  ]), [t]);
 
   const clearTimeoutIfNecessary = useCallback(() => {
     if (showPreviewTimerRef.current) {
@@ -1066,19 +991,11 @@ export default function WeekGlancePage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-2">
-                <div 
-                    className="grid grid-cols-2 gap-2"
-                    onDragEnd={handleDragEnd}
-                >
-                  {orderedFeatures.map((feature) => (
+                <div className="grid grid-cols-3 gap-2">
+                  {features.map((feature) => (
                     <FeatureButton 
                         key={feature.id} 
                         {...feature}
-                        onDragStart={(e) => handleDragStart(e, feature.id)}
-                        onDragOver={(e) => handleDragOver(e, feature.id)}
-                        onDrop={(e) => handleDrop(e, feature.id)}
-                        onDragEnd={handleDragEnd}
-                        isDraggedOver={draggedOverFeature === feature.id}
                     />
                   ))}
                 </div>
