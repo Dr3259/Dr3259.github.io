@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem, LayoutGrid } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -74,6 +74,7 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: '本站依据 MIT 许可证发行',
     mitLicenseLinkAria: '查看 MIT 许可证详情',
+    featureHub: '功能中心',
     restButtonText: '休息一下',
     restButtonAria: '进入休息页面',
     healthButtonText: '健康一下',
@@ -153,6 +154,7 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
+    featureHub: 'Feature Hub',
     restButtonText: 'Take a Break',
     restButtonAria: 'Go to rest page',
     healthButtonText: 'Get Healthy',
@@ -961,18 +963,33 @@ export default function WeekGlancePage() {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={handleTechButtonClick} aria-label={t.techButtonAria}>
-              <Cpu className="mr-2 h-4 w-4" />{t.techButtonText}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleRichButtonClick} aria-label={t.richButtonAria}>
-              <Gem className="mr-2 h-4 w-4" />{t.richButtonText}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleHealthButtonClick} aria-label={t.healthButtonAria}>
-              <HeartPulse className="mr-2 h-4 w-4" />{t.healthButtonText}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleRestButtonClick} aria-label={t.restButtonAria}>
-              <PauseCircle className="mr-2 h-4 w-4" />{t.restButtonText}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <LayoutGrid className="mr-2 h-4 w-4" />
+                  {t.featureHub}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleTechButtonClick}>
+                  <Cpu className="mr-2 h-4 w-4" />
+                  <span>{t.techButtonText}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleRichButtonClick}>
+                  <Gem className="mr-2 h-4 w-4" />
+                  <span>{t.richButtonText}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleHealthButtonClick}>
+                  <HeartPulse className="mr-2 h-4 w-4" />
+                  <span>{t.healthButtonText}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleRestButtonClick}>
+                  <PauseCircle className="mr-2 h-4 w-4" />
+                  <span>{t.restButtonText}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="h-9 w-9">
