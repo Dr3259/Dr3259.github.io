@@ -3,16 +3,12 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Search, Globe, Filter, Building, Briefcase } from 'lucide-react';
+import { Search, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { newsUpdates, type NewsUpdate } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { format, formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { NewsCard } from '@/components/news-card';
 
@@ -64,19 +60,15 @@ export default function AiWorldPage() {
 
 
     return filtered.sort((a, b) => {
-      // 1. Sort by Country product count (descending)
       const countryCountComparison = (filteredCountryCounts[b.country] || 0) - (filteredCountryCounts[a.country] || 0);
       if (countryCountComparison !== 0) return countryCountComparison;
       
-      // 2. If counts are equal, sort by Country name (alphabetical, using a consistent locale)
       const countryNameComparison = a.country.localeCompare(b.country, 'zh-CN');
       if (countryNameComparison !== 0) return countryNameComparison;
 
-      // 3. Sort by Company name (alphabetical)
       const companyComparison = a.company.localeCompare(b.company, 'en');
       if (companyComparison !== 0) return companyComparison;
 
-      // 4. Sort by Date (latest first)
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
@@ -128,30 +120,37 @@ export default function AiWorldPage() {
                 </div>
             </div>
 
-            <div className="relative">
+            <div>
                  {filteredAndSortedUpdates.map((update, index) => {
                      const isFirstOfCountry = index === 0 || filteredAndSortedUpdates[index - 1].country !== update.country;
                      return (
-                         <div key={update.id}>
-                             {isFirstOfCountry && index > 0 && (
-                                <Separator className="my-12" />
+                         <div key={update.id} className="relative">
+                            {/* Country Timeline Stem */}
+                            {isFirstOfCountry && (
+                                <div className="absolute left-[1.125rem] top-10 h-full w-px bg-border -translate-x-1/2"></div>
+                            )}
+
+                             {isFirstOfCountry && (
+                                 <>
+                                    <div id={`country-anchor-${update.country}`} className="absolute -top-24"></div>
+                                    <div className="relative z-10 flex items-center gap-4 mb-8">
+                                        <div className="w-10 h-10 rounded-full bg-card border-2 border-primary/50 shadow-sm flex items-center justify-center">
+                                            <Globe className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-primary">{update.country}</h2>
+                                    </div>
+                                 </>
                              )}
                              <div className="relative pl-12 pb-12">
-                                 {isFirstOfCountry && (
-                                    <div id={`country-anchor-${update.country}`} className="absolute -top-24"></div>
-                                 )}
-                                 <div className="absolute left-0 top-0 flex flex-col items-center">
+                                <div className="absolute left-6 top-0 flex flex-col items-center">
                                      <div className="w-10 h-10 rounded-lg bg-card border shadow-sm flex items-center justify-center">
                                          <Image src={update.logo} alt={`${update.company} logo`} width={28} height={28} className="rounded-md" data-ai-hint="logo" />
                                      </div>
-                                     <div className="w-px h-full bg-border mt-2"></div>
-                                 </div>
-                                 <div className="ml-4">
-                                    {isFirstOfCountry && (
-                                         <h2 className="text-2xl font-bold text-primary mb-6 pt-1">{update.country}</h2>
-                                    )}
+                                     <div className="w-px h-full bg-border/70 mt-2"></div>
+                                </div>
+                                <div className="ml-6">
                                     <NewsCard news={update} />
-                                 </div>
+                                </div>
                              </div>
                          </div>
                      )
