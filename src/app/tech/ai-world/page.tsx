@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Search, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,12 @@ export default function AiWorldPage() {
   const [selectedPricing, setSelectedPricing] = useState('所有价格');
   const [isFilterStuck, setIsFilterStuck] = useState(false);
   const filterSentinelRef = useRef<HTMLDivElement>(null);
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Set image on client-side to prevent hydration mismatch
+    setHeroImage('https://picsum.photos/1200/400');
+  }, []);
 
 
   const { countries, countryCounts } = useMemo(() => {
@@ -73,13 +79,13 @@ export default function AiWorldPage() {
         (acc[update.country] = acc[update.country] || []).push(update);
         return acc;
     }, {} as Record<string, NewsUpdate[]>);
-
-    const sortedCountryNames = Object.keys(groupedByCountry).sort((a, b) => {
+    
+    const countryOrder = Object.keys(groupedByCountry).sort((a, b) => {
         return groupedByCountry[b].length - groupedByCountry[a].length;
     });
 
     const finalList: NewsUpdate[] = [];
-    sortedCountryNames.forEach(country => {
+    countryOrder.forEach(country => {
         const countryUpdates = groupedByCountry[country];
 
         const groupedByCompany = countryUpdates.reduce((acc, update) => {
@@ -87,11 +93,11 @@ export default function AiWorldPage() {
             return acc;
         }, {} as Record<string, NewsUpdate[]>);
 
-        const sortedCompanies = Object.keys(groupedByCompany).sort((a, b) => {
+        const companyOrder = Object.keys(groupedByCompany).sort((a,b) => {
             return groupedByCompany[b].length - groupedByCompany[a].length;
         });
 
-        sortedCompanies.forEach(company => {
+        companyOrder.forEach(company => {
             const companyUpdates = groupedByCompany[company];
             companyUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             finalList.push(...companyUpdates);
@@ -201,14 +207,16 @@ export default function AiWorldPage() {
     <div className="min-h-screen bg-background text-foreground font-body">
       <header className="relative py-28 sm:py-40 text-center text-white bg-slate-900 overflow-hidden">
         <div className="absolute inset-0">
-          <Image
-            src="https://placehold.co/1200x400.png"
-            alt="ai 世界 Hero Image"
-            fill
-            className="object-cover"
-            data-ai-hint="abstract technology"
-            priority
-          />
+          {heroImage && (
+            <Image
+              src={heroImage}
+              alt="ai 世界 Hero Image"
+              fill
+              className="object-cover transition-opacity duration-1000 opacity-0"
+              onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
+              priority
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10">
