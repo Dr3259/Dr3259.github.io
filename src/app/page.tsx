@@ -373,24 +373,18 @@ const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, 
 interface FeatureButtonProps {
     icon: React.ElementType;
     title: string;
-    description: string;
     onClick: () => void;
 }
   
-const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, description, onClick }) => (
+const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, onClick }) => (
     <button 
         onClick={onClick}
-        className="text-left p-4 rounded-lg hover:bg-muted transition-colors w-full group"
+        className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-muted transition-colors w-full group gap-2"
     >
-        <div className="flex items-center gap-4">
-            <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <Icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
-            </div>
-            <div>
-                <p className="font-semibold text-foreground text-base">{title}</p>
-                <p className="text-sm text-muted-foreground">{description}</p>
-            </div>
+        <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
         </div>
+        <p className="text-xs font-medium text-center text-foreground">{title}</p>
     </button>
 );
 
@@ -988,25 +982,22 @@ export default function WeekGlancePage() {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <LayoutGrid className="mr-2 h-4 w-4" />
-                  {t.featureHub}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="h-9 w-9">
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="sr-only">{t.featureHub}</span>
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <SheetHeader className="text-left mb-4">
-                  <SheetTitle>{t.featureHub}</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col space-y-2 py-4">
-                  <FeatureButton icon={Cpu} title={t.techButtonText} description={t.techButtonAria} onClick={handleTechButtonClick} />
-                  <FeatureButton icon={Gem} title={t.richButtonText} description={t.richButtonAria} onClick={handleRichButtonClick} />
-                  <FeatureButton icon={HeartPulse} title={t.healthButtonText} description={t.healthButtonAria} onClick={handleHealthButtonClick} />
-                  <FeatureButton icon={PauseCircle} title={t.restButtonText} description={t.restButtonAria} onClick={handleRestButtonClick} />
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <FeatureButton icon={Cpu} title={t.techButtonText} onClick={handleTechButtonClick} />
+                  <FeatureButton icon={Gem} title={t.richButtonText} onClick={handleRichButtonClick} />
+                  <FeatureButton icon={HeartPulse} title={t.healthButtonText} onClick={handleHealthButtonClick} />
+                  <FeatureButton icon={PauseCircle} title={t.restButtonText} onClick={handleRestButtonClick} />
                 </div>
-              </SheetContent>
-            </Sheet>
+              </PopoverContent>
+            </Popover>
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
