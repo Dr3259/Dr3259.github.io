@@ -106,6 +106,15 @@ export default function AiWorldPage() {
     };
   }, []);
 
+  const handleCountryBadgeClick = (country: string) => {
+    setSelectedCountry(country);
+    setSearchTerm(''); 
+    const anchor = document.getElementById(`country-anchor-${country}`);
+    if (anchor) {
+      anchor.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
 
   const renderContent = () => {
     if (filteredAndSortedUpdates.length === 0) {
@@ -125,11 +134,14 @@ export default function AiWorldPage() {
                 <p className="text-muted-foreground mb-4">快速导航至国家/地区</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                     {countryBadges.map(country => (
-                        <a key={country} href={`#country-anchor-${country}`}>
-                            <Badge variant="secondary" className="text-sm px-3 py-1 cursor-pointer hover:bg-primary/20 transition-colors">
+                        <Badge 
+                            key={country} 
+                            variant={selectedCountry === country ? "default" : "secondary"}
+                            className="text-sm px-3 py-1 cursor-pointer hover:bg-primary/20 transition-colors"
+                            onClick={() => handleCountryBadgeClick(country)}
+                            >
                                 {country} ({countryCounts[country] || 0})
-                            </Badge>
-                        </a>
+                        </Badge>
                     ))}
                 </div>
             </div>
