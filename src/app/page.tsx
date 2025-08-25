@@ -384,10 +384,10 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, descri
     >
         <div className="flex items-center gap-4">
             <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <Icon className="w-7 h-7 text-primary transition-transform group-hover:scale-110" />
+                <Icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
             </div>
             <div>
-                <p className="font-semibold text-foreground text-lg">{title}</p>
+                <p className="font-semibold text-foreground text-base">{title}</p>
                 <p className="text-sm text-muted-foreground">{description}</p>
             </div>
         </div>
@@ -995,11 +995,11 @@ export default function WeekGlancePage() {
                   {t.featureHub}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-auto rounded-t-2xl">
-                <SheetHeader className="text-center mb-4">
+              <SheetContent side="right">
+                <SheetHeader className="text-left mb-4">
                   <SheetTitle>{t.featureHub}</SheetTitle>
                 </SheetHeader>
-                <div className="grid grid-cols-2 gap-4 py-4">
+                <div className="flex flex-col space-y-2 py-4">
                   <FeatureButton icon={Cpu} title={t.techButtonText} description={t.techButtonAria} onClick={handleTechButtonClick} />
                   <FeatureButton icon={Gem} title={t.richButtonText} description={t.richButtonAria} onClick={handleRichButtonClick} />
                   <FeatureButton icon={HeartPulse} title={t.healthButtonText} description={t.healthButtonAria} onClick={handleHealthButtonClick} />
@@ -1217,5 +1217,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
-    
