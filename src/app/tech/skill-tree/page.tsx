@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, GitFork, Code, Type, Wind, Framer, Component, Settings, Box, Database, Cloud, Users, Target, ClipboardList, TrendingUp } from 'lucide-react';
+import { ArrowLeft, GitFork, Code, Type, Wind, Framer, Component, Settings, Box, Database, Cloud, Users, Target, ClipboardList, TrendingUp, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
