@@ -207,7 +207,7 @@ export default function AiWorldPage() {
                         <div className="pt-2 pl-12 space-y-8">
                             {Object.entries(groupedAndSortedUpdates[country]).map(([company, updates], companyIndex) => (
                                 <div key={company} className="relative">
-                                    <div className="absolute top-4 -left-12 -translate-x-1/2 z-10">
+                                    <div className="absolute top-8 -left-12 -translate-x-1/2 z-10">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5 ring-4 ring-background">
                                             <Image 
                                                 src={getLogoUrl(companyUrls[company] || updates[0].link)}
