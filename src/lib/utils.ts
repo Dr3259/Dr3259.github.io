@@ -6,6 +6,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function getLogoUrl(url: string): string {
+    try {
+        const domain = new URL(url).hostname;
+        return `https://www.google.com/s2/favicons?sz=64&domain_url=${domain}`;
+    } catch (e) {
+        // Fallback for invalid URLs
+        return 'https://placehold.co/40x40.png';
+    }
+}
+
+
 const PREDEFINED_TAG_COLORS: Record<string, string> = {
     // 音乐风格类
     'Pop': '#FF6F61',

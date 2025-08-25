@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { NewsCard } from '@/components/news-card';
+import { getLogoUrl } from '@/lib/utils';
+
 
 const countryFlags: Record<string, string> = {
   '美国': '🇺🇸',
@@ -42,6 +44,7 @@ export default function AiWorldPage() {
   const [heroImage, setHeroImage] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only run on the client-side
     setHeroImage('https://picsum.photos/1200/400');
   }, []);
 
@@ -190,7 +193,7 @@ export default function AiWorldPage() {
                                          <div className="absolute left-0 top-0 flex items-center gap-4 -translate-x-1/2 pt-4">
                                             <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card border-2 border-primary/20 shadow-sm p-1.5">
                                                <Image 
-                                                  src={updates[0].logo}
+                                                  src={getLogoUrl(updates[0].link)}
                                                   alt={`${company} logo`}
                                                   width={40}
                                                   height={40}
