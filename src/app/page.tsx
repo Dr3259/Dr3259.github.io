@@ -418,6 +418,7 @@ export default function WeekGlancePage() {
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isPreviewSuppressedByClickRef = useRef(false);
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
@@ -1020,9 +1021,8 @@ export default function WeekGlancePage() {
                   <span className="sr-only">{t.featureHub}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4">
+              <PopoverContent ref={constraintsRef} className="w-auto p-4">
                 <Reorder.Group
-                  axis="x"
                   values={features}
                   onReorder={handleReorder}
                   className="grid grid-cols-3 gap-4"
@@ -1032,6 +1032,8 @@ export default function WeekGlancePage() {
                       key={feature.id}
                       value={feature}
                       className="cursor-grab active:cursor-grabbing"
+                      whileDrag={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.2)" }}
+                      dragConstraints={constraintsRef}
                     >
                       <FeatureButton item={feature} />
                     </Reorder.Item>
