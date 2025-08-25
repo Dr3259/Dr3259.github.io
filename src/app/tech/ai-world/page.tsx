@@ -60,26 +60,28 @@ export default function AiWorldPage() {
 
   const filteredAndSortedUpdates = useMemo(() => {
     let updates = newsUpdates.filter(update => new Date(update.date).getFullYear() >= 2021);
-
-    const countryOrder = [...countries]
-        .filter(c => c.name !== '所有国家')
-        .map(c => c.name);
+    
+    const companyCountsByCountry: Record<string, Record<string, number>> = {};
+    updates.forEach(update => {
+        if (!companyCountsByCountry[update.country]) {
+            companyCountsByCountry[update.country] = {};
+        }
+        companyCountsByCountry[update.country][update.company] = (companyCountsByCountry[update.country][update.company] || 0) + 1;
+    });
 
     updates.sort((a, b) => {
-        const countryIndexA = countryOrder.indexOf(a.country);
-        const countryIndexB = countryOrder.indexOf(b.country);
-        if (countryIndexA !== countryIndexB) {
-            return countryIndexA - countryIndexB;
+        const countryCountA = countryCounts[a.country] || 0;
+        const countryCountB = countryCounts[b.country] || 0;
+        if (countryCountA !== countryCountB) {
+            return countryCountB - countryCountA;
         }
 
-        // Within the same country, sort by company product count
-        const companyACount = updates.filter(u => u.country === a.country && u.company === a.company).length;
-        const companyBCount = updates.filter(u => u.country === b.country && u.company === b.company).length;
-        if (companyACount !== companyBCount) {
-            return companyBCount - companyACount;
+        const companyCountA = companyCountsByCountry[a.country]?.[a.company] || 0;
+        const companyCountB = companyCountsByCountry[b.country]?.[b.company] || 0;
+        if (companyCountA !== companyCountB) {
+            return companyCountB - companyCountA;
         }
 
-        // Finally, sort by date
         return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
     
@@ -98,7 +100,7 @@ export default function AiWorldPage() {
         return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
     });
 
-  }, [searchTerm, selectedCountry, selectedCategory, selectedPricing, countries]);
+  }, [searchTerm, selectedCountry, selectedCategory, selectedPricing, countryCounts]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -175,8 +177,20 @@ export default function AiWorldPage() {
                                            </div>
                                         </div>
                                     )}
-                                    <div className="pl-12 pb-10">
-                                        <NewsCard news={update} />
+                                    <div className="pl-12 pb-10 flex gap-4 items-start">
+                                        <div className="mt-5 w-10 h-10 flex-shrink-0 bg-muted rounded-full flex items-center justify-center border">
+                                            <Image 
+                                              src={update.logo}
+                                              alt={`${update.company} logo`}
+                                              width={28}
+                                              height={28}
+                                              className="rounded-md"
+                                              data-ai-hint="logo"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                          <NewsCard news={update} />
+                                        </div>
                                     </div>
                                 </div>
                              </div>
