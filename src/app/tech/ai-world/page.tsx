@@ -39,7 +39,8 @@ export default function AiWorldPage() {
 
   const filteredAndSortedUpdates = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
-    
+
+    // 1. Filter updates based on UI controls
     const filtered = newsUpdates.filter(update => {
       const matchesSearchTerm = searchTerm === '' ||
         update.title.toLowerCase().includes(lowercasedFilter) ||
@@ -53,24 +54,45 @@ export default function AiWorldPage() {
       return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
     });
 
-    const filteredCountryCounts = filtered.reduce((acc, update) => {
-      acc[update.country] = (acc[update.country] || 0) + 1;
+    // 2. Group by country
+    const groupedByCountry = filtered.reduce((acc, update) => {
+      (acc[update.country] = acc[update.country] || []).push(update);
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, NewsUpdate[]>);
 
-
-    return filtered.sort((a, b) => {
-      const countryCountComparison = (filteredCountryCounts[b.country] || 0) - (filteredCountryCounts[a.country] || 0);
-      if (countryCountComparison !== 0) return countryCountComparison;
-      
-      const countryNameComparison = a.country.localeCompare(b.country, 'zh-CN');
-      if (countryNameComparison !== 0) return countryNameComparison;
-
-      const companyComparison = a.company.localeCompare(b.company, 'en');
-      if (companyComparison !== 0) return companyComparison;
-
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    // 3. Sort countries by number of products
+    const sortedCountries = Object.keys(groupedByCountry).sort((a, b) => {
+      return groupedByCountry[b].length - groupedByCountry[a].length;
     });
+
+    // 4. Process each country: group by company, sort companies, then flatten
+    const finalList: NewsUpdate[] = [];
+    sortedCountries.forEach(country => {
+      const countryUpdates = groupedByCountry[country];
+
+      // 4a. Group this country's updates by company
+      const groupedByCompany = countryUpdates.reduce((acc, update) => {
+        (acc[update.company] = acc[update.company] || []).push(update);
+        return acc;
+      }, {} as Record<string, NewsUpdate[]>);
+
+      // 4b. Sort companies within the country by number of products
+      const sortedCompanies = Object.keys(groupedByCompany).sort((a, b) => {
+          const countComparison = groupedByCompany[b].length - groupedByCompany[a].length;
+          if (countComparison !== 0) return countComparison;
+          // As a tie-breaker, sort by company name
+          return a.localeCompare(b, 'en');
+      });
+
+      // 4c. Sort updates within each company by date and add to the final list
+      sortedCompanies.forEach(company => {
+        const companyUpdates = groupedByCompany[company];
+        companyUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        finalList.push(...companyUpdates);
+      });
+    });
+
+    return finalList;
 
   }, [searchTerm, selectedCountry, selectedCategory, selectedPricing]);
 
@@ -123,33 +145,30 @@ export default function AiWorldPage() {
             <div>
                  {filteredAndSortedUpdates.map((update, index) => {
                      const isFirstOfCountry = index === 0 || filteredAndSortedUpdates[index - 1].country !== update.country;
-                     return (
-                         <div key={update.id} className="relative">
-                            {/* Country Timeline Stem */}
-                            {isFirstOfCountry && (
-                                <div className="absolute left-[1.125rem] top-10 h-full w-px bg-border -translate-x-1/2"></div>
-                            )}
+                     const isFirstOfCompany = index === 0 || filteredAndSortedUpdates[index - 1].company !== update.company || isFirstOfCountry;
 
-                             {isFirstOfCountry && (
-                                 <>
-                                    <div id={`country-anchor-${update.country}`} className="absolute -top-24"></div>
-                                    <div className="relative z-10 flex items-center gap-4 mb-8">
-                                        <div className="w-10 h-10 rounded-full bg-card border-2 border-primary/50 shadow-sm flex items-center justify-center">
-                                            <Globe className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <h2 className="text-2xl font-bold text-primary">{update.country}</h2>
+                     return (
+                         <div key={update.id}>
+                            {isFirstOfCountry && index > 0 && <Separator className="my-12" />}
+                            {isFirstOfCountry && (
+                                <div id={`country-anchor-${update.country}`} className="relative flex items-center gap-4 mb-8 pt-4">
+                                     <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm">
+                                        <Globe className="h-5 w-5 text-primary" />
                                     </div>
-                                 </>
-                             )}
-                             <div className="relative pl-12 pb-12">
-                                <div className="absolute left-6 top-0 flex flex-col items-center">
-                                     <div className="w-10 h-10 rounded-lg bg-card border shadow-sm flex items-center justify-center">
-                                         <Image src={update.logo} alt={`${update.company} logo`} width={28} height={28} className="rounded-md" data-ai-hint="logo" />
-                                     </div>
-                                     <div className="w-px h-full bg-border/70 mt-2"></div>
+                                    <h2 className="text-2xl font-bold text-primary">{update.country}</h2>
                                 </div>
-                                <div className="ml-6">
-                                    <NewsCard news={update} />
+                            )}
+                             <div className="relative pl-5">
+                                <div className="absolute left-5 top-0 h-full w-px bg-border -translate-x-1/2"></div>
+                                <div className="relative">
+                                    {isFirstOfCompany && (
+                                        <div className="absolute left-0 top-1.5 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-lg bg-card border shadow-sm">
+                                             <Image src={update.logo} alt={`${update.company} logo`} width={28} height={28} className="rounded-md" data-ai-hint="logo" />
+                                        </div>
+                                    )}
+                                    <div className="pl-12 pb-10">
+                                        <NewsCard news={update} />
+                                    </div>
                                 </div>
                              </div>
                          </div>
