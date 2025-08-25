@@ -13,12 +13,6 @@ import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { NewsCard } from '@/components/news-card';
 
 
@@ -46,10 +40,10 @@ export default function AiWorldPage() {
   const categories = useMemo(() => ['所有类别', ...Array.from(new Set(newsUpdates.map(u => u.category))).sort()], []);
   const pricings = useMemo(() => ['所有价格', ...Array.from(new Set(newsUpdates.map(u => u.pricing)))], []);
 
-  const filteredUpdates = useMemo(() => {
+  const filteredAndSortedUpdates = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
     
-    return newsUpdates.filter(update => {
+    const filtered = newsUpdates.filter(update => {
       const matchesSearchTerm = searchTerm === '' ||
         update.title.toLowerCase().includes(lowercasedFilter) ||
         update.description.toLowerCase().includes(lowercasedFilter) ||
@@ -61,28 +55,46 @@ export default function AiWorldPage() {
       
       return matchesSearchTerm && matchesCountry && matchesCategory && matchesPricing;
     });
+
+    // Apply sorting: Country -> Company -> Date
+    return filtered.sort((a, b) => {
+      // 1. Sort by Country
+      const countryComparison = a.country.localeCompare(b.country);
+      if (countryComparison !== 0) {
+        return countryComparison;
+      }
+      // 2. Sort by Company
+      const companyComparison = a.company.localeCompare(b.company);
+      if (companyComparison !== 0) {
+        return companyComparison;
+      }
+      // 3. Sort by Date (latest first)
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
   }, [searchTerm, selectedCountry, selectedCategory, selectedPricing]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
         ([e]) => setIsFilterStuck(e.intersectionRatio < 1),
-        { threshold: [1], rootMargin: "-1px 0px 0px 0px" } // trigger when the sentinel is just scrolled past
+        { threshold: [1], rootMargin: "-1px 0px 0px 0px" } 
     );
 
-    if (filterSentinelRef.current) {
-        observer.observe(filterSentinelRef.current);
+    const currentRef = filterSentinelRef.current;
+    if (currentRef) {
+        observer.observe(currentRef);
     }
 
     return () => {
-        if (filterSentinelRef.current) {
-            observer.unobserve(filterSentinelRef.current);
+        if (currentRef) {
+            observer.unobserve(currentRef);
         }
     };
   }, []);
 
 
   const renderContent = () => {
-    if (filteredUpdates.length === 0) {
+    if (filteredAndSortedUpdates.length === 0) {
       return (
         <div className="text-center py-24">
           <p className="text-xl font-medium text-foreground">未找到任何模型</p>
@@ -91,7 +103,6 @@ export default function AiWorldPage() {
       );
     }
     
-    const updatesByDate = filteredUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const countryBadges = countries.filter(c => c !== '所有国家');
 
     return (
@@ -110,8 +121,8 @@ export default function AiWorldPage() {
             </div>
 
             <div className="relative">
-                 {updatesByDate.map((update, index) => {
-                     const isFirstOfCountry = index === 0 || updatesByDate[index - 1].country !== update.country;
+                 {filteredAndSortedUpdates.map((update, index) => {
+                     const isFirstOfCountry = index === 0 || filteredAndSortedUpdates[index - 1].country !== update.country;
                      return (
                          <div key={update.id} className="relative pl-12 pb-12">
                              {isFirstOfCountry && (
@@ -163,60 +174,44 @@ export default function AiWorldPage() {
       </header>
       
       <div ref={filterSentinelRef} className="h-px"></div>
-      <div className={cn(
-          "sticky top-0 z-40 transition-shadow bg-background/80 backdrop-blur-sm border-b",
-          isFilterStuck ? "shadow-lg" : "shadow-none"
+       <div className={cn(
+          "sticky top-0 z-40 transition-shadow duration-300",
+          isFilterStuck ? "bg-background/80 backdrop-blur-sm shadow-lg border-b" : "bg-background"
       )}>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="filters" className="border-b-0">
-              <div className="container mx-auto px-4">
-                 <AccordionTrigger className="h-14 hover:no-underline">
-                   <div className="flex items-center gap-2 text-muted-foreground">
-                      <Filter className="h-4 w-4" />
-                      <span>搜索或筛选</span>
-                   </div>
-                 </AccordionTrigger>
-              </div>
-              <AccordionContent>
-                <div className="border-t">
-                  <div className="container mx-auto px-4 py-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="relative md:col-span-2">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="按关键字、公司、描述搜索..."
-                                className="w-full pl-10 h-11 text-base rounded-lg bg-background"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                            <SelectTrigger className="h-11 text-base rounded-lg bg-background w-full">
-                                <SelectValue placeholder="所有国家" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {countries.map(country => (
-                                    <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="h-11 text-base rounded-lg bg-background w-full">
-                                <SelectValue placeholder="所有类别" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categories.map(category => (
-                                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                  </div>
+        <div className="container mx-auto px-4 py-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="relative md:col-span-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="按关键字、公司、描述搜索..."
+                        className="w-full pl-10 h-11 text-base rounded-lg bg-background/50 focus:bg-background"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                    <SelectTrigger className="h-11 text-base rounded-lg bg-background/50 focus:bg-background w-full">
+                        <SelectValue placeholder="所有国家" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {countries.map(country => (
+                            <SelectItem key={country} value={country}>{country} ({country === '所有国家' ? newsUpdates.length : countryCounts[country] || 0})</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="h-11 text-base rounded-lg bg-background/50 focus:bg-background w-full">
+                        <SelectValue placeholder="所有类别" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {categories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
       </div>
       
       <main className="container mx-auto px-4 py-12">
