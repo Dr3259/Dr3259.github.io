@@ -18,6 +18,8 @@ import { ClipboardModal } from '@/components/ClipboardModal';
 import { QuickAddTodoModal } from '@/components/QuickAddTodoModal';
 import copy from 'copy-to-clipboard';
 import Image from 'next/image';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 
 // Types from DayDetailPage - needed for checking content
@@ -154,7 +156,7 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
-    featureHub: 'Feature Hub',
+    featureHub: '功能中心',
     restButtonText: 'Take a Break',
     restButtonAria: 'Go to rest page',
     healthButtonText: 'Get Healthy',
@@ -368,6 +370,30 @@ const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, 
     return false;
 };
 
+interface FeatureButtonProps {
+    icon: React.ElementType;
+    title: string;
+    description: string;
+    onClick: () => void;
+}
+  
+const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, description, onClick }) => (
+    <button 
+        onClick={onClick}
+        className="text-left p-4 rounded-lg hover:bg-muted transition-colors w-full group"
+    >
+        <div className="flex items-center gap-4">
+            <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <Icon className="w-7 h-7 text-primary transition-transform group-hover:scale-110" />
+            </div>
+            <div>
+                <p className="font-semibold text-foreground text-lg">{title}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
+        </div>
+    </button>
+);
+
 export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -376,7 +402,7 @@ export default function WeekGlancePage() {
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(false);
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(isAfter(new Date(), new Date().setHours(18, 0, 0, 0)));
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
   const [isClientMounted, setIsClientMounted] = useState(false);
   
@@ -489,7 +515,6 @@ export default function WeekGlancePage() {
     const today = new Date();
     setSystemToday(today);
     setDisplayedDate(today);
-    setIsAfter6PMToday(isAfter(today, new Date().setHours(18, 0, 0, 0)));
     setCurrentYear(today.getFullYear());
 
     // Language setting
@@ -963,32 +988,25 @@ export default function WeekGlancePage() {
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
           </div>
           <div className="flex items-center space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Sheet>
+              <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
                   <LayoutGrid className="mr-2 h-4 w-4" />
                   {t.featureHub}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleTechButtonClick}>
-                  <Cpu className="mr-2 h-4 w-4" />
-                  <span>{t.techButtonText}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleRichButtonClick}>
-                  <Gem className="mr-2 h-4 w-4" />
-                  <span>{t.richButtonText}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleHealthButtonClick}>
-                  <HeartPulse className="mr-2 h-4 w-4" />
-                  <span>{t.healthButtonText}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleRestButtonClick}>
-                  <PauseCircle className="mr-2 h-4 w-4" />
-                  <span>{t.restButtonText}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-auto rounded-t-2xl">
+                <SheetHeader className="text-center mb-4">
+                  <SheetTitle>{t.featureHub}</SheetTitle>
+                </SheetHeader>
+                <div className="grid grid-cols-2 gap-4 py-4">
+                  <FeatureButton icon={Cpu} title={t.techButtonText} description={t.techButtonAria} onClick={handleTechButtonClick} />
+                  <FeatureButton icon={Gem} title={t.richButtonText} description={t.richButtonAria} onClick={handleRichButtonClick} />
+                  <FeatureButton icon={HeartPulse} title={t.healthButtonText} description={t.healthButtonAria} onClick={handleHealthButtonClick} />
+                  <FeatureButton icon={PauseCircle} title={t.restButtonText} description={t.restButtonAria} onClick={handleRestButtonClick} />
+                </div>
+              </SheetContent>
+            </Sheet>
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1199,3 +1217,5 @@ export default function WeekGlancePage() {
     </>
   );
 }
+
+    
