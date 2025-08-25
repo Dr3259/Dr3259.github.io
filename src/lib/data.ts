@@ -1134,21 +1134,6 @@ export const newsUpdates: NewsUpdate[] = [
     status: "Active"
   },
   {
-    id: "95",
-    title: "AI保险风控系统",
-    description: "一个专为保险行业打造的AI决策平台，通过自动化理赔和反欺诈检测，提升保险公司的运营效率和决策准确性，最新反欺诈引擎识别准确率达98%。",
-    company: "Shift Technology",
-    country: "法国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.shift-technology.com/",
-    logo: getLogoUrl("Shift Technology"),
-    status: "Active"
-  },
-  {
     id: "97",
     title: "BioClinical ModernBERT",
     description: "一个专为生物医学领域设计的语言模型，能够理解和处理复杂的临床文本和研究数据，支持药物研发和临床分析。",
@@ -1386,21 +1371,6 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://www.harvey.ai/",
     logo: getLogoUrl("Harvey"),
-    status: "Active"
-  },
-  {
-    id: "120",
-    title: "AI 医疗笔记工具",
-    description: "一个能够实时转录和总结医患对话的AI平台，自动生成结构化的临床笔记，减轻医生的行政负担。",
-    company: "Abridge",
-    country: "美国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.abridge.com/",
-    logo: getLogoUrl("Abridge"),
     status: "Active"
   },
   {
@@ -1645,21 +1615,6 @@ export const newsUpdates: NewsUpdate[] = [
     status: "Active"
   },
   {
-    id: "139",
-    title: "Santa AI教育平台",
-    description: "一款AI驱动的个性化学习平台，通过分析学生的学习行为提供定制化的备考路径，已覆盖全球数百万用户。",
-    company: "Riiid",
-    country: "韩国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://riiid.co/",
-    logo: getLogoUrl("Riiid"),
-    status: "Active"
-  },
-  {
     id: "140",
     title: "AI语音克隆技术",
     description: "领先的AI语音生成和克隆技术，能够高保真复刻名人或歌手的声纹，广泛应用于K-pop音乐制作和娱乐产业。",
@@ -1765,36 +1720,6 @@ export const newsUpdates: NewsUpdate[] = [
     status: "Active"
   },
   {
-    id: "147",
-    title: "AI病理分析显微镜",
-    description: "一个AI驱动的自动化显微镜，通过深度学习分析血液和尿液样本，能在5分钟内生成初步诊断报告。",
-    company: "SigTuple",
-    country: "印度",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://sigtuple.com/",
-    logo: getLogoUrl("SigTuple"),
-    status: "Active"
-  },
-  {
-    id: "148",
-    title: "Cerebra 工业物联网AI平台",
-    description: "一个专为重工业打造的物联网AI平台，通过预测性维护优化石油、能源等行业的设备管理，显著降低运营成本。",
-    company: "Flutura",
-    country: "印度",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "v4.0",
-    date: "2022-01-01",
-    link: "https://www.flutura.com/",
-    logo: getLogoUrl("Flutura"),
-    status: "Active"
-  },
-  {
     id: "149",
     title: "LINGO-2 自动驾驶模型",
     description: "一款创新的自动驾驶模型，能够结合自然语言指令来理解复杂的驾驶场景，显著降低事故率。",
@@ -1807,21 +1732,6 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2025-04-17",
     link: "https://wayve.ai/",
     logo: getLogoUrl("Wayve"),
-    status: "Active"
-  },
-  {
-    id: "151",
-    title: "AI 保险定损工具",
-    description: "一个专为保险行业设计的AI工具，能够通过分析车辆照片快速评估损伤，将定损速度提升80%。",
-    company: "Tractable",
-    country: "英国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://tractable.ai/",
-    logo: getLogoUrl("Tractable"),
     status: "Active"
   },
   {
@@ -2305,21 +2215,6 @@ export const newsUpdates: NewsUpdate[] = [
     status: "Active"
   },
   {
-    id: "310",
-    title: "Quantum-Systems AI 无人机",
-    description: "为旗下的电动垂直起降（eVTOL）无人机提供先进的AI功能，包括自主飞行、数据采集和实时分析。",
-    company: "Quantum-Systems",
-    country: "德国",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.quantum-systems.com/",
-    logo: getLogoUrl("Quantum-Systems"),
-    status: "Active"
-  },
-  {
     id: "311",
     title: "cartagon.ai 决策支持平台",
     description: "一个为企业提供AI驱动的数据分析和决策支持的平台，帮助企业从复杂数据中获取商业洞察。",
@@ -2332,21 +2227,6 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2022-01-01",
     link: "https://cartagon.com/",
     logo: getLogoUrl("cartagon.ai"),
-    status: "Active"
-  },
-  {
-    id: "312",
-    title: "tado° 智能恒温器",
-    description: "一款智能家居产品，利用AI算法学习用户习惯和天气数据，自动优化家庭供暖和制冷，以节省能源。",
-    company: "tado°",
-    country: "德国",
-    category: "Platform",
-    type: "Product",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.tado.com/",
-    logo: getLogoUrl("tado°"),
     status: "Active"
   },
   {
@@ -2422,21 +2302,6 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://example.com",
     logo: getLogoUrl("Stardawn AI"),
-    status: "Active"
-  },
-  {
-    id: "326",
-    title: "SberAI 平台",
-    description: "Sberbank的综合AI平台，提供包括语音识别、图像识别在内的多种服务，支持企业级AI应用开发。",
-    company: "Sberbank",
-    country: "俄罗斯",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.sberbank.com/ai",
-    logo: getLogoUrl("Sberbank"),
     status: "Active"
   },
   {
@@ -2575,21 +2440,6 @@ export const newsUpdates: NewsUpdate[] = [
     status: "Active"
   },
   {
-    id: "365",
-    title: "AI驱动的视频安全与商业分析平台",
-    description: "Solink提供AI驱动的威胁识别系统，用于视频安全和商业分析，广泛应用于零售和酒店行业。",
-    company: "Solink",
-    country: "加拿大",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://solink.com/",
-    logo: getLogoUrl("Solink"),
-    status: "Active"
-  },
-  {
     id: "404",
     title: "完全自动驾驶电动汽车",
     description: "一家致力于开发和生产完全自动驾驶电动汽车（EV）的初创公司，旨在实现L4级以上的自动驾驶能力。",
@@ -2599,7 +2449,7 @@ export const newsUpdates: NewsUpdate[] = [
     type: "Product",
     pricing: "研究",
     version: "",
-    date: "2020-01-01",
+    date: "2021-01-01",
     link: "https://www.turing-motors.com/",
     logo: getLogoUrl("Turing Co., Ltd."),
     status: "Active"
@@ -2614,7 +2464,7 @@ export const newsUpdates: NewsUpdate[] = [
     type: "Service",
     pricing: "商业",
     version: "",
-    date: "2020-01-01",
+    date: "2021-01-01",
     link: "https://www.edgematrix.com/",
     logo: getLogoUrl("EDGEMATRIX"),
     status: "Active"
@@ -2635,83 +2485,6 @@ export const newsUpdates: NewsUpdate[] = [
     status: "Active"
   },
   {
-    id: "500",
-    title: "AI驱动的人口健康管理解决方案",
-    description: "帮助医疗机构通过AI分析患者数据以管理人群健康。",
-    company: "Persistent Systems",
-    country: "印度",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://www.persistent.com/industries/healthcare/population-health-management/",
-    logo: getLogoUrl("Persistent Systems"),
-    status: "Active"
-  },
-  {
-    id: "501",
-    title: "AI驾驶员监控系统",
-    description: "使用AI监控驾驶员行为和警觉性，提高道路安全。",
-    company: "Tata Elxsi",
-    country: "印度",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2021-01-01",
-    link: "https://www.tataelxsi.com/industries/transportation/autonomous-driving",
-    logo: getLogoUrl("Tata Elxsi"),
-    status: "Active"
-  },
-  {
-    id: "502",
-    title: "制造业AI预测性维护",
-    description: "使用AI预测制造设备故障，减少停机时间。",
-    company: "Bosch Limited",
-    parentCompany: "Bosch",
-    country: "印度",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2022-01-01",
-    link: "https://www.bosch.in/our-business/industrial-technology/",
-    logo: getLogoUrl("Bosch Limited"),
-    status: "Active"
-  },
-  {
-    id: "503",
-    title: "银行AI欺诈检测",
-    description: "通过AI分析交易数据以识别潜在欺诈。",
-    company: "Oracle Financial Services Software Limited",
-    parentCompany: "Oracle",
-    country: "印度",
-    category: "Platform",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2023-01-01",
-    link: "https://www.oracle.com/industries/financial-services/analytics/fraud-detection/",
-    logo: getLogoUrl("Oracle Financial Services Software Limited"),
-    status: "Active"
-  },
-  {
-    id: "601",
-    title: "AlphaFold",
-    description: "由Google DeepMind开发的蛋白质结构预测工具，极大地推动了生物学和医学研究。",
-    company: "Google AI",
-    country: "英国",
-    category: "Research",
-    type: "Research",
-    pricing: "研究",
-    version: "",
-    date: "2020-11-01",
-    link: "https://www.nature.com/articles/d41586-022-02083-2",
-    logo: getLogoUrl("Google AI"),
-    status: "Active"
-  },
-  {
     id: "604",
     title: "Synthesia Platform",
     description: "通过文本输入生成带有AI化身和配音的逼真视频，应用于企业培训、营销和客户沟通。",
@@ -2721,7 +2494,7 @@ export const newsUpdates: NewsUpdate[] = [
     type: "Product",
     pricing: "商业",
     version: "",
-    date: "2020-01-01",
+    date: "2021-01-01",
     link: "https://www.synthesia.io/",
     logo: getLogoUrl("Synthesia"),
     status: "Active"
@@ -2769,21 +2542,6 @@ export const newsUpdates: NewsUpdate[] = [
     date: "2023-01-01",
     link: "https://oxa.ai/",
     logo: getLogoUrl("Oxa"),
-    status: "Active"
-  },
-  {
-    id: "615",
-    title: "Conversational AI Platform",
-    description: "PolyAI开发的语音助手技术，支持自然对话，应用于客户服务。",
-    company: "PolyAI",
-    country: "英国",
-    category: "Audio",
-    type: "Service",
-    pricing: "商业",
-    version: "",
-    date: "2020-01-01",
-    link: "https://poly.ai/",
-    logo: getLogoUrl("PolyAI"),
     status: "Active"
   },
   {
