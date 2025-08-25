@@ -12,6 +12,19 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { NewsCard } from '@/components/news-card';
 
+const countryFlags: Record<string, string> = {
+  '美国': '🇺🇸',
+  '中国': '🇨🇳',
+  '英国': '🇬🇧',
+  '法国': '🇫🇷',
+  '加拿大': '🇨🇦',
+  '德国': '🇩🇪',
+  '俄罗斯': '🇷🇺',
+  '日本': '🇯🇵',
+  '韩国': '🇰🇷',
+  '印度': '🇮🇳',
+};
+
 
 export default function AiWorldPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,8 +169,8 @@ export default function AiWorldPage() {
                             {isFirstOfCountry && index > 0 && <Separator className="my-12" />}
                             {isFirstOfCountry && (
                                 <div id={`country-anchor-${update.country}`} className="relative flex items-center gap-4 mb-8 pt-4">
-                                     <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm">
-                                        <Globe className="h-5 w-5 text-primary" />
+                                     <div className="z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border-2 border-primary/50 shadow-sm text-2xl">
+                                        {countryFlags[update.country] || '🌐'}
                                     </div>
                                     <h2 className="text-2xl font-bold text-primary">{update.country}</h2>
                                 </div>
