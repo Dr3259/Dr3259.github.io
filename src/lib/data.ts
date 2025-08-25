@@ -17,11 +17,6 @@ export interface NewsUpdate {
   status?: 'Active' | 'Deprecated';
 }
 
-const getLogoUrl = (name: string) => {
-    const firstChar = name.length > 0 ? name[0].toUpperCase() : 'A';
-    return `https://placehold.co/40x40/333333/FFFFFF/png?text=${firstChar}`;
-}
-
 export const newsUpdates: NewsUpdate[] = [
   {
     id: "1",
@@ -35,7 +30,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "GPT-5",
     date: "2025-08-07",
     link: "https://openai.com/index/introducing-gpt-5/",
-    logo: getLogoUrl("OpenAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/openai.svg",
     status: "Active"
   },
   {
@@ -50,7 +45,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "GPT-5 powered",
     date: "2022-11-30",
     link: "https://chat.openai.com/",
-    logo: getLogoUrl("OpenAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/openai.svg",
     status: "Active"
   },
   {
@@ -65,7 +60,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "DALL-E 3",
     date: "2023-09-20",
     link: "https://openai.com/dall-e-3/",
-    logo: getLogoUrl("OpenAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/openai.svg",
     status: "Active"
   },
   {
@@ -80,7 +75,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Sora",
     date: "2024-02-15",
     link: "https://openai.com/sora",
-    logo: getLogoUrl("OpenAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/openai.svg",
     status: "Active"
   },
   {
@@ -95,7 +90,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Whisper",
     date: "2022-09-21",
     link: "https://openai.com/research/whisper",
-    logo: getLogoUrl("OpenAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/openai.svg",
     status: "Active"
   },
   {
@@ -110,7 +105,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Mixtral 8x7B",
     date: "2023-12-09",
     link: "https://mistral.ai/news/mixtral-of-experts/",
-    logo: getLogoUrl("Mistral AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mistral-ai.svg",
     status: "Active"
   },
   {
@@ -125,7 +120,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Mistral Large 3.1",
     date: "2025-08-12",
     link: "https://mistral.ai/news/mistral-large-2508/",
-    logo: getLogoUrl("Mistral AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mistral-ai.svg",
     status: "Active"
   },
   {
@@ -140,7 +135,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Embed v3",
     date: "2023-11-01",
     link: "https://cohere.com/models/embed",
-    logo: getLogoUrl("Cohere"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/cohere.svg",
     status: "Active"
   },
   {
@@ -155,7 +150,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Command A",
     date: "2025-03-01",
     link: "https://cohere.com/blog/command-a",
-    logo: getLogoUrl("Cohere"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/cohere.svg",
     status: "Active"
   },
   {
@@ -170,7 +165,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-08-01",
     link: "https://www.perplexity.ai/",
-    logo: getLogoUrl("Perplexity"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/perplexity.svg",
     status: "Active"
   },
   {
@@ -185,7 +180,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "智谱清言",
     date: "2023-08-01",
     link: "https://www.zhipuai.cn/",
-    logo: getLogoUrl("Zhipu AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/zhipu-ai.svg",
     status: "Active"
   },
   {
@@ -200,7 +195,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "GLM-4.5",
     date: "2025-04-26",
     link: "https://www.zhipuai.cn/glm-4.5",
-    logo: getLogoUrl("Zhipu AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/zhipu-ai.svg",
     status: "Active"
   },
   {
@@ -215,7 +210,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "CogView 3",
     date: "2024-01-16",
     link: "https://www.zhipuai.cn/gallery",
-    logo: getLogoUrl("Zhipu AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/zhipu-ai.svg",
     status: "Active"
   },
   {
@@ -230,7 +225,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "ERNIE 4.5",
     date: "2025-03-16",
     link: "https://wenxin.baidu.com/ebh/index",
-    logo: getLogoUrl("Baidu"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/baidu.svg",
     status: "Active"
   },
   {
@@ -245,7 +240,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-08-19",
     link: "https://yige.baidu.com/",
-    logo: getLogoUrl("Baidu"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/baidu.svg",
     status: "Active"
   },
   {
@@ -260,7 +255,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "3.5",
     date: "2025-06-24",
     link: "https://stability.ai/stable-diffusion-3.5",
-    logo: getLogoUrl("Stability AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/stability-ai.svg",
     status: "Active"
   },
   {
@@ -275,7 +270,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "2.5",
     date: "2025-05-14",
     link: "https://stability.ai/stable-audio-2.5",
-    logo: getLogoUrl("Stability AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/stability-ai.svg",
     status: "Active"
   },
   {
@@ -290,7 +285,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "2.0",
     date: "2025-03-13",
     link: "https://www.sberbank.com/sberchat/gigachat-2.0",
-    logo: getLogoUrl("Sberbank"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sberbank.svg",
     status: "Active"
   },
   {
@@ -305,7 +300,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "3",
     date: "2024-02-15",
     link: "https://cloud.yandex.com/en/services/yandexgpt",
-    logo: getLogoUrl("Yandex"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/yandex.svg",
     status: "Active"
   },
   {
@@ -320,7 +315,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-09-01",
     link: "https://vk.company/en/",
-    logo: getLogoUrl("VK"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/vk.svg",
     status: "Active"
   },
   {
@@ -335,7 +330,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Multi",
     date: "2023-11-01",
     link: "https://ntechlab.com/",
-    logo: getLogoUrl("NtechLab"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/ntechlab.svg",
     status: "Active"
   },
   {
@@ -350,7 +345,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-10-01",
     link: "https://visionlabs.ai/",
-    logo: getLogoUrl("VisionLabs"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/visionlabs.svg",
     status: "Active"
   },
   {
@@ -365,7 +360,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "DBRX",
     date: "2024-03-27",
     link: "https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm",
-    logo: getLogoUrl("Databricks"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/databricks.svg",
     status: "Active"
   },
   {
@@ -380,7 +375,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-06-28",
     link: "https://www.databricks.com/product/mosaic-ai",
-    logo: getLogoUrl("Databricks"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/databricks.svg",
     status: "Active"
   },
   {
@@ -395,7 +390,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Wan2.2-VACE",
     date: "2025-06-30",
     link: "https://tongyi.aliyun.com/wanxiang",
-    logo: getLogoUrl("Alibaba Cloud"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/alibaba-cloud.svg",
     status: "Active"
   },
   {
@@ -410,7 +405,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Qwen3",
     date: "2025-05-04",
     link: "https://tongyi.aliyun.com/qianwen/",
-    logo: getLogoUrl("Alibaba Cloud"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/alibaba-cloud.svg",
     status: "Active"
   },
   {
@@ -425,7 +420,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "T1",
     date: "2024-06-01",
     link: "https://hunyuan.tencent.com/",
-    logo: getLogoUrl("Tencent"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/tencent.svg",
     status: "Active"
   },
   {
@@ -440,7 +435,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "K2",
     date: "2025-07-14",
     link: "https://kimi.moonshot.cn/",
-    logo: getLogoUrl("Moonshot AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/moonshot-ai.svg",
     status: "Active"
   },
   {
@@ -455,7 +450,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Claude 4 Opus",
     date: "2025-05-22",
     link: "https://www.anthropic.com/product",
-    logo: getLogoUrl("Anthropic"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/anthropic.svg",
     status: "Active"
   },
   {
@@ -470,7 +465,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Claude 4 Sonnet",
     date: "2025-05-22",
     link: "https://www.anthropic.com/news/claude-4-family",
-    logo: getLogoUrl("Anthropic"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/anthropic.svg",
     status: "Active"
   },
   {
@@ -485,7 +480,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Claude 4 Haiku",
     date: "2025-05-22",
     link: "https://www.anthropic.com/news/claude-4-family",
-    logo: getLogoUrl("Anthropic"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/anthropic.svg",
     status: "Active"
   },
   {
@@ -500,7 +495,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "2.5",
     date: "2025-08-12",
     link: "https://deepmind.google/technologies/gemini/flash/",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -515,7 +510,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-05-14",
     link: "https://deepmind.google/discover/blog/new-models-and-developer-tools-to-build-with-gemini-and-google-ai/",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -530,7 +525,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "3",
     date: "2024-05-08",
     link: "https://deepmind.google/discover/blog/alphafold-3-predicts-the-structure-and-interactions-of-all-of-lifes-molecules/",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -545,7 +540,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Imagen 3",
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/imagen/",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -560,7 +555,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/veo/",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -575,7 +570,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-05-14",
     link: "https://deepmind.google/technologies/gemini/project-astra/",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -590,7 +585,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://cloud.google.com/vertex-ai",
-    logo: getLogoUrl("Google AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/google-ai.svg",
     status: "Active"
   },
   {
@@ -605,7 +600,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-09-26",
     link: "https://www.microsoft.com/en-us/microsoft-365/blog/2023/03/16/introducing-microsoft-365-copilot-your-copilot-for-work/",
-    logo: getLogoUrl("Microsoft AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/microsoft-ai.svg",
     status: "Active"
   },
   {
@@ -620,7 +615,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Phi-3.5",
     date: "2025-08-22",
     link: "https://azure.microsoft.com/en-us/blog/introducing-phi-3.5-a-highly-capable-and-cost-effective-small-language-model/",
-    logo: getLogoUrl("Microsoft AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/microsoft-ai.svg",
     status: "Active"
   },
   {
@@ -635,7 +630,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://github.com/features/copilot",
-    logo: getLogoUrl("Microsoft AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/microsoft-ai.svg",
     status: "Active"
   },
   {
@@ -650,7 +645,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-04-12",
     link: "https://designer.microsoft.com/",
-    logo: getLogoUrl("Microsoft AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/microsoft-ai.svg",
     status: "Active"
   },
   {
@@ -665,7 +660,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-11-15",
     link: "https://copilot.microsoft.com/",
-    logo: getLogoUrl("Microsoft AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/microsoft-ai.svg",
     status: "Active"
   },
   {
@@ -680,7 +675,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-05-23",
     link: "https://azure.microsoft.com/en-us/solutions/ai",
-    logo: getLogoUrl("Microsoft AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/microsoft-ai.svg",
     status: "Active"
   },
   {
@@ -695,7 +690,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-03-18",
     link: "https://nvidianews.nvidia.com/news/nvidia-blackwell-platform-arrives-to-power-a-new-era-of-computing",
-    logo: getLogoUrl("NVIDIA"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/nvidia.svg",
     status: "Active"
   },
   {
@@ -710,7 +705,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-03-18",
     link: "https://nvidianews.nvidia.com/news/nvidia-launches-generative-ai-microservices-for-developers-to-create-and-deploy-applications-on-their-platforms",
-    logo: getLogoUrl("NVIDIA"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/nvidia.svg",
     status: "Active"
   },
   {
@@ -725,7 +720,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-09-28",
     link: "https://aws.amazon.com/bedrock/",
-    logo: getLogoUrl("Amazon Web Services"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/aws.svg",
     status: "Active"
   },
   {
@@ -740,7 +735,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-04-30",
     link: "https://aws.amazon.com/q/",
-    logo: getLogoUrl("Amazon Web Services"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/aws.svg",
     status: "Active"
   },
   {
@@ -755,7 +750,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-09-25",
     link: "https://ai.meta.com/",
-    logo: getLogoUrl("Meta AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/meta-ai.svg",
     status: "Active"
   },
   {
@@ -770,7 +765,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Llama 3.2",
     date: "2025-09-25",
     link: "https://ai.meta.com/blog/llama-3-2/",
-    logo: getLogoUrl("Meta AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/meta-ai.svg",
     status: "Active"
   },
   {
@@ -785,7 +780,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-12-06",
     link: "https://imagine.meta.com/",
-    logo: getLogoUrl("Meta AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/meta-ai.svg",
     status: "Active"
   },
   {
@@ -800,7 +795,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-05-09",
     link: "https://www.ibm.com/watsonx",
-    logo: getLogoUrl("IBM"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/ibm.svg",
     status: "Active"
   },
   {
@@ -815,7 +810,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-12-05",
     link: "https://scale.com/",
-    logo: getLogoUrl("Scale AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/scale-ai.svg",
     status: "Active"
   },
   {
@@ -830,7 +825,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "AIP",
     date: "2023-04-27",
     link: "https://www.palantir.com/platforms/aip/",
-    logo: getLogoUrl("Palantir"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/palantir.svg",
     status: "Active"
   },
   {
@@ -845,7 +840,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "4",
     date: "2025-07-09",
     link: "https://x.ai/blog/grok-4",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -860,7 +855,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "1.5V",
     date: "2024-04-26",
     link: "https://x.ai/blog/grok-1.5v",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -875,7 +870,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "2",
     date: "2024-08-08",
     link: "https://x.ai/blog/grok-2",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -890,7 +885,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-11-08",
     link: "https://x.ai/blog/prompt-ide",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -905,7 +900,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-11-04",
     link: "https://grok.x.ai/",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -920,7 +915,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Grok-1",
     date: "2024-03-17",
     link: "https://x.ai/blog/grok-os",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -935,7 +930,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "4",
     date: "2025-07-09",
     link: "https://x.ai/",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -950,7 +945,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "3 Mini",
     date: "2025-04-01",
     link: "https://x.ai/",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Deprecated"
   },
   {
@@ -965,7 +960,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Aurora",
     date: "2024-08-08",
     link: "https://x.ai/blog/grok-2",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -980,7 +975,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-04-01",
     link: "https://x.ai/",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -995,7 +990,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-10-01",
     link: "https://x.ai/api",
-    logo: getLogoUrl("xAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/xai.svg",
     status: "Active"
   },
   {
@@ -1010,7 +1005,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://aleph-alpha.com/aleph-alpha-launches-phariaai-the-enterprise-grade-operating-system-for-generative-ai-combining-future-proof-sovereign-design-with-llm-explainability-and-compliance/",
-    logo: getLogoUrl("Aleph Alpha"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/aleph-alpha.svg",
     status: "Active"
   },
   {
@@ -1025,7 +1020,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://www.deepl.com/pro/write",
-    logo: getLogoUrl("DeepL"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/deepl.svg",
     status: "Active"
   },
   {
@@ -1040,7 +1035,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-11-15",
     link: "https://www.mech-mind.com/news/news/002.html",
-    logo: getLogoUrl("Mech-Mind Robotics"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mech-mind.svg",
     status: "Active"
   },
   {
@@ -1055,7 +1050,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Pro",
     date: "2024-02-15",
     link: "https://olakrutrim.com/",
-    logo: getLogoUrl("Krutrim AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/krutrim.svg",
     status: "Active"
   },
   {
@@ -1070,7 +1065,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "v0.1",
     date: "2023-12-21",
     link: "https://sarvam.ai/",
-    logo: getLogoUrl("Sarvam AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sarvam-ai.svg",
     status: "Active"
   },
   {
@@ -1085,7 +1080,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-07-01",
     link: "https://darktrace.com/platform",
-    logo: getLogoUrl("Darktrace"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/darktrace.svg",
     status: "Active"
   },
   {
@@ -1100,7 +1095,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-01-17",
     link: "https://www.synthesia.io/",
-    logo: getLogoUrl("Synthesia"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/synthesia.svg",
     status: "Active"
   },
   {
@@ -1115,7 +1110,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.benevolent.com/benevolent-platform",
-    logo: getLogoUrl("BenevolentAI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/benevolent-ai.svg",
     status: "Active"
   },
   {
@@ -1130,7 +1125,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-08-25",
     link: "https://www.dataiku.com/",
-    logo: getLogoUrl("Dataiku"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/dataiku.svg",
     status: "Active"
   },
   {
@@ -1145,7 +1140,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-11-01",
     link: "https://www.lighton.ai/",
-    logo: getLogoUrl("LightOn"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/lighton.svg",
     status: "Active"
   },
   {
@@ -1160,7 +1155,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.algolia.com/",
-    logo: getLogoUrl("Algolia"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/algolia.svg",
     status: "Active"
   },
   {
@@ -1175,7 +1170,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://www.doosanrobotics.com/",
-    logo: getLogoUrl("Doosan Robotics"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/doosan-robotics.svg",
     status: "Active"
   },
   {
@@ -1190,7 +1185,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.lunit.io/products/lunit-insight-mmg",
-    logo: getLogoUrl("Lunit"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/lunit.svg",
     status: "Active"
   },
   {
@@ -1205,7 +1200,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Pro 2",
     date: "2025-07-10",
     link: "https://upstage.ai/solar",
-    logo: getLogoUrl("Upstage"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/upstage.svg",
     status: "Active"
   },
   {
@@ -1220,7 +1215,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.coveo.com/",
-    logo: getLogoUrl("Coveo"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/coveo.svg",
     status: "Active"
   },
   {
@@ -1235,7 +1230,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "5.0",
     date: "2024-04-23",
     link: "https://www.sensetime.com/cn/product-business#llm",
-    logo: getLogoUrl("SenseTime"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sensetime.svg",
     status: "Active"
   },
   {
@@ -1250,7 +1245,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "V3.5",
     date: "2024-01-30",
     link: "https://xinghuo.xfyun.cn/",
-    logo: getLogoUrl("iFlytek"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/iflytek.svg",
     status: "Active"
   },
   {
@@ -1265,7 +1260,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Baichuan-530B",
     date: "2023-06-15",
     link: "https://www.baichuan-ai.com/",
-    logo: getLogoUrl("Baichuan Intelligent Technology"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/baichuan.svg",
     status: "Active"
   },
   {
@@ -1280,7 +1275,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "V3.1",
     date: "2025-08-21",
     link: "https://www.deepseek.com/",
-    logo: getLogoUrl("DeepSeek"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/deepseek.svg",
     status: "Active"
   },
   {
@@ -1295,7 +1290,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "1.6",
     date: "2023-08-18",
     link: "https://www.doubao.com/",
-    logo: getLogoUrl("ByteDance"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/bytedance.svg",
     status: "Active"
   },
   {
@@ -1310,7 +1305,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.coreweave.com/",
-    logo: getLogoUrl("CoreWeave"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/coreweave.svg",
     status: "Active"
   },
   {
@@ -1325,7 +1320,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://www.anduril.com/lattice/",
-    logo: getLogoUrl("Anduril"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/anduril.svg",
     status: "Active"
   },
   {
@@ -1340,7 +1335,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "03",
     date: "2025-06-07",
     link: "https://www.figure.ai/",
-    logo: getLogoUrl("Figure AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/figure-ai.svg",
     status: "Active"
   },
   {
@@ -1355,7 +1350,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://crusoe.ai/",
-    logo: getLogoUrl("Crusoe"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/crusoe.svg",
     status: "Active"
   },
   {
@@ -1370,7 +1365,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.harvey.ai/",
-    logo: getLogoUrl("Harvey"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/harvey.svg",
     status: "Active"
   },
   {
@@ -1385,7 +1380,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Gen-4",
     date: "2025-03-31",
     link: "https://runwayml.com/",
-    logo: getLogoUrl("Runway"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/runway.svg",
     status: "Active"
   },
   {
@@ -1400,7 +1395,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-05-15",
     link: "https://arxiv.org/abs/2405.09350",
-    logo: getLogoUrl("Stanford University"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/stanford.svg",
     status: "Active"
   },
   {
@@ -1415,7 +1410,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Brain",
     date: "2025-07-29",
     link: "https://www.skild.ai/",
-    logo: getLogoUrl("Skild AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/skild-ai.svg",
     status: "Active"
   },
   {
@@ -1430,7 +1425,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://writer.com/",
-    logo: getLogoUrl("Writer"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/writer.svg",
     status: "Active"
   },
   {
@@ -1445,7 +1440,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "HX-2",
     date: "2021-01-01",
     link: "https://helsing.ai/",
-    logo: getLogoUrl("Helsing"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/helsing.svg",
     status: "Active"
   },
   {
@@ -1461,7 +1456,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.kuka.com/",
-    logo: getLogoUrl("KUKA"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/kuka.svg",
     status: "Active"
   },
   {
@@ -1476,7 +1471,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "FR3",
     date: "2023-01-01",
     link: "https://www.franka.de/",
-    logo: getLogoUrl("Franka Robotics"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/franka-robotics.svg",
     status: "Active"
   },
   {
@@ -1491,7 +1486,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-09-01",
     link: "https://www.sap.com/products/artificial-intelligence/joule.html",
-    logo: getLogoUrl("SAP"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sap.svg",
     status: "Active"
   },
   {
@@ -1506,7 +1501,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://www.bosch.com/",
-    logo: getLogoUrl("Bosch"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/bosch.svg",
     status: "Active"
   },
   {
@@ -1521,7 +1516,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "v5.0",
     date: "2023-01-01",
     link: "https://www.photoroom.com/",
-    logo: getLogoUrl("Photoroom"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/photoroom.svg",
     status: "Active"
   },
   {
@@ -1536,7 +1531,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "HyperCLOVA X Think",
     date: "2025-06-30",
     link: "https://www.navercloud.com/product/ai/hyperclovaX",
-    logo: getLogoUrl("Naver"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/naver.svg",
     status: "Active"
   },
   {
@@ -1551,7 +1546,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-10-18",
     link: "https://www.kakaobrain.com/en/products/karlo",
-    logo: getLogoUrl("Kakao Brain"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/kakao-brain.svg",
     status: "Active"
   },
   {
@@ -1566,7 +1561,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Exaone 4.0",
     date: "2025-07-15",
     link: "https://www.lgresearch.ai/en/exaone",
-    logo: getLogoUrl("LG AI Research"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/lg.svg",
     status: "Active"
   },
   {
@@ -1581,7 +1576,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "X330",
     date: "2023-11-01",
     link: "https://www.sapeon.com/en",
-    logo: getLogoUrl("SK Telecom"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sk-telecom.svg",
     status: "Active"
   },
   {
@@ -1596,7 +1591,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "ATOM",
     date: "2023-01-01",
     link: "https://rebellions.ai/en/",
-    logo: getLogoUrl("Rebellion"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/rebellion.svg",
     status: "Active"
   },
   {
@@ -1611,7 +1606,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.moloco.com/",
-    logo: getLogoUrl("Moloco"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/moloco.svg",
     status: "Active"
   },
   {
@@ -1626,7 +1621,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://supertone.ai/",
-    logo: getLogoUrl("Supertone"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/supertone.svg",
     status: "Active"
   },
   {
@@ -1641,7 +1636,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.selvasai.com/en/service/aivoice-recognition",
-    logo: getLogoUrl("SELVAS AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/selvas-ai.svg",
     status: "Active"
   },
   {
@@ -1656,7 +1651,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Agent+",
     date: "2022-01-01",
     link: "https://www.ada.cx/",
-    logo: getLogoUrl("Ada"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/ada.svg",
     status: "Active"
   },
   {
@@ -1671,7 +1666,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.deepgenomics.com/",
-    logo: getLogoUrl("Deep Genomics"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/deep-genomics.svg",
     status: "Active"
   },
   {
@@ -1686,7 +1681,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Phoenix",
     date: "2023-05-16",
     link: "https://www.sanctuary.ai/",
-    logo: getLogoUrl("Sanctuary AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sanctuary-ai.svg",
     status: "Active"
   },
   {
@@ -1701,7 +1696,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Wormhole",
     date: "2025-07-25",
     link: "https://tenstorrent.com/",
-    logo: getLogoUrl("Tenstorrent"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/tenstorrent.svg",
     status: "Active"
   },
   {
@@ -1716,7 +1711,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Mini",
     date: "2025-06-23",
     link: "https://www.corover.ai/bharatgpt",
-    logo: getLogoUrl("CoRover.ai"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/corover-ai.svg",
     status: "Active"
   },
   {
@@ -1731,7 +1726,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "LINGO-2",
     date: "2025-04-17",
     link: "https://wayve.ai/",
-    logo: getLogoUrl("Wayve"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/wayve.svg",
     status: "Active"
   },
   {
@@ -1746,7 +1741,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-05-01",
     link: "https://matlantis.com/",
-    logo: getLogoUrl("Preferred Networks"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/preferred-networks.svg",
     status: "Active"
   },
   {
@@ -1761,7 +1756,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-03-20",
     link: "https://sakana.ai/",
-    logo: getLogoUrl("Sakana AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sakana-ai.svg",
     status: "Active"
   },
   {
@@ -1776,7 +1771,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.mujin-corp.com/",
-    logo: getLogoUrl("Mujin"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mujin.svg",
     status: "Active"
   },
   {
@@ -1791,7 +1786,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://rinna.co.jp/",
-    logo: getLogoUrl("Rinna"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/rinna.svg",
     status: "Active"
   },
   {
@@ -1806,7 +1801,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://global.toyota/",
-    logo: getLogoUrl("Toyota"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/toyota.svg",
     status: "Active"
   },
   {
@@ -1821,7 +1816,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://cinnamon.ai/",
-    logo: getLogoUrl("Cinnamon AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/cinnamon-ai.svg",
     status: "Active"
   },
   {
@@ -1836,7 +1831,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-10-01",
     link: "https://leapmind.io/",
-    logo: getLogoUrl("LeapMind"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/leapmind.svg",
     status: "Active"
   },
   {
@@ -1851,7 +1846,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-05-01",
     link: "https://www.nec.com/",
-    logo: getLogoUrl("NEC"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/nec.svg",
     status: "Active"
   },
   {
@@ -1866,7 +1861,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-05-01",
     link: "https://www.mitsubishielectric.com/",
-    logo: getLogoUrl("Mitsubishi Electric"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mitsubishi-electric.svg",
     status: "Active"
   },
   {
@@ -1881,7 +1876,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-01-01",
     link: "https://www.hitachi.com/",
-    logo: getLogoUrl("Hitachi"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/hitachi.svg",
     status: "Active"
   },
   {
@@ -1896,7 +1891,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "EVI 3",
     date: "2025-07-17",
     link: "https://elevenlabs.io/",
-    logo: getLogoUrl("ElevenLabs"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/elevenlabs.svg",
     status: "Active"
   },
   {
@@ -1911,7 +1906,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "ERNIE 5",
     date: "2025-08-21",
     link: "https://yiyan.baidu.com/",
-    logo: getLogoUrl("Baidu"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/baidu.svg",
     status: "Active"
   },
   {
@@ -1926,7 +1921,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://cursor.sh/",
-    logo: getLogoUrl("Anysphere"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/anysphere.svg",
     status: "Active"
   },
   {
@@ -1941,7 +1936,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "EVI 3",
     date: "2025-07-17",
     link: "https://www.hume.ai/",
-    logo: getLogoUrl("Hume AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/hume-ai.svg",
     status: "Active"
   },
   {
@@ -1956,7 +1951,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://soundful.com/",
-    logo: getLogoUrl("Soundful"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/soundful.svg",
     status: "Active"
   },
   {
@@ -1971,7 +1966,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "WSE-3",
     date: "2025-02-24",
     link: "https://www.cerebras.net/",
-    logo: getLogoUrl("Cerebras Systems"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/cerebras.svg",
     status: "Active"
   },
   {
@@ -1986,7 +1981,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Voice",
     date: "2025-03-25",
     link: "https://forethought.ai/",
-    logo: getLogoUrl("Forethought"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/forethought.svg",
     status: "Active"
   },
   {
@@ -2001,7 +1996,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://www.nexterarobotics.com/",
-    logo: getLogoUrl("Nextera Robotics"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/nextera-robotics.svg",
     status: "Active"
   },
   {
@@ -2016,7 +2011,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Gen-4",
     date: "2025-03-31",
     link: "https://www.midjourney.com/",
-    logo: getLogoUrl("Midjourney"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/midjourney.svg",
     status: "Active"
   },
   {
@@ -2031,7 +2026,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Autodesigner 2.0",
     date: "2025-06-12",
     link: "https://uizard.io/",
-    logo: getLogoUrl("Uizard"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/uizard.svg",
     status: "Active"
   },
   {
@@ -2046,7 +2041,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-01-01",
     link: "https://www.deepnight.ai/",
-    logo: getLogoUrl("DeepNight"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/deepnight.svg",
     status: "Active"
   },
   {
@@ -2061,7 +2056,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-01-01",
     link: "https://www.atla.ai/",
-    logo: getLogoUrl("Atla"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/atla.svg",
     status: "Active"
   },
   {
@@ -2076,7 +2071,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "5",
     date: "2025-08-21",
     link: "https://baike.baidu.com/item/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80/62642976",
-    logo: getLogoUrl("Baidu"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/baidu.svg",
     status: "Active"
   },
   {
@@ -2091,7 +2086,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "2.5",
     date: "2024-05-24",
     link: "https://tongyi.aliyun.com/blog/191573937",
-    logo: getLogoUrl("Alibaba Cloud"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/alibaba-cloud.svg",
     status: "Active"
   },
   {
@@ -2106,7 +2101,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "2.5",
     date: "2023-03-01",
     link: "https://www.sensetime.com/cn/product-business#llm",
-    logo: getLogoUrl("SenseTime"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/sensetime.svg",
     status: "Active"
   },
   {
@@ -2121,7 +2116,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "R1",
     date: "2025-01-10",
     link: "https://www.deepseek.com/",
-    logo: getLogoUrl("DeepSeek"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/deepseek.svg",
     status: "Active"
   },
   {
@@ -2136,7 +2131,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-01-01",
     link: "https://www.doubao.com/",
-    logo: getLogoUrl("ByteDance"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/bytedance.svg",
     status: "Active"
   },
   {
@@ -2151,7 +2146,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-01-01",
     link: "https://www.doubao.com/",
-    logo: getLogoUrl("ByteDance"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/bytedance.svg",
     status: "Active"
   },
   {
@@ -2166,7 +2161,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "910D",
     date: "2025-06-24",
     link: "https://www.huawei.com/cn/tech-for-all/intelligent-world/ai",
-    logo: getLogoUrl("Huawei"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/huawei.svg",
     status: "Active"
   },
   {
@@ -2181,7 +2176,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-01-01",
     link: "https://aleph-alpha.com/",
-    logo: getLogoUrl("Aleph Alpha"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/aleph-alpha.svg",
     status: "Active"
   },
   {
@@ -2196,7 +2191,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://parloa.com/",
-    logo: getLogoUrl("Parloa"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/parloa.svg",
     status: "Active"
   },
   {
@@ -2211,7 +2206,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://helsing.ai/",
-    logo: getLogoUrl("Helsing"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/helsing.svg",
     status: "Active"
   },
   {
@@ -2226,7 +2221,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://cartagon.com/",
-    logo: getLogoUrl("cartagon.ai"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/cartagon-ai.svg",
     status: "Active"
   },
   {
@@ -2241,7 +2236,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://www.langdock.com/",
-    logo: getLogoUrl("Langdock"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/langdock.svg",
     status: "Active"
   },
   {
@@ -2256,7 +2251,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-01-01",
     link: "https://www.piya.ai/",
-    logo: getLogoUrl("PIYA AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/piya-ai.svg",
     status: "Active"
   },
   {
@@ -2271,7 +2266,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-01-01",
     link: "https://www.piya.ai/",
-    logo: getLogoUrl("PIYA AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/piya-ai.svg",
     status: "Active"
   },
   {
@@ -2286,7 +2281,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://capsula.ai/",
-    logo: getLogoUrl("Capsula"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/capsula.svg",
     status: "Active"
   },
   {
@@ -2301,7 +2296,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://example.com",
-    logo: getLogoUrl("Stardawn AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/stardawn-ai.svg",
     status: "Active"
   },
   {
@@ -2316,7 +2311,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://example.com",
-    logo: getLogoUrl("AIPort"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/aiport.svg",
     status: "Active"
   },
   {
@@ -2331,7 +2326,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2024-02-01",
     link: "https://chat.mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mistral-ai.svg",
     status: "Active"
   },
   {
@@ -2346,7 +2341,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "Magistral Small",
     date: "2025-06-10",
     link: "https://mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mistral-ai.svg",
     status: "Active"
   },
   {
@@ -2361,7 +2356,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-06-03",
     link: "https://www.h.ai/",
-    logo: getLogoUrl("H Company"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/h-company.svg",
     status: "Active"
   },
   {
@@ -2376,7 +2371,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-01-01",
     link: "https://poolside.ai/",
-    logo: getLogoUrl("Poolside"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/poolside.svg",
     status: "Active"
   },
   {
@@ -2391,7 +2386,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2025-01-01",
     link: "https://adaptive-ml.com/",
-    logo: getLogoUrl("Adaptive ML"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/adaptive-ml.svg",
     status: "Active"
   },
   {
@@ -2406,7 +2401,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "3.1",
     date: "2025-03-17",
     link: "https://mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mistral-ai.svg",
     status: "Active"
   },
   {
@@ -2421,7 +2416,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "3.0",
     date: "2025-05-07",
     link: "https://mistral.ai/",
-    logo: getLogoUrl("Mistral AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/mistral-ai.svg",
     status: "Active"
   },
   {
@@ -2436,7 +2431,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://waabi.ai/",
-    logo: getLogoUrl("Waabi"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/waabi.svg",
     status: "Active"
   },
   {
@@ -2451,7 +2446,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.turing-motors.com/",
-    logo: getLogoUrl("Turing Co., Ltd."),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/turing.svg",
     status: "Active"
   },
   {
@@ -2466,7 +2461,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.edgematrix.com/",
-    logo: getLogoUrl("EDGEMATRIX"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/edgematrix.svg",
     status: "Active"
   },
   {
@@ -2481,7 +2476,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://fastctl.ai/",
-    logo: getLogoUrl("fastctl.ai"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/fastctl-ai.svg",
     status: "Active"
   },
   {
@@ -2496,7 +2491,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2021-01-01",
     link: "https://www.synthesia.io/",
-    logo: getLogoUrl("Synthesia"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/synthesia.svg",
     status: "Active"
   },
   {
@@ -2511,7 +2506,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://www.graphcore.ai/",
-    logo: getLogoUrl("Graphcore"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/graphcore.svg",
     status: "Active"
   },
   {
@@ -2526,7 +2521,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2022-01-01",
     link: "https://beta.dreamstudio.ai/",
-    logo: getLogoUrl("Stability AI"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/stability-ai.svg",
     status: "Active"
   },
   {
@@ -2541,7 +2536,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://oxa.ai/",
-    logo: getLogoUrl("Oxa"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/oxa.svg",
     status: "Active"
   },
   {
@@ -2556,7 +2551,7 @@ export const newsUpdates: NewsUpdate[] = [
     version: "",
     date: "2023-01-01",
     link: "https://fetch.ai/",
-    logo: getLogoUrl("Fetch.ai"),
+    logo: "https://storage.googleapis.com/project-weekly-glance.appspot.com/logos/fetch-ai.svg",
     status: "Active"
   }
 ]
