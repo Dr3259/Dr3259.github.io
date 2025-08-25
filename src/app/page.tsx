@@ -18,7 +18,7 @@ import { ClipboardModal } from '@/components/ClipboardModal';
 import { QuickAddTodoModal } from '@/components/QuickAddTodoModal';
 import copy from 'copy-to-clipboard';
 import Image from 'next/image';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Reorder } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 
@@ -364,21 +364,22 @@ const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, 
     return false;
 };
 
-interface FeatureButtonProps {
+interface Feature {
+    id: string;
     icon: React.ElementType;
     title: string;
     onClick: () => void;
 }
 
-const FeatureButton: React.FC<FeatureButtonProps> = ({ icon: Icon, title, onClick }) => (
+const FeatureButton: React.FC<{ item: Feature }> = ({ item }) => (
     <button
-        onClick={onClick}
+        onClick={item.onClick}
         className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-muted transition-colors w-full group gap-1 cursor-pointer"
     >
         <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
+            <item.icon className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
         </div>
-        <p className="text-xs font-medium text-center text-foreground">{title}</p>
+        <p className="text-xs font-medium text-center text-foreground">{item.title}</p>
     </button>
 );
 
@@ -425,13 +426,42 @@ export default function WeekGlancePage() {
   const handleHealthButtonClick = () => router.push('/health');
   const handleTechButtonClick = () => router.push('/tech');
   const handleRichButtonClick = () => router.push('/rich');
+  
+  const [features, setFeatures] = useState<Feature[]>([]);
 
-  const features = useMemo(() => ([
-    { id: 'tech', icon: Cpu, title: t.techButtonText, onClick: handleTechButtonClick },
-    { id: 'rich', icon: Gem, title: t.richButtonText, onClick: handleRichButtonClick },
-    { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
-    { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
-  ]), [t]);
+  useEffect(() => {
+    const initialFeatures: Feature[] = [
+        { id: 'tech', icon: Cpu, title: t.techButtonText, onClick: handleTechButtonClick },
+        { id: 'rich', icon: Gem, title: t.richButtonText, onClick: handleRichButtonClick },
+        { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
+        { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
+    ];
+
+    try {
+        const savedOrder = localStorage.getItem(LOCAL_STORAGE_KEY_FEATURE_ORDER);
+        if (savedOrder) {
+            const orderedIds = JSON.parse(savedOrder);
+            const orderedFeatures = orderedIds.map((id: string) => initialFeatures.find(f => f.id === id)).filter(Boolean);
+            const newFeatures = initialFeatures.filter(f => !orderedIds.includes(f.id));
+            setFeatures([...orderedFeatures, ...newFeatures]);
+        } else {
+            setFeatures(initialFeatures);
+        }
+    } catch(e) {
+        console.error("Failed to load feature order from localStorage", e);
+        setFeatures(initialFeatures);
+    }
+  }, [t]);
+
+  const handleReorder = (newOrder: Feature[]) => {
+    setFeatures(newOrder);
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_FEATURE_ORDER, JSON.stringify(newOrder.map(f => f.id)));
+    } catch(e) {
+        console.error("Failed to save feature order to localStorage", e);
+    }
+  }
+
 
   const clearTimeoutIfNecessary = useCallback(() => {
     if (showPreviewTimerRef.current) {
@@ -990,15 +1020,23 @@ export default function WeekGlancePage() {
                   <span className="sr-only">{t.featureHub}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-2">
-                <div className="grid grid-cols-3 gap-2">
+              <PopoverContent className="w-auto p-4">
+                <Reorder.Group
+                  axis="x"
+                  values={features}
+                  onReorder={handleReorder}
+                  className="grid grid-cols-3 gap-4"
+                >
                   {features.map((feature) => (
-                    <FeatureButton 
-                        key={feature.id} 
-                        {...feature}
-                    />
+                    <Reorder.Item
+                      key={feature.id}
+                      value={feature}
+                      className="cursor-grab active:cursor-grabbing"
+                    >
+                      <FeatureButton item={feature} />
+                    </Reorder.Item>
                   ))}
-                </div>
+                </Reorder.Group>
               </PopoverContent>
             </Popover>
 
