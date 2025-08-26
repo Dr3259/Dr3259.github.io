@@ -63,7 +63,6 @@ export const DayBox: FC<DayBoxProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   // A day is disabled if it's a past day AND has no content.
-  // Such days cannot have ratings changed or be navigated to (effectively).
   const isDisabled = isPastDay && !dayHasAnyData;
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
 
@@ -90,13 +89,12 @@ export const DayBox: FC<DayBoxProps> = ({
   return (
     <Card
       className={cn(
-        "w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "relative w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isDisabled
           ? "opacity-50 cursor-not-allowed bg-card border-transparent"
           : [
               "cursor-pointer bg-card",
               isHovered ? "border-accent/70 shadow-xl scale-105" : "border-transparent",
-              isCurrentDay && !isDisabled && "ring-2 ring-offset-2 ring-offset-background ring-amber-500 dark:ring-amber-400"
             ]
       )}
       onClick={isDisabled ? undefined : onClick}
@@ -108,8 +106,16 @@ export const DayBox: FC<DayBoxProps> = ({
       aria-label={ariaLabel}
       aria-disabled={isDisabled}
     >
+      {isCurrentDay && !isDisabled && (
+        <div className="absolute top-2 left-2 h-2 w-2 rounded-full bg-amber-400" title={todayLabel}></div>
+      )}
       <CardHeader className="p-2 pb-1 text-center">
-        <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{dayName}</CardTitle>
+        <CardTitle className={cn(
+            "text-lg sm:text-xl font-medium text-foreground",
+            isCurrentDay && !isDisabled && "text-amber-500 dark:text-amber-400"
+            )}>
+                {dayName}
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-grow flex items-center justify-center">
         {isDisabled ? (
@@ -140,7 +146,7 @@ export const DayBox: FC<DayBoxProps> = ({
                   )}
                   aria-label={label}
                   aria-pressed={rating === type}
-                  disabled={isDisabled} // Should not be possible due to showRatingIcons logic, but good practice
+                  disabled={isDisabled}
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
