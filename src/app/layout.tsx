@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -13,8 +14,8 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: 'ai 世界',
-  description: '探索全球AI模型、产品与公司，抹平全球AI信息差。',
+  title: '周览 (Week Glance)',
+  description: '一款集周计划、日视图、自动记录和休闲功能于一体的生产力工具。',
   manifest: '/manifest.json',
 };
 
