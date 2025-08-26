@@ -37,9 +37,12 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
   async () => {
     try {
       const baseUrl = 'https://dydytt.net';
-      const response = await fetch(baseUrl + '/html/gndy/dyzz/index.html');
+      const listUrl = baseUrl + '/html/gndy/dyzz/index.html';
+      console.log(`Fetching movie list from: ${listUrl}`);
+      
+      const response = await fetch(listUrl);
       if (!response.ok) {
-        throw new Error(`Failed to fetch dydytt.net page: ${response.statusText}`);
+        throw new Error(`Failed to fetch main page: ${response.status} ${response.statusText}`);
       }
       
       const arrayBuffer = await response.arrayBuffer();
@@ -48,7 +51,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const $ = cheerio.load(decodedHtml);
 
       const movieDetailLinks: string[] = [];
-      // This selector is now more specific, targeting only the table with the movie list.
       $('table.tbspan tr a').each((_index, element) => {
         const href = $(element).attr('href');
         if (href && href.startsWith('/html/gndy/')) {
@@ -56,6 +58,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
         }
       });
       
+      console.log(`Found ${movieDetailLinks.length} movie links to process.`);
+
       if (movieDetailLinks.length === 0) {
         throw new Error("Could not find any movie links on the main page. The website structure may have changed.");
       }
@@ -63,7 +67,10 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const detailPromises = movieDetailLinks.slice(0, 10).map(async (detailUrl) => {
         try {
             const detailResponse = await fetch(detailUrl);
-            if (!detailResponse.ok) return null;
+            if (!detailResponse.ok) {
+                console.error(`Failed to fetch detail page ${detailUrl}: Status ${detailResponse.status}`);
+                return null;
+            }
 
             const detailBuffer = await detailResponse.arrayBuffer();
             const detailHtml = iconv.decode(Buffer.from(detailBuffer), 'gb2312');
@@ -72,8 +79,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const title = $$('div.title_all h1').text().trim();
             const downloadUrl = $$('#Zoom table[bgcolor="#fdfddf"] a').attr('href');
             
-            // If we don't have a title or download url, we can't proceed with this item.
             if (!title || !downloadUrl) {
+              console.warn(`Skipping ${detailUrl} because title or downloadUrl was not found.`);
               return null;
             }
 
@@ -93,8 +100,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             }
 
             return { title, downloadUrl, rating, tags, shortIntro };
-        } catch (e) {
-            console.error(`Failed to scrape detail page ${detailUrl}:`, e);
+        } catch (e: any) {
+            console.error(`Error processing detail page ${detailUrl}:`, e.message);
             return null;
         }
       });
@@ -102,6 +109,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const results = await Promise.all(detailPromises);
       const validMovies = results.filter((m): m is MovieHeavenItem => m !== null);
       
+      console.log(`Successfully parsed ${validMovies.length} movies.`);
+
       if (validMovies.length === 0) {
         throw new Error('Could not parse any movies. The website structure may have changed.');
       }
@@ -114,4 +123,3 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
-
