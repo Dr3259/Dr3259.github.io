@@ -94,8 +94,8 @@ const FigureEightExercise: React.FC = () => {
 };
 
 const DotMatrixExercise: React.FC = () => {
-  const horizontal_dots = 40;
-  const vertical_dots = 24;
+  const horizontal_dots = 60;
+  const vertical_dots = 40;
   const [dots, setDots] = useState<{ id: number; delay: number }[]>([]);
 
   useEffect(() => {
@@ -115,7 +115,7 @@ const DotMatrixExercise: React.FC = () => {
         className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
       >
         <div 
-            className="grid gap-1.5"
+            className="grid gap-1"
             style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`}}
         >
             {dots.map((dot) => (
@@ -123,8 +123,8 @@ const DotMatrixExercise: React.FC = () => {
                 key={dot.id}
                 className="bg-white rounded-full"
                 style={{
-                  width: '0.35rem',
-                  height: '0.35rem',
+                  width: '0.25rem',
+                  height: '0.25rem',
                 }}
               />
             ))}
