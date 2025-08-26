@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Bookmark, Folder, PlusCircle, FileText, ChevronRight, FolderOpen, UploadCloud } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -74,27 +74,33 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
 
     const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
         const nodes: BookmarkNode[] = [];
+        // Direct children of DL should be DT
         const children = Array.from(dlElement.children);
 
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (child.tagName !== 'DT') continue;
 
+            // Content is inside the DT
             const content = child.firstElementChild;
             if (!content) continue;
 
             if (content.tagName === 'H3') { // This is a folder
                 const folderName = content.textContent || 'Untitled Folder';
-                const folderDl = children[i + 1] as HTMLDListElement;
+                
+                // The folder's content is in the NEXT sibling that is a DL
+                const folderDl = child.nextElementSibling;
                 
                 if (folderDl && folderDl.tagName === 'DL') {
                     nodes.push({
                         type: 'folder',
                         name: folderName,
-                        children: parseDl(folderDl),
+                        children: parseDl(folderDl as HTMLDListElement),
                     });
+                    // We've processed the DL, so we can skip it in the next iteration
                     i++; 
                 } else {
+                     // Empty folder
                      nodes.push({
                         type: 'folder',
                         name: folderName,
@@ -112,6 +118,7 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
         return nodes;
     };
     
+    // Find the first DL in the body, which is usually the root container
     const mainDl = doc.body.querySelector('DL');
     if (!mainDl) return [];
 
@@ -338,5 +345,3 @@ export default function OrganizePage() {
     </div>
   );
 }
-
-    
