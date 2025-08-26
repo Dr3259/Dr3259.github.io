@@ -117,5 +117,4 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, onStatusChange, onR
     </Card>
   );
 };
-
     

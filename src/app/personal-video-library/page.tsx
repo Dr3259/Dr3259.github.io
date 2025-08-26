@@ -4,145 +4,133 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileVideo, Download, Clapperboard, Loader2, Star, Tag, FileText } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ArrowLeft, Clapperboard, PlusCircle, Search, Star, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { scrapeMovieHeaven, type MovieHeavenItem } from '@/ai/flows/movie-heaven-scraper-flow';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MovieCard } from '@/components/MovieCard';
+import { useMovies, type Movie } from '@/hooks/useMovies';
+import type { MovieStatus } from '@/hooks/useMovies';
 
 
 const translations = {
   'zh-CN': {
-    pageTitle: '个人视频库',
+    pageTitle: '个人电影院',
     backButton: '返回休闲驿站',
-    localVideosTitle: '本地视频',
-    localVideosDescription: '管理和播放您的本地视频文件。',
-    importLocalButton: '导入本地视频',
-    resourceAcquisitionTitle: '资源获取下载',
-    resourceAcquisitionDescription: '发现和获取新的视频资源。',
-    searchPlaceholder: '输入视频名称或链接...',
-    searchButton: '获取资源',
-    movieParadiseTitle: '电影天堂 资源查看器',
-    movieParadiseDescription: '直接浏览和搜索电影天堂的资源。',
-    comingSoon: '此功能正在开发中，敬请期待！',
-    emptyLibrary: '您的视频库是空的。',
-    loadingMovies: '正在加载最新电影...',
-    loadError: '加载失败，请稍后再试。'
+    searchPlaceholder: '搜索电影...',
+    tabWantToWatch: '想看',
+    tabWatched: '已看',
+    noMoviesWantToWatch: '您的“想看”列表是空的。',
+    noMoviesWatched: '您还没有标记任何电影为“已看”。',
+    addSuccess: (title: string) => `已将《${title}》添加到您的“想看”列表。`,
+    addError: (title: string) => `《${title}》已经在您的列表中了。`,
+    searchResult: '搜索结果',
+    searchInProgress: '正在搜索...',
+    noResults: '未找到结果。',
+    searchInstruction: '搜索电影并添加到您的收藏中。'
   },
   'en': {
-    pageTitle: 'Personal Video Library',
+    pageTitle: 'Personal Cinema',
     backButton: 'Back to Rest Stop',
-    localVideosTitle: 'Local Videos',
-    localVideosDescription: 'Manage and play your local video files.',
-    importLocalButton: 'Import Local Videos',
-    resourceAcquisitionTitle: 'Resource Acquisition',
-    resourceAcquisitionDescription: 'Discover and acquire new video resources.',
-    searchPlaceholder: 'Enter video name or link...',
-    searchButton: 'Acquire',
-    movieParadiseTitle: 'Movie Paradise Viewer',
-    movieParadiseDescription: 'Directly browse and search resources from Movie Paradise.',
-    comingSoon: 'This feature is under development, coming soon!',
-    emptyLibrary: 'Your video library is empty.',
-    loadingMovies: 'Loading latest movies...',
-    loadError: 'Failed to load, please try again later.'
+    searchPlaceholder: 'Search for a movie...',
+    tabWantToWatch: 'Want to Watch',
+    tabWatched: 'Watched',
+    noMoviesWantToWatch: 'Your "Want to Watch" list is empty.',
+    noMoviesWatched: 'You haven\'t marked any movies as "Watched" yet.',
+    addSuccess: (title: string) => `Added "${title}" to your "Want to Watch" list.`,
+    addError: (title: string) => `"${title}" is already in your list.`,
+    searchResult: 'Search Result',
+    searchInProgress: 'Searching...',
+    noResults: 'No results found.',
+    searchInstruction: 'Search for movies to add to your collection.'
   }
 };
 
 type LanguageKey = keyof typeof translations;
 
-const MovieParadiseViewer = ({ t }: { t: (typeof translations)['zh-CN'] }) => {
-    const [movies, setMovies] = useState<MovieHeavenItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+// --- Mock Search Data ---
+const mockSearchResults: Movie[] = [
+    { id: 'tmdb-299534', title: 'Avengers: Endgame', poster_path: '/or06FN3Dka5tukK1e9sl16pB3iy.jpg', release_date: '2019-04-24', overview: 'After the devastating events of Avengers: Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos\' actions and restore balance to the universe.', status: 'want_to_watch' },
+    { id: 'tmdb-27205', title: 'Inception', poster_path_en: '/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg', poster_path: '/edv5CZvWj09upOsy2Y6ama2apoE.jpg', release_date: '2010-07-15', overview: 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets, is offered a chance to regain his old life as payment for a task considered to be impossible: "inception", the implantation of another person\'s idea into a target\'s subconscious.', status: 'want_to_watch' },
+    { id: 'tmdb-155', title: 'The Dark Knight', poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg', release_date: '2008-07-16', overview: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.', status: 'want_to_watch' },
+    { id: 'tmdb-680', title: 'Pulp Fiction', poster_path: '/d5iIlFn5s0ImszYzrKYO7G9B9A1.jpg', release_date: '1994-09-10', overview: 'A burger-loving hit man, his philosophical partner, a drug-addled gangster\'s moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip over each other.', status: 'want_to_watch' },
+];
 
-    useEffect(() => {
-        const fetchMovies = async () => {
-            try {
-                const results = await scrapeMovieHeaven();
-                setMovies(results);
-            } catch (err) {
-                console.error("Failed to scrape Movie Heaven:", err);
-                setError(t.loadError);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchMovies();
-    }, [t.loadError]);
 
-    return (
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-xl">
-                   <Clapperboard className="h-6 w-6 text-primary/80" />
-                   {t.movieParadiseTitle}
-                </CardTitle>
-                <CardDescription>{t.movieParadiseDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 flex-grow flex flex-col">
-                <div className="flex-grow bg-muted/20 rounded-lg border flex items-center justify-center">
-                    {isLoading ? (
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground p-4">
-                            <Loader2 className="w-8 h-8 animate-spin" />
-                            <p>{t.loadingMovies}</p>
-                        </div>
-                    ) : error ? (
-                        <p className="text-destructive p-4">{error}</p>
-                    ) : (
-                        <ScrollArea className="h-72 w-full">
-                            <ul className="p-3 space-y-4">
-                                {movies.map((movie, index) => (
-                                    <li key={index} className="text-sm p-3 rounded-md border bg-background/50 hover:bg-accent/50 transition-colors">
-                                        <h4 className="font-semibold text-foreground mb-1.5" title={movie.title}>{movie.title}</h4>
-                                        {movie.shortIntro && (
-                                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2" title={movie.shortIntro}>{movie.shortIntro}</p>
-                                        )}
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                {movie.rating && <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500"/> {movie.rating}</span>}
-                                                {movie.tags && <span className="flex items-center gap-1"><Tag className="h-3.5 w-3.5"/> {movie.tags}</span>}
-                                            </div>
-                                            <Button asChild size="sm" variant="ghost" className="h-8" onClick={(e) => e.stopPropagation()}>
-                                                <a href={movie.downloadUrl} target="_blank" rel="noopener noreferrer">
-                                                    <Download className="h-4 w-4" />
-                                                </a>
-                                            </Button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </ScrollArea>
-                    )}
-               </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-export default function PersonalVideoLibraryPage() {
+export default function PersonalCinemaPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const { movies, addMovie, updateMovieStatus, updateMovieRating, updateMovieReview } = useMovies();
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
-      setCurrentLanguage(browserLang);
-    }
+    const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+    setCurrentLanguage(browserLang);
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
-  const handleComingSoon = () => {
-    toast({
-      description: t.comingSoon,
-      duration: 3000,
-    });
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+        // Mock search logic
+        const results = mockSearchResults.filter(movie =>
+            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setSearchResults(results);
+        setIsSearching(false);
+    }, 500); // Simulate network delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const handleAddMovie = (movie: Movie) => {
+    const success = addMovie(movie);
+    // You can add toast notifications here based on success
+    if (success) {
+        console.log(t.addSuccess(movie.title));
+        setSearchTerm(''); // Clear search after adding
+    } else {
+        console.warn(t.addError(movie.title));
+    }
+  };
+
+  const wantToWatchMovies = useMemo(() => movies.filter(m => m.status === 'want_to_watch'), [movies]);
+  const watchedMovies = useMemo(() => movies.filter(m => m.status === 'watched'), [movies]);
+
+  const renderMovieList = (movieList: Movie[], emptyMessage: string) => {
+    if (movieList.length === 0) {
+        return (
+            <div className="text-center py-16 text-muted-foreground">
+                <Clapperboard className="w-16 h-16 mx-auto mb-4" />
+                <p>{emptyMessage}</p>
+            </div>
+        );
+    }
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {movieList.map(movie => (
+                <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onStatusChange={(id, status) => updateMovieStatus(id, status)}
+                    onRatingChange={(id, rating) => updateMovieRating(id, rating)}
+                    onReviewChange={(id, review) => updateMovieReview(id, review)}
+                />
+            ))}
+        </div>
+    );
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
-        <header className="w-full max-w-6xl mb-8 self-center">
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
+        <header className="w-full max-w-5xl mb-6 sm:mb-8">
             <Link href="/rest" passHref>
                 <Button variant="outline" size="sm">
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -151,60 +139,66 @@ export default function PersonalVideoLibraryPage() {
             </Link>
         </header>
 
-        <main className="w-full max-w-6xl flex flex-col items-center">
-            <div className="text-center mb-10">
+        <main className="w-full max-w-5xl flex flex-col items-center">
+            <div className="text-center mb-8">
                 <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
                     {t.pageTitle}
                 </h1>
             </div>
 
-            <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Local Videos Module */}
-                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-xl">
-                           <FileVideo className="h-6 w-6 text-primary/80" />
-                           {t.localVideosTitle}
-                        </CardTitle>
-                        <CardDescription>{t.localVideosDescription}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-grow flex flex-col">
-                       <Button className="w-full h-11 text-base" onClick={handleComingSoon}>
-                            {t.importLocalButton}
-                       </Button>
-                       <div className="flex-grow flex items-center justify-center bg-muted/50 rounded-lg border border-dashed">
-                           <p className="text-muted-foreground">{t.emptyLibrary}</p>
-                       </div>
-                    </CardContent>
-                </Card>
-
-                {/* Resource Acquisition Module */}
-                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
-                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-xl">
-                           <Download className="h-6 w-6 text-primary/80" />
-                           {t.resourceAcquisitionTitle}
-                        </CardTitle>
-                        <CardDescription>{t.resourceAcquisitionDescription}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-grow flex flex-col">
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder={t.searchPlaceholder}
-                                className="h-11 text-base flex-grow"
-                                onFocus={handleComingSoon}
-                            />
-                            <Button className="h-11 px-6" onClick={handleComingSoon}>{t.searchButton}</Button>
-                        </div>
-                        <div className="flex-grow flex items-center justify-center bg-muted/50 rounded-lg border border-dashed">
-                           <p className="text-muted-foreground">{t.comingSoon}</p>
-                       </div>
-                    </CardContent>
-                </Card>
-
-                <MovieParadiseViewer t={t} />
+            {/* Search Section */}
+            <div className="w-full max-w-2xl mb-8 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder={t.searchPlaceholder}
+                    className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                    <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
+                        {isSearching ? (
+                             <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
+                        ) : searchResults.length > 0 ? (
+                            <ul>
+                                {searchResults.map(movie => (
+                                    <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold truncate">{movie.title}</p>
+                                            <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
+                                        </div>
+                                        <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Add
+                                        </Button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
+                        )}
+                    </div>
+                )}
             </div>
+
+            {/* Tabs and Content */}
+            <Tabs defaultValue="want_to_watch" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
+                    <TabsTrigger value="want_to_watch">{t.tabWantToWatch} ({wantToWatchMovies.length})</TabsTrigger>
+                    <TabsTrigger value="watched">{t.tabWatched} ({watchedMovies.length})</TabsTrigger>
+                </TabsList>
+                <TabsContent value="want_to_watch">
+                    {renderMovieList(wantToWatchMovies, t.noMoviesWantToWatch)}
+                </TabsContent>
+                <TabsContent value="watched">
+                    {renderMovieList(watchedMovies, t.noMoviesWatched)}
+                </TabsContent>
+            </Tabs>
+
         </main>
     </div>
   );
 }
+
+    
