@@ -62,34 +62,29 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
-    const pathData = "M 50 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0 M 100 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
+    // A single, continuous path for a perfect figure-eight.
+    // Starts at the center (100,50), goes left, then right.
+    const continuousPathData = "M 100,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0";
+
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
-            <svg viewBox="0 0 200 100" className="w-full h-full">
-                {/* The figure-eight path */}
-                <path 
-                    d="M 50 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
-                    stroke="hsl(var(--primary) / 0.3)" 
+            <svg viewBox="0 0 150 100" className="w-full h-full">
+                {/* The figure-eight path, now using the single continuous path data */}
+                <path
+                    d={continuousPathData}
+                    stroke="hsl(var(--primary) / 0.3)"
                     strokeWidth="2"
                     fill="none"
                     strokeDasharray="4 4"
                 />
-                <path 
-                    d="M 100 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
-                    stroke="hsl(var(--primary) / 0.3)" 
-                    strokeWidth="2"
-                    fill="none"
-                    strokeDasharray="4 4"
-                />
-                 {/* The moving dot */}
+                 {/* The moving dot, using the exact same path */}
                  <g>
-                    <circle cx="50" cy="50" r="6" fill="hsl(var(--primary))">
+                    <circle cx="0" cy="0" r="6" fill="hsl(var(--primary))">
                         <animateMotion
                             dur="12s"
                             repeatCount="indefinite"
-                            path={pathData}
-                            keyPoints="0;0.5;1"
-                            keyTimes="0;0.5;1"
+                            path={continuousPathData}
+                            rotate="auto" // Ensures the dot's orientation isn't fixed
                         />
                     </circle>
                  </g>
