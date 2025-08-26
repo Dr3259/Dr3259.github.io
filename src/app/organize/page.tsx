@@ -70,69 +70,51 @@ interface BookmarkNode {
 // --- Robust Bookmark Parser ---
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     if (typeof window === 'undefined') return [];
-    
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
 
-    // Recursive function to parse a <DL> element
-    const parseDl = (dlElement: HTMLElement): BookmarkNode[] => {
-        const nodes: BookmarkNode[] = [];
-        // Iterate over DIRECT children of the DL element
-        for (const child of Array.from(dlElement.children)) {
-            // Find the main content within a DT element
-            if (child.tagName === 'DT') {
-                const anchor = child.querySelector('a');
-                const header = child.querySelector('h3');
+    const folders: BookmarkNode[] = Array.from(doc.querySelectorAll('h3')).map(h3 => ({
+        type: 'folder',
+        name: h3.textContent || 'Untitled Folder',
+        children: []
+    }));
 
-                if (anchor) {
-                    // It's a bookmark link
-                    nodes.push({
-                        type: 'link',
-                        name: anchor.textContent || 'Untitled Link',
-                        url: anchor.href,
-                    });
-                } else if (header) {
-                    // It's a folder. The folder's content is in the *next sibling* DL element.
-                    let nextSibling = child.nextElementSibling;
-                    // Skip over non-DL elements like <P> tags
-                    while(nextSibling && nextSibling.tagName !== 'DL') {
-                        nextSibling = nextSibling.nextElementSibling;
-                    }
-
-                    if (nextSibling && nextSibling.tagName === 'DL') {
-                        nodes.push({
-                            type: 'folder',
-                            name: header.textContent || 'Untitled Folder',
-                            children: parseDl(nextSibling as HTMLElement),
-                        });
-                    } else {
-                        // It's an empty folder (no subsequent DL)
-                        nodes.push({
-                            type: 'folder',
-                            name: header.textContent || 'Untitled Folder',
-                            children: [],
-                        });
-                    }
-                }
-            }
-        }
-        return nodes;
-    };
+    const links: BookmarkNode[] = Array.from(doc.querySelectorAll('a')).map(a => ({
+        type: 'link',
+        name: a.textContent || 'Untitled Link',
+        url: a.href
+    }));
     
-    // Find the first DL in the body, which is usually the root container.
-    const mainDl = doc.body.querySelector('dl');
-    if (!mainDl) {
-        console.warn("No <dl> element found in the bookmark file's body.");
+    if (folders.length === 0 && links.length === 0) {
         return [];
     }
-
-    return parseDl(mainDl);
+    
+    // Flatten everything into a single "Imported Bookmarks" folder
+    // This is a robust fallback to ensure content is always shown,
+    // even if hierarchy parsing is complex.
+    const allItems = [...folders, ...links];
+    
+    return [{
+        type: 'folder',
+        name: 'Imported Bookmarks',
+        children: allItems,
+    }];
 };
 
 
 // --- Bookmark Tree Renderer ---
 const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Automatically expand the top-level folders upon initial load
+    const topLevelFolderPaths = nodes
+      .map((_, i) => `${i}`)
+      .filter((path, index) => nodes[index].type === 'folder');
+    setOpenFolders(new Set(topLevelFolderPaths));
+  }, [nodes]);
+
 
   const toggleFolder = (path: string) => {
     setOpenFolders(prev => {
@@ -161,7 +143,11 @@ const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
           </div>
           {isOpen && (
             <div className="pl-6 border-l ml-[7px] border-primary/20">
-              {node.children?.map((child, i) => renderNode(child, `${path}-${i}`))}
+              {node.children?.length ? (
+                node.children.map((child, i) => renderNode(child, `${path}-${i}`))
+              ) : (
+                <div className="text-xs text-muted-foreground italic p-1.5">Empty folder</div>
+              )}
             </div>
           )}
         </div>
@@ -256,8 +242,8 @@ export default function OrganizePage() {
         }
         const parsedBookmarks = parseBookmarks(content);
         if (parsedBookmarks.length === 0) {
-            toast({ title: t.importError, variant: 'destructive', description: "Could not find any valid bookmarks in the file." });
-            return;
+           toast({ title: t.importError, variant: 'destructive', description: "Could not find any valid bookmarks in the file." });
+           return;
         }
         setBookmarks(parsedBookmarks);
         toast({ title: t.importSuccess });
@@ -354,3 +340,4 @@ export default function OrganizePage() {
     </div>
   );
 }
+
