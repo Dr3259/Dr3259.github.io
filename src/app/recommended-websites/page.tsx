@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { getLogoUrl } from '@/lib/utils';
 
 const translations = {
   'zh-CN': {
@@ -161,7 +162,7 @@ const SiteCard: React.FC<{ item: SiteItem, isFavorite?: boolean, onDelete?: (id:
                     <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                         {item.icon === 'github' ? <Github className="w-6 h-6 text-foreground" /> : item.icon ? 
                             <Image src={item.icon} alt={`${item.name} logo`} width={40} height={40} className="rounded-md" data-ai-hint="logo" /> : 
-                            <Globe className="w-6 h-6 text-muted-foreground" />}
+                            <Image src={getLogoUrl(item.url)} alt={`${item.name} logo`} width={40} height={40} className="rounded-md" data-ai-hint="logo" />}
                     </div>
                     <div className="flex-1">
                         <CardTitle className="text-base font-semibold leading-tight">{item.name}</CardTitle>
@@ -268,5 +269,3 @@ export default function RecommendedWebsitesPage() {
     </div>
   );
 }
-
-    
