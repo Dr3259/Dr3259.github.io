@@ -48,8 +48,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const $ = cheerio.load(decodedHtml);
 
       const movieDetailLinks: string[] = [];
-      // This selector correctly targets the table with the list of new movies.
-      $('.co_content2 table').find('tr a').each((_index, element) => {
+      // This selector is now more specific, targeting only the table with the movie list.
+      $('table.border_style_1 tr a').each((_index, element) => {
         const href = $(element).attr('href');
         if (href && href.startsWith('/html/gndy/')) {
             movieDetailLinks.push(new URL(href, baseUrl).href);
@@ -83,7 +83,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const rating = ratingMatch ? ratingMatch[1] : undefined;
 
             const tagsMatch = zoomText.match(/◎类\s+别\s+([\s\S]*?)(?=◎|$)/);
-            // Safely handle tagsMatch to prevent null reference on .trim()
             const tags = tagsMatch && tagsMatch[1] ? tagsMatch[1].replace(/\s+/g, ' / ').trim() : undefined;
             
             const introMatch = zoomText.match(/◎简\s+介\s+([\s\S]*?)(?=◎|$)/);
@@ -115,4 +114,3 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
-
