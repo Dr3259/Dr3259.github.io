@@ -117,10 +117,10 @@ const DotMatrixExercise: React.FC = () => {
               transform: translate(0, 0);
             }
             33.33% {
-              transform: translate(calc(0.5 * (0.375rem + 0.5rem)), calc(-1 * (0.375rem + 0.5rem)));
+              transform: translate(calc(0.5 * (6px + 0.5rem)), calc(-1 * (6px + 0.5rem)));
             }
             66.66% {
-              transform: translate(calc(-0.5 * (0.375rem + 0.5rem)), calc(-1 * (0.375rem + 0.5rem)));
+              transform: translate(calc(-0.5 * (6px + 0.5rem)), calc(-1 * (6px + 0.5rem)));
             }
             100% {
               transform: translate(0, 0);
@@ -144,7 +144,7 @@ const DotMatrixExercise: React.FC = () => {
                     key={dot.id}
                     className="bg-white rounded-full w-[6px] h-[6px] m-auto"
                     style={{
-                      transform: isOddRow ? `translateX(calc(0.5 * (0.375rem + 0.5rem)))` : 'translateX(0)',
+                      transform: isOddRow ? `translateX(calc(0.5 * (6px + 0.5rem)))` : 'translateX(0)',
                       animation: `point-to-point-triangle 6s linear infinite`,
                       animationDelay: `${dot.delay}s`,
                     }}
@@ -241,5 +241,3 @@ export default function AstigmatismExercisePage() {
     </div>
   );
 }
-
-    
