@@ -4,11 +4,12 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bookmark, Folder, PlusCircle, FileText, ChevronRight, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Bookmark, Folder, PlusCircle, FileText, ChevronRight, FolderOpen, UploadCloud, MousePointerClick, CornerDownRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 const translations = {
   'zh-CN': {
@@ -25,6 +26,13 @@ const translations = {
     importSuccess: '书签导入成功！',
     importError: '导入失败，请确保是有效的书签文件。',
     noBookmarksImported: '尚未导入任何书签。',
+    guide: {
+        title: '两步轻松导入您的浏览器书签',
+        step1Title: '第1步：从浏览器导出书签',
+        step1Description: '在 Chrome/Edge 中，前往 书签 > 书签管理器 > 导出书签。',
+        step2Title: '第2步：将文件导入此处',
+        step2Description: '点击下面的按钮选择您刚刚导出的HTML文件。',
+    }
   },
   'en': {
     pageTitle: 'Organization Hub',
@@ -40,6 +48,13 @@ const translations = {
     importSuccess: 'Bookmarks imported successfully!',
     importError: 'Failed to import. Please ensure it is a valid bookmarks file.',
     noBookmarksImported: 'No bookmarks have been imported yet.',
+    guide: {
+        title: 'Import Your Bookmarks in 2 Easy Steps',
+        step1Title: 'Step 1: Export from Your Browser',
+        step1Description: 'In Chrome/Edge, go to Bookmarks > Bookmark Manager > Export bookmarks.',
+        step2Title: 'Step 2: Import the File Here',
+        step2Description: 'Click the button below to select the HTML file you just exported.',
+    }
   }
 };
 
@@ -99,7 +114,7 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     return parseDl(mainDl as HTMLDListElement);
 };
 
-// --- Bookmark Renderer Component ---
+// --- Bookmark Tree Renderer ---
 const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
 
@@ -129,7 +144,7 @@ const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
             <span className="font-medium text-sm truncate">{node.name}</span>
           </div>
           {isOpen && (
-            <div className="pl-6 border-l ml-[7px]">
+            <div className="pl-6 border-l ml-[7px] border-primary/20">
               {node.children?.map((child, i) => renderNode(child, `${path}-${i}`))}
             </div>
           )}
@@ -157,6 +172,40 @@ const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
 
   return <div className="space-y-1">{nodes.map((node, i) => renderNode(node, `${i}`))}</div>;
 };
+
+// --- Import Guide Component ---
+const BookmarkImportGuide: React.FC<{ t: any; onImportClick: () => void }> = ({ t, onImportClick }) => {
+    return (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+            <Card className="w-full max-w-lg bg-muted/30">
+                <CardHeader>
+                    <CardTitle className="text-center text-lg text-foreground">{t.guide.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg shrink-0">1</div>
+                        <div>
+                            <h3 className="font-semibold text-foreground">{t.guide.step1Title}</h3>
+                            <p className="text-sm text-muted-foreground">{t.guide.step1Description}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg shrink-0">2</div>
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-foreground">{t.guide.step2Title}</h3>
+                            <p className="text-sm text-muted-foreground mb-4">{t.guide.step2Description}</p>
+                            <Button onClick={onImportClick} className="w-full">
+                                <UploadCloud className="mr-2 h-4 w-4" />
+                                {t.importBookmarks}
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
 
 export default function OrganizePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -198,7 +247,6 @@ export default function OrganizePage() {
     };
     reader.readAsText(file);
     
-    // Reset file input to allow importing the same file again
     event.target.value = '';
   };
   
@@ -235,7 +283,6 @@ export default function OrganizePage() {
         </div>
         
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Bookmarks Section */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <div className="flex items-center justify-between gap-3 mb-2">
@@ -243,27 +290,26 @@ export default function OrganizePage() {
                            <Bookmark className="w-6 h-6 text-primary"/>
                            <CardTitle className="text-xl">{t.bookmarksTitle}</CardTitle>
                         </div>
-                        <Button onClick={handleImportClick} size="sm">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            {t.importBookmarks}
-                        </Button>
+                         {bookmarks && (
+                           <Button onClick={handleImportClick} size="sm" variant="outline">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                {t.importBookmarks}
+                           </Button>
+                        )}
                     </div>
                     <CardDescription>{t.bookmarksDescription}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-72 rounded-lg border bg-muted/30 p-3">
+                    <ScrollArea className="h-96 rounded-lg border bg-muted/20 p-3">
                       {bookmarks ? (
                         <BookmarkTree nodes={bookmarks} />
                       ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
-                            <p>{t.noBookmarksImported}</p>
-                        </div>
+                        <BookmarkImportGuide t={t} onImportClick={handleImportClick} />
                       )}
                     </ScrollArea>
                 </CardContent>
             </Card>
 
-            {/* Local Folders Section */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
@@ -273,7 +319,7 @@ export default function OrganizePage() {
                     <CardDescription>{t.foldersDescription}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-72 flex flex-col items-center justify-center bg-muted/30 rounded-lg p-4 text-center">
+                    <div className="h-[26.5rem] flex flex-col items-center justify-center bg-muted/30 rounded-lg p-4 text-center">
                          <p className="text-sm text-muted-foreground mb-4">{t.comingSoon}</p>
                         <Button onClick={handleAddFolderClick} disabled>
                             <PlusCircle className="mr-2 h-4 w-4" />
