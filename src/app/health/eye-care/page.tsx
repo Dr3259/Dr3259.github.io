@@ -4,23 +4,50 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ScanEye, EyeOff, Sparkles, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, Glasses, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const translations = {
   'zh-CN': {
     pageTitle: '眼部放松',
     backButton: '返回健康中心',
-    instruction: '闭上眼睛，深呼吸，让视觉和心灵得到片刻的宁静。',
+    instruction: '通过针对性的练习，舒缓您的眼部肌肉，拥抱清晰视界。',
+    myopiaTitle: '近视放松练习',
+    myopiaDesc: '通过远近交替、眼球运动等方式，缓解长时间近距离用眼带来的疲劳。',
+    astigmatismTitle: '散光放松练习',
+    astigmatismDesc: '进行聚焦训练和眼部瑜伽，帮助改善视觉稳定性和清晰度。',
+    comingSoon: '敬请期待',
   },
   'en': {
     pageTitle: 'Eye Relaxation',
     backButton: 'Back to Health Center',
-    instruction: 'Close your eyes, take a deep breath, and let your vision and mind find a moment of peace.',
+    instruction: 'Soothe your eye muscles and embrace clear vision with targeted exercises.',
+    myopiaTitle: 'Myopia Relaxation',
+    myopiaDesc: 'Relieve fatigue from prolonged close-up work with alternating focus and eye movements.',
+    astigmatismTitle: 'Astigmatism Relaxation',
+    astigmatismDesc: 'Engage in focus training and eye yoga to help improve visual stability and clarity.',
+    comingSoon: 'Coming Soon',
   }
 };
 
 type LanguageKey = keyof typeof translations;
+
+const FeatureCard: React.FC<{ icon: React.ElementType, title: string, description: string, comingSoonText: string }> = ({ icon: Icon, title, description, comingSoonText }) => (
+    <Card className="relative group overflow-hidden text-center transition-all duration-300 bg-background/30 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl hover:-translate-y-1">
+        <CardHeader className="pt-8">
+            <div className="w-16 h-16 bg-primary/10 text-primary-foreground rounded-full mx-auto flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 ring-2 ring-primary-foreground/30">
+                <Icon className="w-8 h-8"/>
+            </div>
+            <CardTitle className="text-primary-foreground text-shadow-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <CardDescription className="text-foreground/80">{description}</CardDescription>
+        </CardContent>
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="font-semibold text-foreground">{comingSoonText}</span>
+        </div>
+    </Card>
+);
 
 export default function EyeCarePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -55,6 +82,21 @@ export default function EyeCarePage() {
             <p className="text-foreground/80 text-base max-w-2xl text-shadow" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.1)'}}>
               {t.instruction}
             </p>
+        </div>
+
+        <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8 z-10">
+            <FeatureCard 
+                icon={Glasses}
+                title={t.myopiaTitle}
+                description={t.myopiaDesc}
+                comingSoonText={t.comingSoon}
+            />
+            <FeatureCard 
+                icon={Target}
+                title={t.astigmatismTitle}
+                description={t.astigmatismDesc}
+                comingSoonText={t.comingSoon}
+            />
         </div>
       </main>
     </div>
