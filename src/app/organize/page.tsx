@@ -72,32 +72,32 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
 
-    // This function recursively parses a <DL> element.
-    const parseDl = (dlElement: HTMLDListElement | null): BookmarkNode[] => {
-        if (!dlElement) {
-            return [];
-        }
-
+    const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
         const nodes: BookmarkNode[] = [];
-        // Iterate through the direct children of the <DL> element.
-        // The structure is typically <DT><H3>...</H3></DT><DD><DL>...</DL></DD>
-        // or <DT><A>...</A></DT>
-        for (const child of Array.from(dlElement.children)) {
-            if (child.tagName !== 'DT') {
-                continue;
-            }
+        const children = Array.from(dlElement.children);
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.tagName !== 'DT') continue;
 
             const h3 = child.querySelector('h3');
             const a = child.querySelector('a');
-
+            
             if (h3) { // It's a folder
-                const nextElement = child.nextElementSibling;
-                const nestedDl = nextElement?.tagName === 'DL' ? nextElement as HTMLDListElement : null;
+                const nextElement = children[i + 1];
+                let nestedChildren: BookmarkNode[] = [];
+                if (nextElement && nextElement.tagName === 'DL') {
+                    nestedChildren = parseDl(nextElement as HTMLDListElement);
+                }
                 nodes.push({
                     type: 'folder',
                     name: h3.textContent || 'Untitled Folder',
-                    children: parseDl(nestedDl),
+                    children: nestedChildren,
                 });
+                // Skip the next element since it's the content of the folder we just processed
+                if (nextElement && nextElement.tagName === 'DL') {
+                    i++;
+                }
             } else if (a) { // It's a link
                 nodes.push({
                     type: 'link',
@@ -108,9 +108,12 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
         }
         return nodes;
     };
-    
+
     const rootDl = doc.body.querySelector('dl');
-    return parseDl(rootDl);
+    if (rootDl) {
+        return parseDl(rootDl);
+    }
+    return [];
 };
 
 
