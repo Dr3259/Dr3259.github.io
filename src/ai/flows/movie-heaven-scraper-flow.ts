@@ -48,16 +48,18 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const $ = cheerio.load(decodedHtml);
 
       const movieDetailLinks: string[] = [];
-      const newMoviesList = $('.co_content2 ul');
-
-      newMoviesList.find('tr a').each((index, element) => {
-        const linkElement = $(element);
-        const href = linkElement.attr('href');
+      // This selector correctly targets the table with the list of new movies.
+      $('.co_content2 ul table').find('tr a').each((_index, element) => {
+        const href = $(element).attr('href');
         if (href && href.startsWith('/html/gndy/')) {
             movieDetailLinks.push(new URL(href, baseUrl).href);
         }
       });
       
+      if (movieDetailLinks.length === 0) {
+        throw new Error("Could not find any movie links on the main page. The website structure may have changed.");
+      }
+
       const detailPromises = movieDetailLinks.slice(0, 10).map(async (detailUrl) => {
         try {
             const detailResponse = await fetch(detailUrl);
@@ -70,12 +72,17 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const title = $$('div.title_all h1').text().trim();
             const downloadUrl = $$('#Zoom table[bgcolor="#fdfddf"] a').attr('href');
             
+            // If we don't have a title or download url, we can't proceed with this item.
+            if (!title || !downloadUrl) {
+              return null;
+            }
+
             const zoomText = $$('#Zoom').text();
             
             const ratingMatch = zoomText.match(/◎豆瓣评分\s+([0-9.]+)/);
             const rating = ratingMatch ? ratingMatch[1] : undefined;
 
-            const tagsMatch = zoomText.match(/◎类\s+别\s+([\s\S]*?)(?=\s*◎)/);
+            const tagsMatch = zoomText.match(/◎类\s+别\s+([\s\S]*?)(?=◎|$)/);
             const tags = tagsMatch ? tagsMatch[1].replace(/\s+/g, ' / ').trim() : undefined;
             
             const introMatch = zoomText.match(/◎简\s+介\s+([\s\S]*?)(?=◎|$)/);
@@ -84,11 +91,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
               shortIntro = shortIntro.substring(0, 100) + '...';
             }
 
-
-            if (title && downloadUrl) {
-                return { title, downloadUrl, rating, tags, shortIntro };
-            }
-            return null;
+            return { title, downloadUrl, rating, tags, shortIntro };
         } catch (e) {
             console.error(`Failed to scrape detail page ${detailUrl}:`, e);
             return null;
@@ -110,4 +113,3 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
-
