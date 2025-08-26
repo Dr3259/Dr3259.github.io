@@ -96,17 +96,18 @@ const FigureEightExercise: React.FC = () => {
 };
 
 const DotMatrixExercise: React.FC = () => {
-  const grid_size = 5;
+  const horizontal_dots = 18;
+  const vertical_dots = 8;
 
   return (
       <div 
         className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
       >
         <div 
-            className="grid gap-8"
-            style={{gridTemplateColumns: `repeat(${grid_size}, 1fr)`}}
+            className="grid gap-4"
+            style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`}}
         >
-            {Array.from({ length: grid_size * grid_size }).map((_, i) => (
+            {Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => (
               <div
                 key={i}
                 className="bg-white rounded-full"
