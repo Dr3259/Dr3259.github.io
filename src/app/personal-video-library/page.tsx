@@ -1,10 +1,10 @@
 
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileVideo, Download, PlayCircle, PlusCircle } from 'lucide-react';
+import { ArrowLeft, FileVideo, Download, PlusCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -61,8 +61,8 @@ export default function PersonalVideoLibraryPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
-        <header className="w-full max-w-5xl mb-6 sm:mb-8">
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
+        <header className="w-full max-w-5xl mb-8 self-center">
             <Link href="/rest" passHref>
                 <Button variant="outline" size="sm">
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -72,7 +72,7 @@ export default function PersonalVideoLibraryPage() {
         </header>
 
         <main className="w-full max-w-5xl flex flex-col items-center">
-            <div className="text-center mb-8">
+            <div className="text-center mb-10">
                 <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
                     {t.pageTitle}
                 </h1>
@@ -80,29 +80,29 @@ export default function PersonalVideoLibraryPage() {
 
             <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Local Videos Module */}
-                <Card className="shadow-lg">
+                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-3 text-xl">
                            <FileVideo className="h-6 w-6 text-primary/80" />
                            {t.localVideosTitle}
                         </CardTitle>
                         <CardDescription>{t.localVideosDescription}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                       <Button className="w-full" onClick={handleComingSoon}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
+                       <Button className="w-full h-11 text-base" onClick={handleComingSoon}>
+                            <PlusCircle className="mr-2 h-5 w-5" />
                             {t.importLocalButton}
                        </Button>
-                       <div className="h-64 flex items-center justify-center bg-muted rounded-md">
+                       <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg border border-dashed">
                            <p className="text-muted-foreground">{t.emptyLibrary}</p>
                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Resource Acquisition Module */}
-                <Card className="shadow-lg">
+                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-3 text-xl">
                            <Download className="h-6 w-6 text-primary/80" />
                            {t.resourceAcquisitionTitle}
                         </CardTitle>
@@ -112,12 +112,12 @@ export default function PersonalVideoLibraryPage() {
                         <div className="flex gap-2">
                             <Input
                                 placeholder={t.searchPlaceholder}
-                                className="h-10"
+                                className="h-11 text-base flex-grow"
                                 onFocus={handleComingSoon}
                             />
-                            <Button className="h-10" onClick={handleComingSoon}>{t.searchButton}</Button>
+                            <Button className="h-11 px-6" onClick={handleComingSoon}>{t.searchButton}</Button>
                         </div>
-                        <div className="h-64 flex items-center justify-center bg-muted rounded-md">
+                        <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg border border-dashed">
                            <p className="text-muted-foreground">{t.comingSoon}</p>
                        </div>
                     </CardContent>
