@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RotateCw, Eye } from 'lucide-react';
+import { ArrowLeft, RotateCw, Eye, Grid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
@@ -18,6 +18,8 @@ const translations = {
     rotateButton: '旋转图表',
     figureEightTitle: '8字形运目放松',
     figureEightInstruction: '请保持头部不动，用您的眼睛平稳地跟随引导点，沿“8”字形轨迹运动。',
+    dotMatrixTitle: '点阵移动放松',
+    dotMatrixInstruction: '保持目光稳定，观察白色小球的运动。这个练习有助于训练眼部聚焦和追踪能力。',
   },
   'en': {
     pageTitle: 'Astigmatism Relaxation Exercise',
@@ -28,6 +30,8 @@ const translations = {
     rotateButton: 'Rotate Chart',
     figureEightTitle: 'Figure-Eight Eye Relaxation',
     figureEightInstruction: 'Keep your head still and smoothly follow the guide dot with your eyes along the figure-eight path.',
+    dotMatrixTitle: 'Dot Matrix Relaxation',
+    dotMatrixInstruction: 'Keep your gaze steady and observe the movement of the white dots. This exercise helps train eye focusing and tracking.',
   }
 };
 
@@ -62,15 +66,15 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
-    // The path for the left loop of the figure-eight.
-    const pathDataLeft = "M 75,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0";
-    // The path for the right loop of the figure-eight.
-    const pathDataRight = "M 75,50 a 25,25 0 1,1 50,0 a 25,25 0 1,1 -50,0";
-    
+    // Correctly define two separate paths for the background
+    const pathDataLeft = "M 50,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0";
+    const pathDataRight = "M 100,50 a 25,25 0 1,1 50,0 a 25,25 0 1,1 -50,0";
+    // A single continuous path for the animation
+    const animationPath = "M 50,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0 M 100,50 a 25,25 0 1,1 50,0 a 25,25 0 1,1 -50,0";
+
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
             <svg viewBox="0 0 150 100" className="w-full h-full">
-                 {/* The dashed background path */}
                 <path
                     d={pathDataLeft}
                     stroke="hsl(var(--primary) / 0.3)"
@@ -78,39 +82,77 @@ const FigureEightExercise: React.FC = () => {
                     fill="none"
                     strokeDasharray="4 4"
                 />
-                 <path
+                <path
                     d={pathDataRight}
                     stroke="hsl(var(--primary) / 0.3)"
                     strokeWidth="2"
                     fill="none"
                     strokeDasharray="4 4"
                 />
-
-                 {/* The moving dot, now split into two animations to follow each loop */}
-                 <g>
+                <g>
                     <circle cx="0" cy="0" r="6" fill="hsl(var(--primary))">
-                        {/* Animate along the left loop, then start the right loop animation */}
                         <animateMotion
-                            id="anim1"
-                            dur="6s"
-                            begin="0s; anim2.end" // Start at time 0, and also after anim2 ends
-                            path={pathDataLeft}
-                            rotate="auto"
-                        />
-                        {/* Animate along the right loop after the left one finishes */}
-                         <animateMotion
-                            id="anim2"
-                            dur="6s"
-                            begin="anim1.end" // Start after anim1 ends
-                            path={pathDataRight}
+                            dur="12s"
+                            repeatCount="indefinite"
+                            path={animationPath}
                             rotate="auto"
                         />
                     </circle>
-                 </g>
+                </g>
             </svg>
         </div>
-    )
-}
+    );
+};
+
+const DotMatrixExercise: React.FC = () => {
+  const grid_size = 5;
+  const gap_rem = 2; // This is the distance between balls
+  const ball_size_rem = 0.5;
+  const triangle_side_length_rem = gap_rem + ball_size_rem;
+  const triangle_height_rem = (Math.sqrt(3) / 2) * triangle_side_length_rem;
+
+  // The keyframes are injected into the global scope via a <style> tag
+  const animationName = `inverted-triangle-move`;
+  const keyframes = `
+    @keyframes ${animationName} {
+      0%, 100% { transform: translate(0, 0); }
+      33.33% { transform: translate(${triangle_side_length_rem / 2}rem, -${triangle_height_rem}rem); }
+      66.67% { transform: translate(-${triangle_side_length_rem / 2}rem, -${triangle_height_rem}rem); }
+    }
+  `;
+
+  return (
+    <>
+      <style>{keyframes}</style>
+      <div 
+        className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
+      >
+        <div 
+          className="grid"
+          style={{ 
+            gridTemplateColumns: `repeat(${grid_size}, 1fr)`,
+            gridTemplateRows: `repeat(${grid_size}, 1fr)`,
+            gap: `${gap_rem}rem`
+          }}
+        >
+          {Array.from({ length: grid_size * grid_size }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-full"
+              style={{
+                width: `${ball_size_rem}rem`,
+                height: `${ball_size_rem}rem`,
+                animation: `${animationName} 6s linear infinite`,
+                animationDelay: `${Math.random() * -6}s`, // Randomize start time
+              }}
+            ></div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
 
 export default function AstigmatismExercisePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -175,6 +217,19 @@ export default function AstigmatismExercisePage() {
             <CardContent className="flex flex-col items-center gap-6">
                 <FigureEightExercise />
                 <p className="text-muted-foreground text-center max-w-md">{t.figureEightInstruction}</p>
+            </CardContent>
+        </Card>
+        
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <Grid className="w-6 h-6 text-primary/80"/>
+                    {t.dotMatrixTitle}
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-6">
+                <DotMatrixExercise />
+                <p className="text-muted-foreground text-center max-w-md">{t.dotMatrixInstruction}</p>
             </CardContent>
         </Card>
 
