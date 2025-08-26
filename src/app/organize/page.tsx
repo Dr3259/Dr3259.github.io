@@ -71,16 +71,19 @@ interface BookmarkNode {
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    const mainDl = doc.querySelector('DL > P > DL'); // Standard structure for bookmarks file
-
+    // More robust selector: finds the first DL list, which is standard.
+    const mainDl = doc.querySelector('DL'); 
+    
     if (!mainDl) return [];
 
     const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
         const nodes: BookmarkNode[] = [];
+        // Iterate over direct children of the DL element
         const children = Array.from(dlElement.children);
 
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
+            // Each entry is a DT element
             if (child.tagName !== 'DT') continue;
 
             const content = child.firstElementChild;
@@ -88,17 +91,23 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
 
             if (content.tagName === 'H3') { // This is a folder
                 const folderName = content.textContent || 'Untitled Folder';
-                // The next sibling DT should contain the DL for this folder
-                const nextDt = children[i + 1];
-                const folderDl = nextDt?.querySelector('DL');
+                // The DL for this folder is the next element after the DT
+                const folderDl = children[i + 1] as HTMLDListElement;
                 
-                if (folderDl) {
+                if (folderDl && folderDl.tagName === 'DL') {
                     nodes.push({
                         type: 'folder',
                         name: folderName,
                         children: parseDl(folderDl),
                     });
-                    i++; // Skip the DL element we just processed
+                    i++; // Skip the DL element as it's been processed
+                } else {
+                     // Handle case where a folder is empty (no subsequent DL)
+                     nodes.push({
+                        type: 'folder',
+                        name: folderName,
+                        children: [],
+                    });
                 }
             } else if (content.tagName === 'A') { // This is a link
                 nodes.push({
@@ -236,7 +245,8 @@ export default function OrganizePage() {
         const content = e.target?.result as string;
         const parsedBookmarks = parseBookmarks(content);
         if (parsedBookmarks.length === 0) {
-            throw new Error("No valid bookmarks found in file.");
+          toast({ title: t.importError, variant: 'destructive' });
+          return;
         }
         setBookmarks(parsedBookmarks);
         toast({ title: t.importSuccess });
