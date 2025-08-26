@@ -96,10 +96,27 @@ const FigureEightExercise: React.FC = () => {
 };
 
 const DotMatrixExercise: React.FC = () => {
+  const grid_size = 5;
+
   return (
       <div 
         className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
       >
+        <div 
+            className="grid gap-8"
+            style={{gridTemplateColumns: `repeat(${grid_size}, 1fr)`}}
+        >
+            {Array.from({ length: grid_size * grid_size }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-full"
+                style={{
+                  width: '0.5rem',
+                  height: '0.5rem',
+                }}
+              />
+            ))}
+        </div>
       </div>
   );
 };
