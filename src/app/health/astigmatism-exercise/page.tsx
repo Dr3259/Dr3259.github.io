@@ -71,13 +71,11 @@ const FigureEightExercise: React.FC = () => {
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
             <svg viewBox="0 0 100 100" className="w-full h-full" style={{ overflow: 'visible' }}>
-                <path
-                    d={animationPath}
-                    stroke="hsl(var(--primary) / 0.3)"
-                    strokeWidth="2"
-                    fill="none"
-                    strokeDasharray="4 4"
-                />
+                {/* Background Path */}
+                <path d="M 25 50 A 25 25 0 1 0 75 50" stroke="hsl(var(--primary) / 0.3)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                <path d="M 75 50 A 25 25 0 1 0 25 50" stroke="hsl(var(--primary) / 0.3)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+
+                {/* Animation Dot */}
                 <g>
                     <circle cx="0" cy="0" r="6" fill="hsl(var(--primary))">
                         <animateMotion
@@ -99,6 +97,7 @@ const DotMatrixExercise: React.FC = () => {
   const [dots, setDots] = useState<{ id: number; delay: number }[]>([]);
 
   useEffect(() => {
+    // This logic runs only on the client, preventing hydration errors
     const newDots = Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => ({
       id: i,
       delay: Math.random() * -6,
@@ -106,7 +105,9 @@ const DotMatrixExercise: React.FC = () => {
     setDots(newDots);
   }, []);
 
+
   if (dots.length === 0) {
+    // Render a placeholder or nothing on the server and during the initial client render
     return <div className="w-full h-80 bg-black rounded-lg" />;
   }
 
@@ -118,12 +119,20 @@ const DotMatrixExercise: React.FC = () => {
             className="grid gap-2 w-full h-full"
             style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`, gridTemplateRows: `repeat(${vertical_dots}, 1fr)`}}
         >
-            {dots.map((dot) => (
-              <div
-                key={dot.id}
-                className="bg-white rounded-full w-[6px] h-[6px] m-auto"
-              />
-            ))}
+            {dots.map((dot, i) => {
+              const row = Math.floor(i / horizontal_dots);
+              const isOddRow = row % 2 !== 0;
+
+              return (
+                  <div
+                    key={dot.id}
+                    className="bg-white rounded-full w-[6px] h-[6px] m-auto"
+                    style={{
+                      transform: isOddRow ? 'translateX(0.25rem)' : 'translateX(0)',
+                    }}
+                  />
+              )
+            })}
         </div>
       </div>
   );
