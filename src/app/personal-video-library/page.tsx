@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileVideo, Download, Clapperboard, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileVideo, Download, Clapperboard, Loader2, Star, Tag, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -81,22 +81,34 @@ const MovieParadiseViewer = ({ t }: { t: (typeof translations)['zh-CN'] }) => {
                 <CardDescription>{t.movieParadiseDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-grow flex flex-col">
-                <div className="flex-grow bg-muted/50 rounded-lg border border-dashed flex items-center justify-center">
+                <div className="flex-grow bg-muted/20 rounded-lg border flex items-center justify-center">
                     {isLoading ? (
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground p-4">
                             <Loader2 className="w-8 h-8 animate-spin" />
                             <p>{t.loadingMovies}</p>
                         </div>
                     ) : error ? (
-                        <p className="text-destructive">{error}</p>
+                        <p className="text-destructive p-4">{error}</p>
                     ) : (
-                        <ScrollArea className="h-64 w-full">
-                            <ul className="p-4 space-y-3">
+                        <ScrollArea className="h-72 w-full">
+                            <ul className="p-3 space-y-4">
                                 {movies.map((movie, index) => (
-                                    <li key={index} className="text-sm">
-                                        <a href={movie.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" title={movie.title}>
-                                            {movie.title}
-                                        </a>
+                                    <li key={index} className="text-sm p-3 rounded-md border bg-background/50 hover:bg-accent/50 transition-colors">
+                                        <h4 className="font-semibold text-foreground mb-1.5" title={movie.title}>{movie.title}</h4>
+                                        {movie.shortIntro && (
+                                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2" title={movie.shortIntro}>{movie.shortIntro}</p>
+                                        )}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                {movie.rating && <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500"/> {movie.rating}</span>}
+                                                {movie.tags && <span className="flex items-center gap-1"><Tag className="h-3.5 w-3.5"/> {movie.tags}</span>}
+                                            </div>
+                                            <Button asChild size="sm" variant="ghost" className="h-8" onClick={(e) => e.stopPropagation()}>
+                                                <a href={movie.downloadUrl} target="_blank" rel="noopener noreferrer">
+                                                    <Download className="h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
@@ -196,4 +208,3 @@ export default function PersonalVideoLibraryPage() {
     </div>
   );
 }
-
