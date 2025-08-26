@@ -66,16 +66,13 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
-    const animationPath = "M25,50 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0";
+    const animationPath = "M25,50 C25,25 75,25 75,50 C75,75 25,75 25,50";
 
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
             <svg viewBox="0 0 100 100" className="w-full h-full" style={{ overflow: 'visible' }}>
-                {/* Background Path */}
-                <path d="M 25 50 A 25 25 0 1 0 75 50" stroke="hsl(var(--primary) / 0.3)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-                <path d="M 75 50 A 25 25 0 1 0 25 50" stroke="hsl(var(--primary) / 0.3)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-
-                {/* Animation Dot */}
+                <path d="M25,50 C25,25 75,25 75,50" stroke="hsl(var(--primary) / 0.3)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                <path d="M75,50 C75,75 25,75 25,50" stroke="hsl(var(--primary) / 0.3)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
                 <g>
                     <circle cx="0" cy="0" r="6" fill="hsl(var(--primary))">
                         <animateMotion
@@ -128,7 +125,7 @@ const DotMatrixExercise: React.FC = () => {
                     key={dot.id}
                     className="bg-white rounded-full w-[6px] h-[6px] m-auto"
                     style={{
-                      transform: isOddRow ? 'translateX(0.25rem)' : 'translateX(0)',
+                      transform: isOddRow ? 'translateX(calc(50% + (0.5rem / 2)))' : 'translateX(0)',
                     }}
                   />
               )
