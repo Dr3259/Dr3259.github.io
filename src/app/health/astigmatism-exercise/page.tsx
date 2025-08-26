@@ -96,61 +96,11 @@ const FigureEightExercise: React.FC = () => {
 };
 
 const DotMatrixExercise: React.FC = () => {
-  const grid_size = 5;
-  const [delays, setDelays] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Generate delays only on the client side
-    setDelays(
-      Array.from({ length: grid_size * grid_size }, () => `${Math.random() * -6}s`)
-    );
-  }, []);
-
-
-  const gap_rem = 2; // This is the distance between balls
-  const ball_size_rem = 0.5;
-  const triangle_side_length_rem = gap_rem + ball_size_rem;
-  const triangle_height_rem = (Math.sqrt(3) / 2) * triangle_side_length_rem;
-
-  // The keyframes are injected into the global scope via a <style> tag
-  const animationName = `inverted-triangle-move`;
-  const keyframes = `
-    @keyframes ${animationName} {
-      0%, 100% { transform: translate(0, 0); }
-      33.33% { transform: translate(${triangle_side_length_rem / 2}rem, -${triangle_height_rem}rem); }
-      66.67% { transform: translate(-${triangle_side_length_rem / 2}rem, -${triangle_height_rem}rem); }
-    }
-  `;
-
   return (
-    <>
-      <style>{keyframes}</style>
       <div 
         className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
       >
-        <div 
-          className="grid"
-          style={{ 
-            gridTemplateColumns: `repeat(${grid_size}, 1fr)`,
-            gridTemplateRows: `repeat(${grid_size}, 1fr)`,
-            gap: `${gap_rem}rem`
-          }}
-        >
-          {Array.from({ length: grid_size * grid_size }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-full"
-              style={{
-                width: `${ball_size_rem}rem`,
-                height: `${ball_size_rem}rem`,
-                animation: delays[i] ? `${animationName} 6s linear infinite` : 'none',
-                animationDelay: delays[i] || '0s',
-              }}
-            ></div>
-          ))}
-        </div>
       </div>
-    </>
   );
 };
 
