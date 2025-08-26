@@ -38,7 +38,7 @@ const translations = {
       labelName: '名称',
       placeholderName: '例如：创意咖啡',
       labelUrl: '链接',
-      placeholderUrl: 'https://example.com',
+      placeholderUrl: 'https://',
       labelDesc: '描述 (可选)',
       placeholderDesc: '一杯咖啡，无限灵感',
       save: '保存',
@@ -61,7 +61,7 @@ const translations = {
       labelName: 'Name',
       placeholderName: 'e.g., Creative Coffee',
       labelUrl: 'URL',
-      placeholderUrl: 'https://example.com',
+      placeholderUrl: 'https://',
       labelDesc: 'Description (optional)',
       placeholderDesc: 'A cup of coffee, endless inspiration',
       save: 'Save',
@@ -160,8 +160,7 @@ const SiteCard: React.FC<{ item: SiteItem, isFavorite?: boolean, onDelete?: (id:
             <a href={item.url} target="_blank" rel="noopener noreferrer" className="block p-4 h-full">
                 <CardHeader className="flex flex-row items-center gap-4 p-0">
                     <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                        {item.icon === 'github' ? <Github className="w-6 h-6 text-foreground" /> : item.icon ? 
-                            <Image src={item.icon} alt={`${item.name} logo`} width={40} height={40} className="rounded-md" data-ai-hint="logo" /> : 
+                        {item.icon === 'github' ? <Github className="w-6 h-6 text-foreground" /> : 
                             <Image src={getLogoUrl(item.url)} alt={`${item.name} logo`} width={40} height={40} className="rounded-md" data-ai-hint="logo" />}
                     </div>
                     <div className="flex-1">
