@@ -48,7 +48,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const $ = cheerio.load(decodedHtml);
 
       const movieDetailLinks: string[] = [];
-      const newMoviesList = $('.co_content2 .u-list1');
+      const newMoviesList = $('.co_content2 ul');
 
       newMoviesList.find('tr a').each((index, element) => {
         const linkElement = $(element);
@@ -110,4 +110,3 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
-
