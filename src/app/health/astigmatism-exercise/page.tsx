@@ -62,6 +62,7 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
+    const pathData = "M 50 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0 M 100 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
             <svg viewBox="0 0 200 100" className="w-full h-full">
@@ -86,7 +87,7 @@ const FigureEightExercise: React.FC = () => {
                         <animateMotion
                             dur="12s"
                             repeatCount="indefinite"
-                            path="M 50 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0 M 100 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
+                            path={pathData}
                             keyPoints="0;0.5;1"
                             keyTimes="0;0.5;1"
                         />
