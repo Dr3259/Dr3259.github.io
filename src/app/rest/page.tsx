@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical, Plane, Rss, BookOpen, Archive } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical, Plane, Rss } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +26,6 @@ const translations = {
       library: { title: '个人图书馆', description: '管理您的阅读列表和笔记。', icon: Library, path: '/personal-library' },
       cinema: { title: '个人电影院', description: '收藏和追踪您想看的电影。', icon: Film, path: '/personal-cinema' },
       music: { title: '私人音乐播放器', description: '创建和聆听您的专属歌单。', icon: Music, path: '/private-music-player' },
-      study: { title: '学习一下', description: '专注学习，提升自我。', icon: BookOpen, path: '/study' },
-      organize: { title: '整理一下', description: '整理思绪，规划生活。', icon: Archive, path: '/organize' },
       travelGuide: { title: '旅行攻略', description: '探索世界，规划你的下一次冒险。', icon: Plane, path: '/travel-guide' },
       infoHub: { title: '聚合信息', description: '汇集 你感兴趣的 热点、新闻和实用资讯。', icon: Rss, path: '/info-hub' },
       websites: { title: '网络宝藏', description: '发现有趣和实用的网站。', icon: Globe, path: '/recommended-websites' },
@@ -50,8 +49,6 @@ const translations = {
       library: { title: 'Personal Library', description: 'Manage your reading lists and notes.', icon: Library, path: '/personal-library' },
       cinema: { title: 'Personal Cinema', description: 'Collect and track movies you want to watch.', icon: Film, path: '/personal-cinema' },
       music: { title: 'Private Music Player', description: 'Create and listen to your exclusive playlists.', icon: Music, path: '/private-music-player' },
-      study: { title: 'Study Time', description: 'Focus on learning and self-improvement.', icon: BookOpen, path: '/study' },
-      organize: { title: 'Get Organized', description: 'Organize your thoughts and plan your life.', icon: Archive, path: '/organize' },
       travelGuide: { title: 'Travel Guide', description: 'Explore the world and plan your next adventure.', icon: Plane, path: '/travel-guide' },
       infoHub: { title: 'Info Hub', description: 'Your daily digest of news, trends, and useful info.', icon: Rss, path: '/info-hub' },
       websites: { title: 'Recommended Websites', description: 'Discover interesting and useful websites.', icon: Globe, path: '/recommended-websites' },

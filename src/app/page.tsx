@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem, LayoutGrid } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem, LayoutGrid, BookOpen, Archive } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -83,6 +83,8 @@ const translations = {
     healthButtonText: '健康一下',
     techButtonText: '科技一下',
     richButtonText: '富豪一下',
+    studyButtonText: '学习一下',
+    organizeButtonText: '整理一下',
     previousWeek: '上一周',
     nextWeek: '下一周',
     currentWeek: '本周',
@@ -159,6 +161,8 @@ const translations = {
     healthButtonText: 'Get Healthy',
     techButtonText: 'Tech Time',
     richButtonText: 'Rich Time',
+    studyButtonText: 'Study Time',
+    organizeButtonText: 'Get Organized',
     previousWeek: 'Previous Week',
     nextWeek: 'Next Week',
     currentWeek: 'Current Week',
@@ -453,6 +457,8 @@ export default function WeekGlancePage() {
   const handleHealthButtonClick = () => router.push('/health');
   const handleTechButtonClick = () => router.push('/tech');
   const handleRichButtonClick = () => router.push('/rich');
+  const handleStudyButtonClick = () => router.push('/study');
+  const handleOrganizeButtonClick = () => router.push('/organize');
   
   const [features, setFeatures] = useState<Feature[]>([]);
   
@@ -462,6 +468,8 @@ export default function WeekGlancePage() {
         { id: 'rich', icon: Gem, title: t.richButtonText, onClick: handleRichButtonClick },
         { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
         { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
+        { id: 'study', icon: BookOpen, title: t.studyButtonText, onClick: handleStudyButtonClick },
+        { id: 'organize', icon: Archive, title: t.organizeButtonText, onClick: handleOrganizeButtonClick },
     ];
 
     try {
