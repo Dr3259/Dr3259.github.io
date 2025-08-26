@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCw, Eye, Grid } from 'lucide-react';
@@ -96,20 +96,33 @@ const FigureEightExercise: React.FC = () => {
 };
 
 const DotMatrixExercise: React.FC = () => {
-  const horizontal_dots = 25;
-  const vertical_dots = 10;
+  const horizontal_dots = 28;
+  const vertical_dots = 18;
+  const [dots, setDots] = useState<{ id: number; delay: number }[]>([]);
+
+  useEffect(() => {
+    const newDots = Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => ({
+      id: i,
+      delay: Math.random() * -6,
+    }));
+    setDots(newDots);
+  }, []);
+
+  if (dots.length === 0) {
+    return <div className="w-full h-80 bg-black rounded-lg" />;
+  }
 
   return (
       <div 
         className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
       >
         <div 
-            className="grid gap-3"
+            className="grid gap-2"
             style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`}}
         >
-            {Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => (
+            {dots.map((dot) => (
               <div
-                key={i}
+                key={dot.id}
                 className="bg-white rounded-full"
                 style={{
                   width: '0.4rem',
