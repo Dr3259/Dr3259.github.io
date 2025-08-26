@@ -69,21 +69,15 @@ interface BookmarkNode {
 
 // --- Robust Bookmark Parser ---
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
+    if (typeof window === 'undefined') return [];
+    
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
 
-    // This map will hold all DL elements and their parsed children
-    const dlMap = new Map<HTMLElement, BookmarkNode[]>();
-
-    // Recursively parse a DL element.
+    // Recursive function to parse a <DL> element
     const parseDl = (dlElement: HTMLElement): BookmarkNode[] => {
-        // If we've already parsed this DL element, return the cached result.
-        if (dlMap.has(dlElement)) {
-            return dlMap.get(dlElement)!;
-        }
-
         const nodes: BookmarkNode[] = [];
-        // Process each direct child of the DL element
+        // Iterate over DIRECT children of the DL element
         for (const child of Array.from(dlElement.children)) {
             // Find the main content within a DT element
             if (child.tagName === 'DT') {
@@ -98,16 +92,21 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
                         url: anchor.href,
                     });
                 } else if (header) {
-                    // It's a folder. The folder's content is in the next DL sibling.
-                    const folderDl = child.nextElementSibling;
-                    if (folderDl && folderDl.tagName === 'DL') {
+                    // It's a folder. The folder's content is in the *next sibling* DL element.
+                    let nextSibling = child.nextElementSibling;
+                    // Skip over non-DL elements like <P> tags
+                    while(nextSibling && nextSibling.tagName !== 'DL') {
+                        nextSibling = nextSibling.nextElementSibling;
+                    }
+
+                    if (nextSibling && nextSibling.tagName === 'DL') {
                         nodes.push({
                             type: 'folder',
                             name: header.textContent || 'Untitled Folder',
-                            children: parseDl(folderDl as HTMLElement),
+                            children: parseDl(nextSibling as HTMLElement),
                         });
                     } else {
-                        // It's an empty folder
+                        // It's an empty folder (no subsequent DL)
                         nodes.push({
                             type: 'folder',
                             name: header.textContent || 'Untitled Folder',
@@ -117,16 +116,15 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
                 }
             }
         }
-        
-        // Cache the result for this DL element
-        dlMap.set(dlElement, nodes);
         return nodes;
     };
     
     // Find the first DL in the body, which is usually the root container.
-    // This is the most common starting point.
     const mainDl = doc.body.querySelector('dl');
-    if (!mainDl) return [];
+    if (!mainDl) {
+        console.warn("No <dl> element found in the bookmark file's body.");
+        return [];
+    }
 
     return parseDl(mainDl);
 };
@@ -258,7 +256,7 @@ export default function OrganizePage() {
         }
         const parsedBookmarks = parseBookmarks(content);
         if (parsedBookmarks.length === 0) {
-            toast({ title: t.importError, variant: 'destructive', description: "Could not find any bookmarks in the selected file." });
+            toast({ title: t.importError, variant: 'destructive', description: "Could not find any valid bookmarks in the file." });
             return;
         }
         setBookmarks(parsedBookmarks);
