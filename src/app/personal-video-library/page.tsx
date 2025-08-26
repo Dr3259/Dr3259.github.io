@@ -4,12 +4,17 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clapperboard, PlusCircle, Search, Star, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Clapperboard, PlusCircle, Search, Star, MessageSquare, Download, Loader2, ServerCrash, Film } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieCard } from '@/components/MovieCard';
 import { useMovies, type Movie } from '@/hooks/useMovies';
 import type { MovieStatus } from '@/hooks/useMovies';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { scrapeMovieHeaven, type MovieHeavenItem } from '@/ai/flows/movie-heaven-scraper-flow';
+import { Badge } from '@/components/ui/badge';
+import copy from 'copy-to-clipboard';
+import { useToast } from '@/hooks/use-toast';
 
 
 const translations = {
@@ -26,7 +31,15 @@ const translations = {
     searchResult: '搜索结果',
     searchInProgress: '正在搜索...',
     noResults: '未找到结果。',
-    searchInstruction: '搜索电影并添加到您的收藏中。'
+    searchInstruction: '搜索电影并添加到您的收藏中。',
+    movieHeavenTitle: '电影天堂资源查看器',
+    loadingHeaven: '正在加载电影天堂最新资源...',
+    errorHeaven: '加载电影天堂资源失败，请稍后重试。',
+    copyLink: '复制下载链接',
+    linkCopied: '链接已复制！',
+    rating: '评分',
+    tags: '标签',
+    intro: '简介',
   },
   'en': {
     pageTitle: 'Personal Cinema',
@@ -41,7 +54,15 @@ const translations = {
     searchResult: 'Search Result',
     searchInProgress: 'Searching...',
     noResults: 'No results found.',
-    searchInstruction: 'Search for movies to add to your collection.'
+    searchInstruction: 'Search for movies to add to your collection.',
+    movieHeavenTitle: 'Movie Heaven Viewer',
+    loadingHeaven: 'Loading latest movies from Movie Heaven...',
+    errorHeaven: 'Failed to load resources from Movie Heaven. Please try again later.',
+    copyLink: 'Copy Download Link',
+    linkCopied: 'Link copied!',
+    rating: 'Rating',
+    tags: 'Tags',
+    intro: 'Intro',
   }
 };
 
@@ -54,6 +75,74 @@ const mockSearchResults: Movie[] = [
     { id: 'tmdb-155', title: 'The Dark Knight', poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg', release_date: '2008-07-16', overview: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.', status: 'want_to_watch' },
     { id: 'tmdb-680', title: 'Pulp Fiction', poster_path: '/d5iIlFn5s0ImszYzrKYO7G9B9A1.jpg', release_date: '1994-09-10', overview: 'A burger-loving hit man, his philosophical partner, a drug-addled gangster\'s moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip over each other.', status: 'want_to_watch' },
 ];
+
+
+const MovieHeavenViewer = ({ t }: { t: (typeof translations)['zh-CN'] }) => {
+    const [movies, setMovies] = useState<MovieHeavenItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        const fetchMovies = async () => {
+            try {
+                const results = await scrapeMovieHeaven();
+                setMovies(results);
+            } catch (err: any) {
+                setError(err.message || t.errorHeaven);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchMovies();
+    }, [t.errorHeaven]);
+
+    const handleCopy = (url: string) => {
+        copy(url);
+        toast({ title: t.linkCopied, duration: 2000 });
+    }
+
+    if (isLoading) {
+        return (
+            <div className="text-center py-10 text-muted-foreground flex items-center justify-center">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                {t.loadingHeaven}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-10 text-destructive flex items-center justify-center">
+                 <ServerCrash className="mr-2 h-5 w-5" />
+                {t.errorHeaven}
+            </div>
+        );
+    }
+    
+    return (
+        <div className="space-y-4">
+            {movies.map(movie => (
+                <Card key={movie.title} className="bg-card/80 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg">{movie.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        {movie.rating && <p><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></p>}
+                        {movie.tags && <p><strong>{t.tags}:</strong> {movie.tags}</p>}
+                        {movie.shortIntro && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.shortIntro}</p>}
+                    </CardContent>
+                    <div className="p-6 pt-0">
+                         <Button onClick={() => handleCopy(movie.downloadUrl)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            {t.copyLink}
+                        </Button>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+};
 
 
 export default function PersonalCinemaPage() {
@@ -146,59 +235,78 @@ export default function PersonalCinemaPage() {
                 </h1>
             </div>
 
-            {/* Search Section */}
-            <div className="w-full max-w-2xl mb-8 relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                    type="search"
-                    placeholder={t.searchPlaceholder}
-                    className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {searchTerm && (
-                    <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
-                        {isSearching ? (
-                             <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
-                        ) : searchResults.length > 0 ? (
-                            <ul>
-                                {searchResults.map(movie => (
-                                    <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold truncate">{movie.title}</p>
-                                            <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
-                                        </div>
-                                        <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Add
-                                        </Button>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
+            <Tabs defaultValue="personal" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
+                    <TabsTrigger value="personal">我的影院</TabsTrigger>
+                    <TabsTrigger value="heaven">电影天堂</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="heaven">
+                    <Card className="w-full max-w-2xl mx-auto shadow-lg">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-xl">
+                                <Film className="text-primary"/>
+                                {t.movieHeavenTitle}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <MovieHeavenViewer t={t} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="personal">
+                    {/* Search Section */}
+                    <div className="w-full max-w-2xl mb-8 relative mx-auto">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder={t.searchPlaceholder}
+                            className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        {searchTerm && (
+                            <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
+                                {isSearching ? (
+                                    <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
+                                ) : searchResults.length > 0 ? (
+                                    <ul>
+                                        {searchResults.map(movie => (
+                                            <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-semibold truncate">{movie.title}</p>
+                                                    <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
+                                                </div>
+                                                <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
+                                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                                    Add
+                                                </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
+                                )}
+                            </div>
                         )}
                     </div>
-                )}
-            </div>
-
-            {/* Tabs and Content */}
-            <Tabs defaultValue="want_to_watch" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
-                    <TabsTrigger value="want_to_watch">{t.tabWantToWatch} ({wantToWatchMovies.length})</TabsTrigger>
-                    <TabsTrigger value="watched">{t.tabWatched} ({watchedMovies.length})</TabsTrigger>
-                </TabsList>
-                <TabsContent value="want_to_watch">
-                    {renderMovieList(wantToWatchMovies, t.noMoviesWantToWatch)}
-                </TabsContent>
-                <TabsContent value="watched">
-                    {renderMovieList(watchedMovies, t.noMoviesWatched)}
+                    {/* Tabs and Content */}
+                     <Tabs defaultValue="want_to_watch" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
+                            <TabsTrigger value="want_to_watch">{t.tabWantToWatch} ({wantToWatchMovies.length})</TabsTrigger>
+                            <TabsTrigger value="watched">{t.tabWatched} ({watchedMovies.length})</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="want_to_watch">
+                            {renderMovieList(wantToWatchMovies, t.noMoviesWantToWatch)}
+                        </TabsContent>
+                        <TabsContent value="watched">
+                            {renderMovieList(watchedMovies, t.noMoviesWatched)}
+                        </TabsContent>
+                    </Tabs>
                 </TabsContent>
             </Tabs>
-
         </main>
     </div>
   );
 }
-
-    
