@@ -4,61 +4,26 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Eye, Sunrise, Sunset } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const EYE_CARE_GREEN_LIGHT = 'hsl(130, 50%, 95%)';
+const EYE_CARE_GREEN_DARK = 'hsl(130, 20%, 10%)';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '护眼专栏',
+    pageTitle: '眼部放松练习',
     backButton: '返回健康中心',
-    pageDescription: '科学护眼，远离疲劳，拥抱清晰视界。',
-    feature1Title: '眼保健操',
-    feature1Desc: '跟随引导，放松眼部肌肉，缓解视疲劳。',
-    feature2Title: '休息提醒',
-    feature2Desc: '设置定时提醒，遵循20-20-20法则保护眼睛。',
-    feature3Title: '护眼知识',
-    feature3Desc: '学习关于蓝光、屏幕距离和环境光线的知识。',
-    comingSoon: '即将推出',
+    instruction: '请用眼睛跟随红点的移动，放松您的眼部肌肉。',
   },
   'en': {
-    pageTitle: 'Eye Care',
+    pageTitle: 'Eye Relaxation Exercise',
     backButton: 'Back to Health Center',
-    pageDescription: 'Protect your vision with scientific tips and exercises.',
-    feature1Title: 'Eye Exercises',
-    feature1Desc: 'Follow guided exercises to relax eye muscles and relieve fatigue.',
-    feature2Title: 'Break Reminders',
-    feature2Desc: 'Set timers to follow the 20-20-20 rule for eye protection.',
-    feature3Title: 'Eye Health Tips',
-    feature3Desc: 'Learn about blue light, screen distance, and ambient lighting.',
-    comingSoon: 'Coming Soon',
+    instruction: 'Please follow the red dot with your eyes to relax your eye muscles.',
   }
 };
 
 type LanguageKey = keyof typeof translations;
-
-interface FeatureCardProps {
-    icon: React.ElementType;
-    title: string;
-    description: string;
-    comingSoonText: string;
-}
-
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, description, comingSoonText }) => (
-    <Card className="relative group overflow-hidden text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-        <CardHeader className="pt-8">
-            <div className="w-16 h-16 bg-primary/10 text-primary rounded-full mx-auto flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
-                <Icon className="w-8 h-8"/>
-            </div>
-            <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <CardDescription>{description}</CardDescription>
-        </CardContent>
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="font-semibold text-foreground">{comingSoonText}</span>
-        </div>
-    </Card>
-);
 
 export default function EyeCarePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -68,48 +33,62 @@ export default function EyeCarePage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
+
+    // Set body background color on mount
+    const originalBodyColor = document.body.style.backgroundColor;
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    document.body.style.backgroundColor = isDarkMode ? EYE_CARE_GREEN_DARK : EYE_CARE_GREEN_LIGHT;
+
+    // Revert body background color on unmount
+    return () => {
+      document.body.style.backgroundColor = originalBodyColor;
+    };
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
-  
-  const features = [
-      { icon: Sunrise, title: t.feature1Title, description: t.feature1Desc },
-      { icon: Sunset, title: t.feature2Title, description: t.feature2Desc },
-      { icon: Eye, title: t.feature3Title, description: t.feature3Desc },
-  ]
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
-      <header className="w-full max-w-4xl mb-8 self-center">
+    <div className="flex flex-col min-h-screen w-full text-foreground transition-colors duration-300">
+      <style jsx global>{`
+        @keyframes move-dot {
+          0%, 100% { top: 50%; left: 50%; }
+          10%, 15% { top: 10%; left: 50%; } /* Move Up & Pause */
+          25% { top: 50%; left: 50%; } /* Return to Center */
+          35%, 40% { top: 50%; left: 90%; } /* Move Right & Pause */
+          50% { top: 50%; left: 50%; } /* Return to Center */
+          60%, 65% { top: 90%; left: 50%; } /* Move Down & Pause */
+          75% { top: 50%; left: 50%; } /* Return to Center */
+          85%, 90% { top: 50%; left: 10%; } /* Move Left & Pause */
+        }
+        .animate-eye-dot {
+          animation: move-dot 24s ease-in-out infinite;
+        }
+      `}</style>
+      
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div 
+          className="animate-eye-dot absolute h-6 w-6 bg-red-500 rounded-full shadow-lg"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        />
+      </div>
+
+      <header className="w-full p-4 sm:p-8 absolute top-0 left-0 z-10">
         <Link href="/health" passHref>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="bg-background/30 backdrop-blur-sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t.backButton}
           </Button>
         </Link>
       </header>
       
-      <main className="w-full max-w-4xl flex flex-col items-center text-center flex-grow">
-        <div className="mb-12">
-            <Eye className="w-12 h-12 text-primary mb-4 mx-auto" />
-            <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary mb-3">
+      <main className="w-full flex-grow flex flex-col items-center justify-center text-center p-4">
+        <div className="relative z-10 bg-background/30 backdrop-blur-sm p-4 rounded-lg">
+            <h1 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-3">
               {t.pageTitle}
             </h1>
             <p className="text-muted-foreground text-base max-w-2xl">
-              {t.pageDescription}
+              {t.instruction}
             </p>
-        </div>
-
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-                <FeatureCard 
-                    key={index}
-                    icon={feature.icon}
-                    title={feature.title}
-                    description={feature.description}
-                    comingSoonText={t.comingSoon}
-                />
-            ))}
         </div>
       </main>
     </div>
