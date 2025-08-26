@@ -46,6 +46,7 @@
     "firebase": "^11.8.1",
     "framer-motion": "^11.2.12",
     "genkit": "^1.8.0",
+    "iconv-lite": "^0.6.3",
     "lucide-react": "^0.475.0",
     "next": "15.2.3",
     "patch-package": "^8.0.0",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
+    "@types/iconv-lite": "^0.0.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

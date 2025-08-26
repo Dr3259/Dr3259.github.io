@@ -1,13 +1,15 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileVideo, Download, Clapperboard } from 'lucide-react';
+import { ArrowLeft, FileVideo, Download, Clapperboard, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { scrapeMovieHeaven, type MovieHeavenItem } from '@/ai/flows/movie-heaven-scraper-flow';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const translations = {
@@ -25,6 +27,8 @@ const translations = {
     movieParadiseDescription: '直接浏览和搜索电影天堂的资源。',
     comingSoon: '此功能正在开发中，敬请期待！',
     emptyLibrary: '您的视频库是空的。',
+    loadingMovies: '正在加载最新电影...',
+    loadError: '加载失败，请稍后再试。'
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -40,10 +44,69 @@ const translations = {
     movieParadiseDescription: 'Directly browse and search resources from Movie Paradise.',
     comingSoon: 'This feature is under development, coming soon!',
     emptyLibrary: 'Your video library is empty.',
+    loadingMovies: 'Loading latest movies...',
+    loadError: 'Failed to load, please try again later.'
   }
 };
 
 type LanguageKey = keyof typeof translations;
+
+const MovieParadiseViewer = ({ t }: { t: (typeof translations)['zh-CN'] }) => {
+    const [movies, setMovies] = useState<MovieHeavenItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchMovies = async () => {
+            try {
+                const results = await scrapeMovieHeaven();
+                setMovies(results);
+            } catch (err) {
+                console.error("Failed to scrape Movie Heaven:", err);
+                setError(t.loadError);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchMovies();
+    }, [t.loadError]);
+
+    return (
+        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-xl">
+                   <Clapperboard className="h-6 w-6 text-primary/80" />
+                   {t.movieParadiseTitle}
+                </CardTitle>
+                <CardDescription>{t.movieParadiseDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 flex-grow flex flex-col">
+                <div className="flex-grow bg-muted/50 rounded-lg border border-dashed flex items-center justify-center">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                            <Loader2 className="w-8 h-8 animate-spin" />
+                            <p>{t.loadingMovies}</p>
+                        </div>
+                    ) : error ? (
+                        <p className="text-destructive">{error}</p>
+                    ) : (
+                        <ScrollArea className="h-64 w-full">
+                            <ul className="p-4 space-y-3">
+                                {movies.map((movie, index) => (
+                                    <li key={index} className="text-sm">
+                                        <a href={movie.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" title={movie.title}>
+                                            {movie.title}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </ScrollArea>
+                    )}
+               </div>
+            </CardContent>
+        </Card>
+    )
+}
 
 export default function PersonalVideoLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -127,23 +190,10 @@ export default function PersonalVideoLibraryPage() {
                     </CardContent>
                 </Card>
 
-                {/* Movie Paradise Module */}
-                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
-                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-xl">
-                           <Clapperboard className="h-6 w-6 text-primary/80" />
-                           {t.movieParadiseTitle}
-                        </CardTitle>
-                        <CardDescription>{t.movieParadiseDescription}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-grow flex flex-col">
-                        <div className="flex-grow flex items-center justify-center bg-muted/50 rounded-lg border border-dashed">
-                           <p className="text-muted-foreground">{t.comingSoon}</p>
-                       </div>
-                    </CardContent>
-                </Card>
+                <MovieParadiseViewer t={t} />
             </div>
         </main>
     </div>
   );
 }
+
