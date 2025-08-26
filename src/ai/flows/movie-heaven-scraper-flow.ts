@@ -66,6 +66,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
 
       const detailPromises = movieDetailLinks.slice(0, 10).map(async (detailUrl) => {
         try {
+            console.log(`Processing detail page: ${detailUrl}`);
             const detailResponse = await fetch(detailUrl);
             if (!detailResponse.ok) {
                 console.error(`Failed to fetch detail page ${detailUrl}: Status ${detailResponse.status}`);
@@ -123,3 +124,4 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
+
