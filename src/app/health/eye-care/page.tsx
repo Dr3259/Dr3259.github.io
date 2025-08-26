@@ -9,14 +9,14 @@ import { cn } from '@/lib/utils';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '眼部放松练习',
+    pageTitle: '眼部放松',
     backButton: '返回健康中心',
-    instruction: '请用眼睛跟随红点的移动，放松您的眼部肌肉。',
+    instruction: '请放松您的眼部肌肉，静静感受背景色彩的柔和变化。',
   },
   'en': {
-    pageTitle: 'Eye Relaxation Exercise',
+    pageTitle: 'Eye Relaxation',
     backButton: 'Back to Health Center',
-    instruction: 'Please follow the red dot with your eyes to relax your eye muscles.',
+    instruction: 'Please relax your eye muscles and enjoy the gentle change of the background colors.',
   }
 };
 
@@ -36,29 +36,7 @@ export default function EyeCarePage() {
 
   return (
     <div className="flex flex-col min-h-screen w-full text-foreground transition-colors duration-300 bg-gradient-to-br from-[#90EE90] via-[#E0FFFF] to-[#99CC33] dark:from-[#90ee90]/20 dark:via-[#e0ffff]/20 dark:to-[#99cc33]/20">
-      <style jsx global>{`
-        @keyframes move-dot {
-          0%, 100% { top: 50%; left: 50%; }
-          10%, 15% { top: 10%; left: 50%; } /* Move Up & Pause */
-          25% { top: 50%; left: 50%; } /* Return to Center */
-          35%, 40% { top: 50%; left: 90%; } /* Move Right & Pause */
-          50% { top: 50%; left: 50%; } /* Return to Center */
-          60%, 65% { top: 90%; left: 50%; } /* Move Down & Pause */
-          75% { top: 50%; left: 50%; } /* Return to Center */
-          85%, 90% { top: 50%; left: 10%; } /* Move Left & Pause */
-        }
-        .animate-eye-dot {
-          animation: move-dot 24s ease-in-out infinite;
-        }
-      `}</style>
       
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div 
-          className="animate-eye-dot absolute h-6 w-6 bg-red-500 rounded-full shadow-lg"
-          style={{ transform: 'translate(-50%, -50%)' }}
-        />
-      </div>
-
       <header className="w-full p-4 sm:p-8 absolute top-0 left-0 z-10">
         <Link href="/health" passHref>
           <Button variant="outline" size="sm" className="bg-background/30 backdrop-blur-sm">
