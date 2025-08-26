@@ -450,6 +450,8 @@ export default function WeekGlancePage() {
   const [draggedItem, setDraggedItem] = useState<Feature | null>(null);
   const [dragOverItem, setDragOverItem] = useState<Feature | null>(null);
 
+  const [showOrganizeButton, setShowOrganizeButton] = useState(false);
+
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
 
@@ -463,14 +465,17 @@ export default function WeekGlancePage() {
   const [features, setFeatures] = useState<Feature[]>([]);
   
   useEffect(() => {
-    const initialFeatures: Feature[] = [
+    let initialFeatures: Feature[] = [
         { id: 'tech', icon: Cpu, title: t.techButtonText, onClick: handleTechButtonClick },
         { id: 'rich', icon: Gem, title: t.richButtonText, onClick: handleRichButtonClick },
         { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
         { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
         { id: 'study', icon: BookOpen, title: t.studyButtonText, onClick: handleStudyButtonClick },
-        { id: 'organize', icon: Archive, title: t.organizeButtonText, onClick: handleOrganizeButtonClick },
     ];
+    
+    if (showOrganizeButton) {
+        initialFeatures.push({ id: 'organize', icon: Archive, title: t.organizeButtonText, onClick: handleOrganizeButtonClick });
+    }
 
     try {
         const savedOrder = localStorage.getItem(LOCAL_STORAGE_KEY_FEATURE_ORDER);
@@ -486,7 +491,7 @@ export default function WeekGlancePage() {
         console.error("Failed to load feature order from localStorage", e);
         setFeatures(initialFeatures);
     }
-  }, [t]);
+  }, [t, showOrganizeButton]);
 
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, item: Feature) => {
@@ -648,12 +653,15 @@ export default function WeekGlancePage() {
   // Effect to check clipboard on focus and handle enter key
    useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Enter') {
-                const activeElement = document.activeElement;
-                const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
-                if (!isInputFocused) {
-                    setIsQuickAddModalOpen(true);
-                }
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
+
+            if (event.key === '6' && !isInputFocused) {
+                setShowOrganizeButton(prev => !prev);
+            }
+
+            if (event.key === 'Enter' && !isInputFocused) {
+                setIsQuickAddModalOpen(true);
             }
         };
 
