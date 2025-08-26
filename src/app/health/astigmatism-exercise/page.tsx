@@ -66,13 +66,11 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
-    // A single continuous path for the animation
     const animationPath = "M25,50 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0";
 
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
             <svg viewBox="0 0 100 100" className="w-full h-full" style={{ overflow: 'visible' }}>
-                 {/* This path is just for the dashed background */}
                 <path
                     d={animationPath}
                     stroke="hsl(var(--primary) / 0.3)"
@@ -96,8 +94,8 @@ const FigureEightExercise: React.FC = () => {
 };
 
 const DotMatrixExercise: React.FC = () => {
-  const horizontal_dots = 28;
-  const vertical_dots = 18;
+  const horizontal_dots = 40;
+  const vertical_dots = 24;
   const [dots, setDots] = useState<{ id: number; delay: number }[]>([]);
 
   useEffect(() => {
@@ -117,7 +115,7 @@ const DotMatrixExercise: React.FC = () => {
         className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
       >
         <div 
-            className="grid gap-2"
+            className="grid gap-1.5"
             style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`}}
         >
             {dots.map((dot) => (
@@ -125,8 +123,8 @@ const DotMatrixExercise: React.FC = () => {
                 key={dot.id}
                 className="bg-white rounded-full"
                 style={{
-                  width: '0.4rem',
-                  height: '0.4rem',
+                  width: '0.35rem',
+                  height: '0.35rem',
                 }}
               />
             ))}
