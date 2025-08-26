@@ -121,7 +121,7 @@ const DotMatrixExercise: React.FC = () => {
             {dots.map((dot) => (
               <div
                 key={dot.id}
-                className="bg-white rounded-full w-[4px] h-[4px] m-auto"
+                className="bg-white rounded-full w-[6px] h-[6px] m-auto"
               />
             ))}
         </div>
