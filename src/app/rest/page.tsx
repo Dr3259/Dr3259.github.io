@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react';
@@ -24,7 +23,7 @@ const translations = {
       games: { title: '小游戏驿站', description: '畅玩 2048、数字华容道等经典益智游戏。', icon: Gamepad2, path: '/rest/games' },
       food: { title: '去哪吃', description: '帮你发现附近的美味餐厅。', icon: Utensils, path: '/food-finder' },
       library: { title: '个人图书馆', description: '管理您的阅读列表和笔记。', icon: Library, path: '/personal-library' },
-      cinema: { title: '个人电影院', description: '收藏和追踪您想看的电影。', icon: Film, path: '/personal-cinema' },
+      cinema: { title: '个人视频库', description: '收藏和追踪您想看的视频。', icon: Film, path: '/personal-video-library' },
       music: { title: '私人音乐播放器', description: '创建和聆听您的专属歌单。', icon: Music, path: '/private-music-player' },
       travelGuide: { title: '旅行攻略', description: '探索世界，规划你的下一次冒险。', icon: Plane, path: '/travel-guide' },
       infoHub: { title: '聚合信息', description: '汇集 你感兴趣的 热点、新闻和实用资讯。', icon: Rss, path: '/info-hub' },
@@ -47,7 +46,7 @@ const translations = {
       games: { title: 'Mini Game Station', description: 'Play classic puzzle games like 2048, Klotski, and more.', icon: Gamepad2, path: '/rest/games' },
       food: { title: 'Where to Eat', description: 'Helps you discover delicious restaurants nearby.', icon: Utensils, path: '/food-finder' },
       library: { title: 'Personal Library', description: 'Manage your reading lists and notes.', icon: Library, path: '/personal-library' },
-      cinema: { title: 'Personal Cinema', description: 'Collect and track movies you want to watch.', icon: Film, path: '/personal-cinema' },
+      cinema: { title: 'Personal Video Library', description: 'Collect and track videos you want to watch.', icon: Film, path: '/personal-video-library' },
       music: { title: 'Private Music Player', description: 'Create and listen to your exclusive playlists.', icon: Music, path: '/private-music-player' },
       travelGuide: { title: 'Travel Guide', description: 'Explore the world and plan your next adventure.', icon: Plane, path: '/travel-guide' },
       infoHub: { title: 'Info Hub', description: 'Your daily digest of news, trends, and useful info.', icon: Rss, path: '/info-hub' },

@@ -18,7 +18,7 @@ export interface Movie {
   review?: string;
 }
 
-const LOCAL_STORAGE_MOVIES_KEY = 'weekglance_personal_cinema_movies_v1';
+const LOCAL_STORAGE_MOVIES_KEY = 'weekglance_personal_video_library_v1';
 
 export const useMovies = () => {
   const [movies, setMovies] = useLocalStorage<Movie[]>(LOCAL_STORAGE_MOVIES_KEY, []);
