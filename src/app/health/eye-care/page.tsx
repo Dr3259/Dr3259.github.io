@@ -32,22 +32,28 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
-const FeatureCard: React.FC<{ icon: React.ElementType, title: string, description: string, comingSoonText: string }> = ({ icon: Icon, title, description, comingSoonText }) => (
-    <Card className="relative group overflow-hidden text-center transition-all duration-300 bg-background/30 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl hover:-translate-y-1">
-        <CardHeader className="pt-8">
-            <div className="w-16 h-16 bg-primary/10 text-primary-foreground rounded-full mx-auto flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 ring-2 ring-primary-foreground/30">
-                <Icon className="w-8 h-8"/>
-            </div>
-            <CardTitle className="text-primary-foreground text-shadow-lg">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <CardDescription className="text-foreground/80">{description}</CardDescription>
-        </CardContent>
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="font-semibold text-foreground">{comingSoonText}</span>
-        </div>
-    </Card>
-);
+const FeatureCard: React.FC<{ icon: React.ElementType, title: string, description: string, comingSoonText: string, path?: string }> = ({ icon: Icon, title, description, comingSoonText, path }) => {
+    const content = (
+        <Card className="relative group overflow-hidden text-center transition-all duration-300 bg-background/30 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl hover:-translate-y-1 h-full">
+            <CardHeader className="pt-8">
+                <div className="w-16 h-16 bg-primary/10 text-primary-foreground rounded-full mx-auto flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 ring-2 ring-primary-foreground/30">
+                    <Icon className="w-8 h-8"/>
+                </div>
+                <CardTitle className="text-primary-foreground text-shadow-lg">{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <CardDescription className="text-foreground/80">{description}</CardDescription>
+            </CardContent>
+            {!path && (
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="font-semibold text-foreground">{comingSoonText}</span>
+                </div>
+            )}
+        </Card>
+    );
+
+    return path ? <Link href={path} className="h-full">{content}</Link> : content;
+};
 
 export default function EyeCarePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -96,6 +102,7 @@ export default function EyeCarePage() {
                 title={t.astigmatismTitle}
                 description={t.astigmatismDesc}
                 comingSoonText={t.comingSoon}
+                path="/health/astigmatism-exercise"
             />
         </div>
       </main>
