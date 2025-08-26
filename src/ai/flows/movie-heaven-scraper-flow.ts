@@ -46,27 +46,20 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
 
       const movies: MovieHeavenItem[] = [];
 
-      // Find the table that contains the new releases
-      const newMoviesTable = $('td[width="878"]').closest('table');
-      
-      newMoviesTable.find('tr').each((index, element) => {
-        const linkElement = $(element).find('a[href^="/html/gndy/dyzz/"]');
-        const movieTitle = linkElement.text().trim();
-        
-        if (movieTitle && movieTitle.startsWith('◎')) {
-            // This is likely not a direct movie link, skip
-            return;
-        }
+      // New, more robust selector targeting the "2024新片精品" section
+      const newMoviesList = $('div.co_content2').find('ul').first();
 
+      newMoviesList.find('a').each((index, element) => {
+        const linkElement = $(element);
+        const movieTitle = linkElement.text().trim();
         const href = linkElement.attr('href');
-        
-        if (movieTitle && href) {
-             const fullUrl = new URL(href, url).href;
+
+        if (movieTitle && href && href.startsWith('/html/gndy/')) {
+            const fullUrl = new URL(href, url).href;
 
             // This is a naive assumption, as we'd need another fetch to get the real download link.
             // For now, we'll just point to the page, as a placeholder for a real download link.
             // A more complex implementation would fetch the `fullUrl` and parse out the ftp:// link.
-            // But for a single-step demo, we link to the page.
             
             movies.push({
                 title: movieTitle,
@@ -75,12 +68,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
         }
       });
       
-      // A more robust scraper would then fetch each `downloadUrl` (which is a page URL)
-      // and parse the `ftp://` link from that page. That's a second level of scraping.
-      // For this example, we will return the page links and let the user click through.
-      // We will also filter out entries that are obviously not movies.
       const filteredMovies = movies.filter(m => m.title && !m.title.includes('更多最新电影') && !m.title.includes('更多高清电影'));
-
+      
       if (filteredMovies.length === 0) {
         throw new Error('Could not parse any movies. The website structure may have changed.');
       }
