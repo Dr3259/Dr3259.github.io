@@ -37,7 +37,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
   async () => {
     try {
       const baseUrl = 'https://dydytt.net';
-      const response = await fetch(baseUrl + '/index.htm');
+      const response = await fetch(baseUrl + '/html/gndy/dyzz/index.html');
       if (!response.ok) {
         throw new Error(`Failed to fetch dydytt.net page: ${response.statusText}`);
       }
@@ -48,7 +48,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const $ = cheerio.load(decodedHtml);
 
       const movieDetailLinks: string[] = [];
-      const newMoviesList = $('.co_content2 ul .u-list1');
+      const newMoviesList = $('.co_content2 .u-list1');
 
       newMoviesList.find('tr a').each((index, element) => {
         const linkElement = $(element);
@@ -75,8 +75,8 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const ratingMatch = zoomText.match(/◎豆瓣评分\s+([0-9.]+)/);
             const rating = ratingMatch ? ratingMatch[1] : undefined;
 
-            const tagsMatch = zoomText.match(/◎类\s+别\s+([\w\s/]+)/);
-            const tags = tagsMatch ? tagsMatch[1].replace(/\s+/g, ' / ') : undefined;
+            const tagsMatch = zoomText.match(/◎类\s+别\s+([\s\S]*?)(?=\s*◎)/);
+            const tags = tagsMatch ? tagsMatch[1].replace(/\s+/g, ' / ').trim() : undefined;
             
             const introMatch = zoomText.match(/◎简\s+介\s+([\s\S]*?)(?=◎|$)/);
             let shortIntro = introMatch ? introMatch[1].trim().split('\n')[0] : undefined;
@@ -110,3 +110,4 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
+
