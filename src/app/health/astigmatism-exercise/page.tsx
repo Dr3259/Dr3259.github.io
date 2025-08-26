@@ -62,29 +62,48 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
-    // A single, continuous path for a perfect figure-eight.
-    // Starts at the center (100,50), goes left, then right.
-    const continuousPathData = "M 100,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0";
-
+    // The path for the left loop of the figure-eight.
+    const pathDataLeft = "M 75,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0";
+    // The path for the right loop of the figure-eight.
+    const pathDataRight = "M 75,50 a 25,25 0 1,1 50,0 a 25,25 0 1,1 -50,0";
+    
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
             <svg viewBox="0 0 150 100" className="w-full h-full">
-                {/* The figure-eight path, now using the single continuous path data */}
+                 {/* The dashed background path */}
                 <path
-                    d={continuousPathData}
+                    d={pathDataLeft}
                     stroke="hsl(var(--primary) / 0.3)"
                     strokeWidth="2"
                     fill="none"
                     strokeDasharray="4 4"
                 />
-                 {/* The moving dot, using the exact same path */}
+                 <path
+                    d={pathDataRight}
+                    stroke="hsl(var(--primary) / 0.3)"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeDasharray="4 4"
+                />
+
+                 {/* The moving dot, now split into two animations to follow each loop */}
                  <g>
                     <circle cx="0" cy="0" r="6" fill="hsl(var(--primary))">
+                        {/* Animate along the left loop, then start the right loop animation */}
                         <animateMotion
-                            dur="12s"
-                            repeatCount="indefinite"
-                            path={continuousPathData}
-                            rotate="auto" // Ensures the dot's orientation isn't fixed
+                            id="anim1"
+                            dur="6s"
+                            begin="0s; anim2.end" // Start at time 0, and also after anim2 ends
+                            path={pathDataLeft}
+                            rotate="auto"
+                        />
+                        {/* Animate along the right loop after the left one finishes */}
+                         <animateMotion
+                            id="anim2"
+                            dur="6s"
+                            begin="anim1.end" // Start after anim1 ends
+                            path={pathDataRight}
+                            rotate="auto"
                         />
                     </circle>
                  </g>
