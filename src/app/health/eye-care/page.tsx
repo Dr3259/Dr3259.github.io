@@ -7,9 +7,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const EYE_CARE_GREEN_LIGHT = 'hsl(130, 50%, 95%)';
-const EYE_CARE_GREEN_DARK = 'hsl(130, 20%, 10%)';
-
 const translations = {
   'zh-CN': {
     pageTitle: '眼部放松练习',
@@ -33,22 +30,12 @@ export default function EyeCarePage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-
-    // Set body background color on mount
-    const originalBodyColor = document.body.style.backgroundColor;
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    document.body.style.backgroundColor = isDarkMode ? EYE_CARE_GREEN_DARK : EYE_CARE_GREEN_LIGHT;
-
-    // Revert body background color on unmount
-    return () => {
-      document.body.style.backgroundColor = originalBodyColor;
-    };
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   return (
-    <div className="flex flex-col min-h-screen w-full text-foreground transition-colors duration-300">
+    <div className="flex flex-col min-h-screen w-full text-foreground transition-colors duration-300 bg-gradient-to-br from-green-100 via-cyan-100 to-emerald-200 dark:from-green-900/70 dark:via-cyan-900/70 dark:to-emerald-900/70">
       <style jsx global>{`
         @keyframes move-dot {
           0%, 100% { top: 50%; left: 50%; }
