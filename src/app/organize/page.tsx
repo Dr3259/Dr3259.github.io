@@ -67,63 +67,70 @@ interface BookmarkNode {
   children?: BookmarkNode[];
 }
 
-// --- Bookmark Parser ---
+// --- Robust Bookmark Parser ---
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
 
-    const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
+    // This map will hold all DL elements and their parsed children
+    const dlMap = new Map<HTMLElement, BookmarkNode[]>();
+
+    // Recursively parse a DL element.
+    const parseDl = (dlElement: HTMLElement): BookmarkNode[] => {
+        // If we've already parsed this DL element, return the cached result.
+        if (dlMap.has(dlElement)) {
+            return dlMap.get(dlElement)!;
+        }
+
         const nodes: BookmarkNode[] = [];
-        // Direct children of DL should be DT
-        const children = Array.from(dlElement.children);
+        // Process each direct child of the DL element
+        for (const child of Array.from(dlElement.children)) {
+            // Find the main content within a DT element
+            if (child.tagName === 'DT') {
+                const anchor = child.querySelector('a');
+                const header = child.querySelector('h3');
 
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i];
-            if (child.tagName !== 'DT') continue;
-
-            // Content is inside the DT
-            const content = child.firstElementChild;
-            if (!content) continue;
-
-            if (content.tagName === 'H3') { // This is a folder
-                const folderName = content.textContent || 'Untitled Folder';
-                
-                // The folder's content is in the NEXT sibling that is a DL
-                const folderDl = child.nextElementSibling;
-                
-                if (folderDl && folderDl.tagName === 'DL') {
+                if (anchor) {
+                    // It's a bookmark link
                     nodes.push({
-                        type: 'folder',
-                        name: folderName,
-                        children: parseDl(folderDl as HTMLDListElement),
+                        type: 'link',
+                        name: anchor.textContent || 'Untitled Link',
+                        url: anchor.href,
                     });
-                    // We've processed the DL, so we can skip it in the next iteration
-                    i++; 
-                } else {
-                     // Empty folder
-                     nodes.push({
-                        type: 'folder',
-                        name: folderName,
-                        children: [],
-                    });
+                } else if (header) {
+                    // It's a folder. The folder's content is in the next DL sibling.
+                    const folderDl = child.nextElementSibling;
+                    if (folderDl && folderDl.tagName === 'DL') {
+                        nodes.push({
+                            type: 'folder',
+                            name: header.textContent || 'Untitled Folder',
+                            children: parseDl(folderDl as HTMLElement),
+                        });
+                    } else {
+                        // It's an empty folder
+                        nodes.push({
+                            type: 'folder',
+                            name: header.textContent || 'Untitled Folder',
+                            children: [],
+                        });
+                    }
                 }
-            } else if (content.tagName === 'A') { // This is a link
-                nodes.push({
-                    type: 'link',
-                    name: content.textContent || 'Untitled Link',
-                    url: (content as HTMLAnchorElement).href,
-                });
             }
         }
+        
+        // Cache the result for this DL element
+        dlMap.set(dlElement, nodes);
         return nodes;
     };
     
-    // Find the first DL in the body, which is usually the root container
-    const mainDl = doc.body.querySelector('DL');
+    // Find the first DL in the body, which is usually the root container.
+    // This is the most common starting point.
+    const mainDl = doc.body.querySelector('dl');
     if (!mainDl) return [];
 
     return parseDl(mainDl);
 };
+
 
 // --- Bookmark Tree Renderer ---
 const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
