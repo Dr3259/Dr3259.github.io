@@ -35,7 +35,7 @@ export default function EyeCarePage() {
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   return (
-    <div className="flex flex-col min-h-screen w-full text-foreground transition-colors duration-300 bg-gradient-to-br from-green-100 via-cyan-100 to-emerald-200 dark:from-green-900/70 dark:via-cyan-900/70 dark:to-emerald-900/70">
+    <div className="flex flex-col min-h-screen w-full text-foreground transition-colors duration-300 bg-gradient-to-br from-[#90EE90] via-[#E0FFFF] to-[#99CC33] dark:from-[#90ee90]/20 dark:via-[#e0ffff]/20 dark:to-[#99cc33]/20">
       <style jsx global>{`
         @keyframes move-dot {
           0%, 100% { top: 50%; left: 50%; }
