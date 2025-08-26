@@ -112,20 +112,16 @@ const DotMatrixExercise: React.FC = () => {
 
   return (
       <div 
-        className="w-full h-80 bg-black rounded-lg p-4 flex items-center justify-center"
+        className="w-full h-80 bg-black rounded-lg overflow-hidden"
       >
         <div 
-            className="grid gap-1"
-            style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`}}
+            className="grid gap-2 w-full h-full"
+            style={{gridTemplateColumns: `repeat(${horizontal_dots}, 1fr)`, gridTemplateRows: `repeat(${vertical_dots}, 1fr)`}}
         >
             {dots.map((dot) => (
               <div
                 key={dot.id}
-                className="bg-white rounded-full"
-                style={{
-                  width: '0.25rem',
-                  height: '0.25rem',
-                }}
+                className="bg-white rounded-full w-[4px] h-[4px] m-auto"
               />
             ))}
         </div>
