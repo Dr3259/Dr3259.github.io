@@ -67,39 +67,50 @@ interface BookmarkNode {
   children?: BookmarkNode[];
 }
 
-// --- Robust Bookmark Parser ---
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     if (typeof window === 'undefined') return [];
-
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
 
-    const folders: BookmarkNode[] = Array.from(doc.querySelectorAll('h3')).map(h3 => ({
-        type: 'folder',
-        name: h3.textContent || 'Untitled Folder',
-        children: []
-    }));
+    // This function recursively parses a <DL> element.
+    const parseDl = (dlElement: HTMLDListElement | null): BookmarkNode[] => {
+        if (!dlElement) {
+            return [];
+        }
 
-    const links: BookmarkNode[] = Array.from(doc.querySelectorAll('a')).map(a => ({
-        type: 'link',
-        name: a.textContent || 'Untitled Link',
-        url: a.href
-    }));
+        const nodes: BookmarkNode[] = [];
+        // Iterate through the direct children of the <DL> element.
+        // The structure is typically <DT><H3>...</H3></DT><DD><DL>...</DL></DD>
+        // or <DT><A>...</A></DT>
+        for (const child of Array.from(dlElement.children)) {
+            if (child.tagName !== 'DT') {
+                continue;
+            }
+
+            const h3 = child.querySelector('h3');
+            const a = child.querySelector('a');
+
+            if (h3) { // It's a folder
+                const nextElement = child.nextElementSibling;
+                const nestedDl = nextElement?.tagName === 'DL' ? nextElement as HTMLDListElement : null;
+                nodes.push({
+                    type: 'folder',
+                    name: h3.textContent || 'Untitled Folder',
+                    children: parseDl(nestedDl),
+                });
+            } else if (a) { // It's a link
+                nodes.push({
+                    type: 'link',
+                    name: a.textContent || 'Untitled Link',
+                    url: a.href,
+                });
+            }
+        }
+        return nodes;
+    };
     
-    if (folders.length === 0 && links.length === 0) {
-        return [];
-    }
-    
-    // Flatten everything into a single "Imported Bookmarks" folder
-    // This is a robust fallback to ensure content is always shown,
-    // even if hierarchy parsing is complex.
-    const allItems = [...folders, ...links];
-    
-    return [{
-        type: 'folder',
-        name: 'Imported Bookmarks',
-        children: allItems,
-    }];
+    const rootDl = doc.body.querySelector('dl');
+    return parseDl(rootDl);
 };
 
 
@@ -340,4 +351,3 @@ export default function OrganizePage() {
     </div>
   );
 }
-
