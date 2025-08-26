@@ -145,7 +145,7 @@ const DotMatrixExercise: React.FC = () => {
                     key={dot.id}
                     className="bg-white rounded-full w-[6px] h-[6px] m-auto"
                     style={{
-                      transform: isOddRow ? `translateX(calc(0.5 * (6px + 0.5rem)))` : 'translateX(0)',
+                      transform: isOddRow ? `translateX(7px)` : 'translateX(0)',
                       animation: `point-to-point-triangle 6s linear infinite`,
                     }}
                   />
