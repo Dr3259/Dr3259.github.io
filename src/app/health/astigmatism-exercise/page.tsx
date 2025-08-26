@@ -91,17 +91,13 @@ const FigureEightExercise: React.FC = () => {
 const DotMatrixExercise: React.FC = () => {
   const horizontal_dots = 60;
   const vertical_dots = 40;
-  const [dots, setDots] = useState<{ id: number; delay: number }[]>([]);
+  const [dots, setDots] = useState<{ id: number }[]>([]);
 
   useEffect(() => {
     // This logic runs only on the client, preventing hydration errors
     const newDots = Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => {
-        const row = Math.floor(i / horizontal_dots);
-        const col = i % horizontal_dots;
         return {
           id: i,
-          // Calculate delay based on position for a patterned wave effect
-          delay: (row * 0.1 + col * 0.05) * -1, 
         };
     });
     setDots(newDots);
@@ -151,7 +147,6 @@ const DotMatrixExercise: React.FC = () => {
                     style={{
                       transform: isOddRow ? `translateX(calc(0.5 * (6px + 0.5rem)))` : 'translateX(0)',
                       animation: `point-to-point-triangle 6s linear infinite`,
-                      animationDelay: `${dot.delay}s`,
                     }}
                   />
               )
