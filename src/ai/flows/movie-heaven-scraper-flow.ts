@@ -58,7 +58,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
         }
       });
       
-      const movies: MovieHeavenItem[] = [];
       const detailPromises = movieDetailLinks.slice(0, 10).map(async (detailUrl) => {
         try {
             const detailResponse = await fetch(detailUrl);
@@ -69,7 +68,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const $$ = cheerio.load(detailHtml);
 
             const title = $$('div.title_all h1').text().trim();
-            const downloadUrl = $$('#Zoom table[cellpadding="0"] a').attr('href');
+            const downloadUrl = $$('#Zoom table').first().find('a').attr('href');
             
             const zoomText = $$('#Zoom').text();
             
