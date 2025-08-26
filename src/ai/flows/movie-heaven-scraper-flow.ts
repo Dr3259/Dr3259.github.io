@@ -49,7 +49,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
 
       const movieDetailLinks: string[] = [];
       // This selector is now more specific, targeting only the table with the movie list.
-      $('table.border_style_1 tr a').each((_index, element) => {
+      $('table.tbspan tr a').each((_index, element) => {
         const href = $(element).attr('href');
         if (href && href.startsWith('/html/gndy/')) {
             movieDetailLinks.push(new URL(href, baseUrl).href);
@@ -114,3 +114,4 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
+
