@@ -66,24 +66,15 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
 };
 
 const FigureEightExercise: React.FC = () => {
-    // Correctly define two separate paths for the background
-    const pathDataLeft = "M 50,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0";
-    const pathDataRight = "M 100,50 a 25,25 0 1,1 50,0 a 25,25 0 1,1 -50,0";
     // A single continuous path for the animation
-    const animationPath = "M 50,50 a 25,25 0 1,0 -50,0 a 25,25 0 1,0 50,0 M 100,50 a 25,25 0 1,1 50,0 a 25,25 0 1,1 -50,0";
+    const animationPath = "M25,50 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0";
 
     return (
         <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
-            <svg viewBox="0 0 150 100" className="w-full h-full">
+            <svg viewBox="0 0 100 100" className="w-full h-full" style={{ overflow: 'visible' }}>
+                 {/* This path is just for the dashed background */}
                 <path
-                    d={pathDataLeft}
-                    stroke="hsl(var(--primary) / 0.3)"
-                    strokeWidth="2"
-                    fill="none"
-                    strokeDasharray="4 4"
-                />
-                <path
-                    d={pathDataRight}
+                    d={animationPath}
                     stroke="hsl(var(--primary) / 0.3)"
                     strokeWidth="2"
                     fill="none"
@@ -106,6 +97,16 @@ const FigureEightExercise: React.FC = () => {
 
 const DotMatrixExercise: React.FC = () => {
   const grid_size = 5;
+  const [delays, setDelays] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Generate delays only on the client side
+    setDelays(
+      Array.from({ length: grid_size * grid_size }, () => `${Math.random() * -6}s`)
+    );
+  }, []);
+
+
   const gap_rem = 2; // This is the distance between balls
   const ball_size_rem = 0.5;
   const triangle_side_length_rem = gap_rem + ball_size_rem;
@@ -142,8 +143,8 @@ const DotMatrixExercise: React.FC = () => {
               style={{
                 width: `${ball_size_rem}rem`,
                 height: `${ball_size_rem}rem`,
-                animation: `${animationName} 6s linear infinite`,
-                animationDelay: `${Math.random() * -6}s`, // Randomize start time
+                animation: delays[i] ? `${animationName} 6s linear infinite` : 'none',
+                animationDelay: delays[i] || '0s',
               }}
             ></div>
           ))}
