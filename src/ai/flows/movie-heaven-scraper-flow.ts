@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to scrape movie heaven (dydytt.net) for latest movies.
@@ -82,10 +83,12 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const rating = ratingMatch ? ratingMatch[1] : undefined;
 
             const tagsMatch = zoomText.match(/◎类\s+别\s+([\s\S]*?)(?=◎|$)/);
-            const tags = tagsMatch ? tagsMatch[1].replace(/\s+/g, ' / ').trim() : undefined;
+            // Safely handle tagsMatch to prevent null reference on .trim()
+            const tags = tagsMatch && tagsMatch[1] ? tagsMatch[1].replace(/\s+/g, ' / ').trim() : undefined;
             
             const introMatch = zoomText.match(/◎简\s+介\s+([\s\S]*?)(?=◎|$)/);
-            let shortIntro = introMatch ? introMatch[1].trim().split('\n')[0] : undefined;
+            let shortIntro = introMatch && introMatch[1] ? introMatch[1].trim().split('\n')[0] : undefined;
+
             if(shortIntro && shortIntro.length > 100) {
               shortIntro = shortIntro.substring(0, 100) + '...';
             }
@@ -112,3 +115,4 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
+
