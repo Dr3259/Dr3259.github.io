@@ -4,23 +4,30 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RotateCw } from 'lucide-react';
+import { ArrowLeft, RotateCw, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const translations = {
   'zh-CN': {
     pageTitle: '散光放松练习',
     backButton: '返回护眼专栏',
+    astigmatismChartTitle: '放射状图表放松',
     instruction: '注视中心点，观察所有线条。如果某些线条看起来比其他线条更粗、更黑或更模糊，这可能表明存在散光。',
     instruction_2: '尝试慢慢转动头部，看看线条的清晰度是否发生变化。这个练习可以帮助放松您的眼部肌肉。',
-    rotateButton: '旋转图表'
+    rotateButton: '旋转图表',
+    figureEightTitle: '8字形运目放松',
+    figureEightInstruction: '请保持头部不动，用您的眼睛平稳地跟随引导点，沿“8”字形轨迹运动。',
   },
   'en': {
     pageTitle: 'Astigmatism Relaxation Exercise',
     backButton: 'Back to Eye Care',
+    astigmatismChartTitle: 'Radial Chart Relaxation',
     instruction: 'Focus on the center dot. Observe all the lines. If some lines appear darker, thicker, or blurrier than others, it may indicate astigmatism.',
     instruction_2: 'Try slowly rotating your head to see if the clarity of the lines changes. This exercise can help relax your eye muscles.',
-    rotateButton: 'Rotate Chart'
+    rotateButton: 'Rotate Chart',
+    figureEightTitle: 'Figure-Eight Eye Relaxation',
+    figureEightInstruction: 'Keep your head still and smoothly follow the guide dot with your eyes along the figure-eight path.',
   }
 };
 
@@ -54,6 +61,42 @@ const AstigmatismChart: React.FC<{ rotation: number }> = ({ rotation }) => {
   );
 };
 
+const FigureEightExercise: React.FC = () => {
+    return (
+        <div className="relative w-full max-w-sm h-48 flex items-center justify-center">
+            <svg viewBox="0 0 200 100" className="w-full h-full">
+                {/* The figure-eight path */}
+                <path 
+                    d="M 50 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
+                    stroke="hsl(var(--primary) / 0.3)" 
+                    strokeWidth="2"
+                    fill="none"
+                    strokeDasharray="4 4"
+                />
+                <path 
+                    d="M 100 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
+                    stroke="hsl(var(--primary) / 0.3)" 
+                    strokeWidth="2"
+                    fill="none"
+                    strokeDasharray="4 4"
+                />
+                 {/* The moving dot */}
+                 <g>
+                    <circle cx="50" cy="50" r="6" fill="hsl(var(--primary))">
+                        <animateMotion
+                            dur="12s"
+                            repeatCount="indefinite"
+                            path="M 50 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0 M 100 50 a 25 25 0 1 0 50 0 a 25 25 0 1 0 -50 0"
+                            keyPoints="0;0.5;1"
+                            keyTimes="0;0.5;1"
+                        />
+                    </circle>
+                 </g>
+            </svg>
+        </div>
+    )
+}
+
 export default function AstigmatismExercisePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [rotation, setRotation] = useState(0);
@@ -72,8 +115,8 @@ export default function AstigmatismExercisePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full items-center justify-center bg-gray-50 dark:bg-gray-900 text-foreground p-4 sm:p-8">
-      <header className="absolute top-4 left-4 sm:top-8 sm:left-8">
+    <div className="flex flex-col min-h-screen w-full items-center bg-gray-50 dark:bg-gray-900 text-foreground p-4 sm:p-8">
+      <header className="w-full max-w-4xl self-center mb-8">
         <Link href="/health/eye-care" passHref>
           <Button variant="outline" size="sm" className="bg-background/50 backdrop-blur-sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -82,22 +125,44 @@ export default function AstigmatismExercisePage() {
         </Link>
       </header>
 
-      <main className="flex flex-col items-center justify-center text-center">
-        <h1 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-6">
+      <main className="flex flex-col items-center w-full max-w-4xl space-y-12">
+        <h1 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-0 text-center">
           {t.pageTitle}
         </h1>
         
-        <AstigmatismChart rotation={rotation} />
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <RotateCw className="w-6 h-6 text-primary/80"/>
+                    {t.astigmatismChartTitle}
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col md:flex-row items-center gap-8">
+                <AstigmatismChart rotation={rotation} />
+                <div className="flex-1 space-y-4">
+                     <p className="text-muted-foreground">{t.instruction}</p>
+                     <p className="text-muted-foreground">{t.instruction_2}</p>
+                     <Button onClick={handleRotate} className="mt-4">
+                        <RotateCw className="mr-2 h-4 w-4" />
+                        {t.rotateButton}
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
 
-        <div className="max-w-md mt-8 space-y-3">
-          <p className="text-muted-foreground">{t.instruction}</p>
-          <p className="text-muted-foreground">{t.instruction_2}</p>
-        </div>
+         <Card className="w-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <Eye className="w-6 h-6 text-primary/80"/>
+                    {t.figureEightTitle}
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-6">
+                <FigureEightExercise />
+                <p className="text-muted-foreground text-center max-w-md">{t.figureEightInstruction}</p>
+            </CardContent>
+        </Card>
 
-        <Button onClick={handleRotate} className="mt-8">
-          <RotateCw className="mr-2 h-4 w-4" />
-          {t.rotateButton}
-        </Button>
       </main>
     </div>
   );
