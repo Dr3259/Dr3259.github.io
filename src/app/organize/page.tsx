@@ -1,239 +1,205 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bookmark, Folder, PlusCircle, FileText, ChevronRight, FolderOpen, UploadCloud } from 'lucide-react';
+import { ArrowLeft, Bookmark, Folder, PlusCircle, Trash2, ChevronRight, FolderOpen, Link as LinkIcon, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { Input } from '@/components/ui/input';
 
 const translations = {
   'zh-CN': {
     pageTitle: '整理中心',
-    pageDescription: '聚合、整理并快速访问您的数字资产。',
+    pageDescription: '管理您的书签和数字资产。',
     backButton: '返回主页',
-    bookmarksTitle: '浏览器书签助手',
-    bookmarksDescription: '导入浏览器书签文件，在这里进行分类、搜索和管理。',
-    importBookmarks: '导入书签HTML文件',
-    foldersTitle: '本地文件夹快捷方式',
-    foldersDescription: '添加常用本地文件夹的快捷方式，以便快速访问。',
-    addFolder: '添加文件夹快捷方式',
-    comingSoon: '功能即将上线。',
-    importSuccess: '书签导入成功！',
-    importError: '导入失败，请确保是有效的书签文件。',
-    noBookmarksImported: '尚未导入任何书签。',
-    guide: {
-        title: '两步轻松导入您的浏览器书签',
-        step1Title: '第1步：从浏览器导出书签',
-        step1Description: '在 Chrome/Edge 中，前往 书签 > 书签管理器 > 导出书签。',
-        step2Title: '第2步：将文件导入此处',
-        step2Description: '点击下面的按钮选择您刚刚导出的HTML文件。',
-    }
+    bookmarksTitle: '书签管理助手',
+    importBookmarks: '导入HTML文件',
+    addFolderBtn: '添加文件夹',
+    addItemNamePlaceholder: '名称...',
+    addItemUrlPlaceholder: '链接 (可选, 留空则为文件夹)',
+    addItemBtn: '新增',
+    guideTitle: '从导入或新增开始',
+    guideDescription: '您可以导入一个浏览器书签HTML文件，或者手动添加新的书签和文件夹。',
+    deleteConfirmation: '您确定要删除这个项目吗？'
   },
   'en': {
     pageTitle: 'Organization Hub',
-    pageDescription: 'Aggregate, organize, and quickly access your digital assets.',
+    pageDescription: 'Manage your bookmarks and digital assets.',
     backButton: 'Back to Home',
-    bookmarksTitle: 'Browser Bookmark Helper',
-    bookmarksDescription: 'Import your browser bookmarks file to categorize, search, and manage them here.',
-    importBookmarks: 'Import Bookmarks HTML',
-    foldersTitle: 'Local Folder Shortcuts',
-    foldersDescription: 'Add shortcuts to frequently used local folders for quick access.',
-    addFolder: 'Add Folder Shortcut',
-    comingSoon: 'Feature coming soon.',
-    importSuccess: 'Bookmarks imported successfully!',
-    importError: 'Failed to import. Please ensure it is a valid bookmarks file.',
-    noBookmarksImported: 'No bookmarks have been imported yet.',
-    guide: {
-        title: 'Import Your Bookmarks in 2 Easy Steps',
-        step1Title: 'Step 1: Export from Your Browser',
-        step1Description: 'In Chrome/Edge, go to Bookmarks > Bookmark Manager > Export bookmarks.',
-        step2Title: 'Step 2: Import the File Here',
-        step2Description: 'Click the button below to select the HTML file you just exported.',
-    }
+    bookmarksTitle: 'Bookmark Manager',
+    importBookmarks: 'Import HTML File',
+    addFolderBtn: 'Add Folder',
+    addItemNamePlaceholder: 'Name...',
+    addItemUrlPlaceholder: 'URL (optional, creates folder)',
+    addItemBtn: 'Add',
+    guideTitle: 'Start by Importing or Adding',
+    guideDescription: 'You can import a browser bookmarks HTML file, or manually add new bookmarks and folders.',
+    deleteConfirmation: 'Are you sure you want to delete this item?'
   }
 };
 
 type LanguageKey = keyof typeof translations;
 
-interface BookmarkNode {
-  type: 'folder' | 'link';
+interface BookmarkNodeData {
+  id: string;
+  type: 'folder' | 'bookmark';
   name: string;
   url?: string;
-  children?: BookmarkNode[];
+  children?: BookmarkNodeData[];
 }
 
-const parseBookmarks = (htmlString: string): BookmarkNode[] => {
+// Robust parser based on user feedback and correct HTML structure understanding.
+const parseBookmarks = (htmlString: string): BookmarkNodeData[] => {
     if (typeof window === 'undefined') return [];
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
+    const firstDl = doc.body.querySelector('dl');
 
-    const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
-        const nodes: BookmarkNode[] = [];
+    if (!firstDl) {
+        console.warn("No <DL> tag found in the document body.");
+        return [];
+    }
+
+    const parseDl = (dlElement: HTMLDListElement): BookmarkNodeData[] => {
+        const items: BookmarkNodeData[] = [];
+        // Directly iterate over children to be more robust
         const children = Array.from(dlElement.children);
 
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (child.tagName !== 'DT') continue;
 
-            const h3 = child.querySelector('h3');
-            const a = child.querySelector('a');
-            
-            if (h3) { // It's a folder
+            const childNode = child.firstElementChild;
+            if (!childNode) continue;
+
+            const id = `item-${Date.now()}-${Math.random()}`;
+
+            if (childNode.tagName === 'H3') {
                 const nextElement = children[i + 1];
-                let nestedChildren: BookmarkNode[] = [];
+                let nestedChildren: BookmarkNodeData[] = [];
+
                 if (nextElement && nextElement.tagName === 'DL') {
                     nestedChildren = parseDl(nextElement as HTMLDListElement);
+                    i++; // Crucially, skip the next element as it has been processed
                 }
-                nodes.push({
+                
+                items.push({
+                    id,
                     type: 'folder',
-                    name: h3.textContent || 'Untitled Folder',
+                    name: childNode.textContent?.trim() || 'Untitled Folder',
                     children: nestedChildren,
                 });
-                // Skip the next element since it's the content of the folder we just processed
-                if (nextElement && nextElement.tagName === 'DL') {
-                    i++;
-                }
-            } else if (a) { // It's a link
-                nodes.push({
-                    type: 'link',
-                    name: a.textContent || 'Untitled Link',
-                    url: a.href,
+            } else if (childNode.tagName === 'A') {
+                items.push({
+                    id,
+                    type: 'bookmark',
+                    name: childNode.textContent?.trim() || 'Untitled Link',
+                    url: (childNode as HTMLAnchorElement).href,
                 });
             }
         }
-        return nodes;
+        return items;
     };
 
-    const rootDl = doc.body.querySelector('dl');
-    if (rootDl) {
-        return parseDl(rootDl);
-    }
-    return [];
+    return parseDl(firstDl);
 };
 
 
 // --- Bookmark Tree Renderer ---
-const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
+const BookmarkTree: React.FC<{ 
+    nodes: BookmarkNodeData[];
+    onDelete: (id: string) => void;
+    t: any;
+}> = ({ nodes, onDelete, t }) => {
+
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Automatically expand the top-level folders upon initial load
-    const topLevelFolderPaths = nodes
-      .map((_, i) => `${i}`)
-      .filter((path, index) => nodes[index].type === 'folder');
-    setOpenFolders(new Set(topLevelFolderPaths));
+    const topLevelFolderIds = nodes
+      .filter(node => node.type === 'folder')
+      .map(node => node.id);
+    setOpenFolders(new Set(topLevelFolderIds));
   }, [nodes]);
 
-
-  const toggleFolder = (path: string) => {
+  const toggleFolder = (id: string) => {
     setOpenFolders(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(path)) {
-        newSet.delete(path);
-      } else {
-        newSet.add(path);
-      }
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
       return newSet;
     });
   };
 
-  const renderNode = (node: BookmarkNode, path: string): JSX.Element | null => {
+  const renderNode = (node: BookmarkNodeData): JSX.Element | null => {
+    const isOpen = openFolders.has(node.id);
+
     if (node.type === 'folder') {
-      const isOpen = openFolders.has(path);
       return (
-        <div key={path}>
-          <div 
-            className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted cursor-pointer"
-            onClick={() => toggleFolder(path)}
-          >
-            <ChevronRight className={cn("h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-90")} />
-            {isOpen ? <FolderOpen className="h-4 w-4 text-primary" /> : <Folder className="h-4 w-4 text-primary" />}
-            <span className="font-medium text-sm truncate">{node.name}</span>
+        <li key={node.id} data-id={node.id} data-type="folder" className="my-1.5">
+          <div className="flex items-center gap-1 p-2 rounded-md hover:bg-muted/60 group">
+             <button onClick={() => toggleFolder(node.id)} className="flex items-center gap-2 flex-grow min-w-0">
+                <ChevronRight className={cn("h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-90")} />
+                {isOpen ? <FolderOpen className="h-5 w-5 text-primary" /> : <Folder className="h-5 w-5 text-primary" />}
+                <span className="font-semibold text-sm truncate">{node.name}</span>
+            </button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={() => { if(window.confirm(t.deleteConfirmation)) onDelete(node.id) }}>
+                <Trash2 className="h-4 w-4"/>
+            </Button>
           </div>
-          {isOpen && (
-            <div className="pl-6 border-l ml-[7px] border-primary/20">
-              {node.children?.length ? (
-                node.children.map((child, i) => renderNode(child, `${path}-${i}`))
-              ) : (
-                <div className="text-xs text-muted-foreground italic p-1.5">Empty folder</div>
-              )}
-            </div>
+          {isOpen && node.children && (
+            <ul className="pl-6 border-l-2 ml-3 border-dashed border-border">
+                {node.children.map(child => renderNode(child))}
+            </ul>
           )}
-        </div>
+        </li>
       );
     }
 
-    if (node.type === 'link') {
+    if (node.type === 'bookmark') {
       return (
-        <div key={node.url} className="pl-6 ml-[7px]">
-             <a 
-                href={node.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted"
-            >
-              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm truncate text-foreground/80 hover:text-foreground">{node.name}</span>
-            </a>
-        </div>
+         <li key={node.id} data-id={node.id} data-type="bookmark" className="my-1.5 list-none ml-2">
+            <div className="flex items-center gap-1 p-2 rounded-md hover:bg-muted/60 group">
+                <a 
+                    href={node.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 flex-grow min-w-0"
+                >
+                  <Image src={`https://www.google.com/s2/favicons?domain=${node.url}&sz=32`} alt="" width={16} height={16} className="shrink-0"/>
+                  <span className="text-sm truncate text-foreground/80 hover:text-foreground">{node.name}</span>
+                </a>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={() => { if(window.confirm(t.deleteConfirmation)) onDelete(node.id) }}>
+                    <Trash2 className="h-4 w-4"/>
+                </Button>
+            </div>
+        </li>
       );
     }
     return null;
   };
 
-  return <div className="space-y-1">{nodes.map((node, i) => renderNode(node, `${i}`))}</div>;
+  return <ul className="space-y-1">{nodes.map(node => renderNode(node))}</ul>;
 };
 
-// --- Import Guide Component ---
-const BookmarkImportGuide: React.FC<{ t: any; onImportClick: () => void }> = ({ t, onImportClick }) => {
-    return (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-            <Card className="w-full max-w-lg bg-muted/30">
-                <CardHeader>
-                    <CardTitle className="text-center text-lg text-foreground">{t.guide.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6 p-6">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg shrink-0">1</div>
-                        <div>
-                            <h3 className="font-semibold text-foreground">{t.guide.step1Title}</h3>
-                            <p className="text-sm text-muted-foreground">{t.guide.step1Description}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg shrink-0">2</div>
-                        <div className="flex-1">
-                            <h3 className="font-semibold text-foreground">{t.guide.step2Title}</h3>
-                            <p className="text-sm text-muted-foreground mb-4">{t.guide.step2Description}</p>
-                            <Button onClick={onImportClick} className="w-full">
-                                <UploadCloud className="mr-2 h-4 w-4" />
-                                {t.importBookmarks}
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
-};
-
-
+// --- Main Page Component ---
 export default function OrganizePage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [bookmarks, setBookmarks] = useState<BookmarkNode[] | null>(null);
+  const [bookmarks, setBookmarks] = useState<BookmarkNodeData[]>([]);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemUrl, setNewItemUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
-      setCurrentLanguage(browserLang);
-    }
+    const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+    setCurrentLanguage(browserLang);
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
@@ -251,30 +217,60 @@ export default function OrganizePage() {
       try {
         const content = e.target?.result as string;
         if (!content) {
-            toast({ title: t.importError, variant: 'destructive', description: "File is empty or could not be read." });
+            toast({ title: "Import error", variant: 'destructive', description: "File is empty or could not be read." });
             return;
         }
         const parsedBookmarks = parseBookmarks(content);
         if (parsedBookmarks.length === 0) {
-           toast({ title: t.importError, variant: 'destructive', description: "Could not find any valid bookmarks in the file." });
+           toast({ title: "Import failed", variant: 'destructive', description: "No valid bookmarks found. The file might be empty or in an unsupported format." });
            return;
         }
         setBookmarks(parsedBookmarks);
-        toast({ title: t.importSuccess });
+        toast({ title: "Bookmarks imported successfully!" });
       } catch (error) {
         console.error("Bookmark parsing error:", error);
-        toast({ title: t.importError, variant: 'destructive' });
+        toast({ title: "Import error", variant: 'destructive', description: "An error occurred while parsing the file."});
       }
     };
+    reader.onerror = () => {
+        toast({ title: "File read error", variant: "destructive" });
+    }
+
     reader.readAsText(file);
-    
     event.target.value = '';
   };
-  
-  const handleAddFolderClick = () => {
-      alert(t.comingSoon);
+
+  const handleAddItem = () => {
+    if (!newItemName.trim()) return;
+    
+    const isFolder = !newItemUrl.trim();
+    const newItem: BookmarkNodeData = {
+        id: `manual-${Date.now()}`,
+        type: isFolder ? 'folder' : 'bookmark',
+        name: newItemName.trim(),
+        url: isFolder ? undefined : newItemUrl.trim(),
+        children: isFolder ? [] : undefined
+    };
+
+    setBookmarks(prev => [...prev, newItem]);
+    setNewItemName('');
+    setNewItemUrl('');
   }
 
+  const findAndDelete = (nodes: BookmarkNodeData[], id: string): BookmarkNodeData[] => {
+    return nodes.filter(node => {
+        if (node.id === id) return false;
+        if (node.children) {
+            node.children = findAndDelete(node.children, id);
+        }
+        return true;
+    });
+  }
+
+  const handleDeleteItem = (id: string) => {
+    setBookmarks(prev => findAndDelete([...prev], id));
+  }
+  
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
       <header className="w-full max-w-4xl mb-8 self-center">
@@ -303,53 +299,39 @@ export default function OrganizePage() {
             </p>
         </div>
         
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-3">
-                           <Bookmark className="w-6 h-6 text-primary"/>
-                           <CardTitle className="text-xl">{t.bookmarksTitle}</CardTitle>
+        <Card className="shadow-lg w-full">
+            <CardHeader>
+                <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <div className="flex items-center gap-3">
+                       <Bookmark className="w-6 h-6 text-primary"/>
+                       <CardTitle className="text-xl">{t.bookmarksTitle}</CardTitle>
+                    </div>
+                     <Button onClick={handleImportClick} size="sm" variant="outline">
+                         <PlusCircle className="mr-2 h-4 w-4" />
+                         {t.importBookmarks}
+                     </Button>
+                </div>
+                <div className="flex gap-2 items-center flex-wrap pt-4 border-t">
+                    <Input value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder={t.addItemNamePlaceholder} className="h-9 flex-grow min-w-[150px]"/>
+                    <Input value={newItemUrl} onChange={e => setNewItemUrl(e.target.value)} placeholder={t.addItemUrlPlaceholder} className="h-9 flex-grow min-w-[150px]"/>
+                    <Button onClick={handleAddItem} size="sm" className="h-9">{t.addItemBtn}</Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-[32rem] rounded-lg border bg-muted/20 p-3">
+                  {bookmarks.length > 0 ? (
+                    <BookmarkTree nodes={bookmarks} onDelete={handleDeleteItem} t={t} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                        <div>
+                            <h3 className="font-semibold text-lg text-foreground">{t.guideTitle}</h3>
+                            <p className="mt-1">{t.guideDescription}</p>
                         </div>
-                         {bookmarks && (
-                           <Button onClick={handleImportClick} size="sm" variant="outline">
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                {t.importBookmarks}
-                           </Button>
-                        )}
                     </div>
-                    <CardDescription>{t.bookmarksDescription}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-96 rounded-lg border bg-muted/20 p-3">
-                      {bookmarks ? (
-                        <BookmarkTree nodes={bookmarks} />
-                      ) : (
-                        <BookmarkImportGuide t={t} onImportClick={handleImportClick} />
-                      )}
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Folder className="w-6 h-6 text-primary"/>
-                        <CardTitle className="text-xl">{t.foldersTitle}</CardTitle>
-                    </div>
-                    <CardDescription>{t.foldersDescription}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="h-[26.5rem] flex flex-col items-center justify-center bg-muted/30 rounded-lg p-4 text-center">
-                         <p className="text-sm text-muted-foreground mb-4">{t.comingSoon}</p>
-                        <Button onClick={handleAddFolderClick} disabled>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            {t.addFolder}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+                  )}
+                </ScrollArea>
+            </CardContent>
+        </Card>
       </main>
     </div>
   );
