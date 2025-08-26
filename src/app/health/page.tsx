@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BrainCircuit, HeartPulse, Sparkles, Leaf, MoreVertical, Pin, PinOff, GripVertical } from 'lucide-react';
+import { ArrowLeft, BrainCircuit, HeartPulse, Sparkles, Leaf, MoreVertical, Pin, PinOff, GripVertical, Eye } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,7 @@ const translations = {
     items: {
       mentalHealth: { title: '心理健康', description: '关注情绪与思维健康，提供正念练习与心理支持工具。', icon: BrainCircuit, path: '/health/mental' },
       physicalHealth: { title: '身体健康', description: '追踪身体指标，获取个性化运动与营养建议。', icon: HeartPulse, path: '/health/physical' },
+      eyeCare: { title: '护眼专栏', description: '科学护眼，远离疲劳，拥抱清晰视界。', icon: Eye, path: '/health/eye-care' },
       stayYoung: { title: '永葆青春', description: '探索前沿科技，了解延缓衰老的科学方法。', icon: Sparkles, path: '/health/stay-young' },
       vegetarianism: { title: '素食主义', description: '探索植物性饮食带来的健康与活力。', icon: Leaf, path: '/health/vegetarianism' },
     }
@@ -40,6 +41,7 @@ const translations = {
     items: {
       mentalHealth: { title: 'Mental Health', description: 'Care for your emotional and cognitive well-being with mindfulness and support tools.', icon: BrainCircuit, path: '/health/mental' },
       physicalHealth: { title: 'Physical Health', description: 'Track physical metrics and get personalized fitness and nutrition advice.', icon: HeartPulse, path: '/health/physical' },
+      eyeCare: { title: 'Eye Care', description: 'Protect your vision with scientific tips and exercises.', icon: Eye, path: '/health/eye-care' },
       stayYoung: { title: 'Stay Young', description: 'Explore cutting-edge science on anti-aging and longevity.', icon: Sparkles, path: '/health/stay-young' },
       vegetarianism: { title: 'Vegetarianism', description: 'Explore the health and vitality of a plant-based diet.', icon: Leaf, path: '/health/vegetarianism' },
     }
