@@ -115,7 +115,7 @@ const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
     });
   };
 
-  const renderNode = (node: BookmarkNode, path: string) => {
+  const renderNode = (node: BookmarkNode, path: string): JSX.Element | null => {
     if (node.type === 'folder') {
       const isOpen = openFolders.has(path);
       return (
@@ -129,8 +129,8 @@ const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
             <span className="font-medium text-sm truncate">{node.name}</span>
           </div>
           {isOpen && (
-            <div className="pl-6 border-l ml-4">
-              <BookmarkTree nodes={node.children || []} />
+            <div className="pl-6 border-l ml-[7px]">
+              {node.children?.map((child, i) => renderNode(child, `${path}-${i}`))}
             </div>
           )}
         </div>
@@ -139,16 +139,17 @@ const BookmarkTree: React.FC<{ nodes: BookmarkNode[] }> = ({ nodes }) => {
 
     if (node.type === 'link') {
       return (
-        <a 
-            key={node.url} 
-            href={node.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted ml-2"
-        >
-          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-sm truncate text-foreground/80 hover:text-foreground">{node.name}</span>
-        </a>
+        <div key={node.url} className="pl-6 ml-[7px]">
+             <a 
+                href={node.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted"
+            >
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-sm truncate text-foreground/80 hover:text-foreground">{node.name}</span>
+            </a>
+        </div>
       );
     }
     return null;
@@ -185,6 +186,9 @@ export default function OrganizePage() {
       try {
         const content = e.target?.result as string;
         const parsedBookmarks = parseBookmarks(content);
+        if (parsedBookmarks.length === 0) {
+            throw new Error("No valid bookmarks found in file.");
+        }
         setBookmarks(parsedBookmarks);
         toast({ title: t.importSuccess });
       } catch (error) {
