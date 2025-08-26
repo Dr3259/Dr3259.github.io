@@ -48,9 +48,9 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const $ = cheerio.load(decodedHtml);
 
       const movieDetailLinks: string[] = [];
-      const newMoviesList = $('div.co_content2').find('ul').first();
+      const newMoviesList = $('div.co_content2').first().find('ul');
 
-      newMoviesList.find('a').each((index, element) => {
+      newMoviesList.find('tr a').each((index, element) => {
         const linkElement = $(element);
         const href = linkElement.attr('href');
         if (href && href.startsWith('/html/gndy/')) {
@@ -68,7 +68,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const $$ = cheerio.load(detailHtml);
 
             const title = $$('div.title_all h1').text().trim();
-            const downloadUrl = $$('#Zoom table').first().find('a').attr('href');
+            const downloadUrl = $$('#Zoom table[bgcolor="#fdfddf"] a').attr('href');
             
             const zoomText = $$('#Zoom').text();
             
@@ -110,3 +110,4 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     }
   }
 );
+
