@@ -95,10 +95,15 @@ const DotMatrixExercise: React.FC = () => {
 
   useEffect(() => {
     // This logic runs only on the client, preventing hydration errors
-    const newDots = Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => ({
-      id: i,
-      delay: Math.random() * -6,
-    }));
+    const newDots = Array.from({ length: horizontal_dots * vertical_dots }).map((_, i) => {
+        const row = Math.floor(i / horizontal_dots);
+        const col = i % horizontal_dots;
+        return {
+          id: i,
+          // Calculate delay based on position for a patterned wave effect
+          delay: (row * 0.1 + col * 0.05) * -1, 
+        };
+    });
     setDots(newDots);
   }, []);
 
