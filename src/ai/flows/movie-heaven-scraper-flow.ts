@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A flow to scrape movie heaven (dydytt.net) for latest movies.
@@ -49,7 +48,7 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
 
       const movieDetailLinks: string[] = [];
       // This selector correctly targets the table with the list of new movies.
-      $('.co_content2 ul table').find('tr a').each((_index, element) => {
+      $('.co_content2 table').find('tr a').each((_index, element) => {
         const href = $(element).attr('href');
         if (href && href.startsWith('/html/gndy/')) {
             movieDetailLinks.push(new URL(href, baseUrl).href);
