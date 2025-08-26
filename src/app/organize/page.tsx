@@ -245,6 +245,10 @@ export default function OrganizePage() {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
+        if (!content) {
+            toast({ title: t.importError, variant: 'destructive', description: "File is empty or could not be read." });
+            return;
+        }
         const parsedBookmarks = parseBookmarks(content);
         if (parsedBookmarks.length === 0) {
             toast({ title: t.importError, variant: 'destructive', description: "Could not find any bookmarks in the selected file." });
