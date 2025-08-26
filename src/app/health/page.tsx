@@ -200,9 +200,7 @@ export default function HealthPage() {
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   const handleNavigation = useCallback((path: string) => {
-      // For now, just log it as sub-pages are not created yet
-      console.log(`Navigating to ${path}`);
-      // router.push(path)
+      router.push(path);
   }, [router]);
 
   const handlePinToggle = (itemKey: HealthItemKey) => {
