@@ -1,15 +1,15 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bookmark, Folder, PlusCircle, FileText, ChevronRight, FolderOpen, UploadCloud, MousePointerClick, CornerDownRight } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Bookmark, Folder, PlusCircle, FileText, ChevronRight, FolderOpen, UploadCloud } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
 
 const translations = {
   'zh-CN': {
@@ -71,15 +71,13 @@ interface BookmarkNode {
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    
+
     const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
         const nodes: BookmarkNode[] = [];
-        // Iterate over direct children of the DL element
         const children = Array.from(dlElement.children);
 
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            // Each entry is a DT element
             if (child.tagName !== 'DT') continue;
 
             const content = child.firstElementChild;
@@ -87,7 +85,6 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
 
             if (content.tagName === 'H3') { // This is a folder
                 const folderName = content.textContent || 'Untitled Folder';
-                // The DL for this folder is the next element after the DT
                 const folderDl = children[i + 1] as HTMLDListElement;
                 
                 if (folderDl && folderDl.tagName === 'DL') {
@@ -96,9 +93,8 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
                         name: folderName,
                         children: parseDl(folderDl),
                     });
-                    i++; // Skip the DL element as it's been processed
+                    i++; 
                 } else {
-                     // Handle case where a folder is empty (no subsequent DL)
                      nodes.push({
                         type: 'folder',
                         name: folderName,
@@ -115,8 +111,7 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
         }
         return nodes;
     };
-
-    // Find the first DL in the body, which is the standard starting point.
+    
     const mainDl = doc.body.querySelector('DL');
     if (!mainDl) return [];
 
@@ -343,3 +338,5 @@ export default function OrganizePage() {
     </div>
   );
 }
+
+    
