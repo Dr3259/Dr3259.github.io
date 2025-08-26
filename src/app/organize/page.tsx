@@ -71,11 +71,7 @@ interface BookmarkNode {
 const parseBookmarks = (htmlString: string): BookmarkNode[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    // More robust selector: finds the first DL list, which is standard.
-    const mainDl = doc.querySelector('DL'); 
     
-    if (!mainDl) return [];
-
     const parseDl = (dlElement: HTMLDListElement): BookmarkNode[] => {
         const nodes: BookmarkNode[] = [];
         // Iterate over direct children of the DL element
@@ -120,7 +116,11 @@ const parseBookmarks = (htmlString: string): BookmarkNode[] => {
         return nodes;
     };
 
-    return parseDl(mainDl as HTMLDListElement);
+    // Find the first DL in the body, which is the standard starting point.
+    const mainDl = doc.body.querySelector('DL');
+    if (!mainDl) return [];
+
+    return parseDl(mainDl);
 };
 
 // --- Bookmark Tree Renderer ---
@@ -245,8 +245,8 @@ export default function OrganizePage() {
         const content = e.target?.result as string;
         const parsedBookmarks = parseBookmarks(content);
         if (parsedBookmarks.length === 0) {
-          toast({ title: t.importError, variant: 'destructive' });
-          return;
+            toast({ title: t.importError, variant: 'destructive', description: "Could not find any bookmarks in the selected file." });
+            return;
         }
         setBookmarks(parsedBookmarks);
         toast({ title: t.importSuccess });
