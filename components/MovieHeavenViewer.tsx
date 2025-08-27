@@ -171,12 +171,14 @@ export const MovieHeavenViewer: React.FC = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
-                                    <div className="flex items-center gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
+                                    <div className="flex items-center gap-2 text-sm col-span-1 sm:col-span-2">
                                         <Star className="w-4 h-4 text-amber-400"/>
-                                        <strong>{t.rating}:</strong>
-                                        {movie.imdb_score && <Badge variant="secondary">{t.imdb} {movie.imdb_score}</Badge>}
-                                        {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t.douban} {movie.douban_score}</Badge>}
+                                        <strong className="shrink-0">{t.rating}:</strong>
+                                        <div className="flex flex-wrap gap-2">
+                                            {movie.imdb_score && <Badge variant="secondary">{t.imdb} {movie.imdb_score}</Badge>}
+                                            {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t.douban} {movie.douban_score}</Badge>}
+                                        </div>
                                     </div>
                                     <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
                                     <InfoRow icon={User} label={t.director} value={movie.director} />
