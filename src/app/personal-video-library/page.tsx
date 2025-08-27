@@ -11,6 +11,7 @@ import { MovieCard } from '@/components/MovieCard';
 import { useMovies, type Movie } from '@/hooks/useMovies';
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { useToast } from '@/hooks/use-toast';
+import { searchMovies } from '@/ai/flows/movie-search-flow';
 
 
 const translations = {
@@ -60,15 +61,6 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
-// --- Mock Search Data ---
-const mockSearchResults: Movie[] = [
-    { id: 'tmdb-299534', title: 'Avengers: Endgame', poster_path: '/or06FN3Dka5tukK1e9sl16pB3iy.jpg', release_date: '2019-04-24', overview: 'After the devastating events of Avengers: Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos\' actions and restore balance to the universe.', status: 'want_to_watch' },
-    { id: 'tmdb-27205', title: 'Inception', poster_path_en: '/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg', poster_path: '/edv5CZvWj09upOsy2Y6ama2apoE.jpg', release_date: '2010-07-15', overview: 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets, is offered a chance to regain his old life as payment for a task considered to be impossible: "inception", the implantation of another person\'s idea into a target\'s subconscious.', status: 'want_to_watch' },
-    { id: 'tmdb-155', title: 'The Dark Knight', poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg', release_date: '2008-07-16', overview: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.', status: 'want_to_watch' },
-    { id: 'tmdb-680', title: 'Pulp Fiction', poster_path: '/d5iIlFn5s0ImszYzrKYO7G9B9A1.jpg', release_date: '1994-09-10', overview: 'A burger-loving hit man, his philosophical partner, a drug-addled gangster\'s moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip over each other.', status: 'want_to_watch' },
-];
-
-
 export default function PersonalVideoLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,7 +84,7 @@ export default function PersonalVideoLibraryPage() {
                 return;
             }
             const parsedData = JSON.parse(content);
-            setLocalJsonData(parsedData); // Load data into state for preview
+            setLocalJsonData(parsedData); 
             toast({ title: t.jsonImportSuccess });
         } catch (error) {
             console.error("JSON parsing error:", error);
@@ -103,18 +95,6 @@ export default function PersonalVideoLibraryPage() {
     event.target.value = '';
   };
   
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-        if(event.key === '1') {
-            fileInputRef.current?.click();
-        }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -130,22 +110,34 @@ export default function PersonalVideoLibraryPage() {
         return;
     }
 
-    setIsSearching(true);
+    const handleSearch = async () => {
+        setIsSearching(true);
+        try {
+            const results = await searchMovies({ query: searchTerm });
+            const movies = results.map(r => ({ ...r, status: 'want_to_watch' as const }));
+            setSearchResults(movies);
+        } catch (error) {
+            console.error("Failed to search movies:", error);
+            toast({ title: "Search failed", description: "Could not fetch movie results.", variant: "destructive" });
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     const timer = setTimeout(() => {
-        const results = mockSearchResults.filter(movie =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setSearchResults(results);
-        setIsSearching(false);
+       handleSearch();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, toast]);
 
   const handleAddMovie = (movie: Movie) => {
     const success = addMovie(movie);
     if (success) {
+        toast({ title: t.addSuccess(movie.title) });
         setSearchTerm('');
+    } else {
+        toast({ title: t.addError(movie.title), variant: "destructive" });
     }
   };
 

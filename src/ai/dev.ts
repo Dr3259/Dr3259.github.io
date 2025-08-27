@@ -5,3 +5,5 @@
 import './flows/scrape-tiobe-flow';
 import './flows/info-hub-flow';
 import './flows/github-trending-flow';
+import './flows/movie-search-flow';
+
