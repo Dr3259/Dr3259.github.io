@@ -67,34 +67,7 @@ export default function PersonalVideoLibraryPage() {
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { movies, addMovie, updateMovieStatus, updateMovieRating, updateMovieReview } = useMovies();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [localJsonData, setLocalJsonData] = useState(null);
   const { toast } = useToast();
-
-  const handleJsonImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const content = e.target?.result as string;
-            if (!content) {
-                toast({ title: t.jsonImportError, variant: 'destructive' });
-                return;
-            }
-            const parsedData = JSON.parse(content);
-            setLocalJsonData(parsedData); 
-            toast({ title: t.jsonImportSuccess });
-        } catch (error) {
-            console.error("JSON parsing error:", error);
-            toast({ title: t.jsonImportError, variant: 'destructive' });
-        }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-  };
-  
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -170,13 +143,6 @@ export default function PersonalVideoLibraryPage() {
 
   return (
     <>
-      <input
-        type="file"
-        accept=".json"
-        ref={fileInputRef}
-        onChange={handleJsonImport}
-        className="hidden"
-      />
       <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
           <header className="w-full max-w-6xl mb-6 sm:mb-8">
               <Link href="/rest" passHref>
@@ -259,7 +225,7 @@ export default function PersonalVideoLibraryPage() {
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">
-                       <MovieHeavenViewer localDataOverride={localJsonData} />
+                       <MovieHeavenViewer />
                   </TabsContent>
               </Tabs>
           </main>
