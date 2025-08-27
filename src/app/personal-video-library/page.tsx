@@ -4,24 +4,22 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clapperboard, PlusCircle, Search, Star, MessageSquare, Download, Loader2, ServerCrash, Film } from 'lucide-react';
+import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieCard } from '@/components/MovieCard';
 import { useMovies, type Movie } from '@/hooks/useMovies';
-import type { MovieStatus } from '@/hooks/useMovies';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { scrapeMovieHeaven, type MovieHeavenItem } from '@/ai/flows/movie-heaven-scraper-flow';
-import { Badge } from '@/components/ui/badge';
-import copy from 'copy-to-clipboard';
-import { useToast } from '@/hooks/use-toast';
+import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 
 
 const translations = {
   'zh-CN': {
-    pageTitle: '个人电影院',
+    pageTitle: '个人视频库',
     backButton: '返回休闲驿站',
     searchPlaceholder: '搜索电影...',
+    tabLocalCinema: '本地影院',
+    tabShortVideo: '短视频',
+    tabMovieHeaven: '电影天堂',
     tabWantToWatch: '想看',
     tabWatched: '已看',
     noMoviesWantToWatch: '您的“想看”列表是空的。',
@@ -32,19 +30,15 @@ const translations = {
     searchInProgress: '正在搜索...',
     noResults: '未找到结果。',
     searchInstruction: '搜索电影并添加到您的收藏中。',
-    movieHeavenTitle: '电影天堂资源查看器',
-    loadingHeaven: '正在加载电影天堂最新资源...',
-    errorHeaven: '加载电影天堂资源失败，请稍后重试。',
-    copyLink: '复制下载链接',
-    linkCopied: '链接已复制！',
-    rating: '评分',
-    tags: '标签',
-    intro: '简介',
+    comingSoon: '敬请期待！此功能正在开发中。'
   },
   'en': {
-    pageTitle: 'Personal Cinema',
+    pageTitle: 'Personal Video Library',
     backButton: 'Back to Rest Stop',
     searchPlaceholder: 'Search for a movie...',
+    tabLocalCinema: 'Local Cinema',
+    tabShortVideo: 'Shorts',
+    tabMovieHeaven: 'Movie Heaven DB',
     tabWantToWatch: 'Want to Watch',
     tabWatched: 'Watched',
     noMoviesWantToWatch: 'Your "Want to Watch" list is empty.',
@@ -55,14 +49,7 @@ const translations = {
     searchInProgress: 'Searching...',
     noResults: 'No results found.',
     searchInstruction: 'Search for movies to add to your collection.',
-    movieHeavenTitle: 'Movie Heaven Viewer',
-    loadingHeaven: 'Loading latest movies from Movie Heaven...',
-    errorHeaven: 'Failed to load resources from Movie Heaven. Please try again later.',
-    copyLink: 'Copy Download Link',
-    linkCopied: 'Link copied!',
-    rating: 'Rating',
-    tags: 'Tags',
-    intro: 'Intro',
+    comingSoon: 'Coming soon! This feature is under development.'
   }
 };
 
@@ -77,75 +64,7 @@ const mockSearchResults: Movie[] = [
 ];
 
 
-const MovieHeavenViewer = ({ t }: { t: (typeof translations)['zh-CN'] }) => {
-    const [movies, setMovies] = useState<MovieHeavenItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        const fetchMovies = async () => {
-            try {
-                const results = await scrapeMovieHeaven();
-                setMovies(results);
-            } catch (err: any) {
-                setError(err.message || t.errorHeaven);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchMovies();
-    }, [t.errorHeaven]);
-
-    const handleCopy = (url: string) => {
-        copy(url);
-        toast({ title: t.linkCopied, duration: 2000 });
-    }
-
-    if (isLoading) {
-        return (
-            <div className="text-center py-10 text-muted-foreground flex items-center justify-center">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {t.loadingHeaven}
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="text-center py-10 text-destructive flex items-center justify-center">
-                 <ServerCrash className="mr-2 h-5 w-5" />
-                {t.errorHeaven}
-            </div>
-        );
-    }
-    
-    return (
-        <div className="space-y-4">
-            {movies.map(movie => (
-                <Card key={movie.title} className="bg-card/80 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg">{movie.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm">
-                        {movie.rating && <p><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></p>}
-                        {movie.tags && <p><strong>{t.tags}:</strong> {movie.tags}</p>}
-                        {movie.shortIntro && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.shortIntro}</p>}
-                    </CardContent>
-                    <div className="p-6 pt-0">
-                         <Button onClick={() => handleCopy(movie.downloadUrl)}>
-                            <Download className="mr-2 h-4 w-4" />
-                            {t.copyLink}
-                        </Button>
-                    </div>
-                </Card>
-            ))}
-        </div>
-    );
-};
-
-
-export default function PersonalCinemaPage() {
+export default function PersonalVideoLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
@@ -219,7 +138,7 @@ export default function PersonalCinemaPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
-        <header className="w-full max-w-5xl mb-6 sm:mb-8">
+        <header className="w-full max-w-6xl mb-6 sm:mb-8">
             <Link href="/rest" passHref>
                 <Button variant="outline" size="sm">
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -228,34 +147,21 @@ export default function PersonalCinemaPage() {
             </Link>
         </header>
 
-        <main className="w-full max-w-5xl flex flex-col items-center">
+        <main className="w-full max-w-6xl flex flex-col items-center">
             <div className="text-center mb-8">
                 <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary">
                     {t.pageTitle}
                 </h1>
             </div>
 
-            <Tabs defaultValue="personal" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
-                    <TabsTrigger value="personal">我的影院</TabsTrigger>
-                    <TabsTrigger value="heaven">电影天堂</TabsTrigger>
+            <Tabs defaultValue="local_cinema" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
+                    <TabsTrigger value="local_cinema"><Film className="mr-2 h-4 w-4"/>{t.tabLocalCinema}</TabsTrigger>
+                    <TabsTrigger value="short_video"><Video className="mr-2 h-4 w-4"/>{t.tabShortVideo}</TabsTrigger>
+                    <TabsTrigger value="movie_heaven"><Database className="mr-2 h-4 w-4"/>{t.tabMovieHeaven}</TabsTrigger>
                 </TabsList>
-
-                <TabsContent value="heaven">
-                    <Card className="w-full max-w-2xl mx-auto shadow-lg">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-xl">
-                                <Film className="text-primary"/>
-                                {t.movieHeavenTitle}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <MovieHeavenViewer t={t} />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="personal">
+                
+                <TabsContent value="local_cinema">
                     {/* Search Section */}
                     <div className="w-full max-w-2xl mb-8 relative mx-auto">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -269,7 +175,7 @@ export default function PersonalCinemaPage() {
                         {searchTerm && (
                             <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
                                 {isSearching ? (
-                                    <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
+                                     <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
                                 ) : searchResults.length > 0 ? (
                                     <ul>
                                         {searchResults.map(movie => (
@@ -291,7 +197,6 @@ export default function PersonalCinemaPage() {
                             </div>
                         )}
                     </div>
-                    {/* Tabs and Content */}
                      <Tabs defaultValue="want_to_watch" className="w-full">
                         <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
                             <TabsTrigger value="want_to_watch">{t.tabWantToWatch} ({wantToWatchMovies.length})</TabsTrigger>
@@ -304,6 +209,17 @@ export default function PersonalCinemaPage() {
                             {renderMovieList(watchedMovies, t.noMoviesWatched)}
                         </TabsContent>
                     </Tabs>
+                </TabsContent>
+                
+                <TabsContent value="short_video">
+                    <div className="text-center py-24 text-muted-foreground">
+                        <Video className="w-20 h-20 mx-auto mb-4" />
+                        <p className="text-xl">{t.comingSoon}</p>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="movie_heaven">
+                     <MovieHeavenViewer />
                 </TabsContent>
             </Tabs>
         </main>
