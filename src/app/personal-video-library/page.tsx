@@ -78,7 +78,6 @@ export default function PersonalVideoLibraryPage() {
   const { movies, addMovie, updateMovieStatus, updateMovieRating, updateMovieReview } = useMovies();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [_, setForceRender] = useState(0); // Helper to force re-render on data load
 
   const handleJsonImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -92,15 +91,13 @@ export default function PersonalVideoLibraryPage() {
                 toast({ title: t.jsonImportError, variant: 'destructive' });
                 return;
             }
-            // Basic validation
             const parsedData = JSON.parse(content);
             if (!Array.isArray(parsedData)) {
                 throw new Error("JSON is not an array");
             }
             localStorage.setItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY, content);
             toast({ title: t.jsonImportSuccess });
-            // Force re-render of MovieHeavenViewer component
-            setForceRender(Date.now());
+            window.dispatchEvent(new Event('local-storage')); // Notify other components of the change
         } catch (error) {
             console.error("JSON parsing error:", error);
             toast({ title: t.jsonImportError, variant: 'destructive' });
@@ -274,7 +271,7 @@ export default function PersonalVideoLibraryPage() {
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">
-                       <MovieHeavenViewer key={_} />
+                       <MovieHeavenViewer />
                   </TabsContent>
               </Tabs>
           </main>
