@@ -42,17 +42,18 @@ const translations = {
 
 type LanguageKey = keyof typeof translations;
 
-const LOCAL_STORAGE_MOVIE_HEAVEN_KEY = 'weekglance_movie_heaven_data_v1';
 const ITEMS_PER_PAGE = 10;
 
-// Helper to extract year from title string
 const getYearFromTitle = (title: string): number => {
     const match = title.match(/\b(20\d{2})\b/);
     return match ? parseInt(match[1], 10) : 0;
 }
 
+interface MovieHeavenViewerProps {
+  localDataOverride?: any[] | null;
+}
 
-export const MovieHeavenViewer = () => {
+export const MovieHeavenViewer: React.FC<MovieHeavenViewerProps> = ({ localDataOverride }) => {
     const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
     const [allMovies, setAllMovies] = useState<MovieHeavenItem[]>([]);
     const { toast } = useToast();
@@ -63,66 +64,28 @@ export const MovieHeavenViewer = () => {
     useEffect(() => {
         const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
         setCurrentLanguage(browserLang);
-
-        const loadMovies = () => {
-             try {
-                // If the default data source is empty, we should clear localStorage as well.
-                if (movieHeavenData.length === 0) {
-                    localStorage.removeItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY);
-                    setAllMovies([]);
-                    return;
-                }
-
-                const localData = localStorage.getItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY);
-                let moviesToLoad: MovieHeavenItem[];
-
-                if (localData) {
-                    const parsedData = JSON.parse(localData) as any[];
-                    moviesToLoad = parsedData.map((item: any) => ({
-                        title: item.title,
-                        download_links: item.download_links || [],
-                        imdb_score: item.imdb_score || '暂无评分',
-                        category: item.category || '未知',
-                        content: item.content || '暂无简介'
-                    }));
-                } else {
-                    moviesToLoad = movieHeavenData;
-                }
-
-                // Sort movies by year descending
-                moviesToLoad.sort((a, b) => {
-                    const yearA = getYearFromTitle(a.title);
-                    const yearB = getYearFromTitle(b.title);
-                    return yearB - yearA;
-                });
-                
-                setAllMovies(moviesToLoad);
-
-            } catch(e) {
-                console.error("Failed to load movie data from localStorage, falling back to default.", e);
-                const sortedDefaultData = [...movieHeavenData].sort((a, b) => getYearFromTitle(b.title) - getYearFromTitle(a.title));
-                setAllMovies(sortedDefaultData);
-            }
-        };
-
-        loadMovies();
-        
-        const handleStorageChange = (event: StorageEvent) => {
-            if (event.key === LOCAL_STORAGE_MOVIE_HEAVEN_KEY || event.type === 'local-storage') {
-                loadMovies();
-                setCurrentPage(1); // Reset to first page on new data
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        window.addEventListener('local-storage', handleStorageChange); // For changes within the same tab
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('local-storage', handleStorageChange);
-        };
-        
     }, []);
+
+    useEffect(() => {
+        const loadMovies = () => {
+            let moviesToLoad: MovieHeavenItem[];
+            if (localDataOverride) {
+                moviesToLoad = localDataOverride;
+            } else {
+                moviesToLoad = movieHeavenData;
+            }
+            
+            moviesToLoad.sort((a, b) => {
+                const yearA = getYearFromTitle(a.title);
+                const yearB = getYearFromTitle(b.title);
+                return yearB - yearA;
+            });
+            
+            setAllMovies(moviesToLoad);
+            setCurrentPage(1); 
+        };
+        loadMovies();
+    }, [localDataOverride]);
     
     const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
@@ -167,7 +130,6 @@ export const MovieHeavenViewer = () => {
             <div className="text-center py-10 text-muted-foreground flex flex-col items-center justify-center gap-4">
                 <ServerCrash className="h-10 w-10" />
                 <p>{t.noData}</p>
-                <p className="text-sm">{t.loadLocalDataMessage}</p>
             </div>
         );
     }

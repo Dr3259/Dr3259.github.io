@@ -7,7 +7,5 @@ export interface MovieHeavenItem {
   content?: string;
 }
 
-// 在此处粘贴您的JSON数据
 // Paste your JSON data here
-export const movieHeavenData: MovieHeavenItem[] = [
-]
+export const movieHeavenData: MovieHeavenItem[] = [];

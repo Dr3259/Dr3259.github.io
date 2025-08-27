@@ -32,7 +32,7 @@ const translations = {
     noResults: '未找到结果。',
     searchInstruction: '搜索电影并添加到您的收藏中。',
     comingSoon: '敬请期待！此功能正在开发中。',
-    jsonImportSuccess: '电影天堂数据已成功加载！',
+    jsonImportSuccess: '本地JSON文件预览成功！请确认数据无误后，通知我将其固化到项目中。',
     jsonImportError: '加载JSON文件失败，请检查文件格式。'
   },
   'en': {
@@ -53,13 +53,12 @@ const translations = {
     noResults: 'No results found.',
     searchInstruction: 'Search for movies to add to your collection.',
     comingSoon: 'Coming soon! This feature is under development.',
-    jsonImportSuccess: 'Successfully loaded Movie Heaven data!',
+    jsonImportSuccess: 'Local JSON file previewed successfully! After confirming the data is correct, please instruct me to commit it to the project.',
     jsonImportError: 'Failed to load JSON file. Please check the format.'
   }
 };
 
 type LanguageKey = keyof typeof translations;
-const LOCAL_STORAGE_MOVIE_HEAVEN_KEY = 'weekglance_movie_heaven_data_v1';
 
 // --- Mock Search Data ---
 const mockSearchResults: Movie[] = [
@@ -77,6 +76,7 @@ export default function PersonalVideoLibraryPage() {
   const [isSearching, setIsSearching] = useState(false);
   const { movies, addMovie, updateMovieStatus, updateMovieRating, updateMovieReview } = useMovies();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [localJsonData, setLocalJsonData] = useState(null);
   const { toast } = useToast();
 
   const handleJsonImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,12 +92,8 @@ export default function PersonalVideoLibraryPage() {
                 return;
             }
             const parsedData = JSON.parse(content);
-            if (!Array.isArray(parsedData)) {
-                throw new Error("JSON is not an array");
-            }
-            localStorage.setItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY, content);
+            setLocalJsonData(parsedData); // Load data into state for preview
             toast({ title: t.jsonImportSuccess });
-            window.dispatchEvent(new Event('local-storage')); // Notify other components of the change
         } catch (error) {
             console.error("JSON parsing error:", error);
             toast({ title: t.jsonImportError, variant: 'destructive' });
@@ -271,7 +267,7 @@ export default function PersonalVideoLibraryPage() {
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">
-                       <MovieHeavenViewer />
+                       <MovieHeavenViewer localDataOverride={localJsonData} />
                   </TabsContent>
               </Tabs>
           </main>
