@@ -11,7 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "update:movies": "node scripts/update-movie-data.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",

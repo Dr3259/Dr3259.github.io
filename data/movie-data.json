@@ -1,0 +1,12 @@
+
+[
+  {
+    "title": "Placeholder: Your Movie Data Here",
+    "download_links": [
+      "ftp://example.com/movie.mp4"
+    ],
+    "imdb_score": "8.0",
+    "category": "Action / Sci-Fi",
+    "content": "This is a placeholder. Replace this file with your actual movie data JSON."
+  }
+]
