@@ -175,36 +175,33 @@ export const MovieHeavenViewer: React.FC = () => {
                                 </CardTitle>
                             </CardHeader>
                              <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-                                    <div className="md:col-span-1 flex flex-col gap-2">
-                                        <div className="flex items-center gap-2 text-sm font-semibold">
-                                            <Star className="w-4 h-4 text-amber-400"/>
-                                            <span className="shrink-0">{t.rating}</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2 pl-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                                    <div className="flex items-center gap-2 text-sm col-span-1">
+                                        <Star className="w-4 h-4 text-amber-400 shrink-0"/>
+                                        <strong className="mr-1 shrink-0">{t.rating}:</strong>
+                                        <div className="flex flex-wrap gap-2">
                                             {movie.imdb_score && <Badge variant="secondary">{t.imdb} {movie.imdb_score}</Badge>}
                                             {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t.douban} {movie.douban_score}</Badge>}
-                                            {!movie.imdb_score && !movie.douban_score && <span className="text-sm text-muted-foreground pl-1">N/A</span>}
+                                            {!movie.imdb_score && !movie.douban_score && <span className="text-sm text-muted-foreground">N/A</span>}
                                         </div>
                                     </div>
-                                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                                        <InfoRow icon={User} label={t.director} value={movie.director} />
-                                        <InfoRow icon={MapPin} label={t.country} value={movie.country} />
-                                        <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
-                                        <InfoRow icon={Clock} label={t.duration} value={movie.duration} />
-                                        <InfoRow icon={Languages} label={t.language} value={movie.language} />
-                                        <InfoRow icon={Subtitles} label={t.subtitles} value={movie.subtitles} />
-                                    </div>
+                                    <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
+                                    <InfoRow icon={Clock} label={t.duration} value={movie.duration} />
+                                    <InfoRow icon={User} label={t.director} value={movie.director} />
+                                    <InfoRow icon={MapPin} label={t.country} value={movie.country} />
+                                    <InfoRow icon={Languages} label={t.language} value={movie.language} />
+                                    <InfoRow icon={Subtitles} label={t.subtitles} value={movie.subtitles} />
+                                    <InfoRow icon={User} label={t.actors} value={movie.actors} className="col-span-full" />
                                 </div>
                                 
-                                <Separator />
+                                <Separator className="my-4" />
                                 
-                                <div className="space-y-3 text-sm">
-                                    <InfoRow icon={User} label={t.actors} value={movie.actors} />
-                                    <div>
-                                        <strong className="text-sm text-foreground/80">{t.intro}:</strong>
-                                        <p className="text-sm text-muted-foreground pt-1">{movie.content}</p>
-                                    </div>
+                                <div>
+                                    <strong className="text-sm text-foreground/80 flex items-center mb-2">
+                                        <Download className="w-4 h-4 mr-2" />
+                                        {t.intro}
+                                    </strong>
+                                    <p className="text-sm text-muted-foreground pt-1">{movie.content}</p>
                                 </div>
                             </CardContent>
                             <CardFooter>
@@ -244,4 +241,3 @@ export const MovieHeavenViewer: React.FC = () => {
         </Card>
     );
 };
-
