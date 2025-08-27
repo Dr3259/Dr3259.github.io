@@ -1,123 +1,122 @@
 
-// scripts/update-movie-data.mjs
 import fs from 'fs';
 import path from 'path';
 
 // --- Configuration ---
-const INPUT_DATA_FILES = ['movies_2025.json', 'movie-data.json']; // Prioritize new file
-const OUTPUT_TS_FILE = path.join(process.cwd(), 'src', 'lib', 'data', 'movie-heaven-data.ts');
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = 'data';
+const OUTPUT_FILE = 'src/lib/data/movie-heaven-data.ts';
+const DATA_SOURCES = ['movies_2025.json', 'movie-data.json']; // Prioritized list
 
 // --- Helper Functions ---
 
 /**
- * Extracts the first magnet link from an array of links.
- * @param {string[]} links - Array of download links.
- * @returns {string | undefined} The first magnet link or undefined.
+ * Finds the first valid data source from the prioritized list.
+ * @returns {string|null} The path to the valid data source or null if none found.
  */
-const getMagnetLink = (links) => {
-  if (!Array.isArray(links)) return undefined;
-  return links.find(link => link.startsWith('magnet:?'));
-};
+function findValidDataSource() {
+  for (const sourceFile of DATA_SOURCES) {
+    const sourcePath = path.join(DATA_DIR, sourceFile);
+    if (fs.existsSync(sourcePath)) {
+      console.log(`Found data source: ${sourcePath}`);
+      return sourcePath;
+    }
+  }
+  console.warn('No valid data source found in /data directory.');
+  return null;
+}
 
 /**
- * Parses and cleans up the IMDb score.
- * @param {string} scoreString - The raw score string (e.g., "6.1/10 from 7049 users").
- * @returns {string | undefined} The cleaned score (e.g., "6.1") or undefined.
+ * Extracts a score value (like 6.1) from a string (like "6.1/10 from 7049 users").
+ * @param {string | undefined} scoreString The string containing the score.
+ * @returns {string | undefined} The extracted score or undefined.
  */
-const parseImdbScore = (scoreString) => {
-    if (!scoreString || typeof scoreString !== 'string' || scoreString.includes('暂无')) {
-        return undefined;
-    }
+function extractScore(scoreString) {
+    if (!scoreString) return undefined;
     const match = scoreString.match(/^[0-9.]+/);
     return match ? match[0] : undefined;
-};
+}
 
 
 /**
- * Processes a single raw movie entry from the JSON file into the standardized MovieHeavenItem format.
- * @param {object} rawEntry - The raw movie object from the JSON file.
- * @returns {object | null} A formatted movie object or null if invalid.
+ * Processes a single raw movie entry and maps it to the MovieHeavenItem format.
+ * @param {any} rawEntry The raw data entry from the JSON file.
+ * @returns {any} A processed movie item.
  */
-const processMovieEntry = (rawEntry) => {
-    if (!rawEntry.title || !rawEntry.download_links) {
-        return null; // Skip entries without essential data
-    }
-    
-    // Use the first magnet link found.
-    const magnetLink = getMagnetLink(rawEntry.download_links);
-    if (!magnetLink) {
-        return null;
-    }
+function processMovieEntry(rawEntry) {
+  return {
+    title: rawEntry.title || 'Untitled',
+    download_links: rawEntry.download_links || [],
+    imdb_score: extractScore(rawEntry.imdb_score),
+    douban_score: extractScore(rawEntry.douban_score),
+    category: rawEntry.category,
+    content: rawEntry.content,
+    translated_name: rawEntry.translated_name,
+    original_name: rawEntry.original_name,
+    year: rawEntry.year,
+    country: rawEntry.country,
+    language: rawEntry.language,
+    subtitles: rawEntry.subtitles,
+    release_date: rawEntry.release_date,
+    duration: rawEntry.duration,
+    director: rawEntry.director,
+    actors: rawEntry.actors,
+  };
+}
 
-    // Standardize the data into the MovieHeavenItem structure.
-    return {
-        title: rawEntry.translated_name || rawEntry.title,
-        download_links: [magnetLink], // Ensure it's always an array with one link
-        imdb_score: parseImdbScore(rawEntry.imdb_score),
-        category: rawEntry.category,
-        content: rawEntry.content && !rawEntry.content.includes('暂无简介') ? rawEntry.content.split('\n')[0] : undefined,
-    };
-};
-
-
-// --- Main Execution ---
+// --- Main Script ---
 
 console.log('Starting movie data update...');
 
-let allMovies = [];
-let inputFileFound = false;
+const dataSourcePath = findValidDataSource();
 
-// Find the first available data file from the priority list
-for (const fileName of INPUT_DATA_FILES) {
-    const inputFilePath = path.join(DATA_DIR, fileName);
-    if (fs.existsSync(inputFilePath)) {
-        console.log(`Found data source: ${fileName}`);
-        try {
-            const fileContent = fs.readFileSync(inputFilePath, 'utf-8');
-            const jsonData = JSON.parse(fileContent);
-            if (Array.isArray(jsonData)) {
-                allMovies = jsonData;
-                inputFileFound = true;
-                break; 
-            } else {
-                console.warn(`Warning: ${fileName} does not contain a valid JSON array. Skipping.`);
-            }
-        } catch (error) {
-            console.error(`Error reading or parsing ${fileName}:`, error);
-        }
-    }
+if (!dataSourcePath) {
+  console.error('Operation cancelled: No data source file found.');
+  process.exit(1);
 }
 
-if (!inputFileFound) {
-    console.error('No valid movie data JSON file found in /data directory. Looked for:', INPUT_DATA_FILES.join(', '));
-    process.exit(1);
+let rawData;
+try {
+  rawData = JSON.parse(fs.readFileSync(dataSourcePath, 'utf-8'));
+  if (!Array.isArray(rawData)) {
+    throw new Error("Data source is not a JSON array.");
+  }
+} catch (error) {
+  console.error(`Error reading or parsing ${dataSourcePath}:`, error);
+  process.exit(1);
 }
 
-const processedMovies = allMovies.map(processMovieEntry).filter(Boolean); // filter(Boolean) removes null entries
+const processedData = rawData.map(processMovieEntry);
 
-console.log(`Successfully processed ${processedMovies.length} movie entries.`);
-
-const tsContent = `
+const fileContent = `
 // This file is auto-generated by a script. Do not edit manually.
 export interface MovieHeavenItem {
   title: string;
-  download_links: string[];
-  imdb_score?: string;
+  translated_name?: string;
+  original_name?: string;
+  year?: string;
+  country?: string;
   category?: string;
+  language?: string;
+  subtitles?: string;
+  release_date?: string;
+  imdb_score?: string;
+  douban_score?: string;
+  duration?: string;
+  director?: string;
+  actors?: string;
   content?: string;
+  download_links: string[];
 }
 
 // Data sourced from local JSON file.
-export const movieHeavenData: MovieHeavenItem[] = ${JSON.stringify(processedMovies, null, 2)};
+// To update, place your JSON in /data/ and run \`npm run update:movies\`
+export const movieHeavenData: MovieHeavenItem[] = ${JSON.stringify(processedData, null, 2)};
 `;
 
 try {
-    fs.writeFileSync(OUTPUT_TS_FILE, tsContent.trim());
-    console.log(`Successfully wrote ${processedMovies.length} movies to ${OUTPUT_TS_FILE}`);
+  fs.writeFileSync(OUTPUT_FILE, fileContent.trim());
+  console.log(`✅ Successfully updated ${OUTPUT_FILE} with ${processedData.length} entries from ${dataSourcePath}.`);
 } catch (error) {
-    console.error('Error writing TypeScript file:', error);
-    process.exit(1);
+  console.error(`Error writing to ${OUTPUT_FILE}:`, error);
+  process.exit(1);
 }
-
-console.log('Movie data update complete!');

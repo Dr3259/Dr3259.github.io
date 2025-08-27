@@ -2,10 +2,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ServerCrash, Download, Film, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ServerCrash, Download, Film, ChevronLeft, ChevronRight, Star, Clock, User, Languages, Calendar, MapPin, Subtitles } from 'lucide-react';
 import { movieHeavenData, type MovieHeavenItem } from '@/lib/data/movie-heaven-data';
 import copy from 'copy-to-clipboard';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,15 @@ const translations = {
     page: '页',
     of: '/',
     jumpTo: '跳转',
+    imdb: 'IMDb',
+    douban: '豆瓣',
+    director: '导演',
+    actors: '主演',
+    country: '国家/地区',
+    language: '语言',
+    releaseDate: '上映日期',
+    duration: '片长',
+    subtitles: '字幕',
   },
   'en': {
     movieHeavenTitle: 'Movie Heaven Database',
@@ -35,6 +44,15 @@ const translations = {
     page: 'Page',
     of: 'of',
     jumpTo: 'Jump',
+    imdb: 'IMDb',
+    douban: 'Douban',
+    director: 'Director',
+    actors: 'Actors',
+    country: 'Country/Region',
+    language: 'Language',
+    releaseDate: 'Release Date',
+    duration: 'Duration',
+    subtitles: 'Subtitles',
   }
 };
 
@@ -87,7 +105,7 @@ export const MovieHeavenViewer: React.FC = () => {
 
     const handleCopy = (links: string[]) => {
         if (links && links.length > 0) {
-            copy(links[0]);
+            copy(links.join('\\n'));
             toast({ title: t.linkCopied, duration: 2000 });
         }
     }
@@ -113,6 +131,17 @@ export const MovieHeavenViewer: React.FC = () => {
             setJumpToPage('');
         }
     }
+
+    const InfoRow: React.FC<{ icon: React.ElementType, label: string, value?: string | null }> = ({ icon: Icon, label, value }) => {
+        if (!value) return null;
+        return (
+            <div className="flex items-start text-xs">
+                <Icon className="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0 text-muted-foreground" />
+                <strong className="mr-1.5 shrink-0">{label}:</strong>
+                <span className="text-muted-foreground">{value}</span>
+            </div>
+        );
+    };
     
     if (!allMovies || allMovies.length === 0) {
         return (
@@ -138,17 +167,32 @@ export const MovieHeavenViewer: React.FC = () => {
                             <CardHeader>
                                 <CardTitle className="text-lg">{movie.title}</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3 text-sm">
-                                {movie.imdb_score && <div className="flex items-center gap-2"><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.imdb_score}</Badge></div>}
-                                {movie.category && <div className="flex items-center gap-2"><strong>{t.tags}:</strong> {movie.category}</div>}
-                                {movie.content && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.content}</p>}
+                            <CardContent className="space-y-3">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Star className="w-4 h-4 text-amber-400"/>
+                                        <strong>{t.rating}:</strong>
+                                        {movie.imdb_score && <Badge variant="secondary">{t.imdb} {movie.imdb_score}</Badge>}
+                                        {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800">{t.douban} {movie.douban_score}</Badge>}
+                                    </div>
+                                    <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
+                                    <InfoRow icon={User} label={t.director} value={movie.director} />
+                                    <InfoRow icon={MapPin} label={t.country} value={movie.country} />
+                                    <InfoRow icon={Languages} label={t.language} value={movie.language} />
+                                    <InfoRow icon={Subtitles} label={t.subtitles} value={movie.subtitles} />
+                                    <InfoRow icon={Clock} label={t.duration} value={movie.duration} />
+                                </div>
+                                <div className="space-y-2 pt-2">
+                                  <InfoRow icon={User} label={t.actors} value={movie.actors} />
+                                  <p className="text-xs text-muted-foreground pt-1">{movie.content}</p>
+                                </div>
                             </CardContent>
-                            <div className="p-6 pt-0">
+                            <CardFooter>
                                  <Button onClick={() => handleCopy(movie.download_links)} disabled={!movie.download_links || movie.download_links.length === 0}>
                                     <Download className="mr-2 h-4 w-4" />
                                     {t.copyLink}
                                 </Button>
-                            </div>
+                            </CardFooter>
                         </Card>
                     ))}
                 </div>
