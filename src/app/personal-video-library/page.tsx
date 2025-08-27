@@ -20,7 +20,7 @@ const translations = {
     backButton: '返回休闲驿站',
     searchPlaceholder: '搜索电影...',
     tabLocalCinema: '本地影院',
-    tabShortVideo: '短视频',
+    tabVideo: '视频',
     tabMovieHeaven: '电影天堂',
     tabWantToWatch: '想看',
     tabWatched: '已看',
@@ -41,7 +41,7 @@ const translations = {
     backButton: 'Back to Rest Stop',
     searchPlaceholder: 'Search for a movie...',
     tabLocalCinema: 'Local Cinema',
-    tabShortVideo: 'Shorts',
+    tabVideo: 'Video',
     tabMovieHeaven: 'Movie Heaven DB',
     tabWantToWatch: 'Want to Watch',
     tabWatched: 'Watched',
@@ -160,13 +160,20 @@ export default function PersonalVideoLibraryPage() {
                   </h1>
               </div>
 
-              <Tabs defaultValue="local_cinema" className="w-full">
+              <Tabs defaultValue="video" className="w-full">
                   <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
+                      <TabsTrigger value="video"><Video className="mr-2 h-4 w-4"/>{t.tabVideo}</TabsTrigger>
                       <TabsTrigger value="local_cinema"><Film className="mr-2 h-4 w-4"/>{t.tabLocalCinema}</TabsTrigger>
-                      <TabsTrigger value="short_video"><Video className="mr-2 h-4 w-4"/>{t.tabShortVideo}</TabsTrigger>
                       <TabsTrigger value="movie_heaven"><Database className="mr-2 h-4 w-4"/>{t.tabMovieHeaven}</TabsTrigger>
                   </TabsList>
                   
+                  <TabsContent value="video">
+                      <div className="text-center py-24 text-muted-foreground">
+                          <Video className="w-20 h-20 mx-auto mb-4" />
+                          <p className="text-xl">{t.comingSoon}</p>
+                      </div>
+                  </TabsContent>
+
                   <TabsContent value="local_cinema">
                       {/* Search Section */}
                       <div className="w-full max-w-2xl mb-8 relative mx-auto">
@@ -215,13 +222,6 @@ export default function PersonalVideoLibraryPage() {
                               {renderMovieList(watchedMovies, t.noMoviesWatched)}
                           </TabsContent>
                       </Tabs>
-                  </TabsContent>
-                  
-                  <TabsContent value="short_video">
-                      <div className="text-center py-24 text-muted-foreground">
-                          <Video className="w-20 h-20 mx-auto mb-4" />
-                          <p className="text-xl">{t.comingSoon}</p>
-                      </div>
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">
