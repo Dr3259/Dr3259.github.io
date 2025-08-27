@@ -1,45 +1,105 @@
 
+// scripts/update-movie-data.mjs
 import fs from 'fs';
 import path from 'path';
 
-// Define paths
-const dataDir = path.resolve(process.cwd(), 'data');
-const sourceJsonPath = path.resolve(dataDir, 'movie-data.json');
-const targetTsPath = path.resolve(process.cwd(), 'src', 'lib', 'data', 'movie-heaven-data.ts');
+// --- Configuration ---
+const INPUT_DATA_FILES = ['movies_2025.json', 'movie-data.json']; // Prioritize new file
+const OUTPUT_TS_FILE = path.join(process.cwd(), 'src', 'lib', 'data', 'movie-heaven-data.ts');
+const DATA_DIR = path.join(process.cwd(), 'data');
 
-function updateMovieData() {
-  // 1. Ensure data directory exists
-  if (!fs.existsSync(dataDir)) {
-    console.log(`Creating data directory at: ${dataDir}`);
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
+// --- Helper Functions ---
 
-  // 2. Check if source JSON exists
-  if (!fs.existsSync(sourceJsonPath)) {
-    console.error(`Error: Source file not found at ${sourceJsonPath}`);
-    console.log('Please place your JSON file named "movie-data.json" in the "/data" directory at the root of the project.');
-    // Optional: Create a placeholder file if it doesn't exist
-    fs.writeFileSync(
-        sourceJsonPath, 
-        JSON.stringify([{ title: "Placeholder Movie", download_links: [] }], null, 2), 
-        'utf-8'
-    );
-    console.log('A placeholder "movie-data.json" file has been created for you.');
-    return;
-  }
+/**
+ * Extracts the first magnet link from an array of links.
+ * @param {string[]} links - Array of download links.
+ * @returns {string | undefined} The first magnet link or undefined.
+ */
+const getMagnetLink = (links) => {
+  if (!Array.isArray(links)) return undefined;
+  return links.find(link => link.startsWith('magnet:?'));
+};
 
-  try {
-    // 3. Read and parse the JSON file
-    console.log(`Reading data from ${sourceJsonPath}...`);
-    const jsonData = fs.readFileSync(sourceJsonPath, 'utf-8');
-    const data = JSON.parse(jsonData);
+/**
+ * Parses and cleans up the IMDb score.
+ * @param {string} scoreString - The raw score string (e.g., "6.1/10 from 7049 users").
+ * @returns {string | undefined} The cleaned score (e.g., "6.1") or undefined.
+ */
+const parseImdbScore = (scoreString) => {
+    if (!scoreString || typeof scoreString !== 'string' || scoreString.includes('暂无')) {
+        return undefined;
+    }
+    const match = scoreString.match(/^[0-9.]+/);
+    return match ? match[0] : undefined;
+};
 
-    if (!Array.isArray(data)) {
-        throw new Error('JSON data is not an array.');
+
+/**
+ * Processes a single raw movie entry from the JSON file into the standardized MovieHeavenItem format.
+ * @param {object} rawEntry - The raw movie object from the JSON file.
+ * @returns {object | null} A formatted movie object or null if invalid.
+ */
+const processMovieEntry = (rawEntry) => {
+    if (!rawEntry.title || !rawEntry.download_links) {
+        return null; // Skip entries without essential data
+    }
+    
+    // Use the first magnet link found.
+    const magnetLink = getMagnetLink(rawEntry.download_links);
+    if (!magnetLink) {
+        return null;
     }
 
-    // 4. Format the data into a TypeScript module
-    const tsContent = `
+    // Standardize the data into the MovieHeavenItem structure.
+    return {
+        title: rawEntry.translated_name || rawEntry.title,
+        download_links: [magnetLink], // Ensure it's always an array with one link
+        imdb_score: parseImdbScore(rawEntry.imdb_score),
+        category: rawEntry.category,
+        content: rawEntry.content && !rawEntry.content.includes('暂无简介') ? rawEntry.content.split('\n')[0] : undefined,
+    };
+};
+
+
+// --- Main Execution ---
+
+console.log('Starting movie data update...');
+
+let allMovies = [];
+let inputFileFound = false;
+
+// Find the first available data file from the priority list
+for (const fileName of INPUT_DATA_FILES) {
+    const inputFilePath = path.join(DATA_DIR, fileName);
+    if (fs.existsSync(inputFilePath)) {
+        console.log(`Found data source: ${fileName}`);
+        try {
+            const fileContent = fs.readFileSync(inputFilePath, 'utf-8');
+            const jsonData = JSON.parse(fileContent);
+            if (Array.isArray(jsonData)) {
+                allMovies = jsonData;
+                inputFileFound = true;
+                break; 
+            } else {
+                console.warn(`Warning: ${fileName} does not contain a valid JSON array. Skipping.`);
+            }
+        } catch (error) {
+            console.error(`Error reading or parsing ${fileName}:`, error);
+        }
+    }
+}
+
+if (!inputFileFound) {
+    console.error('No valid movie data JSON file found in /data directory. Looked for:', INPUT_DATA_FILES.join(', '));
+    process.exit(1);
+}
+
+const processedMovies = allMovies.map(processMovieEntry).filter(Boolean); // filter(Boolean) removes null entries
+
+console.log(`Successfully processed ${processedMovies.length} movie entries.`);
+
+const tsContent = `
+// This file is auto-generated by a script. Do not edit manually.
 export interface MovieHeavenItem {
   title: string;
   download_links: string[];
@@ -48,23 +108,16 @@ export interface MovieHeavenItem {
   content?: string;
 }
 
-// This file is auto-generated by scripts/update-movie-data.mjs
-// Do not edit this file directly.
-export const movieHeavenData: MovieHeavenItem[] = ${JSON.stringify(data, null, 2)};
+// Data sourced from local JSON file.
+export const movieHeavenData: MovieHeavenItem[] = ${JSON.stringify(processedMovies, null, 2)};
 `;
 
-    // 5. Write the content to the target TypeScript file
-    console.log(`Writing data to ${targetTsPath}...`);
-    fs.writeFileSync(targetTsPath, tsContent.trim(), 'utf-8');
-
-    console.log(`\n✅ Successfully updated movie data!`);
-    console.log(`${data.length} movies loaded.`);
-
-  } catch (error) {
-    console.error('\n❌ An error occurred during the update process:');
-    console.error(error);
+try {
+    fs.writeFileSync(OUTPUT_TS_FILE, tsContent.trim());
+    console.log(`Successfully wrote ${processedMovies.length} movies to ${OUTPUT_TS_FILE}`);
+} catch (error) {
+    console.error('Error writing TypeScript file:', error);
     process.exit(1);
-  }
 }
 
-updateMovieData();
+console.log('Movie data update complete!');
