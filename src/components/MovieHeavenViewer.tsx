@@ -70,14 +70,14 @@ export const MovieHeavenViewer = () => {
                 let moviesToLoad: MovieHeavenItem[];
 
                 if (localData) {
-                    const parsedData = JSON.parse(localData).map((item: any) => ({
+                    const parsedData = JSON.parse(localData) as any[];
+                    moviesToLoad = parsedData.map((item: any) => ({
                         title: item.title,
-                        downloadUrl: (item.download_links && item.download_links[0]) || 'N/A',
-                        rating: item.imdb_score || '暂无评分',
-                        tags: item.category || '未知',
-                        shortIntro: item.content || '暂无简介'
+                        download_links: item.download_links || [],
+                        imdb_score: item.imdb_score || '暂无评分',
+                        category: item.category || '未知',
+                        content: item.content || '暂无简介'
                     }));
-                    moviesToLoad = parsedData;
                 } else {
                     moviesToLoad = movieHeavenData;
                 }
@@ -126,9 +126,11 @@ export const MovieHeavenViewer = () => {
         return allMovies.slice(start, end);
     }, [allMovies, currentPage]);
 
-    const handleCopy = (url: string) => {
-        copy(url);
-        toast({ title: t.linkCopied, duration: 2000 });
+    const handleCopy = (links: string[]) => {
+        if (links && links.length > 0) {
+            copy(links[0]);
+            toast({ title: t.linkCopied, duration: 2000 });
+        }
     }
 
     const handlePrevPage = () => {
@@ -179,12 +181,12 @@ export const MovieHeavenViewer = () => {
                                 <CardTitle className="text-lg">{movie.title}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm">
-                                {movie.rating && <div className="flex items-center gap-2"><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></div>}
-                                {movie.tags && <div className="flex items-center gap-2"><strong>{t.tags}:</strong> {movie.tags}</div>}
-                                {movie.shortIntro && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.shortIntro}</p>}
+                                {movie.imdb_score && <div className="flex items-center gap-2"><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.imdb_score}</Badge></div>}
+                                {movie.category && <div className="flex items-center gap-2"><strong>{t.tags}:</strong> {movie.category}</div>}
+                                {movie.content && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.content}</p>}
                             </CardContent>
                             <div className="p-6 pt-0">
-                                 <Button onClick={() => handleCopy(movie.downloadUrl)}>
+                                 <Button onClick={() => handleCopy(movie.download_links)} disabled={!movie.download_links || movie.download_links.length === 0}>
                                     <Download className="mr-2 h-4 w-4" />
                                     {t.copyLink}
                                 </Button>
