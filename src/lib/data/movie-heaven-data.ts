@@ -24,744 +24,762 @@ export interface MovieHeavenItem {
 export const movieHeavenData: MovieHeavenItem[] = [
   {
     "title": "我的牛津岁月/My Oxford Year",
-    "download_links": [
-      "magnet:?xt=urn:btih:9b27d647e9aa13d09f82d166cf83378bd5802ff8&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%88%91%e7%9a%84%e7%89%9b%e6%b4%a5%e5%b2%81%e6%9c%88.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.1",
-    "category": "剧情/喜剧/爱情",
-    "content": "剧情/喜剧/爱情",
     "translated_name": "我的牛津岁月",
     "original_name": "My Oxford Year",
     "year": "2025",
     "country": "美国",
+    "category": "剧情/喜剧/爱情",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-08-01(美国网络)",
+    "imdb_score": "6.1",
     "douban_score": "5.5",
     "duration": "113分钟",
     "director": "艾恩·莫里斯 Iain Morris",
-    "actors": "多格雷·斯科特 Dougray Scott"
+    "actors": "多格雷·斯科特 Dougray Scott",
+    "content": "剧情/喜剧/爱情",
+    "download_links": [
+      "magnet:?xt=urn:btih:9b27d647e9aa13d09f82d166cf83378bd5802ff8&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%88%91%e7%9a%84%e7%89%9b%e6%b4%a5%e5%b2%81%e6%9c%88.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "缉盗/Never a Thief",
-    "download_links": [
-      "magnet:?xt=urn:btih:ccfa23a443e4350ce1049e30767506df0fa2f257&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%bc%89%e7%9b%97.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "剧情/犯罪",
-    "content": "剧情/犯罪",
     "translated_name": "缉盗/Never a Thief",
     "original_name": "緝盜",
     "year": "2025",
     "country": "中国大陆/中国香港",
+    "category": "剧情/犯罪",
     "language": "汉语普通话/粤语",
     "subtitles": "中文",
     "release_date": "2025-07-25(中国大陆网络)",
+    "imdb_score": undefined,
+    "douban_score": undefined,
     "duration": "86分钟",
     "director": "麦浩邦 Ho-Bon Mak",
-    "actors": "任达华 Simon Yam"
+    "actors": "任达华 Simon Yam",
+    "content": "剧情/犯罪",
+    "download_links": [
+      "magnet:?xt=urn:btih:ccfa23a443e4350ce1049e30767506df0fa2f257&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%bc%89%e7%9b%97.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "高尔夫球也疯狂2/球场古惑仔2",
-    "download_links": [
-      "magnet:?xt=urn:btih:ffb6748c054e99d44bc445805f8d49adf01150fa&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%ab%98%e5%b0%94%e5%a4%ab%e7%90%83%e4%b9%9f%e7%96%af%e7%8b%822.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.5",
-    "category": "喜剧/运动",
-    "content": "故事，他参加了一场高级高尔夫巡回赛。\n高尔夫球也疯狂2.2025.BD.1080P.中英双字",
     "translated_name": "高尔夫球也疯狂2/球场古惑仔2",
     "original_name": "Happy Gilmore 2",
     "year": "2025",
     "country": "美国",
+    "category": "喜剧/运动",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-07-25(美国网络)",
+    "imdb_score": "6.5",
+    "douban_score": undefined,
     "duration": "114分钟",
     "director": "凯尔·纽瓦切克 Kyle Newacheck",
-    "actors": "亚当·桑德勒 Adam Sandler"
+    "actors": "亚当·桑德勒 Adam Sandler",
+    "content": "故事，他参加了一场高级高尔夫巡回赛。\n高尔夫球也疯狂2.2025.BD.1080P.中英双字",
+    "download_links": [
+      "magnet:?xt=urn:btih:ffb6748c054e99d44bc445805f8d49adf01150fa&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%ab%98%e5%b0%94%e5%a4%ab%e7%90%83%e4%b9%9f%e7%96%af%e7%8b%822.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "侏罗纪世界：重生/侏罗纪世界4/Jurassic World 4",
-    "download_links": [
-      "magnet:?xt=urn:btih:ddd0096c8e09e849807d0833b106d2a468581c61&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e4%be%8f%e7%bd%97%e7%ba%aa%e4%b8%96%e7%95%8c%ef%bc%9a%e9%87%8d%e7%94%9f.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.2",
-    "category": "动作/科幻/惊悚/冒险",
-    "content": "故事发生在《侏罗纪世界3》事件的五年后。危在旦夕的恐龙族群生存于孤岛之上，但是它们中却隐藏着能够带来人类医药奇迹的关键基因，为获取神秘基因，一支精英小队潜入恐龙禁地，然而等待他们的却是无法预知的危机和惊天阴谋……\n侏罗纪世界：重生.2025.HD.1080P.中英双字",
     "translated_name": "侏罗纪世界：重生/侏罗纪世界4/Jurassic World 4",
     "original_name": "Jurassic World: Rebirth",
     "year": "2025",
     "country": "美国",
+    "category": "动作/科幻/惊悚/冒险",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-07-02(美国/中国大陆)",
+    "imdb_score": "6.2",
     "douban_score": "6.1",
     "duration": "134分钟",
     "director": "加里斯·爱德华斯 Gareth Edwards",
-    "actors": "斯嘉丽·约翰逊 Scarlett Johansson"
+    "actors": "斯嘉丽·约翰逊 Scarlett Johansson",
+    "content": "故事发生在《侏罗纪世界3》事件的五年后。危在旦夕的恐龙族群生存于孤岛之上，但是它们中却隐藏着能够带来人类医药奇迹的关键基因，为获取神秘基因，一支精英小队潜入恐龙禁地，然而等待他们的却是无法预知的危机和惊天阴谋……\n侏罗纪世界：重生.2025.HD.1080P.中英双字",
+    "download_links": [
+      "magnet:?xt=urn:btih:ddd0096c8e09e849807d0833b106d2a468581c61&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e4%be%8f%e7%bd%97%e7%ba%aa%e4%b8%96%e7%95%8c%ef%bc%9a%e9%87%8d%e7%94%9f.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "永生守卫2/不死军团2(港/台)/老卫兵",
-    "download_links": [
-      "magnet:?xt=urn:btih:619a72cfc85a00d56a01e93aa0627595a43760c2&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%b0%b8%e7%94%9f%e5%ae%88%e5%8d%ab2.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "5.4",
-    "category": "动作/惊悚/奇幻/冒险",
-    "content": "暂无简介",
     "translated_name": "永生守卫2/不死军团2(港/台)/老卫兵",
     "original_name": "The Old Guard 2",
     "year": "2025",
     "country": "美国",
+    "category": "动作/惊悚/奇幻/冒险",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-07-02(美国网络)",
+    "imdb_score": "5.4",
+    "douban_score": undefined,
     "duration": "105分钟",
     "director": "维多利亚·马奥尼 Victoria Mahoney",
-    "actors": "查理兹·塞隆 Charlize Theron"
+    "actors": "查理兹·塞隆 Charlize Theron",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:619a72cfc85a00d56a01e93aa0627595a43760c2&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%b0%b8%e7%94%9f%e5%ae%88%e5%8d%ab2.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "惊变28年/28年后(港)/28年毁灭倒数(台)",
-    "download_links": [
-      "magnet:?xt=urn:btih:845e26715df66f1bd5ceb973e61bbac27852bda5&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%83%8a%e5%8f%9828%e5%b9%b4.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "7.1",
-    "category": "科幻/惊悚/恐怖",
-    "content": "暂无简介",
     "translated_name": "惊变28年/28年后(港)/28年毁灭倒数(台)",
     "original_name": "28 Years Later",
     "year": "2025",
     "country": "英国/美国",
+    "category": "科幻/惊悚/恐怖",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-06-18(中国台湾)/2025-06-20(美国)",
+    "imdb_score": "7.1",
     "douban_score": "7.1",
     "duration": "115分钟",
     "director": "丹尼·博伊尔 Danny Boyle",
-    "actors": "朱迪·科默 Jodie Comer"
+    "actors": "朱迪·科默 Jodie Comer",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:845e26715df66f1bd5ceb973e61bbac27852bda5&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%83%8a%e5%8f%9828%e5%b9%b4.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "回声谷/回音谷",
-    "download_links": [
-      "magnet:?xt=urn:btih:c2fb30fa182ce185c007092a02e98b3d8a4e5763&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%9b%9e%e5%a3%b0%e8%b0%b7.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "剧情/惊悚",
-    "content": "剧情/惊悚",
     "translated_name": "回声谷/回音谷",
     "original_name": "Echo Valley",
     "year": "2025",
     "country": "美国",
+    "category": "剧情/惊悚",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-06-13(美国网络)",
+    "imdb_score": undefined,
+    "douban_score": undefined,
     "duration": "104分钟",
     "director": "迈克·皮尔斯 Michael Pearce",
-    "actors": "朱丽安·摩尔 Julianne Moore"
+    "actors": "朱丽安·摩尔 Julianne Moore",
+    "content": "剧情/惊悚",
+    "download_links": [
+      "magnet:?xt=urn:btih:c2fb30fa182ce185c007092a02e98b3d8a4e5763&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%9b%9e%e5%a3%b0%e8%b0%b7.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "物质主义者/钱财心爱物(港)/实利主义者/天作之合(台)/唯物主义者",
-    "download_links": [
-      "magnet:?xt=urn:btih:20b41d4f32263706003899d50982f12fa0a91882&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%89%a9%e8%b4%a8%e4%b8%bb%e4%b9%89%e8%80%85.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.6",
-    "category": "喜剧/爱情",
-    "content": "暂无简介",
     "translated_name": "物质主义者/钱财心爱物(港)/实利主义者/天作之合(台)/唯物主义者",
     "original_name": "Materialists/The Materialists",
     "year": "2025",
     "country": "美国/芬兰",
+    "category": "喜剧/爱情",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-06-13(美国)",
+    "imdb_score": "6.6",
     "douban_score": "6.1",
     "duration": "116分钟",
     "director": "席琳·宋 Celine Song",
-    "actors": "达科塔·约翰逊 Dakota Johnson"
+    "actors": "达科塔·约翰逊 Dakota Johnson",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:20b41d4f32263706003899d50982f12fa0a91882&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%89%a9%e8%b4%a8%e4%b8%bb%e4%b9%89%e8%80%85.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "疾速追杀：芭蕾杀姬/芭蕾猎杀/芭蕾女杀手/芭蕾杀机/芭蕾舞女/捍卫任务：复仇芭蕾(台)/疾速追杀外传：芭蕾杀姬/杀神John Wick外传：芭蕾杀姬(港)",
-    "download_links": [
-      "magnet:?xt=urn:btih:7487965b0449aa05a3e73944aab06f66eec2e14e&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%96%be%e9%80%9f%e8%bf%bd%e6%9d%80%ef%bc%9a%e8%8a%ad%e8%95%be%e6%9d%80%e5%a7%ac.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "7.2",
-    "category": "动作/惊悚",
-    "content": "暂无简介",
     "translated_name": "疾速追杀：芭蕾杀姬/芭蕾猎杀/芭蕾女杀手/芭蕾杀机/芭蕾舞女/捍卫任务：复仇芭蕾(台)/疾速追杀外传：芭蕾杀姬/杀神John Wick外传：芭蕾杀姬(港)",
     "original_name": "Ballerina/From the World of John Wick: Ballerina",
     "year": "2025",
     "country": "美国",
+    "category": "动作/惊悚",
     "language": "英语/德语",
     "subtitles": "中英双字",
     "release_date": "2025-06-04(澳大利亚)/2025-06-06(美国/中国大陆)",
+    "imdb_score": "7.2",
     "douban_score": "7.3",
     "duration": "125分钟",
     "director": "伦·怀斯曼 Len Wiseman",
-    "actors": "安娜·德·阿玛斯 Ana de Armas"
+    "actors": "安娜·德·阿玛斯 Ana de Armas",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:7487965b0449aa05a3e73944aab06f66eec2e14e&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%96%be%e9%80%9f%e8%bf%bd%e6%9d%80%ef%bc%9a%e8%8a%ad%e8%95%be%e6%9d%80%e5%a7%ac.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "私家侦探/尾随/Behind The Shadows",
-    "download_links": [
-      "magnet:?xt=urn:btih:45a1c5c1cd104416fc2144543e98ae6271897f7f&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%a7%81%e5%ae%b6%e4%be%a6%e6%8e%a2.2025.HD.4K.%e5%9b%bd%e7%b2%a4%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.3",
-    "category": "剧情/悬疑/犯罪",
-    "content": "剧情/悬疑/犯罪",
     "translated_name": "私家侦探/尾随/Behind The Shadows",
     "original_name": "私家偵探",
     "year": "2025",
     "country": "中国香港",
+    "category": "剧情/悬疑/犯罪",
     "language": "国粤双语",
     "subtitles": "中英双字",
     "release_date": "2025-05-31(中国大陆)/2025-06-12(中国香港)",
+    "imdb_score": "6.3",
     "douban_score": "4.9",
     "duration": "102分钟",
     "director": "李子俊 Jonathan Li",
-    "actors": "古天乐 Louis Koo"
+    "actors": "古天乐 Louis Koo",
+    "content": "剧情/悬疑/犯罪",
+    "download_links": [
+      "magnet:?xt=urn:btih:45a1c5c1cd104416fc2144543e98ae6271897f7f&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%a7%81%e5%ae%b6%e4%be%a6%e6%8e%a2.2025.HD.4K.%e5%9b%bd%e7%b2%a4%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "时间之子/Endless Journey of Love",
-    "download_links": [
-      "magnet:?xt=urn:btih:d70f7d6196b88f80086f04b6a08d6205071e79a1&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%97%b6%e9%97%b4%e4%b9%8b%e5%ad%90.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "爱情/动画/奇幻/冒险",
-    "content": "暂无简介",
     "translated_name": "Endless Journey of Love",
     "original_name": "时间之子",
     "year": "2025",
     "country": "中国大陆",
+    "category": "爱情/动画/奇幻/冒险",
     "language": "普通话",
     "subtitles": "中文",
     "release_date": "2025-05-30(中国大陆)",
+    "imdb_score": undefined,
     "douban_score": "6.3",
     "duration": "107分钟",
     "director": "于奥 Ao Yu",
-    "actors": "王俊凯 Karry Wang"
+    "actors": "王俊凯 Karry Wang",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:d70f7d6196b88f80086f04b6a08d6205071e79a1&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%97%b6%e9%97%b4%e4%b9%8b%e5%ad%90.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "寻秘不老泉/不老泉/青春之泉",
-    "download_links": [
-      "magnet:?xt=urn:btih:07cd60f971e4653ecb4d9fb838188cc8b875b8b7&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%af%bb%e7%a7%98%e4%b8%8d%e8%80%81%e6%b3%89.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "悬疑/奇幻/冒险",
-    "content": "暂无简介",
     "translated_name": "寻秘不老泉/不老泉/青春之泉",
     "original_name": "Fountain of Youth",
     "year": "2025",
     "country": "美国",
+    "category": "悬疑/奇幻/冒险",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-05-23(美国网络)",
+    "imdb_score": undefined,
+    "douban_score": undefined,
     "duration": "125分钟",
     "director": "盖·里奇 Guy Ritchie",
-    "actors": "约翰·卡拉辛斯基 John Krasinski"
+    "actors": "约翰·卡拉辛斯基 John Krasinski",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:07cd60f971e4653ecb4d9fb838188cc8b875b8b7&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%af%bb%e7%a7%98%e4%b8%8d%e8%80%81%e6%b3%89.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "星际宝贝史迪奇/史迪仔(港)/星际宝贝/星际宝贝：史迪奇(台)/星际宝贝真人版",
-    "download_links": [
-      "magnet:?xt=urn:btih:8fee23550fd2476b41bdb7688d648e9f59b5a411&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%98%9f%e9%99%85%e5%ae%9d%e8%b4%9d%e5%8f%b2%e8%bf%aa%e5%a5%87.2025.BD.1080P.%e5%9b%bd%e7%b2%a4%e8%8b%b1%e4%b8%89%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.9",
-    "category": "喜剧/动作/科幻/奇幻/冒险",
-    "content": "故事。\n星际宝贝史迪奇.2025.BD.1080P.国粤英三语中英双字",
     "translated_name": "星际宝贝史迪奇/史迪仔(港)/星际宝贝/星际宝贝：史迪奇(台)/星际宝贝真人版",
     "original_name": "Lilo & Stitch",
     "year": "2025",
     "country": "美国",
+    "category": "喜剧/动作/科幻/奇幻/冒险",
     "language": "英语/国语/粤语 三音轨",
     "subtitles": "中英双字",
     "release_date": "2025-05-21(法国)/2025-05-23(美国/中国大陆)",
+    "imdb_score": "6.9",
     "douban_score": "7.2",
     "duration": "108分钟",
     "director": "迪恩·弗雷斯彻-坎普 Dean Fleischer-Camp",
-    "actors": "玛雅·凯洛哈 Maia Kealoha"
+    "actors": "玛雅·凯洛哈 Maia Kealoha",
+    "content": "故事。\n星际宝贝史迪奇.2025.BD.1080P.国粤英三语中英双字",
+    "download_links": [
+      "magnet:?xt=urn:btih:8fee23550fd2476b41bdb7688d648e9f59b5a411&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%98%9f%e9%99%85%e5%ae%9d%e8%b4%9d%e5%8f%b2%e8%bf%aa%e5%a5%87.2025.BD.1080P.%e5%9b%bd%e7%b2%a4%e8%8b%b1%e4%b8%89%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "海底小纵队：海啸大危机/海底小纵队大电影3/Octonauts: the Crisis of the Tsunami",
-    "download_links": [
-      "magnet:?xt=urn:btih:53e42878e863187ec2f05ec6865c919e9bb4a8e3&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%b5%b7%e5%ba%95%e5%b0%8f%e7%ba%b5%e9%98%9f%ef%bc%9a%e6%b5%b7%e5%95%b8%e5%a4%a7%e5%8d%b1%e6%9c%ba.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "喜剧/科幻/动画/冒险",
-    "content": "暂无简介",
     "translated_name": "海底小纵队大电影3/Octonauts: the Crisis of the Tsunami",
     "original_name": "海底小纵队：海啸大危机",
     "year": "2025",
     "country": "中国大陆",
+    "category": "喜剧/科幻/动画/冒险",
     "language": "普通话",
     "subtitles": "中文",
     "release_date": "2025-05-01(中国大陆)",
+    "imdb_score": undefined,
     "douban_score": "6.6",
     "duration": "90分钟",
     "director": "虞嘉尧  Jiayao Yu",
-    "actors": "未知"
+    "actors": "未知",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:53e42878e863187ec2f05ec6865c919e9bb4a8e3&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%b5%b7%e5%ba%95%e5%b0%8f%e7%ba%b5%e9%98%9f%ef%bc%9a%e6%b5%b7%e5%95%b8%e5%a4%a7%e5%8d%b1%e6%9c%ba.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "水饺皇后/湾仔码头/阳光码头/The Dumpling Queen",
-    "download_links": [
-      "magnet:?xt=urn:btih:6da86106b647ca4580641e7abc01714f9a27b142&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%b0%b4%e9%a5%ba%e7%9a%87%e5%90%8e.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.5",
-    "category": "剧情/传记",
-    "content": "剧情/传记",
     "translated_name": "湾仔码头/阳光码头/The Dumpling Queen",
     "original_name": "水饺皇后",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/传记",
     "language": "汉语普通话/粤语",
     "subtitles": "中英双字",
     "release_date": "2025-04-30(中国大陆)",
+    "imdb_score": "6.5",
     "douban_score": "6.4",
     "duration": "119分钟",
     "director": "刘伟强 Andrew Lau",
-    "actors": "马丽 Li Ma"
+    "actors": "马丽 Li Ma",
+    "content": "剧情/传记",
+    "download_links": [
+      "magnet:?xt=urn:btih:6da86106b647ca4580641e7abc01714f9a27b142&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%b0%b4%e9%a5%ba%e7%9a%87%e5%90%8e.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "雷霆特攻队*/*新复仇者联盟/*The New Avengers/雷霆特工队/雷霆特攻队",
-    "download_links": [
-      "magnet:?xt=urn:btih:39d7614c650ac2a16f9885cafebf29271500845e&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%9b%b7%e9%9c%86%e7%89%b9%e6%94%bb%e9%98%9f.2025.BD.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "7.3",
-    "category": "剧情/动作/科幻/犯罪/奇幻/冒险",
-    "content": "剧情/动作/科幻/犯罪/奇幻/冒险",
     "translated_name": "雷霆特攻队*/*新复仇者联盟/*The New Avengers/雷霆特工队/雷霆特攻队",
     "original_name": "Thunderbolts*/Thunderbolts",
     "year": "2025",
     "country": "美国",
+    "category": "剧情/动作/科幻/犯罪/奇幻/冒险",
     "language": "国英双语",
     "subtitles": "中文",
     "release_date": "2025-04-30(中国大陆)/2025-05-02(美国)",
+    "imdb_score": "7.3",
     "douban_score": "6.6",
     "duration": "127分钟",
     "director": "杰克·施莱尔 Jake Schreier",
-    "actors": "弗洛伦丝·皮尤 Florence Pugh"
+    "actors": "弗洛伦丝·皮尤 Florence Pugh",
+    "content": "剧情/动作/科幻/犯罪/奇幻/冒险",
+    "download_links": [
+      "magnet:?xt=urn:btih:39d7614c650ac2a16f9885cafebf29271500845e&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%9b%b7%e9%9c%86%e7%89%b9%e6%94%bb%e9%98%9f.2025.BD.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "新干线惊爆倒数/新干线爆炸案(新版)/新干线大爆破/Bullet Train Explosion",
-    "download_links": [
-      "magnet:?xt=urn:btih:7c04e4c84c49b2490c6fa20f0b30ee0bd9a31fc0&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%96%b0%e5%b9%b2%e7%ba%bf%e6%83%8a%e7%88%86%e5%80%92%e6%95%b0.2025.BD.1080P.%e6%97%a5%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.4",
-    "category": "剧情/动作/惊悚/犯罪",
-    "content": "剧情/动作/惊悚/犯罪",
     "translated_name": "新干线惊爆倒数/新干线爆炸案(新版)/新干线大爆破/Bullet Train Explosion",
     "original_name": "新幹線大爆破",
     "year": "2025",
     "country": "日本",
+    "category": "剧情/动作/惊悚/犯罪",
     "language": "日语",
     "subtitles": "中文",
     "release_date": "2025-04-23(日本网络)",
+    "imdb_score": "6.4",
+    "douban_score": undefined,
     "duration": "134分钟",
     "director": "樋口真嗣 Shinji Higuchi",
-    "actors": "草彅刚 Tsuyoshi Kusanagi"
+    "actors": "草彅刚 Tsuyoshi Kusanagi",
+    "content": "剧情/动作/惊悚/犯罪",
+    "download_links": [
+      "magnet:?xt=urn:btih:7c04e4c84c49b2490c6fa20f0b30ee0bd9a31fc0&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%96%b0%e5%b9%b2%e7%ba%bf%e6%83%8a%e7%88%86%e5%80%92%e6%95%b0.2025.BD.1080P.%e6%97%a5%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "大风杀/大风吹/Trapped",
-    "download_links": [
-      "magnet:?xt=urn:btih:b48dea4402c173e0bfff6ae1cddb70cbf54b4b88&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%a4%a7%e9%a3%8e%e6%9d%80.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mp4&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.6",
-    "category": "剧情/悬疑/犯罪",
-    "content": "剧情/悬疑/犯罪",
     "translated_name": "Trapped",
     "original_name": "大风杀/大风吹",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/悬疑/犯罪",
     "language": "汉语普通话/蒙语/藏语",
     "subtitles": "中英双字",
     "release_date": "2025-04-19(北京国际电影节)/2025-05-01(中国大陆)",
+    "imdb_score": "6.6",
     "douban_score": "7.0",
     "duration": "131分钟",
     "director": "张琪 Qi Zhang",
-    "actors": "白客 White. K"
+    "actors": "白客 White. K",
+    "content": "剧情/悬疑/犯罪",
+    "download_links": [
+      "magnet:?xt=urn:btih:b48dea4402c173e0bfff6ae1cddb70cbf54b4b88&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%a4%a7%e9%a3%8e%e6%9d%80.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mp4&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "命中罪爱/六个凶手/A Stolen Life/Town Without Pity",
-    "download_links": [
-      "magnet:?xt=urn:btih:f51e1b0ba5900b1f5976bfdebc34dc6f5a2ef78f&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%91%bd%e4%b8%ad%e7%bd%aa%e7%88%b1.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "剧情/悬疑/犯罪",
-    "content": "剧情/悬疑/犯罪",
     "translated_name": "A Stolen Life/Town Without Pity",
     "original_name": "命中罪爱/六个凶手",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/悬疑/犯罪",
     "language": "普通话",
     "subtitles": "中文",
     "release_date": "2025-04-12(中国大陆)",
+    "imdb_score": undefined,
+    "douban_score": undefined,
     "duration": "106分钟",
     "director": "赵非 Fei Zhao",
-    "actors": "张静初 Jingchu Zhang"
+    "actors": "张静初 Jingchu Zhang",
+    "content": "剧情/悬疑/犯罪",
+    "download_links": [
+      "magnet:?xt=urn:btih:f51e1b0ba5900b1f5976bfdebc34dc6f5a2ef78f&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%91%bd%e4%b8%ad%e7%bd%aa%e7%88%b1.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "战·争/遗军之战/战·役(港)",
-    "download_links": [
-      "magnet:?xt=urn:btih:e01eb24b3b46bba7a79cb0afa5f9a60a9dc67c61&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%88%98%c2%b7%e4%ba%89.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "7.5",
-    "category": "剧情/动作/战争",
-    "content": "剧情/动作/战争",
     "translated_name": "战·争/遗军之战/战·役(港)",
     "original_name": "Warfare",
     "year": "2025",
     "country": "美国/英国",
+    "category": "剧情/动作/战争",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-04-11(美国)",
+    "imdb_score": "7.5",
     "douban_score": "7.5",
     "duration": "95分钟",
     "director": "雷·门多萨 Ray Mendoza",
-    "actors": "德德哈罗·伍恩-阿乙-太任 D'Pharaoh Woon-A-Tai"
+    "actors": "德德哈罗·伍恩-阿乙-太任 D'Pharaoh Woon-A-Tai",
+    "content": "剧情/动作/战争",
+    "download_links": [
+      "magnet:?xt=urn:btih:e01eb24b3b46bba7a79cb0afa5f9a60a9dc67c61&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%88%98%c2%b7%e4%ba%89.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "谍网追凶/暗杀指令/复仇反击战(港/台)/复仇行动/生手/外行/新暗杀指令/业余特工/Operation Revenge",
-    "download_links": [
-      "magnet:?xt=urn:btih:80f8dd986e47f989f1803cc85e2291d36d363929&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e8%b0%8d%e7%bd%91%e8%bf%bd%e5%87%b6.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.6",
-    "category": "动作/惊悚",
-    "content": "暂无简介",
     "translated_name": "谍网追凶/暗杀指令/复仇反击战(港/台)/复仇行动/生手/外行/新暗杀指令/业余特工/Operation Revenge",
     "original_name": "The Amateur",
     "year": "2025",
     "country": "美国",
+    "category": "动作/惊悚",
     "language": "英语/法语/俄语",
     "subtitles": "中英双字",
     "release_date": "2025-04-10(中国香港)/2025-04-11(美国/中国大陆)",
+    "imdb_score": "6.6",
     "douban_score": "6.2",
     "duration": "123分钟",
     "director": "詹姆斯·哈维斯 James Hawes",
-    "actors": "拉米·马雷克 Rami Malek"
+    "actors": "拉米·马雷克 Rami Malek",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:80f8dd986e47f989f1803cc85e2291d36d363929&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e8%b0%8d%e7%bd%91%e8%bf%bd%e5%87%b6.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "我的世界大电影/当个创世神/我的世界/Minecraft/MINECRAFT：我的世界大电影(港)/MINECRAFT麦块电影(台)",
-    "download_links": [
-      "magnet:?xt=urn:btih:3667151f4e3779bc9bec0b0757fa51feb8b21518&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%88%91%e7%9a%84%e4%b8%96%e7%95%8c%e5%a4%a7%e7%94%b5%e5%bd%b1.2024.BD.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "5.7",
-    "category": "喜剧/动作/家庭/奇幻/冒险",
-    "content": "暂无简介",
     "translated_name": "我的世界大电影/当个创世神/我的世界/Minecraft/MINECRAFT：我的世界大电影(港)/MINECRAFT麦块电影(台)",
     "original_name": "A Minecraft Movie",
     "year": "2025",
     "country": "美国/瑞典",
+    "category": "喜剧/动作/家庭/奇幻/冒险",
     "language": "国英双语",
     "subtitles": "中文",
     "release_date": "2025-04-04(美国/中国大陆)",
+    "imdb_score": "5.7",
     "douban_score": "5.6",
     "duration": "101分钟",
     "director": "杰瑞德·赫斯 Jared Hess",
-    "actors": "杰森·莫玛 Jason Momoa"
+    "actors": "杰森·莫玛 Jason Momoa",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:3667151f4e3779bc9bec0b0757fa51feb8b21518&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%88%91%e7%9a%84%e4%b8%96%e7%95%8c%e5%a4%a7%e7%94%b5%e5%bd%b1.2024.BD.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "向阳·花/出狱女子的故事/We Girls",
-    "download_links": [
-      "magnet:?xt=urn:btih:ac25299dc546b9857bc1d48c4d645fbd79fba706&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%90%91%e9%98%b3%c2%b7%e8%8a%b1.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "8.6",
-    "category": "剧情/犯罪",
-    "content": "故事/We Girls",
     "translated_name": "出狱女子的故事/We Girls",
     "original_name": "向阳·花",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/犯罪",
     "language": "汉语普通话/中国手语/湖南方言",
     "subtitles": "中英双字",
     "release_date": "2025-04-04(中国大陆)",
+    "imdb_score": "8.6",
     "douban_score": "6.4",
     "duration": "124分钟",
     "director": "冯小刚 Xiaogang Feng",
-    "actors": "赵丽颖 Liying Zhao"
+    "actors": "赵丽颖 Liying Zhao",
+    "content": "故事/We Girls",
+    "download_links": [
+      "magnet:?xt=urn:btih:ac25299dc546b9857bc1d48c4d645fbd79fba706&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%90%91%e9%98%b3%c2%b7%e8%8a%b1.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "制暴：无限杀机/打工汉/打工人/打工仔/工神救援/建筑师/莱文的交易/重裝制裁(台)/Levon Cade/Levon's Trade",
-    "download_links": [
-      "magnet:?xt=urn:btih:8db53d3bde467bd336426ab9d79517a1f48c5c0b&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%88%b6%e6%9a%b4%ef%bc%9a%e6%97%a0%e9%99%90%e6%9d%80%e6%9c%ba.2025.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "5.7",
-    "category": "动作/惊悚",
-    "content": "暂无简介",
     "translated_name": "制暴：无限杀机/打工汉/打工人/打工仔/工神救援/建筑师/莱文的交易/重裝制裁(台)/Levon Cade/Levon's Trade",
     "original_name": "A Working Man",
     "year": "2025",
     "country": "英国/美国",
+    "category": "动作/惊悚",
     "language": "国英双语",
     "subtitles": "中文",
     "release_date": "2025-03-28(美国/中国大陆)",
+    "imdb_score": "5.7",
     "douban_score": "5.5",
     "duration": "116分钟",
     "director": "大卫·阿耶 David Ayer",
-    "actors": "杰森·斯坦森 Jason Statham"
+    "actors": "杰森·斯坦森 Jason Statham",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:8db53d3bde467bd336426ab9d79517a1f48c5c0b&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%88%b6%e6%9a%b4%ef%bc%9a%e6%97%a0%e9%99%90%e6%9d%80%e6%9c%ba.2025.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "生命清单/The Life List",
-    "download_links": [
-      "magnet:?xt=urn:btih:94e02fed0fb0e32efc77fc2c1fbcaad170e5e278&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%94%9f%e5%91%bd%e6%b8%85%e5%8d%95.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "7.0",
-    "category": "剧情/喜剧/爱情",
-    "content": "剧情/喜剧/爱情",
     "translated_name": "生命清单",
     "original_name": "The Life List",
     "year": "2025",
     "country": "美国",
+    "category": "剧情/喜剧/爱情",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-03-28(美国网络)",
+    "imdb_score": "7.0",
     "douban_score": "6.7",
     "duration": "123分钟",
     "director": "亚当·布鲁克斯 Adam Brooks",
-    "actors": "索菲亚·卡尔森 Sofia Carson"
+    "actors": "索菲亚·卡尔森 Sofia Carson",
+    "content": "剧情/喜剧/爱情",
+    "download_links": [
+      "magnet:?xt=urn:btih:94e02fed0fb0e32efc77fc2c1fbcaad170e5e278&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%94%9f%e5%91%bd%e6%b8%85%e5%8d%95.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "终极对弈/竞赛/升武/胜负",
-    "download_links": [
-      "magnet:?xt=urn:btih:1bddcdfd017c1c82080b29fb2f4902990421006f&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%bb%88%e6%9e%81%e5%af%b9%e5%bc%88.2025.BD.1080P.%e9%9f%a9%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.9",
-    "category": "剧情",
-    "content": "剧情",
     "translated_name": "终极对弈/竞赛/升武/胜负",
     "original_name": "승부/The Match",
     "year": "2025",
     "country": "韩国",
+    "category": "剧情",
     "language": "韩语",
     "subtitles": "中英双字",
     "release_date": "2025-03-26(韩国)",
+    "imdb_score": "6.9",
     "douban_score": "7.4",
     "duration": "116分钟",
     "director": "金炯柱 Hyeong-ju Kim",
-    "actors": "李炳宪 Byung-hun Lee"
+    "actors": "李炳宪 Byung-hun Lee",
+    "content": "剧情",
+    "download_links": [
+      "magnet:?xt=urn:btih:1bddcdfd017c1c82080b29fb2f4902990421006f&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%bb%88%e6%9e%81%e5%af%b9%e5%bc%88.2025.BD.1080P.%e9%9f%a9%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "非标准恋爱/女巨人也要谈恋爱/女巨人也要谈恋爱电影版/Tall Girl",
-    "download_links": [
-      "magnet:?xt=urn:btih:e8b9c8da7c1cc811a74dc8595c51b6bd520150a9&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%9d%9e%e6%a0%87%e5%87%86%e6%81%8b%e7%88%b1.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "喜剧/爱情",
-    "content": "故事。\n非标准恋爱.2025.HD.4K.国语中英双字",
     "translated_name": "女巨人也要谈恋爱/女巨人也要谈恋爱电影版/Tall Girl",
     "original_name": "非标准恋爱",
     "year": "2025",
     "country": "中国大陆",
+    "category": "喜剧/爱情",
     "language": "普通话",
     "subtitles": "中英双字",
     "release_date": "2025-03-14(中国大陆)",
+    "imdb_score": undefined,
+    "douban_score": undefined,
     "duration": "95分钟",
     "director": "邢潇 Xiao Xing",
-    "actors": "管乐 Yue Guan"
+    "actors": "管乐 Yue Guan",
+    "content": "故事。\n非标准恋爱.2025.HD.4K.国语中英双字",
+    "download_links": [
+      "magnet:?xt=urn:btih:e8b9c8da7c1cc811a74dc8595c51b6bd520150a9&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%9d%9e%e6%a0%87%e5%87%86%e6%81%8b%e7%88%b1.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "无痛凯恩/无痛侠(港)/无痛先生(台)",
-    "download_links": [
-      "magnet:?xt=urn:btih:99582f687e8a652d4a680d9cb06c654ec0afe96b&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%97%a0%e7%97%9b%e5%87%af%e6%81%a9.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.6",
-    "category": "喜剧/动作/惊悚",
-    "content": "暂无简介",
     "translated_name": "无痛凯恩/无痛侠(港)/无痛先生(台)",
     "original_name": "Novocaine",
     "year": "2025",
     "country": "美国",
+    "category": "喜剧/动作/惊悚",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-03-13(中国香港)/2025-03-14(美国)",
+    "imdb_score": "6.6",
     "douban_score": "6.4",
     "duration": "110分钟",
     "director": "罗伯特·奥尔森 Robert Olsen",
-    "actors": "杰克·奎德 Jack Quaid"
+    "actors": "杰克·奎德 Jack Quaid",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:99582f687e8a652d4a680d9cb06c654ec0afe96b&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%97%a0%e7%97%9b%e5%87%af%e6%81%a9.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "多幸运遇见你/吹过你吹过的风/教师日记 中国版/Love Island/The Wind That You Blew",
-    "download_links": [
-      "magnet:?xt=urn:btih:5dc88e4de0b4b4976d0a9555ff805d2696f8db86&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%a4%9a%e5%b9%b8%e8%bf%90%e9%81%87%e8%a7%81%e4%bd%a0.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "剧情/喜剧/爱情",
-    "content": "剧情/喜剧/爱情",
     "translated_name": "吹过你吹过的风/教师日记 中国版/Love Island/The Wind That You Blew",
     "original_name": "多幸运遇见你",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/喜剧/爱情",
     "language": "普通话",
     "subtitles": "中文",
     "release_date": "2025-03-07(中国大陆)",
+    "imdb_score": undefined,
+    "douban_score": undefined,
     "duration": "93分钟",
     "director": "田蒙 Meng Tian",
-    "actors": "蓝盈莹 Lyric Lan"
+    "actors": "蓝盈莹 Lyric Lan",
+    "content": "剧情/喜剧/爱情",
+    "download_links": [
+      "magnet:?xt=urn:btih:5dc88e4de0b4b4976d0a9555ff805d2696f8db86&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%a4%9a%e5%b9%b8%e8%bf%90%e9%81%87%e8%a7%81%e4%bd%a0.2025.HD.4K.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "怪猴/安娜贝尔衍生片/猴(港)/猴子/敲锣猴子/乔利黑猩猩/史蒂芬金之猴子(台)/嗜血怪猴",
-    "download_links": [
-      "magnet:?xt=urn:btih:8dcf8ac54fa35dd13d8bf777a7e6330262b4e1cc&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%80%aa%e7%8c%b4.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.3",
-    "category": "喜剧/恐怖",
-    "content": "暂无简介",
     "translated_name": "怪猴/安娜贝尔衍生片/猴(港)/猴子/敲锣猴子/乔利黑猩猩/史蒂芬金之猴子(台)/嗜血怪猴",
     "original_name": "The Monkey",
     "year": "2025",
     "country": "美国",
+    "category": "喜剧/恐怖",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-02-21(美国)",
+    "imdb_score": "6.3",
     "douban_score": "5.6",
     "duration": "95分钟",
     "director": "奥斯古德·珀金斯 Osgood Perkins",
-    "actors": "西奥·詹姆斯 Theo James"
+    "actors": "西奥·詹姆斯 Theo James",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:8dcf8ac54fa35dd13d8bf777a7e6330262b4e1cc&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e6%80%aa%e7%8c%b4.2025.HD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "美国队长4/美队4/美国队长：无畏新世界(台)/美国队长4：新世界秩序/美国队长4：勇敢新世界(港)",
-    "download_links": [
-      "magnet:?xt=urn:btih:cdf969b2aa40f6d1e9fc5004822218a982970a6c&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%be%8e%e5%9b%bd%e9%98%9f%e9%95%bf4.2025.BD.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "5.7",
-    "category": "动作/科幻/冒险",
-    "content": "暂无简介",
     "translated_name": "美国队长4/美队4/美国队长：无畏新世界(台)/美国队长4：新世界秩序/美国队长4：勇敢新世界(港)",
     "original_name": "Captain America: Brave New World/Captain America 4/Captain America: New World Order",
     "year": "2025",
     "country": "美国",
+    "category": "动作/科幻/冒险",
     "language": "英语/西班牙语/日语",
     "subtitles": "中英双字",
     "release_date": "2025-02-12(法国)/2025-02-14(美国/中国大陆)",
+    "imdb_score": "5.7",
     "douban_score": "4.9",
     "duration": "119分钟",
     "director": "朱利叶斯·约拿 Julius Onah",
-    "actors": "安东尼·麦凯 Anthony Mackie"
+    "actors": "安东尼·麦凯 Anthony Mackie",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:cdf969b2aa40f6d1e9fc5004822218a982970a6c&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%be%8e%e5%9b%bd%e9%98%9f%e9%95%bf4.2025.BD.1080P.%e5%9b%bd%e8%8b%b1%e5%8f%8c%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "唐探1900/唐人街探案1900/唐人街探案前传/唐探前传/Detective Chinatown 1900",
-    "download_links": [
-      "magnet:?xt=urn:btih:368ad2a24368547f426a0c05b2d99b73bdbce370&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%94%90%e6%8e%a21900.2025.BD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.0",
-    "category": "喜剧/动作/悬疑",
-    "content": "暂无简介",
     "translated_name": "唐人街探案1900/唐人街探案前传/唐探前传/Detective Chinatown 1900",
     "original_name": "唐探1900",
     "year": "2025",
     "country": "中国大陆/中国香港",
+    "category": "喜剧/动作/悬疑",
     "language": "汉语普通话/英语",
     "subtitles": "中文",
     "release_date": "2025-01-29(中国大陆)",
+    "imdb_score": "6.0",
     "douban_score": "6.5",
     "duration": "136分钟",
     "director": "陈思诚 Sicheng Chen / 戴墨 Mo Dai",
-    "actors": "王宝强 Baoqiang Wang"
+    "actors": "王宝强 Baoqiang Wang",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:368ad2a24368547f426a0c05b2d99b73bdbce370&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%94%90%e6%8e%a21900.2025.BD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "熊出没·重启未来/熊出没：重启未来/熊出没大电影11/Boonie Bears: Future Reborn",
-    "download_links": [
-      "magnet:?xt=urn:btih:ce57255fe374a51b115c88dcc6bcaf2347b56c27&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%86%8a%e5%87%ba%e6%b2%a1%c2%b7%e9%87%8d%e5%90%af%e6%9c%aa%e6%9d%a5.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "category": "剧情/喜剧/科幻/动画",
-    "content": "剧情/喜剧/科幻/动画",
     "translated_name": "熊出没：重启未来/熊出没大电影11/Boonie Bears: Future Reborn",
     "original_name": "熊出没·重启未来",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/喜剧/科幻/动画",
     "language": "普通话",
     "subtitles": "中文",
     "release_date": "2025-01-29(中国大陆)",
+    "imdb_score": undefined,
     "douban_score": "7.2",
     "duration": "108分钟",
     "director": "林永长 Yongchang Lin",
-    "actors": "谭笑 Xiao Tan"
+    "actors": "谭笑 Xiao Tan",
+    "content": "剧情/喜剧/科幻/动画",
+    "download_links": [
+      "magnet:?xt=urn:btih:ce57255fe374a51b115c88dcc6bcaf2347b56c27&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%86%8a%e5%87%ba%e6%b2%a1%c2%b7%e9%87%8d%e5%90%af%e6%9c%aa%e6%9d%a5.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "哪吒之魔童闹海/哪吒2/哪吒2之魔童闹海/Ne Zha 2",
-    "download_links": [
-      "magnet:?xt=urn:btih:4795f5bea979e3ac2c5c96c9c0f80fde49fadace&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%93%aa%e5%90%92%e4%b9%8b%e9%ad%94%e7%ab%a5%e9%97%b9%e6%b5%b7.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "8.1",
-    "category": "剧情/喜剧/动画/奇幻",
-    "content": "剧情/喜剧/动画/奇幻",
     "translated_name": "哪吒2/哪吒2之魔童闹海/Ne Zha 2",
     "original_name": "哪吒之魔童闹海",
     "year": "2025",
     "country": "中国大陆",
+    "category": "剧情/喜剧/动画/奇幻",
     "language": "普通话",
     "subtitles": "中文",
     "release_date": "2025-01-29(中国大陆)",
+    "imdb_score": "8.1",
     "douban_score": "8.5",
     "duration": "144分钟",
     "director": "饺子 Yu Yang",
-    "actors": "吕艳婷 Yanting Lü"
+    "actors": "吕艳婷 Yanting Lü",
+    "content": "剧情/喜剧/动画/奇幻",
+    "download_links": [
+      "magnet:?xt=urn:btih:4795f5bea979e3ac2c5c96c9c0f80fde49fadace&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e5%93%aa%e5%90%92%e4%b9%8b%e9%ad%94%e7%ab%a5%e9%97%b9%e6%b5%b7.2025.HD.1080P.%e5%9b%bd%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "黑修女们/黑祭司2：暗黑修女(台)/黑色修女/女版黑祭司们/驱魔黑修女(港)",
-    "download_links": [
-      "magnet:?xt=urn:btih:e8882225c8429e5c6cd4804541923c297db321f3&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%bb%91%e4%bf%ae%e5%a5%b3%e4%bb%ac.2025.BD.1080P.%e9%9f%a9%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "5.3",
-    "category": "剧情/恐怖",
-    "content": "剧情/恐怖",
     "translated_name": "黑修女们/黑祭司2：暗黑修女(台)/黑色修女/女版黑祭司们/驱魔黑修女(港)",
     "original_name": "검은 수녀들/The Priests 2: Dark Nuns",
     "year": "2025",
     "country": "韩国",
+    "category": "剧情/恐怖",
     "language": "韩语",
     "subtitles": "中文",
     "release_date": "2025-01-24(韩国)",
+    "imdb_score": "5.3",
     "douban_score": "4.7",
     "duration": "114分钟",
     "director": "权赫宰 Hyeok-jae Kwon",
-    "actors": "宋慧乔 Hye-kyo Song"
+    "actors": "宋慧乔 Hye-kyo Song",
+    "content": "剧情/恐怖",
+    "download_links": [
+      "magnet:?xt=urn:btih:e8882225c8429e5c6cd4804541923c297db321f3&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e9%bb%91%e4%bf%ae%e5%a5%b3%e4%bb%ac.2025.BD.1080P.%e9%9f%a9%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "丑陋的继姐/Cinderella's Stepsister/The Ugly Stepsister",
-    "download_links": [
-      "magnet:?xt=urn:btih:1e8a49827c32c5ac3f9f48e016d3a7902251c451&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e4%b8%91%e9%99%8b%e7%9a%84%e7%bb%a7%e5%a7%90.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "7.0",
-    "category": "剧情/恐怖",
-    "content": "剧情/恐怖",
     "translated_name": "丑陋的继姐/Cinderella's Stepsister/The Ugly Stepsister",
     "original_name": "Den stygge stesøsteren",
     "year": "2025",
     "country": "挪威/丹麦/罗马尼亚/波兰/瑞典",
+    "category": "剧情/恐怖",
     "language": "挪威语",
     "subtitles": "中英双字",
     "release_date": "2025-01-23(圣丹斯电影节)/2025-02-16(柏林电影节)/2025-03-07(挪威)",
+    "imdb_score": "7.0",
     "douban_score": "7.3",
     "duration": "109分钟",
     "director": "埃米莉·布里西菲尔特 Emilie Blichfeldt",
-    "actors": "莉娅·迈伦 Lea Myren"
+    "actors": "莉娅·迈伦 Lea Myren",
+    "content": "剧情/恐怖",
+    "download_links": [
+      "magnet:?xt=urn:btih:1e8a49827c32c5ac3f9f48e016d3a7902251c451&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e4%b8%91%e9%99%8b%e7%9a%84%e7%bb%a7%e5%a7%90.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "绝密战境/极盗战2(台)/极盗战线/贼巢2：绝密战境/贼斗2(港)/钻石大劫案：极盗战(台)",
-    "download_links": [
-      "magnet:?xt=urn:btih:5ddec57a845714f45a7dd919e198671ad0bd33d6&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e8%b4%bc%e5%b7%a22%ef%bc%9a%e7%bb%9d%e5%af%86%e6%88%98%e5%a2%83.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.3",
-    "category": "动作/惊悚/犯罪",
-    "content": "暂无简介",
     "translated_name": "绝密战境/极盗战2(台)/极盗战线/贼巢2：绝密战境/贼斗2(港)/钻石大劫案：极盗战(台)",
     "original_name": "Den of Thieves 2/Den of Thieves 2: Pantera",
     "year": "2025",
     "country": "美国/加拿大/西班牙",
+    "category": "动作/惊悚/犯罪",
     "language": "英语",
     "subtitles": "中英双字",
     "release_date": "2025-01-10(美国)",
+    "imdb_score": "6.3",
     "douban_score": "5.6",
     "duration": "144分钟",
     "director": "克里斯蒂安·古德加斯特 Christian Gudegast",
-    "actors": "杰拉德·巴特勒 Gerard Butler"
+    "actors": "杰拉德·巴特勒 Gerard Butler",
+    "content": "暂无简介",
+    "download_links": [
+      "magnet:?xt=urn:btih:5ddec57a845714f45a7dd919e198671ad0bd33d6&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e8%b4%bc%e5%b7%a22%ef%bc%9a%e7%bb%9d%e5%af%86%e6%88%98%e5%a2%83.2025.BD.1080P.%e4%b8%ad%e8%8b%b1%e5%8f%8c%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   },
   {
     "title": "禁忌童话/成人童话/童话睇硬了(港)/这是一个童话，但却是个请求",
-    "download_links": [
-      "magnet:?xt=urn:btih:0c50d3097efdfb3da45c01b13822de19c8f8dca3&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%a6%81%e5%bf%8c%e7%ab%a5%e8%af%9d.2024.BD.1080P.%e9%9f%a9%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
-    ],
-    "imdb_score": "6.0",
-    "category": "喜剧",
-    "content": "故事作家（朴智炫 饰演）故事，毕业后梦想写儿童故事，但被分配到青少年保护队，被迫每天看色情片。更糟糕的是，他被迫写一部成人网络小说。\n禁忌童话.2024.BD.1080P.韩语中字",
     "translated_name": "禁忌童话/成人童话/童话睇硬了(港)/这是一个童话，但却是个请求",
     "original_name": "동화지만 청불입니다/Forbidden Fairytale/어른동화",
     "year": "2025",
     "country": "韩国",
+    "category": "喜剧",
     "language": "韩语",
     "subtitles": "中文",
     "release_date": "2025-01-08(韩国)",
+    "imdb_score": "6.0",
     "douban_score": "6.3",
     "duration": "109分钟",
     "director": "李钟奭 Jong-Seok Lee",
-    "actors": "朴智炫 Ji-hyun Park"
+    "actors": "朴智炫 Ji-hyun Park",
+    "content": "故事作家（朴智炫 饰演）故事，毕业后梦想写儿童故事，但被分配到青少年保护队，被迫每天看色情片。更糟糕的是，他被迫写一部成人网络小说。\n禁忌童话.2024.BD.1080P.韩语中字",
+    "download_links": [
+      "magnet:?xt=urn:btih:0c50d3097efdfb3da45c01b13822de19c8f8dca3&dn=%e9%98%b3%e5%85%89%e7%94%b5%e5%bd%b1dygod.org.%e7%a6%81%e5%bf%8c%e7%ab%a5%e8%af%9d.2024.BD.1080P.%e9%9f%a9%e8%af%ad%e4%b8%ad%e5%ad%97.mkv&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce"
+    ]
   }
 ]
