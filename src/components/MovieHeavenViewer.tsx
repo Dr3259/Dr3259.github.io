@@ -66,6 +66,13 @@ export const MovieHeavenViewer = () => {
 
         const loadMovies = () => {
              try {
+                // If the default data source is empty, we should clear localStorage as well.
+                if (movieHeavenData.length === 0) {
+                    localStorage.removeItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY);
+                    setAllMovies([]);
+                    return;
+                }
+
                 const localData = localStorage.getItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY);
                 let moviesToLoad: MovieHeavenItem[];
 
