@@ -10,6 +10,8 @@ import { movieHeavenData, type MovieHeavenItem } from '@/lib/data/movie-heaven-d
 import copy from 'copy-to-clipboard';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 const translations = {
   'zh-CN': {
@@ -132,13 +134,15 @@ export const MovieHeavenViewer: React.FC = () => {
         }
     }
 
-    const InfoRow: React.FC<{ icon: React.ElementType, label: string, value?: string | null }> = ({ icon: Icon, label, value }) => {
+    const InfoRow: React.FC<{ icon: React.ElementType, label: string, value?: string | null, className?: string }> = ({ icon: Icon, label, value, className }) => {
         if (!value) return null;
         return (
-            <div className="flex items-start text-xs">
-                <Icon className="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0 text-muted-foreground" />
-                <strong className="mr-1.5 shrink-0">{label}:</strong>
-                <span className="text-muted-foreground">{value}</span>
+            <div className={cn("flex items-start text-sm", className)}>
+                <Icon className="w-4 h-4 mr-2 mt-0.5 shrink-0 text-muted-foreground" />
+                <div className="flex flex-wrap items-baseline">
+                  <strong className="mr-1.5 shrink-0 text-foreground/80">{label}:</strong>
+                  <span className="text-muted-foreground">{value}</span>
+                </div>
             </div>
         );
     };
@@ -153,43 +157,54 @@ export const MovieHeavenViewer: React.FC = () => {
     }
     
     return (
-        <Card className="w-full max-w-4xl mx-auto shadow-lg">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
+        <Card className="w-full max-w-4xl mx-auto shadow-lg bg-transparent border-none">
+            <CardHeader className="px-0">
+                <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
                     <Film className="text-primary"/>
                     {t.movieHeavenTitle}
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
+            <CardContent className="px-0">
+                <div className="space-y-6">
                     {currentMovies.map((movie, index) => (
-                        <Card key={`${movie.title}-${index}`} className="bg-card/80 backdrop-blur-sm">
+                        <Card key={`${movie.title}-${index}`} className="bg-card/80 backdrop-blur-sm shadow-md">
                             <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
+                                <CardTitle className="text-lg font-semibold flex items-center gap-3">
                                   <span>{movie.title}</span>
-                                  {movie.year && <Badge variant="outline">{movie.year}</Badge>}
+                                  {movie.year && <Badge variant="outline" className="text-base">{movie.year}</Badge>}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
-                                    <div className="flex items-center gap-2 text-sm col-span-1 sm:col-span-2">
-                                        <Star className="w-4 h-4 text-amber-400"/>
-                                        <strong className="shrink-0">{t.rating}:</strong>
-                                        <div className="flex flex-wrap gap-2">
+                             <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                                    <div className="md:col-span-1 flex flex-col gap-2">
+                                        <div className="flex items-center gap-2 text-sm font-semibold">
+                                            <Star className="w-4 h-4 text-amber-400"/>
+                                            <span className="shrink-0">{t.rating}</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 pl-6">
                                             {movie.imdb_score && <Badge variant="secondary">{t.imdb} {movie.imdb_score}</Badge>}
                                             {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t.douban} {movie.douban_score}</Badge>}
+                                            {!movie.imdb_score && !movie.douban_score && <span className="text-sm text-muted-foreground pl-1">N/A</span>}
                                         </div>
                                     </div>
-                                    <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
-                                    <InfoRow icon={User} label={t.director} value={movie.director} />
-                                    <InfoRow icon={MapPin} label={t.country} value={movie.country} />
-                                    <InfoRow icon={Languages} label={t.language} value={movie.language} />
-                                    <InfoRow icon={Subtitles} label={t.subtitles} value={movie.subtitles} />
-                                    <InfoRow icon={Clock} label={t.duration} value={movie.duration} />
+                                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                        <InfoRow icon={User} label={t.director} value={movie.director} />
+                                        <InfoRow icon={MapPin} label={t.country} value={movie.country} />
+                                        <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
+                                        <InfoRow icon={Clock} label={t.duration} value={movie.duration} />
+                                        <InfoRow icon={Languages} label={t.language} value={movie.language} />
+                                        <InfoRow icon={Subtitles} label={t.subtitles} value={movie.subtitles} />
+                                    </div>
                                 </div>
-                                <div className="space-y-2 pt-2">
-                                  <InfoRow icon={User} label={t.actors} value={movie.actors} />
-                                  <p className="text-xs text-muted-foreground pt-1">{movie.content}</p>
+                                
+                                <Separator />
+                                
+                                <div className="space-y-3 text-sm">
+                                    <InfoRow icon={User} label={t.actors} value={movie.actors} />
+                                    <div>
+                                        <strong className="text-sm text-foreground/80">{t.intro}:</strong>
+                                        <p className="text-sm text-muted-foreground pt-1">{movie.content}</p>
+                                    </div>
                                 </div>
                             </CardContent>
                             <CardFooter>
@@ -229,3 +244,4 @@ export const MovieHeavenViewer: React.FC = () => {
         </Card>
     );
 };
+
