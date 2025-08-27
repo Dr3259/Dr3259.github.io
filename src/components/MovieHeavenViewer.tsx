@@ -1,35 +1,35 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ServerCrash, Download, Film } from 'lucide-react';
-import { scrapeMovieHeaven, type MovieHeavenItem } from '@/ai/flows/movie-heaven-scraper-flow';
+import { ServerCrash, Download, Film } from 'lucide-react';
+import { movieHeavenData, type MovieHeavenItem } from '@/lib/data/movie-heaven-data';
 import copy from 'copy-to-clipboard';
 import { useToast } from '@/hooks/use-toast';
 
 const translations = {
   'zh-CN': {
     movieHeavenTitle: '电影天堂资源查看器',
-    loadingHeaven: '正在加载电影天堂最新资源...',
-    errorHeaven: '加载电影天堂资源失败，请稍后重试。',
+    errorHeaven: '加载电影天堂资源失败。',
     copyLink: '复制下载链接',
     linkCopied: '链接已复制！',
     rating: '评分',
     tags: '标签',
     intro: '简介',
+    noData: '暂无电影数据。请在 src/lib/data/movie-heaven-data.ts 中提供数据。'
   },
   'en': {
     movieHeavenTitle: 'Movie Heaven Viewer',
-    loadingHeaven: 'Loading latest movies from Movie Heaven...',
-    errorHeaven: 'Failed to load resources from Movie Heaven. Please try again later.',
+    errorHeaven: 'Failed to load resources from Movie Heaven.',
     copyLink: 'Copy Download Link',
     linkCopied: 'Link copied!',
     rating: 'Rating',
     tags: 'Tags',
     intro: 'Intro',
+    noData: 'No movie data available. Please provide data in src/lib/data/movie-heaven-data.ts.'
   }
 };
 
@@ -37,9 +37,6 @@ type LanguageKey = keyof typeof translations;
 
 export const MovieHeavenViewer = () => {
     const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-    const [movies, setMovies] = useState<MovieHeavenItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const { toast } = useToast();
     
     useEffect(() => {
@@ -51,41 +48,16 @@ export const MovieHeavenViewer = () => {
     
     const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
-    useEffect(() => {
-        const fetchMovies = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const results = await scrapeMovieHeaven();
-                setMovies(results);
-            } catch (err: any) {
-                setError(err.message || t.errorHeaven);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchMovies();
-    }, [t.errorHeaven]);
-
     const handleCopy = (url: string) => {
         copy(url);
         toast({ title: t.linkCopied, duration: 2000 });
     }
-
-    if (isLoading) {
+    
+    if (!movieHeavenData || movieHeavenData.length === 0) {
         return (
             <div className="text-center py-10 text-muted-foreground flex items-center justify-center">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {t.loadingHeaven}
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="text-center py-10 text-destructive flex items-center justify-center">
-                 <ServerCrash className="mr-2 h-5 w-5" />
-                {error}
+                <ServerCrash className="mr-2 h-5 w-5" />
+                {t.noData}
             </div>
         );
     }
@@ -100,8 +72,8 @@ export const MovieHeavenViewer = () => {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {movies.map(movie => (
-                        <Card key={movie.title} className="bg-card/80 backdrop-blur-sm">
+                    {movieHeavenData.map((movie, index) => (
+                        <Card key={`${movie.title}-${index}`} className="bg-card/80 backdrop-blur-sm">
                             <CardHeader>
                                 <CardTitle className="text-lg">{movie.title}</CardTitle>
                             </CardHeader>
