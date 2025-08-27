@@ -78,8 +78,8 @@ export const MovieHeavenViewer = () => {
                                 <CardTitle className="text-lg">{movie.title}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm">
-                                {movie.rating && <p><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></p>}
-                                {movie.tags && <p><strong>{t.tags}:</strong> {movie.tags}</p>}
+                                {movie.rating && <div className="flex items-center gap-2"><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></div>}
+                                {movie.tags && <div className="flex items-center gap-2"><strong>{t.tags}:</strong> {movie.tags}</div>}
                                 {movie.shortIntro && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.shortIntro}</p>}
                             </CardContent>
                             <div className="p-6 pt-0">
