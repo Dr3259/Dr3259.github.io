@@ -45,6 +45,13 @@ type LanguageKey = keyof typeof translations;
 const LOCAL_STORAGE_MOVIE_HEAVEN_KEY = 'weekglance_movie_heaven_data_v1';
 const ITEMS_PER_PAGE = 10;
 
+// Helper to extract year from title string
+const getYearFromTitle = (title: string): number => {
+    const match = title.match(/\b(20\d{2})\b/);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+
 export const MovieHeavenViewer = () => {
     const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
     const [allMovies, setAllMovies] = useState<MovieHeavenItem[]>([]);
@@ -60,6 +67,8 @@ export const MovieHeavenViewer = () => {
         const loadMovies = () => {
              try {
                 const localData = localStorage.getItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY);
+                let moviesToLoad: MovieHeavenItem[];
+
                 if (localData) {
                     const parsedData = JSON.parse(localData).map((item: any) => ({
                         title: item.title,
@@ -68,13 +77,24 @@ export const MovieHeavenViewer = () => {
                         tags: item.category || '未知',
                         shortIntro: item.content || '暂无简介'
                     }));
-                    setAllMovies(parsedData);
+                    moviesToLoad = parsedData;
                 } else {
-                    setAllMovies(movieHeavenData);
+                    moviesToLoad = movieHeavenData;
                 }
+
+                // Sort movies by year descending
+                moviesToLoad.sort((a, b) => {
+                    const yearA = getYearFromTitle(a.title);
+                    const yearB = getYearFromTitle(b.title);
+                    return yearB - yearA;
+                });
+                
+                setAllMovies(moviesToLoad);
+
             } catch(e) {
                 console.error("Failed to load movie data from localStorage, falling back to default.", e);
-                setAllMovies(movieHeavenData);
+                const sortedDefaultData = [...movieHeavenData].sort((a, b) => getYearFromTitle(b.title) - getYearFromTitle(a.title));
+                setAllMovies(sortedDefaultData);
             }
         };
 
