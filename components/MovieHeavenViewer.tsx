@@ -83,8 +83,8 @@ export const MovieHeavenViewer: React.FC = () => {
             let moviesToLoad: MovieHeavenItem[] = movieHeavenData;
             
             moviesToLoad.sort((a, b) => {
-                const yearA = getYearFromTitle(a.title);
-                const yearB = getYearFromTitle(b.title);
+                const yearA = a.year ? parseInt(a.year, 10) : getYearFromTitle(a.title);
+                const yearB = b.year ? parseInt(b.year, 10) : getYearFromTitle(b.title);
                 return yearB - yearA;
             });
             
@@ -165,7 +165,10 @@ export const MovieHeavenViewer: React.FC = () => {
                     {currentMovies.map((movie, index) => (
                         <Card key={`${movie.title}-${index}`} className="bg-card/80 backdrop-blur-sm">
                             <CardHeader>
-                                <CardTitle className="text-lg">{movie.title}</CardTitle>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  <span>{movie.title}</span>
+                                  {movie.year && <Badge variant="outline">{movie.year}</Badge>}
+                                </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
@@ -173,7 +176,7 @@ export const MovieHeavenViewer: React.FC = () => {
                                         <Star className="w-4 h-4 text-amber-400"/>
                                         <strong>{t.rating}:</strong>
                                         {movie.imdb_score && <Badge variant="secondary">{t.imdb} {movie.imdb_score}</Badge>}
-                                        {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800">{t.douban} {movie.douban_score}</Badge>}
+                                        {movie.douban_score && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t.douban} {movie.douban_score}</Badge>}
                                     </div>
                                     <InfoRow icon={Calendar} label={t.releaseDate} value={movie.release_date} />
                                     <InfoRow icon={User} label={t.director} value={movie.director} />
