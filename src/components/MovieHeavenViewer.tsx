@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ServerCrash, Download, Film, UploadCloud } from 'lucide-react';
-import { movieHeavenData as defaultMovieData, type MovieHeavenItem } from '@/lib/data/movie-heaven-data';
+import { movieHeavenData, type MovieHeavenItem } from '@/lib/data/movie-heaven-data';
 import copy from 'copy-to-clipboard';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,28 +45,28 @@ export const MovieHeavenViewer = () => {
     const { toast } = useToast();
     
     useEffect(() => {
-        if (typeof navigator !== 'undefined') {
-          const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
-          setCurrentLanguage(browserLang);
-        }
+        const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+        setCurrentLanguage(browserLang);
 
         try {
             const localData = localStorage.getItem(LOCAL_STORAGE_MOVIE_HEAVEN_KEY);
             if (localData) {
-                setMovies(JSON.parse(localData));
+                const parsedData = JSON.parse(localData).map((item: any) => ({
+                    title: item.title,
+                    downloadUrl: item.download_links && item.download_links[0] ? item.download_links[0] : 'N/A',
+                    rating: item.imdb_score || '暂无评分',
+                    tags: item.category || '未知',
+                    shortIntro: item.content || '暂无简介'
+                }));
+                setMovies(parsedData);
             } else {
-                setMovies(defaultMovieData);
-                toast({
-                    title: translations[currentLanguage].noLocalData,
-                    description: translations[currentLanguage].loadLocalDataMessage,
-                    duration: 5000,
-                });
+                setMovies(movieHeavenData);
             }
         } catch(e) {
             console.error("Failed to load movie data from localStorage, falling back to default.", e);
-            setMovies(defaultMovieData);
+            setMovies(movieHeavenData);
         }
-    }, [currentLanguage]); // Dependency on currentLanguage to re-evaluate toast messages if needed
+    }, []);
     
     const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
@@ -101,9 +101,9 @@ export const MovieHeavenViewer = () => {
                                 <CardTitle className="text-lg">{movie.title}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm">
-                                {movie.rating && <div className="flex items-center gap-2"><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></div>}
-                                {movie.tags && <div className="flex items-center gap-2"><strong>{t.tags}:</strong> {movie.tags}</div>}
-                                {movie.shortIntro && <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.shortIntro}</p>}
+                                <div className="flex items-center gap-2"><strong>{t.rating}:</strong> <Badge variant="secondary">{movie.rating}</Badge></div>
+                                <div className="flex items-center gap-2"><strong>{t.tags}:</strong> {movie.tags}</div>
+                                <p className="text-muted-foreground"><strong>{t.intro}:</strong> {movie.shortIntro}</p>
                             </CardContent>
                             <div className="p-6 pt-0">
                                  <Button onClick={() => handleCopy(movie.downloadUrl)}>
