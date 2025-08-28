@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database, Upload, MonitorPlay, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieCard } from '@/components/MovieCard';
@@ -39,7 +39,8 @@ const translations = {
     videoPlayerTitle: "本地视频播放器",
     selectVideo: "选择视频文件",
     noVideoSelected: "请选择一个本地视频文件进行播放。",
-    videoLoading: "正在加载视频..."
+    videoLoading: "正在加载视频...",
+    openInLocalPlayer: '使用本地播放器打开',
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -65,7 +66,8 @@ const translations = {
     videoPlayerTitle: "Local Video Player",
     selectVideo: "Select Video File",
     noVideoSelected: "Please select a local video file to play.",
-    videoLoading: "Loading video..."
+    videoLoading: "Loading video...",
+    openInLocalPlayer: 'Open in Local Player',
   }
 };
 
@@ -82,7 +84,7 @@ export default function PersonalVideoLibraryPage() {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const [selectedVideoName, setSelectedVideoName] = useState<string | null>(null);
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function PersonalVideoLibraryPage() {
         URL.revokeObjectURL(videoSrc);
       }
     };
-  }, []); // videoSrc removed from dependencies to prevent revoking URL too early
+  }, [videoSrc]); 
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
@@ -195,9 +197,21 @@ export default function PersonalVideoLibraryPage() {
       setIsVideoLoading(true);
       const newSrc = URL.createObjectURL(file);
       setVideoSrc(newSrc);
-      setSelectedVideoName(file.name);
+      setSelectedVideoFile(file);
     }
   };
+  
+  const handleOpenInLocalPlayer = () => {
+    if (videoSrc) {
+      const a = document.createElement('a');
+      a.href = videoSrc;
+      a.download = selectedVideoFile?.name || 'video.mkv';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
 
 
   const wantToWatchMovies = useMemo(() => movies.filter(m => m.status === 'want_to_watch'), [movies]);
@@ -294,13 +308,19 @@ export default function PersonalVideoLibraryPage() {
                                 )
                             )}
                         </div>
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-4">
                            <Button onClick={handleVideoSelectClick} size="lg">
                             <Upload className="mr-2 h-5 w-5"/>
                              {t.selectVideo}
                            </Button>
-                           {selectedVideoName && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoName}</p>}
+                           {selectedVideoFile && (
+                            <Button onClick={handleOpenInLocalPlayer} size="lg" variant="outline">
+                                <ExternalLink className="mr-2 h-5 w-5"/>
+                                {t.openInLocalPlayer}
+                            </Button>
+                           )}
                         </div>
+                         {selectedVideoFile && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
                       </div>
                   </TabsContent>
 
