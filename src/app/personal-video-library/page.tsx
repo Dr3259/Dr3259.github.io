@@ -166,12 +166,19 @@ export default function PersonalVideoLibraryPage() {
           toast({ title: t.alreadyInPlaylist });
           return;
       }
-  
-      if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
-      setIsVideoLoading(true);
       
-      const newVideo: VideoFile = { id: `video-${Date.now()}`, name: file.name, content: file };
+      const newVideo: VideoFile = {
+          id: `video-${Date.now()}`,
+          name: file.name,
+          content: file
+      };
+
       setPlaylist(prev => [...prev, newVideo]);
+      
+      if (currentObjectUrl.current) {
+          URL.revokeObjectURL(currentObjectUrl.current);
+      }
+      setIsVideoLoading(true);
       
       const newSrc = URL.createObjectURL(file);
       currentObjectUrl.current = newSrc;
@@ -190,9 +197,11 @@ export default function PersonalVideoLibraryPage() {
   };
 
   const playVideoFromPlaylist = (video: VideoFile) => {
-    if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
-    
+    if (currentObjectUrl.current) {
+        URL.revokeObjectURL(currentObjectUrl.current);
+    }
     setIsVideoLoading(true);
+
     const newSrc = URL.createObjectURL(video.content);
     currentObjectUrl.current = newSrc;
     setVideoSrc(newSrc);
@@ -201,7 +210,7 @@ export default function PersonalVideoLibraryPage() {
   }
 
   const handleDeleteFromPlaylist = async (videoId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+    event.stopPropagation(); // Prevent card click when deleting
     try {
         await deleteVideo(videoId);
         toast({ title: t.deleteSuccess });
@@ -369,10 +378,27 @@ export default function PersonalVideoLibraryPage() {
                                           <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
                                         </div>
                                         <div className="flex items-center justify-between text-white mt-1">
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-2">
                                                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handlePlayPause}>
                                                     {isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6" />}
                                                 </Button>
+                                                <div className="flex items-center gap-2">
+                                                  <Popover>
+                                                    <PopoverTrigger asChild>
+                                                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleMute}><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm flex items-center justify-center">
+                                                      <Slider 
+                                                        orientation="vertical" 
+                                                        value={[isMuted ? 0 : volume * 100]} 
+                                                        onValueChange={handleVolumeChange} 
+                                                        max={100} 
+                                                        step={1} 
+                                                        className="h-24 flex items-center"
+                                                      />
+                                                    </PopoverContent>
+                                                  </Popover>
+                                                </div>
                                                 <span className="text-xs font-mono select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
                                             </div>
 
@@ -381,7 +407,7 @@ export default function PersonalVideoLibraryPage() {
                                                   <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><Sun className="w-5 h-5"/></Button>
                                                   </PopoverTrigger>
-                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
+                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm flex items-center justify-center">
                                                     <Slider 
                                                       orientation="vertical" 
                                                       defaultValue={[100]} 
@@ -389,22 +415,7 @@ export default function PersonalVideoLibraryPage() {
                                                       onValueChange={(v) => setBrightness(v[0])} 
                                                       max={200} 
                                                       step={1} 
-                                                      className="h-24"
-                                                    />
-                                                  </PopoverContent>
-                                                </Popover>
-                                                 <Popover>
-                                                  <PopoverTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleMute}><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
-                                                  </PopoverTrigger>
-                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
-                                                    <Slider 
-                                                      orientation="vertical" 
-                                                      value={[isMuted ? 0 : volume * 100]} 
-                                                      onValueChange={handleVolumeChange} 
-                                                      max={100} 
-                                                      step={1} 
-                                                      className="h-24"
+                                                      className="h-24 flex items-center"
                                                     />
                                                   </PopoverContent>
                                                 </Popover>
