@@ -12,6 +12,7 @@ import { useMovies, type Movie } from '@/hooks/useMovies';
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { useToast } from '@/hooks/use-toast';
 import { searchMovies } from '@/ai/flows/movie-search-flow';
+import { Separator } from '@/components/ui/separator';
 
 
 const translations = {
@@ -274,112 +275,124 @@ export default function PersonalVideoLibraryPage() {
                   </h1>
               </div>
 
-              <Tabs defaultValue="video" className="w-full">
+              <Tabs defaultValue="local_cinema" className="w-full">
                   <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
-                      <TabsTrigger value="video"><Video className="mr-2 h-4 w-4"/>{t.tabVideo}</TabsTrigger>
                       <TabsTrigger value="local_cinema"><Film className="mr-2 h-4 w-4"/>{t.tabLocalCinema}</TabsTrigger>
+                      <TabsTrigger value="video"><Video className="mr-2 h-4 w-4"/>{t.tabVideo}</TabsTrigger>
                       <TabsTrigger value="movie_heaven"><Database className="mr-2 h-4 w-4"/>{t.tabMovieHeaven}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="video">
-                      <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-                        <h2 className="text-2xl font-semibold">{t.videoPlayerTitle}</h2>
-                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground">
-                            {isVideoLoading && (
-                                <div className="text-center p-8 flex items-center gap-4">
-                                    <Loader2 className="w-8 h-8 animate-spin text-primary"/>
-                                    <p className="text-lg">{t.videoLoading}</p>
-                                </div>
-                            )}
-                            {videoSrc ? (
-                                <video 
-                                  ref={videoPlayerRef} 
-                                  src={videoSrc} 
-                                  controls 
-                                  className={`w-full h-full ${isVideoLoading ? 'hidden' : 'block'}`} 
-                                  onCanPlay={() => setIsVideoLoading(false)}
-                                />
-                            ) : (
-                                !isVideoLoading && (
-                                    <div className="text-center p-8">
-                                        <MonitorPlay className="w-16 h-16 mx-auto mb-4"/>
-                                        <p>{t.noVideoSelected}</p>
-                                    </div>
-                                )
-                            )}
-                        </div>
-                        <div className="flex items-center gap-4">
-                           <Button onClick={handleVideoSelectClick} size="lg">
-                            <Upload className="mr-2 h-5 w-5"/>
-                             {t.selectVideo}
-                           </Button>
-                           {selectedVideoFile && (
-                            <Button onClick={handleOpenInLocalPlayer} size="lg" variant="outline">
-                                <ExternalLink className="mr-2 h-5 w-5"/>
-                                {t.openInLocalPlayer}
-                            </Button>
-                           )}
-                        </div>
-                         {selectedVideoFile && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
+                      <div className="text-center py-24 text-muted-foreground">
+                          <Video className="w-20 h-20 mx-auto mb-4" />
+                          <p className="text-xl">{t.comingSoon}</p>
                       </div>
                   </TabsContent>
 
                   <TabsContent value="local_cinema">
-                      {/* Search Section */}
-                      <div className="w-full max-w-2xl mb-8 mx-auto">
-                        <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder={t.searchPlaceholder}
-                                className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            {searchTerm && (
-                                <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
-                                    {isSearching ? (
-                                        <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
-                                    ) : searchResults.length > 0 ? (
-                                        <ul>
-                                            {searchResults.map(movie => (
-                                                <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-semibold truncate">{movie.title}</p>
-                                                        <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
-                                                    </div>
-                                                    <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
-                                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                                        Add
-                                                    </Button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
+                    <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-8">
+                        {/* Local Video Player Section */}
+                        <div className="w-full flex flex-col items-center gap-6">
+                            <h2 className="text-2xl font-semibold">{t.videoPlayerTitle}</h2>
+                            <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground">
+                                {isVideoLoading && (
+                                    <div className="text-center p-8 flex items-center gap-4">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary"/>
+                                        <p className="text-lg">{t.videoLoading}</p>
+                                    </div>
+                                )}
+                                {videoSrc ? (
+                                    <video 
+                                      ref={videoPlayerRef} 
+                                      src={videoSrc} 
+                                      controls 
+                                      className={`w-full h-full ${isVideoLoading ? 'hidden' : 'block'}`} 
+                                      onCanPlay={() => setIsVideoLoading(false)}
+                                    />
+                                ) : (
+                                    !isVideoLoading && (
+                                        <div className="text-center p-8">
+                                            <MonitorPlay className="w-16 h-16 mx-auto mb-4"/>
+                                            <p>{t.noVideoSelected}</p>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                            <div className="flex items-center gap-4">
+                               <Button onClick={handleVideoSelectClick} size="lg">
+                                <Upload className="mr-2 h-5 w-5"/>
+                                 {t.selectVideo}
+                               </Button>
+                               {selectedVideoFile && (
+                                <Button onClick={handleOpenInLocalPlayer} size="lg" variant="outline">
+                                    <ExternalLink className="mr-2 h-5 w-5"/>
+                                    {t.openInLocalPlayer}
+                                </Button>
+                               )}
+                            </div>
+                             {selectedVideoFile && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
+                        </div>
+
+                        <Separator className="my-4" />
+
+                        {/* Movie Collection Section */}
+                        <div className="w-full">
+                            <div className="w-full max-w-2xl mb-8 mx-auto">
+                                <div className="relative">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                    <Input
+                                        type="search"
+                                        placeholder={t.searchPlaceholder}
+                                        className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    {searchTerm && (
+                                        <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
+                                            {isSearching ? (
+                                                <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
+                                            ) : searchResults.length > 0 ? (
+                                                <ul>
+                                                    {searchResults.map(movie => (
+                                                        <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-semibold truncate">{movie.title}</p>
+                                                                <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
+                                                            </div>
+                                                            <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
+                                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                                Add
+                                                            </Button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                            )}
+                                <div className="flex justify-end mt-2">
+                                     <Button variant="outline" size="sm" onClick={handleImportClick}>
+                                        <Upload className="mr-2 h-4 w-4"/>
+                                        {t.importJson}
+                                    </Button>
+                                </div>
+                            </div>
+                             <Tabs defaultValue="want_to_watch" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
+                                    <TabsTrigger value="want_to_watch">{t.tabWantToWatch} ({wantToWatchMovies.length})</TabsTrigger>
+                                    <TabsTrigger value="watched">{t.tabWatched} ({watchedMovies.length})</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="want_to_watch">
+                                    {renderMovieList(wantToWatchMovies, t.noMoviesWantToWatch)}
+                                </TabsContent>
+                                <TabsContent value="watched">
+                                    {renderMovieList(watchedMovies, t.noMoviesWatched)}
+                                </TabsContent>
+                            </Tabs>
                         </div>
-                        <div className="flex justify-end mt-2">
-                             <Button variant="outline" size="sm" onClick={handleImportClick}>
-                                <Upload className="mr-2 h-4 w-4"/>
-                                {t.importJson}
-                            </Button>
-                        </div>
-                      </div>
-                       <Tabs defaultValue="want_to_watch" className="w-full">
-                          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
-                              <TabsTrigger value="want_to_watch">{t.tabWantToWatch} ({wantToWatchMovies.length})</TabsTrigger>
-                              <TabsTrigger value="watched">{t.tabWatched} ({watchedMovies.length})</TabsTrigger>
-                          </TabsList>
-                          <TabsContent value="want_to_watch">
-                              {renderMovieList(wantToWatchMovies, t.noMoviesWantToWatch)}
-                          </TabsContent>
-                          <TabsContent value="watched">
-                              {renderMovieList(watchedMovies, t.noMoviesWatched)}
-                          </TabsContent>
-                      </Tabs>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">
