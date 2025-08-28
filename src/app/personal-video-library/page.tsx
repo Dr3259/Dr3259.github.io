@@ -170,13 +170,13 @@ export default function PersonalVideoLibraryPage() {
       if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
       setIsVideoLoading(true);
       
+      const newVideo: VideoFile = { id: `video-${Date.now()}`, name: file.name, content: file };
+      setPlaylist(prev => [...prev, newVideo]);
+      
       const newSrc = URL.createObjectURL(file);
       currentObjectUrl.current = newSrc;
       setVideoSrc(newSrc);
       setSelectedVideoFile(file);
-      
-      const newVideo: VideoFile = { id: `video-${Date.now()}`, name: file.name, content: file };
-      setPlaylist(prev => [...prev, newVideo]);
   
       try {
           await saveVideo(newVideo);
@@ -247,7 +247,6 @@ export default function PersonalVideoLibraryPage() {
       if (videoRef.current) {
           if (isPlaying) videoRef.current.pause();
           else videoRef.current.play();
-          setIsPlaying(!isPlaying);
       }
   };
 
@@ -370,7 +369,6 @@ export default function PersonalVideoLibraryPage() {
                                           <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
                                         </div>
                                         <div className="flex items-center justify-between text-white mt-1">
-                                            {/* Left Controls */}
                                             <div className="flex items-center gap-1">
                                                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handlePlayPause}>
                                                     {isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6" />}
@@ -378,13 +376,12 @@ export default function PersonalVideoLibraryPage() {
                                                 <span className="text-xs font-mono select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
                                             </div>
 
-                                            {/* Right Controls */}
                                             <div className="flex items-center gap-1">
                                                 <Popover>
                                                   <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><Sun className="w-5 h-5"/></Button>
                                                   </PopoverTrigger>
-                                                  <PopoverContent className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
+                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
                                                     <Slider 
                                                       orientation="vertical" 
                                                       defaultValue={[100]} 
@@ -400,7 +397,7 @@ export default function PersonalVideoLibraryPage() {
                                                   <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleMute}><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
                                                   </PopoverTrigger>
-                                                  <PopoverContent className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
+                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
                                                     <Slider 
                                                       orientation="vertical" 
                                                       value={[isMuted ? 0 : volume * 100]} 
