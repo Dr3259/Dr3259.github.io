@@ -35,7 +35,7 @@ const translations = {
   'en': {
     pageTitle: 'Personal Video Library',
     backButton: 'Back to Rest Stop',
-    tabVideo: 'Video',
+    tabVideo: '视频',
     tabLocalCinema: 'Local Cinema',
     tabMovieHeaven: 'Movie Heaven DB',
     comingSoon: 'Coming soon! This feature is under development.',
@@ -208,32 +208,32 @@ export default function PersonalVideoLibraryPage() {
                   <TabsContent value="local_cinema" className="space-y-10">
                     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
                         <h2 className="text-2xl font-semibold">{t.videoPlayerTitle}</h2>
-                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground">
-                            {isVideoLoading && (
-                                <div className="text-center p-8 flex items-center gap-4">
-                                    <Loader2 className="w-8 h-8 animate-spin text-primary"/>
-                                    <p className="text-lg">{t.videoLoading}</p>
-                                </div>
-                            )}
-                            {videoSrc && !isVideoLoading ? (
-                                <video 
-                                  src={videoSrc} 
-                                  controls 
-                                  autoPlay
-                                  className={`w-full h-full block`} 
-                                  onCanPlay={() => setIsVideoLoading(false)}
-                                  onError={() => {
-                                      setIsVideoLoading(false);
-                                      toast({ title: 'Error playing video', variant: 'destructive' });
-                                  }}
-                                />
+                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative">
+                            {videoSrc ? (
+                                <>
+                                    <video 
+                                        src={videoSrc} 
+                                        controls 
+                                        autoPlay
+                                        className="w-full h-full block" 
+                                        onCanPlay={() => setIsVideoLoading(false)}
+                                        onError={() => {
+                                            setIsVideoLoading(false);
+                                            toast({ title: 'Error playing video', variant: 'destructive' });
+                                        }}
+                                    />
+                                    {isVideoLoading && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
+                                            <Loader2 className="w-8 h-8 animate-spin text-primary"/>
+                                            <p className="text-lg ml-4">{t.videoLoading}</p>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
-                                !isVideoLoading && (
-                                    <div className="text-center p-8">
-                                        <MonitorPlay className="w-16 h-16 mx-auto mb-4"/>
-                                        <p>{t.noVideoSelected}</p>
-                                    </div>
-                                )
+                                <div className="text-center p-8">
+                                    <MonitorPlay className="w-16 h-16 mx-auto mb-4"/>
+                                    <p>{t.noVideoSelected}</p>
+                                </div>
                             )}
                         </div>
                         <div className="flex items-center gap-4">
@@ -286,5 +286,3 @@ export default function PersonalVideoLibraryPage() {
     </>
   );
 }
-
-    
