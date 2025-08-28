@@ -23,7 +23,6 @@ const translations = {
     tabLocalCinema: '本地影院',
     tabMovieHeaven: '电影天堂',
     comingSoon: '敬请期待！此功能正在开发中。',
-    videoPlayerTitle: "本地视频播放器",
     selectVideo: "选择视频文件",
     noVideoSelected: "请选择一个本地视频文件进行播放。",
     videoLoading: "正在加载视频...",
@@ -53,7 +52,6 @@ const translations = {
     tabLocalCinema: 'Local Cinema',
     tabMovieHeaven: 'Movie Heaven DB',
     comingSoon: 'Coming soon! This feature is under development.',
-    videoPlayerTitle: "Local Video Player",
     selectVideo: "Select Video File",
     noVideoSelected: "Please select a local video file to play.",
     videoLoading: "Loading video...",
@@ -123,13 +121,12 @@ export default function PersonalVideoLibraryPage() {
   const handleVideoFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Check for duplicates before processing
       const isDuplicate = playlist.some(video => video.content.name === file.name && video.content.size === file.size);
       if (isDuplicate) {
           toast({ title: t.alreadyInPlaylist });
           return;
       }
-
+  
       if (currentObjectUrl.current) {
           URL.revokeObjectURL(currentObjectUrl.current);
       }
@@ -139,20 +136,26 @@ export default function PersonalVideoLibraryPage() {
       currentObjectUrl.current = newSrc;
       setVideoSrc(newSrc);
       setSelectedVideoFile(file);
-
-      // Save to playlist
+  
+      // Optimistic UI update
+      const newVideo: VideoFile = {
+          id: `video-${Date.now()}`,
+          name: file.name,
+          content: file
+      };
+      setPlaylist(prev => [...prev, newVideo]);
+  
+      // Save to DB in the background
       try {
-          const newVideo: VideoFile = {
-              id: `video-${Date.now()}`,
-              name: file.name,
-              content: file
-          };
           await saveVideo(newVideo);
           toast({ title: t.importSuccess });
-          loadPlaylist(); // Refresh playlist
+          // Optional: refresh from DB to ensure consistency, though not strictly needed for this flow
+          // loadPlaylist(); 
       } catch (error) {
           toast({ title: t.importError, variant: 'destructive' });
           console.error("Error saving video:", error);
+          // Revert optimistic update on failure
+          setPlaylist(prev => prev.filter(v => v.id !== newVideo.id));
       }
     }
   };
@@ -373,5 +376,5 @@ export default function PersonalVideoLibraryPage() {
         translations={t.editVideoModal}
       />
     </>
-  );
-}
+
+    
