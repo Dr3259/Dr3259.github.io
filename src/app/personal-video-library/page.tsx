@@ -4,13 +4,14 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic } from 'lucide-react';
+import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic, FileEdit } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { saveVideo, getVideos, deleteVideo, type VideoFile } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { EditVideoModal } from '@/components/EditVideoModal';
 
 const translations = {
   'zh-CN': {
@@ -31,7 +32,15 @@ const translations = {
     deleteError: "删除视频失败。",
     playlistTitle: "播放列表",
     noPlaylist: "暂无视频。",
-    alreadyInPlaylist: "此视频已在播放列表中。"
+    alreadyInPlaylist: "此视频已在播放列表中。",
+    editVideo: "编辑视频名称",
+    editVideoModal: {
+      title: "编辑视频信息",
+      description: "修改视频的文件名。",
+      nameLabel: "名称",
+      saveButton: "保存",
+      cancelButton: "取消",
+    }
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -51,7 +60,15 @@ const translations = {
     deleteError: "Failed to delete video.",
     playlistTitle: "Playlist",
     noPlaylist: "No videos in playlist yet.",
-    alreadyInPlaylist: "This video is already in the playlist."
+    alreadyInPlaylist: "This video is already in the playlist.",
+    editVideo: "Edit video name",
+    editVideoModal: {
+      title: "Edit Video Info",
+      description: "Modify the name of the video file.",
+      nameLabel: "Name",
+      saveButton: "Save",
+      cancelButton: "Cancel",
+    }
   }
 };
 
@@ -66,6 +83,7 @@ export default function PersonalVideoLibraryPage() {
   const [playlist, setPlaylist] = useState<VideoFile[]>([]);
   const { toast } = useToast();
   const currentObjectUrl = useRef<string | null>(null);
+  const [editingVideo, setEditingVideo] = useState<VideoFile | null>(null);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -159,6 +177,26 @@ export default function PersonalVideoLibraryPage() {
         toast({ title: t.deleteError, variant: 'destructive' });
     }
   }
+
+  const handleEditVideo = (video: VideoFile, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setEditingVideo(video);
+  };
+
+  const handleSaveVideoName = async (video: VideoFile, newName: string) => {
+    try {
+        const updatedVideo = { ...video, name: newName };
+        await saveVideo(updatedVideo);
+        toast({ title: "Video name updated!" });
+        loadPlaylist();
+        if (selectedVideoFile && selectedVideoFile.name === video.name) {
+            const updatedFile = new File([video.content], newName, { type: video.content.type });
+            setSelectedVideoFile(updatedFile);
+        }
+    } catch (e) {
+        toast({ title: "Error updating video name", variant: 'destructive' });
+    }
+  };
   
   const handleOpenInLocalPlayer = () => {
     if (videoSrc) {
@@ -270,9 +308,14 @@ export default function PersonalVideoLibraryPage() {
                                     <div key={video.id} onClick={() => playVideoFromPlaylist(video)} className="group relative p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors flex flex-col items-center justify-center text-center">
                                        <Film className="w-10 h-10 mb-2 text-primary/80" />
                                        <p className="text-sm font-medium line-clamp-2" title={video.name}>{video.name}</p>
-                                       <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleDeleteFromPlaylist(video.id, e)}>
-                                            <Trash2 className="h-4 w-4"/>
-                                       </Button>
+                                       <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" title={t.editVideo} onClick={(e) => handleEditVideo(video, e)}>
+                                                <FileEdit className="h-4 w-4"/>
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={(e) => handleDeleteFromPlaylist(video.id, e)}>
+                                                <Trash2 className="h-4 w-4"/>
+                                            </Button>
+                                       </div>
                                     </div>
                                 ))}
                                 </div>
@@ -290,6 +333,13 @@ export default function PersonalVideoLibraryPage() {
               </Tabs>
           </main>
       </div>
+      <EditVideoModal
+        isOpen={!!editingVideo}
+        onClose={() => setEditingVideo(null)}
+        onSave={handleSaveVideoName}
+        video={editingVideo}
+        translations={t.editVideoModal}
+      />
     </>
   );
 }
