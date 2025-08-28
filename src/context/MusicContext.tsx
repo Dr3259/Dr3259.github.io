@@ -443,12 +443,19 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
           const activeElement = document.activeElement;
-          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
+          const isTextInput = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || (activeElement as HTMLElement).isContentEditable);
+          const isVideoPlayerVisible = document.querySelector('video') !== null;
+          
+          if (isTextInput) {
             return;
           }
     
           switch (event.key) {
             case ' ':
+              if (isVideoPlayerVisible && document.body.contains(activeElement) && activeElement?.tagName !== 'BUTTON') {
+                // If a video player is visible and the focus is not on a button, let the video player handle it.
+                return;
+              }
               event.preventDefault();
               handlePlayPause();
               break;
@@ -488,5 +495,3 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
 };
-
-    
