@@ -105,13 +105,6 @@ export const MovieHeavenViewer: React.FC = () => {
         return allMovies.slice(start, end);
     }, [allMovies, currentPage]);
 
-    const handleCopy = (links: string[]) => {
-        if (links && links.length > 0) {
-            copy(links.join('\\n'));
-            toast({ title: t.linkCopied, duration: 2000 });
-        }
-    }
-
     const handlePrevPage = () => {
         setCurrentPage(prev => Math.max(prev - 1, 1));
     };
@@ -206,12 +199,6 @@ export const MovieHeavenViewer: React.FC = () => {
                                   </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex justify-end">
-                                 <Button onClick={() => handleCopy(movie.download_links)} disabled={!movie.download_links || movie.download_links.length === 0}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    {t.copyLink}
-                                </Button>
-                            </CardFooter>
                         </Card>
                     ))}
                 </div>
@@ -234,7 +221,7 @@ export const MovieHeavenViewer: React.FC = () => {
                             <span>{t.of} {totalPages}</span>
                         </div>
                         <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
-                            {currentLanguage === 'zh-CN' ? '下一页' : 'Next'}
+                            {currentLanguage === 'zh-CN' ? 'Next' : 'Next'}
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
