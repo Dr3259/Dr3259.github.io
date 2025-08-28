@@ -265,7 +265,8 @@ export default function PersonalVideoLibraryPage() {
                                 <>
                                     <video 
                                         src={videoSrc} 
-                                        controls 
+                                        controls
+                                        controlsList="nodownload"
                                         autoPlay
                                         className="w-full h-full block" 
                                         style={{ filter: `brightness(${brightness}%)`}}
