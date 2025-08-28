@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic, FileEdit } from 'lucide-react';
+import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic, FileEdit, Sun } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { saveVideo, getVideos, deleteVideo, type VideoFile } from '@/lib/db';
@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { EditVideoModal } from '@/components/EditVideoModal';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
 
 const translations = {
   'zh-CN': {
@@ -41,12 +43,13 @@ const translations = {
       originalFilenameLabel: "原始文件名:",
       saveButton: "保存",
       cancelButton: "取消",
-    }
+    },
+    brightness: "亮度",
   },
   'en': {
     pageTitle: 'Personal Video Library',
     backButton: 'Back to Rest Stop',
-    tabVideo: '视频',
+    tabVideo: 'Video',
     tabLocalCinema: 'Local Cinema',
     tabMovieHeaven: 'Movie Heaven DB',
     comingSoon: 'Coming soon! This feature is under development.',
@@ -70,7 +73,8 @@ const translations = {
       originalFilenameLabel: "Original filename:",
       saveButton: "Save",
       cancelButton: "Cancel",
-    }
+    },
+    brightness: "Brightness",
   }
 };
 
@@ -86,6 +90,7 @@ export default function PersonalVideoLibraryPage() {
   const { toast } = useToast();
   const currentObjectUrl = useRef<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoFile | null>(null);
+  const [brightness, setBrightness] = useState(100);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -263,6 +268,7 @@ export default function PersonalVideoLibraryPage() {
                                         controls 
                                         autoPlay
                                         className="w-full h-full block" 
+                                        style={{ filter: `brightness(${brightness}%)`}}
                                         onCanPlay={() => setIsVideoLoading(false)}
                                         onError={() => {
                                             setIsVideoLoading(false);
@@ -289,10 +295,29 @@ export default function PersonalVideoLibraryPage() {
                              {t.selectVideo}
                            </Button>
                            {selectedVideoFile && (
-                            <Button onClick={handleOpenInLocalPlayer} size="lg" variant="outline">
-                                <ExternalLink className="mr-2 h-5 w-5"/>
-                                {t.openInLocalPlayer}
-                            </Button>
+                             <>
+                                <Button onClick={handleOpenInLocalPlayer} size="lg" variant="outline">
+                                    <ExternalLink className="mr-2 h-5 w-5"/>
+                                    {t.openInLocalPlayer}
+                                </Button>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button size="lg" variant="outline">
+                                            <Sun className="mr-2 h-5 w-5" />
+                                            {t.brightness}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-56 p-2">
+                                        <Slider
+                                            defaultValue={[100]}
+                                            value={[brightness]}
+                                            onValueChange={(value) => setBrightness(value[0])}
+                                            max={200}
+                                            step={1}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                             </>
                            )}
                         </div>
                          {selectedVideoFile && !isVideoLoading && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
