@@ -123,6 +123,46 @@ export default function PersonalVideoLibraryPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [brightness, setBrightness] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const hideControls = () => {
+    if (videoRef.current && !videoRef.current.paused) {
+      setIsControlsVisible(false);
+    }
+  };
+
+  const handleMouseMove = () => {
+    setIsControlsVisible(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(hideControls, 3000);
+  };
+  
+  useEffect(() => {
+      const container = playerContainerRef.current;
+      if (container) {
+          container.addEventListener('mousemove', handleMouseMove);
+          container.addEventListener('mouseleave', hideControls);
+          // Show controls when video is paused
+          if (isPlaying) {
+             handleMouseMove(); // Start timer when playing
+          } else {
+             setIsControlsVisible(true);
+             if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+          }
+      }
+      return () => {
+          if (container) {
+              container.removeEventListener('mousemove', handleMouseMove);
+              container.removeEventListener('mouseleave', hideControls);
+          }
+          if (controlsTimeoutRef.current) {
+              clearTimeout(controlsTimeoutRef.current);
+          }
+      };
+  }, [isPlaying]);
 
   useEffect(() => {
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -373,7 +413,10 @@ export default function PersonalVideoLibraryPage() {
                                             <p className="text-lg ml-4">{t.videoLoading}</p>
                                         </div>
                                     )}
-                                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/player:opacity-100 transition-opacity duration-300">
+                                     <div className={cn(
+                                        "absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300",
+                                        isControlsVisible ? "opacity-100" : "opacity-0"
+                                     )}>
                                         <div className="px-2">
                                           <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
                                         </div>
@@ -393,6 +436,7 @@ export default function PersonalVideoLibraryPage() {
                                                     <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm flex items-center justify-center">
                                                       <Slider 
                                                         orientation="vertical" 
+                                                        defaultValue={[75]}
                                                         value={[isMuted ? 0 : volume * 100]} 
                                                         onValueChange={handleVolumeChange} 
                                                         max={100} 
