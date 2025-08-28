@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, History } from 'lucide-react';
+import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { saveVideo, getVideos, deleteVideo, type VideoFile } from '@/lib/db';
@@ -25,12 +25,13 @@ const translations = {
     noVideoSelected: "请选择一个本地视频文件进行播放。",
     videoLoading: "正在加载视频...",
     openInLocalPlayer: '使用本地播放器打开',
-    importSuccess: "视频已成功添加到历史记录！",
-    importError: "添加视频到历史记录失败。",
-    deleteSuccess: "视频已从历史记录中删除。",
+    importSuccess: "视频已成功添加到播放列表！",
+    importError: "添加视频到播放列表失败。",
+    deleteSuccess: "视频已从播放列表删除。",
     deleteError: "删除视频失败。",
-    historyTitle: "播放历史",
-    noHistory: "暂无播放历史。",
+    playlistTitle: "播放列表",
+    noPlaylist: "暂无视频。",
+    alreadyInPlaylist: "此视频已在播放列表中。"
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -44,12 +45,13 @@ const translations = {
     noVideoSelected: "Please select a local video file to play.",
     videoLoading: "Loading video...",
     openInLocalPlayer: 'Open in Local Player',
-    importSuccess: "Video successfully added to history!",
-    importError: "Failed to add video to history.",
-    deleteSuccess: "Video removed from history.",
+    importSuccess: "Video successfully added to playlist!",
+    importError: "Failed to add video to playlist.",
+    deleteSuccess: "Video removed from playlist.",
     deleteError: "Failed to delete video.",
-    historyTitle: "Playback History",
-    noHistory: "No playback history yet.",
+    playlistTitle: "Playlist",
+    noPlaylist: "No videos in playlist yet.",
+    alreadyInPlaylist: "This video is already in the playlist."
   }
 };
 
@@ -61,7 +63,7 @@ export default function PersonalVideoLibraryPage() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
-  const [history, setHistory] = useState<VideoFile[]>([]);
+  const [playlist, setPlaylist] = useState<VideoFile[]>([]);
   const { toast } = useToast();
   const currentObjectUrl = useRef<string | null>(null);
 
@@ -69,7 +71,7 @@ export default function PersonalVideoLibraryPage() {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
     
-    loadHistory();
+    loadPlaylist();
 
     return () => {
       if (currentObjectUrl.current) {
@@ -80,12 +82,12 @@ export default function PersonalVideoLibraryPage() {
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
-  const loadHistory = async () => {
+  const loadPlaylist = async () => {
       try {
-        const videoHistory = await getVideos();
-        setHistory(videoHistory);
+        const videoPlaylist = await getVideos();
+        setPlaylist(videoPlaylist);
       } catch (error) {
-        console.error("Failed to load video history:", error);
+        console.error("Failed to load video playlist:", error);
       }
   };
 
@@ -96,6 +98,13 @@ export default function PersonalVideoLibraryPage() {
   const handleVideoFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check for duplicates before processing
+      const isDuplicate = playlist.some(video => video.name === file.name);
+      if (isDuplicate) {
+          toast({ title: t.alreadyInPlaylist });
+          return;
+      }
+
       if (currentObjectUrl.current) {
           URL.revokeObjectURL(currentObjectUrl.current);
       }
@@ -106,7 +115,7 @@ export default function PersonalVideoLibraryPage() {
       setVideoSrc(newSrc);
       setSelectedVideoFile(file);
 
-      // Save to history
+      // Save to playlist
       try {
           const newVideo: VideoFile = {
               id: `video-${Date.now()}`,
@@ -115,7 +124,7 @@ export default function PersonalVideoLibraryPage() {
           };
           await saveVideo(newVideo);
           toast({ title: t.importSuccess });
-          loadHistory(); // Refresh history list
+          loadPlaylist(); // Refresh playlist
       } catch (error) {
           toast({ title: t.importError, variant: 'destructive' });
           console.error("Error saving video:", error);
@@ -123,7 +132,7 @@ export default function PersonalVideoLibraryPage() {
     }
   };
 
-  const playVideoFromHistory = (video: VideoFile) => {
+  const playVideoFromPlaylist = (video: VideoFile) => {
     if (currentObjectUrl.current) {
         URL.revokeObjectURL(currentObjectUrl.current);
     }
@@ -132,19 +141,17 @@ export default function PersonalVideoLibraryPage() {
     const newSrc = URL.createObjectURL(video.content);
     currentObjectUrl.current = newSrc;
     setVideoSrc(newSrc);
-    // Create a File-like object for the download button, though it lacks some properties.
     const fileLikeObject = new File([video.content], video.name, { type: video.content.type });
     setSelectedVideoFile(fileLikeObject);
   }
 
-  const handleDeleteFromHistory = async (videoId: string, event: React.MouseEvent) => {
+  const handleDeleteFromPlaylist = async (videoId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent card click when deleting
     try {
         await deleteVideo(videoId);
         toast({ title: t.deleteSuccess });
-        loadHistory();
-        // If the deleted video is the one currently playing, clear the player
-        if (selectedVideoFile && selectedVideoFile.name === history.find(v => v.id === videoId)?.name) {
+        loadPlaylist();
+        if (selectedVideoFile && selectedVideoFile.name === playlist.find(v => v.id === videoId)?.name) {
             setVideoSrc(null);
             setSelectedVideoFile(null);
         }
@@ -253,17 +260,17 @@ export default function PersonalVideoLibraryPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />{t.historyTitle}</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><ListMusic className="h-5 w-5" />{t.playlistTitle}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                             {history.length > 0 ? (
+                             {playlist.length > 0 ? (
                                 <ScrollArea className="h-64">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {history.map(video => (
-                                    <div key={video.id} onClick={() => playVideoFromHistory(video)} className="group relative p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors flex flex-col items-center justify-center text-center">
+                                {playlist.map(video => (
+                                    <div key={video.id} onClick={() => playVideoFromPlaylist(video)} className="group relative p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors flex flex-col items-center justify-center text-center">
                                        <Film className="w-10 h-10 mb-2 text-primary/80" />
                                        <p className="text-sm font-medium line-clamp-2" title={video.name}>{video.name}</p>
-                                       <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleDeleteFromHistory(video.id, e)}>
+                                       <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleDeleteFromPlaylist(video.id, e)}>
                                             <Trash2 className="h-4 w-4"/>
                                        </Button>
                                     </div>
@@ -271,7 +278,7 @@ export default function PersonalVideoLibraryPage() {
                                 </div>
                                 </ScrollArea>
                             ) : (
-                                <div className="text-center py-10 text-muted-foreground">{t.noHistory}</div>
+                                <div className="text-center py-10 text-muted-foreground">{t.noPlaylist}</div>
                             )}
                         </CardContent>
                     </Card>
