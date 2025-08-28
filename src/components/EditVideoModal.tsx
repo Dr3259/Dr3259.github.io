@@ -24,6 +24,7 @@ interface EditVideoModalProps {
     title: string;
     description: string;
     nameLabel: string;
+    originalFilenameLabel: string;
     saveButton: string;
     cancelButton: string;
   };
@@ -66,15 +67,22 @@ export const EditVideoModal: React.FC<EditVideoModalProps> = ({
           <DialogTitle>{translations.title}</DialogTitle>
           <DialogDescription>{translations.description}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-2 py-4">
-          <Label htmlFor="video-name">{translations.nameLabel}</Label>
-          <Input
-            id="video-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-            autoComplete="off"
-          />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="video-name">{translations.nameLabel}</Label>
+            <Input
+              id="video-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              autoComplete="off"
+            />
+          </div>
+          <div className="space-y-2">
+             <p className="text-sm text-muted-foreground">
+                <span className="font-semibold">{translations.originalFilenameLabel}</span> {video.content.name}
+             </p>
+          </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>

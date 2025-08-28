@@ -36,8 +36,9 @@ const translations = {
     editVideo: "编辑视频名称",
     editVideoModal: {
       title: "编辑视频信息",
-      description: "修改视频的文件名。",
-      nameLabel: "名称",
+      description: "修改视频的显示名称。这不会更改原始文件名。",
+      nameLabel: "显示名称",
+      originalFilenameLabel: "原始文件名:",
       saveButton: "保存",
       cancelButton: "取消",
     }
@@ -64,8 +65,9 @@ const translations = {
     editVideo: "Edit video name",
     editVideoModal: {
       title: "Edit Video Info",
-      description: "Modify the name of the video file.",
-      nameLabel: "Name",
+      description: "Modify the display name of the video. This will not change the original file name.",
+      nameLabel: "Display Name",
+      originalFilenameLabel: "Original filename:",
       saveButton: "Save",
       cancelButton: "Cancel",
     }
@@ -117,7 +119,7 @@ export default function PersonalVideoLibraryPage() {
     const file = event.target.files?.[0];
     if (file) {
       // Check for duplicates before processing
-      const isDuplicate = playlist.some(video => video.name === file.name);
+      const isDuplicate = playlist.some(video => video.content.name === file.name && video.content.size === file.size);
       if (isDuplicate) {
           toast({ title: t.alreadyInPlaylist });
           return;
@@ -169,7 +171,7 @@ export default function PersonalVideoLibraryPage() {
         await deleteVideo(videoId);
         toast({ title: t.deleteSuccess });
         loadPlaylist();
-        if (selectedVideoFile && selectedVideoFile.name === playlist.find(v => v.id === videoId)?.name) {
+        if (selectedVideoFile && playlist.find(v => v.id === videoId)?.content.name === selectedVideoFile.name) {
             setVideoSrc(null);
             setSelectedVideoFile(null);
         }
@@ -189,8 +191,8 @@ export default function PersonalVideoLibraryPage() {
         await saveVideo(updatedVideo);
         toast({ title: "Video name updated!" });
         loadPlaylist();
-        if (selectedVideoFile && selectedVideoFile.name === video.name) {
-            const updatedFile = new File([video.content], newName, { type: video.content.type });
+        if (selectedVideoFile && video.content.name === selectedVideoFile.name) {
+             const updatedFile = new File([video.content], newName, { type: video.content.type });
             setSelectedVideoFile(updatedFile);
         }
     } catch (e) {
@@ -237,7 +239,7 @@ export default function PersonalVideoLibraryPage() {
               </div>
 
               <Tabs defaultValue="local_cinema" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
+                   <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
                       <TabsTrigger value="video"><Video className="mr-2 h-4 w-4"/>{t.tabVideo}</TabsTrigger>
                       <TabsTrigger value="local_cinema"><Film className="mr-2 h-4 w-4"/>{t.tabLocalCinema}</TabsTrigger>
                       <TabsTrigger value="movie_heaven"><Database className="mr-2 h-4 w-4"/>{t.tabMovieHeaven}</TabsTrigger>
@@ -305,9 +307,12 @@ export default function PersonalVideoLibraryPage() {
                                 <ScrollArea className="h-64">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {playlist.map(video => (
-                                    <div key={video.id} onClick={() => playVideoFromPlaylist(video)} className="group relative p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors flex flex-col items-center justify-center text-center">
-                                       <Film className="w-10 h-10 mb-2 text-primary/80" />
-                                       <p className="text-sm font-medium line-clamp-2" title={video.name}>{video.name}</p>
+                                    <div key={video.id} onClick={() => playVideoFromPlaylist(video)} className="group relative p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors flex flex-col justify-between h-full">
+                                       <div className="flex flex-col items-center justify-center text-center flex-grow">
+                                          <Film className="w-10 h-10 mb-2 text-primary/80" />
+                                          <p className="text-sm font-semibold line-clamp-2" title={video.name}>{video.name}</p>
+                                       </div>
+                                       <p className="text-xs text-muted-foreground mt-2 truncate text-center" title={video.content.name}>({video.content.name})</p>
                                        <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" title={t.editVideo} onClick={(e) => handleEditVideo(video, e)}>
                                                 <FileEdit className="h-4 w-4"/>
