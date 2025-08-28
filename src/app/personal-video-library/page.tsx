@@ -237,7 +237,7 @@ export default function PersonalVideoLibraryPage() {
         ref={videoInputRef}
         onChange={handleVideoFileChange}
         className="hidden"
-        accept="video/mkv,video/mp4,video/webm,video/*"
+        accept=".mkv,.mp4,.webm,video/*"
       />
       <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
           <header className="w-full max-w-6xl mb-6 sm:mb-8">
