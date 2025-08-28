@@ -376,5 +376,5 @@ export default function PersonalVideoLibraryPage() {
         translations={t.editVideoModal}
       />
     </>
-
-    
+  );
+}
