@@ -4,13 +4,14 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database } from 'lucide-react';
+import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieCard } from '@/components/MovieCard';
 import { useMovies, type Movie } from '@/hooks/useMovies';
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { useToast } from '@/hooks/use-toast';
+import { searchMovies } from '@/ai/flows/movie-search-flow';
 
 
 const translations = {
@@ -19,7 +20,7 @@ const translations = {
     backButton: '返回休闲驿站',
     searchPlaceholder: '搜索电影...',
     tabLocalCinema: '本地影院',
-    tabShortVideo: '短视频',
+    tabVideo: '视频',
     tabMovieHeaven: '电影天堂',
     tabWantToWatch: '想看',
     tabWatched: '已看',
@@ -33,14 +34,15 @@ const translations = {
     searchInstruction: '搜索电影并添加到您的收藏中。',
     comingSoon: '敬请期待！此功能正在开发中。',
     jsonImportSuccess: '本地JSON文件预览成功！请确认数据无误后，通知我将其固化到项目中。',
-    jsonImportError: '加载JSON文件失败，请检查文件格式。'
+    jsonImportError: '加载JSON文件失败，请检查文件格式。',
+    importJson: '导入JSON'
   },
   'en': {
     pageTitle: 'Personal Video Library',
     backButton: 'Back to Rest Stop',
     searchPlaceholder: 'Search for a movie...',
     tabLocalCinema: 'Local Cinema',
-    tabShortVideo: 'Shorts',
+    tabVideo: 'Video',
     tabMovieHeaven: 'Movie Heaven DB',
     tabWantToWatch: 'Want to Watch',
     tabWatched: 'Watched',
@@ -54,27 +56,21 @@ const translations = {
     searchInstruction: 'Search for movies to add to your collection.',
     comingSoon: 'Coming soon! This feature is under development.',
     jsonImportSuccess: 'Local JSON file previewed successfully! After confirming the data is correct, please instruct me to commit it to the project.',
-    jsonImportError: 'Failed to load JSON file. Please check the format.'
+    jsonImportError: 'Failed to load JSON file. Please check the format.',
+    importJson: 'Import JSON'
   }
 };
 
 type LanguageKey = keyof typeof translations;
-
-// --- Mock Search Data ---
-const mockSearchResults: Movie[] = [
-    { id: 'tmdb-299534', title: 'Avengers: Endgame', poster_path: '/or06FN3Dka5tukK1e9sl16pB3iy.jpg', release_date: '2019-04-24', overview: 'After the devastating events of Avengers: Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos\' actions and restore balance to the universe.', status: 'want_to_watch' },
-    { id: 'tmdb-27205', title: 'Inception', poster_path_en: '/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg', poster_path: '/edv5CZvWj09upOsy2Y6ama2apoE.jpg', release_date: '2010-07-15', overview: 'Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets, is offered a chance to regain his old life as payment for a task considered to be impossible: "inception", the implantation of another person\'s idea into a target\'s subconscious.', status: 'want_to_watch' },
-    { id: 'tmdb-155', title: 'The Dark Knight', poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg', release_date: '2008-07-16', overview: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.', status: 'want_to_watch' },
-    { id: 'tmdb-680', title: 'Pulp Fiction', poster_path: '/d5iIlFn5s0ImszYzrKYO7G9B9A1.jpg', release_date: '1994-09-10', overview: 'A burger-loving hit man, his philosophical partner, a drug-addled gangster\'s moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip over each other.', status: 'want_to_watch' },
-];
-
 
 export default function PersonalVideoLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { movies, addMovie, updateMovieStatus, updateMovieRating, updateMovieReview } = useMovies();
+  const { movies, addMovie, updateMovieStatus, updateMovieRating, updateMovieReview, setMovies } = useMovies();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -90,24 +86,83 @@ export default function PersonalVideoLibraryPage() {
         return;
     }
 
-    setIsSearching(true);
+    const handleSearch = async () => {
+        setIsSearching(true);
+        try {
+            const results = await searchMovies({ query: searchTerm });
+            const movies = results.map(r => ({ ...r, status: 'want_to_watch' as const }));
+            setSearchResults(movies);
+        } catch (error) {
+            console.error("Failed to search movies:", error);
+            toast({ title: "Search failed", description: "Could not fetch movie results.", variant: "destructive" });
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     const timer = setTimeout(() => {
-        const results = mockSearchResults.filter(movie =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setSearchResults(results);
-        setIsSearching(false);
+       handleSearch();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, toast]);
 
   const handleAddMovie = (movie: Movie) => {
     const success = addMovie(movie);
     if (success) {
+        toast({ title: t.addSuccess(movie.title) });
         setSearchTerm('');
+    } else {
+        toast({ title: t.addError(movie.title), variant: "destructive" });
     }
   };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const jsonData = JSON.parse(content);
+
+        // Basic validation and transformation
+        if (Array.isArray(jsonData)) {
+          const importedMovies: Movie[] = jsonData.map((item: any, index: number) => ({
+            id: item.id || `local-${Date.now()}-${index}`,
+            title: item.title || 'Untitled',
+            poster_path: item.poster_path || '',
+            release_date: item.release_date || '',
+            overview: item.overview || '',
+            status: item.status || 'want_to_watch',
+            rating: item.rating,
+            review: item.review,
+          }));
+          setMovies(importedMovies);
+          toast({
+            title: t.jsonImportSuccess,
+            duration: 5000,
+          });
+        } else {
+          throw new Error("JSON is not an array");
+        }
+      } catch (error) {
+        toast({
+          title: t.jsonImportError,
+          variant: 'destructive',
+        });
+        console.error("Error parsing JSON:", error);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
 
   const wantToWatchMovies = useMemo(() => movies.filter(m => m.status === 'want_to_watch'), [movies]);
   const watchedMovies = useMemo(() => movies.filter(m => m.status === 'watched'), [movies]);
@@ -137,6 +192,14 @@ export default function PersonalVideoLibraryPage() {
   };
 
   return (
+    <>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="application/json"
+      />
       <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
           <header className="w-full max-w-6xl mb-6 sm:mb-8">
               <Link href="/rest" passHref>
@@ -154,48 +217,63 @@ export default function PersonalVideoLibraryPage() {
                   </h1>
               </div>
 
-              <Tabs defaultValue="local_cinema" className="w-full">
+              <Tabs defaultValue="video" className="w-full">
                   <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
+                      <TabsTrigger value="video"><Video className="mr-2 h-4 w-4"/>{t.tabVideo}</TabsTrigger>
                       <TabsTrigger value="local_cinema"><Film className="mr-2 h-4 w-4"/>{t.tabLocalCinema}</TabsTrigger>
-                      <TabsTrigger value="short_video"><Video className="mr-2 h-4 w-4"/>{t.tabShortVideo}</TabsTrigger>
                       <TabsTrigger value="movie_heaven"><Database className="mr-2 h-4 w-4"/>{t.tabMovieHeaven}</TabsTrigger>
                   </TabsList>
                   
+                  <TabsContent value="video">
+                      <div className="text-center py-24 text-muted-foreground">
+                          <Video className="w-20 h-20 mx-auto mb-4" />
+                          <p className="text-xl">{t.comingSoon}</p>
+                      </div>
+                  </TabsContent>
+
                   <TabsContent value="local_cinema">
                       {/* Search Section */}
-                      <div className="w-full max-w-2xl mb-8 relative mx-auto">
-                          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                          <Input
-                              type="search"
-                              placeholder={t.searchPlaceholder}
-                              className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                          {searchTerm && (
-                              <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
-                                  {isSearching ? (
-                                      <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
-                                  ) : searchResults.length > 0 ? (
-                                      <ul>
-                                          {searchResults.map(movie => (
-                                              <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
-                                                  <div className="flex-1 min-w-0">
-                                                      <p className="font-semibold truncate">{movie.title}</p>
-                                                      <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
-                                                  </div>
-                                                  <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
-                                                      <PlusCircle className="mr-2 h-4 w-4" />
-                                                      Add
-                                                  </Button>
-                                              </li>
-                                          ))}
-                                      </ul>
-                                  ) : (
-                                      <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
-                                  )}
-                              </div>
-                          )}
+                      <div className="w-full max-w-2xl mb-8 mx-auto">
+                        <div className="relative">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder={t.searchPlaceholder}
+                                className="w-full pl-12 h-12 text-lg rounded-full shadow-lg"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-xl z-10 max-h-96 overflow-y-auto">
+                                    {isSearching ? (
+                                        <p className="p-4 text-center text-muted-foreground">{t.searchInProgress}</p>
+                                    ) : searchResults.length > 0 ? (
+                                        <ul>
+                                            {searchResults.map(movie => (
+                                                <li key={movie.id} className="flex items-center justify-between p-3 hover:bg-accent">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold truncate">{movie.title}</p>
+                                                        <p className="text-sm text-muted-foreground">{movie.release_date.substring(0, 4)}</p>
+                                                    </div>
+                                                    <Button size="sm" variant="ghost" onClick={() => handleAddMovie(movie)}>
+                                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                                        Add
+                                                    </Button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="p-4 text-center text-muted-foreground">{t.noResults}</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex justify-end mt-2">
+                             <Button variant="outline" size="sm" onClick={handleImportClick}>
+                                <Upload className="mr-2 h-4 w-4"/>
+                                {t.importJson}
+                            </Button>
+                        </div>
                       </div>
                        <Tabs defaultValue="want_to_watch" className="w-full">
                           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
@@ -209,13 +287,6 @@ export default function PersonalVideoLibraryPage() {
                               {renderMovieList(watchedMovies, t.noMoviesWatched)}
                           </TabsContent>
                       </Tabs>
-                  </TabsContent>
-                  
-                  <TabsContent value="short_video">
-                      <div className="text-center py-24 text-muted-foreground">
-                          <Video className="w-20 h-20 mx-auto mb-4" />
-                          <p className="text-xl">{t.comingSoon}</p>
-                      </div>
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">

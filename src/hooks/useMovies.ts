@@ -62,6 +62,7 @@ export const useMovies = () => {
 
   return {
     movies,
+    setMovies, // Exposing setMovies for direct manipulation like import
     addMovie,
     updateMovieStatus,
     updateMovieRating,
@@ -69,5 +70,3 @@ export const useMovies = () => {
     deleteMovie,
   };
 };
-
-    
