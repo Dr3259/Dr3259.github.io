@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { EditVideoModal } from '@/components/EditVideoModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
 
 const translations = {
   'zh-CN': {
@@ -262,7 +263,7 @@ export default function PersonalVideoLibraryPage() {
 
                   <TabsContent value="local_cinema" className="space-y-10">
                     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative">
+                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative group">
                             {videoSrc ? (
                                 <>
                                     <video 
@@ -286,6 +287,24 @@ export default function PersonalVideoLibraryPage() {
                                             <p className="text-lg ml-4">{t.videoLoading}</p>
                                         </div>
                                     )}
+                                    <div className="absolute top-3 right-3 z-10 opacity-50 group-hover:opacity-100 transition-opacity">
+                                       <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button size="icon" variant="secondary" className="bg-black/40 hover:bg-black/60 text-white rounded-full h-10 w-10">
+                                                    <Sun className="h-5 w-5" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-56 p-2 mr-2">
+                                                <Slider
+                                                    defaultValue={[100]}
+                                                    value={[brightness]}
+                                                    onValueChange={(value) => setBrightness(value[0])}
+                                                    max={200}
+                                                    step={1}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
                                 </>
                             ) : (
                                 <div className="text-center p-8">
@@ -305,23 +324,6 @@ export default function PersonalVideoLibraryPage() {
                                     <ExternalLink className="mr-2 h-5 w-5"/>
                                     {t.openInLocalPlayer}
                                 </Button>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button size="lg" variant="outline">
-                                            <Sun className="mr-2 h-5 w-5" />
-                                            {t.brightness}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-56 p-2">
-                                        <Slider
-                                            defaultValue={[100]}
-                                            value={[brightness]}
-                                            onValueChange={(value) => setBrightness(value[0])}
-                                            max={200}
-                                            step={1}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
                              </>
                            )}
                         </div>
@@ -376,5 +378,5 @@ export default function PersonalVideoLibraryPage() {
         translations={t.editVideoModal}
       />
     </>
-  );
-}
+
+    
