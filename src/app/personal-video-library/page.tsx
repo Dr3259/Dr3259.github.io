@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database, Upload, MonitorPlay } from 'lucide-react';
+import { ArrowLeft, Clapperboard, PlusCircle, Search, Film, Video, Database, Upload, MonitorPlay, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieCard } from '@/components/MovieCard';
@@ -38,7 +38,8 @@ const translations = {
     importJson: '导入JSON',
     videoPlayerTitle: "本地视频播放器",
     selectVideo: "选择视频文件",
-    noVideoSelected: "请选择一个本地视频文件进行播放。"
+    noVideoSelected: "请选择一个本地视频文件进行播放。",
+    videoLoading: "正在加载视频..."
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -63,7 +64,8 @@ const translations = {
     importJson: 'Import JSON',
     videoPlayerTitle: "Local Video Player",
     selectVideo: "Select Video File",
-    noVideoSelected: "Please select a local video file to play."
+    noVideoSelected: "Please select a local video file to play.",
+    videoLoading: "Loading video..."
   }
 };
 
@@ -81,6 +83,7 @@ export default function PersonalVideoLibraryPage() {
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedVideoName, setSelectedVideoName] = useState<string | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -91,7 +94,7 @@ export default function PersonalVideoLibraryPage() {
         URL.revokeObjectURL(videoSrc);
       }
     };
-  }, [videoSrc]);
+  }, []); // videoSrc removed from dependencies to prevent revoking URL too early
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
@@ -185,13 +188,14 @@ export default function PersonalVideoLibraryPage() {
 
   const handleVideoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && videoPlayerRef.current) {
-        if (videoSrc) {
-            URL.revokeObjectURL(videoSrc);
-        }
-        const newSrc = URL.createObjectURL(file);
-        setVideoSrc(newSrc);
-        setSelectedVideoName(file.name);
+    if (file) {
+      if (videoSrc) {
+          URL.revokeObjectURL(videoSrc);
+      }
+      setIsVideoLoading(true);
+      const newSrc = URL.createObjectURL(file);
+      setVideoSrc(newSrc);
+      setSelectedVideoName(file.name);
     }
   };
 
@@ -267,13 +271,27 @@ export default function PersonalVideoLibraryPage() {
                       <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
                         <h2 className="text-2xl font-semibold">{t.videoPlayerTitle}</h2>
                         <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground">
-                            {videoSrc ? (
-                                <video ref={videoPlayerRef} src={videoSrc} controls className="w-full h-full" />
-                            ) : (
-                                <div className="text-center p-8">
-                                    <MonitorPlay className="w-16 h-16 mx-auto mb-4"/>
-                                    <p>{t.noVideoSelected}</p>
+                            {isVideoLoading && (
+                                <div className="text-center p-8 flex items-center gap-4">
+                                    <Loader2 className="w-8 h-8 animate-spin text-primary"/>
+                                    <p className="text-lg">{t.videoLoading}</p>
                                 </div>
+                            )}
+                            {videoSrc ? (
+                                <video 
+                                  ref={videoPlayerRef} 
+                                  src={videoSrc} 
+                                  controls 
+                                  className={`w-full h-full ${isVideoLoading ? 'hidden' : 'block'}`} 
+                                  onCanPlay={() => setIsVideoLoading(false)}
+                                />
+                            ) : (
+                                !isVideoLoading && (
+                                    <div className="text-center p-8">
+                                        <MonitorPlay className="w-16 h-16 mx-auto mb-4"/>
+                                        <p>{t.noVideoSelected}</p>
+                                    </div>
+                                )
                             )}
                         </div>
                         <div className="flex flex-col items-center gap-2">
