@@ -365,36 +365,56 @@ export default function PersonalVideoLibraryPage() {
                                             <p className="text-lg ml-4">{t.videoLoading}</p>
                                         </div>
                                     )}
-                                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover/player:opacity-100 transition-opacity duration-300 space-y-2">
-                                        <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
-                                        <div className="flex items-center justify-between text-white">
-                                            <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={handlePlayPause}>
-                                                    {isPlaying ? <Pause className="w-5 h-5"/> : <Play className="w-5 h-5" />}
-                                                </Button>
-                                                <div className="flex items-center gap-2 group/volume">
-                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={toggleMute}>
-                                                       <VolumeIcon volume={volume} isMuted={isMuted} />
-                                                    </Button>
-                                                    <div className="w-24 opacity-0 group-hover/volume:opacity-100 transition-opacity">
-                                                        <Slider value={[isMuted ? 0 : volume * 100]} onValueChange={handleVolumeChange} max={100} step={1} />
-                                                    </div>
-                                                </div>
-                                                <span className="text-xs font-mono ml-2">{formatTime(currentTime)} / {formatTime(duration)}</span>
-                                            </div>
+                                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/player:opacity-100 transition-opacity duration-300">
+                                        <div className="px-2">
+                                          <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
+                                        </div>
+                                        <div className="flex items-center justify-between text-white mt-1">
+                                            {/* Left Controls */}
                                             <div className="flex items-center gap-1">
-                                                 <div className="flex items-center gap-1 group/brightness">
-                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white" >
-                                                        <Sun className="w-5 h-5" />
-                                                    </Button>
-                                                     <div className="w-24 opacity-0 group-hover/brightness:opacity-100 transition-opacity">
-                                                        <Slider defaultValue={[100]} value={[brightness]} onValueChange={(v) => setBrightness(v[0])} max={200} step={1} />
-                                                     </div>
-                                                </div>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={handleOpenInNewWindow}>
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handlePlayPause}>
+                                                    {isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6" />}
+                                                </Button>
+                                                <span className="text-xs font-mono select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                            </div>
+
+                                            {/* Right Controls */}
+                                            <div className="flex items-center gap-1">
+                                                <Popover>
+                                                  <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><Sun className="w-5 h-5"/></Button>
+                                                  </PopoverTrigger>
+                                                  <PopoverContent className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
+                                                    <Slider 
+                                                      orientation="vertical" 
+                                                      defaultValue={[100]} 
+                                                      value={[brightness]}
+                                                      onValueChange={(v) => setBrightness(v[0])} 
+                                                      max={200} 
+                                                      step={1} 
+                                                      className="h-24"
+                                                    />
+                                                  </PopoverContent>
+                                                </Popover>
+                                                 <Popover>
+                                                  <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleMute}><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
+                                                  </PopoverTrigger>
+                                                  <PopoverContent className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
+                                                    <Slider 
+                                                      orientation="vertical" 
+                                                      value={[isMuted ? 0 : volume * 100]} 
+                                                      onValueChange={handleVolumeChange} 
+                                                      max={100} 
+                                                      step={1} 
+                                                      className="h-24"
+                                                    />
+                                                  </PopoverContent>
+                                                </Popover>
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handleOpenInNewWindow}>
                                                     <ExternalLink className="w-5 h-5"/>
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={toggleFullscreen}>
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleFullscreen}>
                                                     {isFullscreen ? <Minimize className="w-5 h-5"/> : <Maximize className="w-5 h-5"/>}
                                                 </Button>
                                             </div>
