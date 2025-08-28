@@ -4,18 +4,20 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, History } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
-
+import { saveVideo, getVideos, deleteVideo, type VideoFile } from '@/lib/db';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const translations = {
   'zh-CN': {
     pageTitle: '个人视频库',
     backButton: '返回休闲驿站',
-    tabLocalCinema: '本地影院',
     tabVideo: '视频',
+    tabLocalCinema: '本地影院',
     tabMovieHeaven: '电影天堂',
     comingSoon: '敬请期待！此功能正在开发中。',
     videoPlayerTitle: "本地视频播放器",
@@ -23,12 +25,18 @@ const translations = {
     noVideoSelected: "请选择一个本地视频文件进行播放。",
     videoLoading: "正在加载视频...",
     openInLocalPlayer: '使用本地播放器打开',
+    importSuccess: "视频已成功添加到历史记录！",
+    importError: "添加视频到历史记录失败。",
+    deleteSuccess: "视频已从历史记录中删除。",
+    deleteError: "删除视频失败。",
+    historyTitle: "播放历史",
+    noHistory: "暂无播放历史。",
   },
   'en': {
     pageTitle: 'Personal Video Library',
     backButton: 'Back to Rest Stop',
-    tabLocalCinema: 'Local Cinema',
     tabVideo: 'Video',
+    tabLocalCinema: 'Local Cinema',
     tabMovieHeaven: 'Movie Heaven DB',
     comingSoon: 'Coming soon! This feature is under development.',
     videoPlayerTitle: "Local Video Player",
@@ -36,6 +44,12 @@ const translations = {
     noVideoSelected: "Please select a local video file to play.",
     videoLoading: "Loading video...",
     openInLocalPlayer: 'Open in Local Player',
+    importSuccess: "Video successfully added to history!",
+    importError: "Failed to add video to history.",
+    deleteSuccess: "Video removed from history.",
+    deleteError: "Failed to delete video.",
+    historyTitle: "Playback History",
+    noHistory: "No playback history yet.",
   }
 };
 
@@ -47,36 +61,97 @@ export default function PersonalVideoLibraryPage() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [history, setHistory] = useState<VideoFile[]>([]);
+  const { toast } = useToast();
+  const currentObjectUrl = useRef<string | null>(null);
 
   useEffect(() => {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
     
+    loadHistory();
+
     return () => {
-      if (videoSrc) {
-        URL.revokeObjectURL(videoSrc);
+      if (currentObjectUrl.current) {
+        URL.revokeObjectURL(currentObjectUrl.current);
       }
     };
-  }, [videoSrc]); 
+  }, []); 
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
+
+  const loadHistory = async () => {
+      try {
+        const videoHistory = await getVideos();
+        setHistory(videoHistory);
+      } catch (error) {
+        console.error("Failed to load video history:", error);
+      }
+  };
 
   const handleVideoSelectClick = () => {
     videoInputRef.current?.click();
   }
 
-  const handleVideoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (videoSrc) {
-          URL.revokeObjectURL(videoSrc);
+      if (currentObjectUrl.current) {
+          URL.revokeObjectURL(currentObjectUrl.current);
       }
       setIsVideoLoading(true);
+      
       const newSrc = URL.createObjectURL(file);
+      currentObjectUrl.current = newSrc;
       setVideoSrc(newSrc);
       setSelectedVideoFile(file);
+
+      // Save to history
+      try {
+          const newVideo: VideoFile = {
+              id: `video-${Date.now()}`,
+              name: file.name,
+              content: file
+          };
+          await saveVideo(newVideo);
+          toast({ title: t.importSuccess });
+          loadHistory(); // Refresh history list
+      } catch (error) {
+          toast({ title: t.importError, variant: 'destructive' });
+          console.error("Error saving video:", error);
+      }
     }
   };
+
+  const playVideoFromHistory = (video: VideoFile) => {
+    if (currentObjectUrl.current) {
+        URL.revokeObjectURL(currentObjectUrl.current);
+    }
+    setIsVideoLoading(true);
+
+    const newSrc = URL.createObjectURL(video.content);
+    currentObjectUrl.current = newSrc;
+    setVideoSrc(newSrc);
+    // Create a File-like object for the download button, though it lacks some properties.
+    const fileLikeObject = new File([video.content], video.name, { type: video.content.type });
+    setSelectedVideoFile(fileLikeObject);
+  }
+
+  const handleDeleteFromHistory = async (videoId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click when deleting
+    try {
+        await deleteVideo(videoId);
+        toast({ title: t.deleteSuccess });
+        loadHistory();
+        // If the deleted video is the one currently playing, clear the player
+        if (selectedVideoFile && selectedVideoFile.name === history.find(v => v.id === videoId)?.name) {
+            setVideoSrc(null);
+            setSelectedVideoFile(null);
+        }
+    } catch(e) {
+        toast({ title: t.deleteError, variant: 'destructive' });
+    }
+  }
   
   const handleOpenInLocalPlayer = () => {
     if (videoSrc) {
@@ -130,7 +205,7 @@ export default function PersonalVideoLibraryPage() {
                       </div>
                   </TabsContent>
 
-                  <TabsContent value="local_cinema">
+                  <TabsContent value="local_cinema" className="space-y-10">
                     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
                         <h2 className="text-2xl font-semibold">{t.videoPlayerTitle}</h2>
                         <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground">
@@ -140,12 +215,17 @@ export default function PersonalVideoLibraryPage() {
                                     <p className="text-lg">{t.videoLoading}</p>
                                 </div>
                             )}
-                            {videoSrc ? (
+                            {videoSrc && !isVideoLoading ? (
                                 <video 
                                   src={videoSrc} 
                                   controls 
-                                  className={`w-full h-full ${isVideoLoading ? 'hidden' : 'block'}`} 
+                                  autoPlay
+                                  className={`w-full h-full block`} 
                                   onCanPlay={() => setIsVideoLoading(false)}
+                                  onError={() => {
+                                      setIsVideoLoading(false);
+                                      toast({ title: 'Error playing video', variant: 'destructive' });
+                                  }}
                                 />
                             ) : (
                                 !isVideoLoading && (
@@ -168,8 +248,33 @@ export default function PersonalVideoLibraryPage() {
                             </Button>
                            )}
                         </div>
-                         {selectedVideoFile && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
+                         {selectedVideoFile && !isVideoLoading && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
                     </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />{t.historyTitle}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             {history.length > 0 ? (
+                                <ScrollArea className="h-64">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {history.map(video => (
+                                    <div key={video.id} onClick={() => playVideoFromHistory(video)} className="group relative p-3 rounded-lg border bg-card hover:bg-accent cursor-pointer transition-colors flex flex-col items-center justify-center text-center">
+                                       <Film className="w-10 h-10 mb-2 text-primary/80" />
+                                       <p className="text-sm font-medium line-clamp-2" title={video.name}>{video.name}</p>
+                                       <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleDeleteFromHistory(video.id, e)}>
+                                            <Trash2 className="h-4 w-4"/>
+                                       </Button>
+                                    </div>
+                                ))}
+                                </div>
+                                </ScrollArea>
+                            ) : (
+                                <div className="text-center py-10 text-muted-foreground">{t.noHistory}</div>
+                            )}
+                        </CardContent>
+                    </Card>
                   </TabsContent>
 
                   <TabsContent value="movie_heaven">
@@ -181,3 +286,5 @@ export default function PersonalVideoLibraryPage() {
     </>
   );
 }
+
+    

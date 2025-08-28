@@ -1,9 +1,10 @@
 
 
 const DB_NAME = 'WeekGlanceDB';
-const DB_VERSION = 2; // Keep at version 2 as per codebase state
+const DB_VERSION = 3; // Incremented version to add the new video store
 const BOOK_STORE_NAME = 'books';
 const MUSIC_STORE_NAME = 'musicTracks';
+const VIDEO_STORE_NAME = 'videos'; // New store for videos
 
 export interface Bookmark {
   page: number;
@@ -33,6 +34,12 @@ export interface TrackMetadata {
 
 export interface TrackWithContent extends TrackMetadata {
     content: Blob; // Store as Blob
+}
+
+export interface VideoFile {
+    id: string; // e.g., 'video-timestamp'
+    name: string;
+    content: File;
 }
 
 
@@ -96,6 +103,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!dbInstance.objectStoreNames.contains(MUSIC_STORE_NAME)) {
         dbInstance.createObjectStore(MUSIC_STORE_NAME, { keyPath: 'id' });
+      }
+      if (!dbInstance.objectStoreNames.contains(VIDEO_STORE_NAME)) {
+        dbInstance.createObjectStore(VIDEO_STORE_NAME, { keyPath: 'id' });
       }
     };
   });
@@ -210,3 +220,45 @@ export async function deleteTrack(id: string): Promise<void> {
     request.onerror = () => reject(request.error);
   });
 }
+
+
+// Video Functions
+export async function saveVideo(video: VideoFile): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([VIDEO_STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(VIDEO_STORE_NAME);
+    const request = store.put(video);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getVideos(): Promise<VideoFile[]> {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([VIDEO_STORE_NAME], 'readonly');
+        const store = transaction.objectStore(VIDEO_STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            resolve(request.result as VideoFile[]);
+        };
+        request.onerror = () => reject(request.error);
+    });
+}
+
+export async function deleteVideo(id: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([VIDEO_STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(VIDEO_STORE_NAME);
+    const request = store.delete(id);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+    
