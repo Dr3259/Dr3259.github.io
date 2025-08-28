@@ -93,7 +93,7 @@ export default function PersonalVideoLibraryPage() {
   const [brightness, setBrightness] = useState(100);
 
   useEffect(() => {
-    const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+    const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
     
     loadPlaylist();
@@ -259,7 +259,6 @@ export default function PersonalVideoLibraryPage() {
 
                   <TabsContent value="local_cinema" className="space-y-10">
                     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-                        <h2 className="text-2xl font-semibold">{t.videoPlayerTitle}</h2>
                         <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative">
                             {videoSrc ? (
                                 <>
@@ -275,6 +274,8 @@ export default function PersonalVideoLibraryPage() {
                                             setIsVideoLoading(false);
                                             toast({ title: 'Error playing video', variant: 'destructive' });
                                         }}
+                                        playsInline 
+                                        disablePictureInPicture
                                     />
                                     {isVideoLoading && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
