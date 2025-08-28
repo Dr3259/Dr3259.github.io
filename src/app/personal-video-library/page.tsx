@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic, FileEdit, Sun } from 'lucide-react';
+import { ArrowLeft, Video, Database, Upload, MonitorPlay, Loader2, ExternalLink, Film, Trash2, ListMusic, FileEdit, Sun, Play, Pause, Volume2, VolumeX, Volume1, Maximize, Minimize, Volume } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieHeavenViewer } from '@/components/MovieHeavenViewer';
 import { saveVideo, getVideos, deleteVideo, type VideoFile } from '@/lib/db';
@@ -27,7 +27,7 @@ const translations = {
     selectVideo: "选择视频文件",
     noVideoSelected: "请选择一个本地视频文件进行播放。",
     videoLoading: "正在加载视频...",
-    openInLocalPlayer: '使用本地播放器打开',
+    openInNewWindow: '在新窗口中播放',
     importSuccess: "视频已成功添加到播放列表！",
     importError: "添加视频到播放列表失败。",
     deleteSuccess: "视频已从播放列表删除。",
@@ -45,6 +45,9 @@ const translations = {
       cancelButton: "取消",
     },
     brightness: "亮度",
+    volume: "音量",
+    fullscreen: "全屏",
+    exitFullscreen: "退出全屏",
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -56,7 +59,7 @@ const translations = {
     selectVideo: "Select Video File",
     noVideoSelected: "Please select a local video file to play.",
     videoLoading: "Loading video...",
-    openInLocalPlayer: 'Open in Local Player',
+    openInNewWindow: 'Open in new window',
     importSuccess: "Video successfully added to playlist!",
     importError: "Failed to add video to playlist.",
     deleteSuccess: "Video removed from playlist.",
@@ -74,14 +77,35 @@ const translations = {
       cancelButton: "Cancel",
     },
     brightness: "Brightness",
+    volume: "Volume",
+    fullscreen: "Fullscreen",
+    exitFullscreen: "Exit Fullscreen",
   }
 };
 
 type LanguageKey = keyof typeof translations;
 
+const formatTime = (timeInSeconds: number) => {
+    if (isNaN(timeInSeconds)) return '0:00';
+    const floorSeconds = Math.floor(timeInSeconds);
+    const minutes = Math.floor(floorSeconds / 60);
+    const seconds = floorSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
+
+const VolumeIcon = ({ volume, isMuted }: { volume: number, isMuted: boolean }) => {
+    if (isMuted || volume === 0) return <VolumeX className="w-5 h-5" />;
+    if (volume < 0.5) return <Volume1 className="w-5 h-5" />;
+    return <Volume2 className="w-5 h-5" />;
+};
+
+
 export default function PersonalVideoLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
@@ -89,7 +113,16 @@ export default function PersonalVideoLibraryPage() {
   const { toast } = useToast();
   const currentObjectUrl = useRef<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoFile | null>(null);
+  
+  // Player state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(0.75);
+  const [isMuted, setIsMuted] = useState(false);
   const [brightness, setBrightness] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -97,7 +130,13 @@ export default function PersonalVideoLibraryPage() {
     
     loadPlaylist();
 
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
     return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
       if (currentObjectUrl.current) {
         URL.revokeObjectURL(currentObjectUrl.current);
       }
@@ -128,45 +167,32 @@ export default function PersonalVideoLibraryPage() {
           return;
       }
   
-      if (currentObjectUrl.current) {
-          URL.revokeObjectURL(currentObjectUrl.current);
-      }
+      if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
       setIsVideoLoading(true);
       
       const newSrc = URL.createObjectURL(file);
       currentObjectUrl.current = newSrc;
       setVideoSrc(newSrc);
       setSelectedVideoFile(file);
-  
-      // Optimistic UI update
-      const newVideo: VideoFile = {
-          id: `video-${Date.now()}`,
-          name: file.name,
-          content: file
-      };
+      
+      const newVideo: VideoFile = { id: `video-${Date.now()}`, name: file.name, content: file };
       setPlaylist(prev => [...prev, newVideo]);
   
-      // Save to DB in the background
       try {
           await saveVideo(newVideo);
           toast({ title: t.importSuccess });
-          // Optional: refresh from DB to ensure consistency, though not strictly needed for this flow
-          // loadPlaylist(); 
       } catch (error) {
           toast({ title: t.importError, variant: 'destructive' });
           console.error("Error saving video:", error);
-          // Revert optimistic update on failure
           setPlaylist(prev => prev.filter(v => v.id !== newVideo.id));
       }
     }
   };
 
   const playVideoFromPlaylist = (video: VideoFile) => {
-    if (currentObjectUrl.current) {
-        URL.revokeObjectURL(currentObjectUrl.current);
-    }
+    if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
+    
     setIsVideoLoading(true);
-
     const newSrc = URL.createObjectURL(video.content);
     currentObjectUrl.current = newSrc;
     setVideoSrc(newSrc);
@@ -175,7 +201,7 @@ export default function PersonalVideoLibraryPage() {
   }
 
   const handleDeleteFromPlaylist = async (videoId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent card click when deleting
+    event.stopPropagation();
     try {
         await deleteVideo(videoId);
         toast({ title: t.deleteSuccess });
@@ -183,6 +209,8 @@ export default function PersonalVideoLibraryPage() {
         if (selectedVideoFile && playlist.find(v => v.id === videoId)?.content.name === selectedVideoFile.name) {
             setVideoSrc(null);
             setSelectedVideoFile(null);
+            setIsPlaying(false);
+            setProgress(0);
         }
     } catch(e) {
         toast({ title: t.deleteError, variant: 'destructive' });
@@ -209,17 +237,68 @@ export default function PersonalVideoLibraryPage() {
     }
   };
   
-  const handleOpenInLocalPlayer = () => {
+  const handleOpenInNewWindow = () => {
     if (videoSrc) {
-      const a = document.createElement('a');
-      a.href = videoSrc;
-      a.download = selectedVideoFile?.name || 'video.mkv';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.open(videoSrc, '_blank');
     }
   }
+
+  const handlePlayPause = () => {
+      if (videoRef.current) {
+          if (isPlaying) videoRef.current.pause();
+          else videoRef.current.play();
+          setIsPlaying(!isPlaying);
+      }
+  };
+
+  const handleTimeUpdate = () => {
+      if (videoRef.current) {
+          setCurrentTime(videoRef.current.currentTime);
+          setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
+      }
+  };
+  
+  const handleLoadedMetadata = () => {
+      if (videoRef.current) {
+          setDuration(videoRef.current.duration);
+          videoRef.current.volume = volume;
+      }
+  };
+
+  const handleProgressSeek = (value: number[]) => {
+      if (videoRef.current) {
+          const newTime = (value[0] / 100) * duration;
+          videoRef.current.currentTime = newTime;
+          setCurrentTime(newTime);
+          setProgress(value[0]);
+      }
+  };
+  
+  const handleVolumeChange = (value: number[]) => {
+      const newVolume = value[0] / 100;
+      if (videoRef.current) {
+          videoRef.current.volume = newVolume;
+      }
+      setVolume(newVolume);
+      setIsMuted(newVolume === 0);
+  };
+  
+  const toggleMute = () => {
+      if (videoRef.current) {
+          videoRef.current.muted = !isMuted;
+          setIsMuted(!isMuted);
+      }
+  };
+  
+  const toggleFullscreen = () => {
+      if (playerContainerRef.current) {
+          if (!document.fullscreenElement) {
+              playerContainerRef.current.requestFullscreen();
+          } else {
+              document.exitFullscreen();
+          }
+      }
+  };
 
   return (
     <>
@@ -263,23 +342,22 @@ export default function PersonalVideoLibraryPage() {
 
                   <TabsContent value="local_cinema" className="space-y-10">
                     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative group">
+                        <div ref={playerContainerRef} className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative group/player">
                             {videoSrc ? (
                                 <>
                                     <video 
+                                        ref={videoRef}
                                         src={videoSrc} 
-                                        controls
-                                        controlsList="nodownload"
                                         autoPlay
-                                        className="w-full h-full block" 
-                                        style={{ filter: `brightness(${brightness}%)`}}
                                         onCanPlay={() => setIsVideoLoading(false)}
-                                        onError={() => {
-                                            setIsVideoLoading(false);
-                                            toast({ title: 'Error playing video', variant: 'destructive' });
-                                        }}
-                                        playsInline 
-                                        disablePictureInPicture
+                                        onLoadedMetadata={handleLoadedMetadata}
+                                        onTimeUpdate={handleTimeUpdate}
+                                        onPlay={() => setIsPlaying(true)}
+                                        onPause={() => setIsPlaying(false)}
+                                        onClick={handlePlayPause}
+                                        onDoubleClick={toggleFullscreen}
+                                        className="w-full h-full block cursor-pointer" 
+                                        style={{ filter: `brightness(${brightness}%)`}}
                                     />
                                     {isVideoLoading && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
@@ -287,23 +365,40 @@ export default function PersonalVideoLibraryPage() {
                                             <p className="text-lg ml-4">{t.videoLoading}</p>
                                         </div>
                                     )}
-                                    <div className="absolute top-3 right-3 z-10 opacity-50 group-hover:opacity-100 transition-opacity">
-                                       <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button size="icon" variant="secondary" className="bg-black/40 hover:bg-black/60 text-white rounded-full h-10 w-10">
-                                                    <Sun className="h-5 w-5" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover/player:opacity-100 transition-opacity duration-300 space-y-2">
+                                        <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
+                                        <div className="flex items-center justify-between text-white">
+                                            <div className="flex items-center gap-2">
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={handlePlayPause}>
+                                                    {isPlaying ? <Pause className="w-5 h-5"/> : <Play className="w-5 h-5" />}
                                                 </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-56 p-2 mr-2">
-                                                <Slider
-                                                    defaultValue={[100]}
-                                                    value={[brightness]}
-                                                    onValueChange={(value) => setBrightness(value[0])}
-                                                    max={200}
-                                                    step={1}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
+                                                <div className="flex items-center gap-2 group/volume">
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={toggleMute}>
+                                                       <VolumeIcon volume={volume} isMuted={isMuted} />
+                                                    </Button>
+                                                    <div className="w-24 opacity-0 group-hover/volume:opacity-100 transition-opacity">
+                                                        <Slider value={[isMuted ? 0 : volume * 100]} onValueChange={handleVolumeChange} max={100} step={1} />
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs font-mono ml-2">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                 <div className="flex items-center gap-1 group/brightness">
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white" >
+                                                        <Sun className="w-5 h-5" />
+                                                    </Button>
+                                                     <div className="w-24 opacity-0 group-hover/brightness:opacity-100 transition-opacity">
+                                                        <Slider defaultValue={[100]} value={[brightness]} onValueChange={(v) => setBrightness(v[0])} max={200} step={1} />
+                                                     </div>
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={handleOpenInNewWindow}>
+                                                    <ExternalLink className="w-5 h-5"/>
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white" onClick={toggleFullscreen}>
+                                                    {isFullscreen ? <Minimize className="w-5 h-5"/> : <Maximize className="w-5 h-5"/>}
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </>
                             ) : (
@@ -318,14 +413,6 @@ export default function PersonalVideoLibraryPage() {
                             <Upload className="mr-2 h-5 w-5"/>
                              {t.selectVideo}
                            </Button>
-                           {selectedVideoFile && (
-                             <>
-                                <Button onClick={handleOpenInLocalPlayer} size="lg" variant="outline">
-                                    <ExternalLink className="mr-2 h-5 w-5"/>
-                                    {t.openInLocalPlayer}
-                                </Button>
-                             </>
-                           )}
                         </div>
                          {selectedVideoFile && !isVideoLoading && <p className="text-sm text-muted-foreground mt-2">Now playing: {selectedVideoFile.name}</p>}
                     </div>
