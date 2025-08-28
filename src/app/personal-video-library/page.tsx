@@ -377,15 +377,18 @@ export default function PersonalVideoLibraryPage() {
                                         <div className="px-2">
                                           <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
                                         </div>
-                                        <div className="flex items-center justify-between text-white mt-1">
+                                        <div className="flex items-center justify-between text-white mt-1 px-1">
                                             <div className="flex items-center gap-2">
                                                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handlePlayPause}>
                                                     {isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6" />}
                                                 </Button>
-                                                <div className="flex items-center gap-2">
-                                                  <Popover>
+                                                <span className="text-xs font-mono select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-1">
+                                                <Popover>
                                                     <PopoverTrigger asChild>
-                                                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleMute}><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
+                                                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm flex items-center justify-center">
                                                       <Slider 
@@ -394,15 +397,10 @@ export default function PersonalVideoLibraryPage() {
                                                         onValueChange={handleVolumeChange} 
                                                         max={100} 
                                                         step={1} 
-                                                        className="h-24 flex items-center"
+                                                        className="h-24 flex flex-col items-center"
                                                       />
                                                     </PopoverContent>
-                                                  </Popover>
-                                                </div>
-                                                <span className="text-xs font-mono select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
-                                            </div>
-
-                                            <div className="flex items-center gap-1">
+                                                </Popover>
                                                 <Popover>
                                                   <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><Sun className="w-5 h-5"/></Button>
@@ -415,7 +413,7 @@ export default function PersonalVideoLibraryPage() {
                                                       onValueChange={(v) => setBrightness(v[0])} 
                                                       max={200} 
                                                       step={1} 
-                                                      className="h-24 flex items-center"
+                                                      className="h-24 flex flex-col items-center"
                                                     />
                                                   </PopoverContent>
                                                 </Popover>
