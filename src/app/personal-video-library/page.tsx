@@ -48,6 +48,7 @@ const translations = {
     volume: "音量",
     fullscreen: "全屏",
     exitFullscreen: "退出全屏",
+    playbackSpeed: "播放速度",
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -80,6 +81,7 @@ const translations = {
     volume: "Volume",
     fullscreen: "Fullscreen",
     exitFullscreen: "Exit Fullscreen",
+    playbackSpeed: "Playback Speed",
   }
 };
 
@@ -122,6 +124,7 @@ export default function PersonalVideoLibraryPage() {
   const [volume, setVolume] = useState(0.75);
   const [isMuted, setIsMuted] = useState(false);
   const [brightness, setBrightness] = useState(100);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -286,12 +289,6 @@ export default function PersonalVideoLibraryPage() {
     }
   };
   
-  const handleOpenInNewWindow = () => {
-    if (videoSrc) {
-      window.open(videoSrc, '_blank');
-    }
-  }
-
   const handlePlayPause = () => {
       if (videoRef.current) {
           if (isPlaying) videoRef.current.pause();
@@ -310,6 +307,7 @@ export default function PersonalVideoLibraryPage() {
       if (videoRef.current) {
           setDuration(videoRef.current.duration);
           videoRef.current.volume = volume;
+          videoRef.current.playbackRate = playbackRate;
       }
   };
 
@@ -331,6 +329,13 @@ export default function PersonalVideoLibraryPage() {
       setIsMuted(newVolume === 0);
   };
   
+  const handlePlaybackRateChange = (rate: number) => {
+      if(videoRef.current) {
+          videoRef.current.playbackRate = rate;
+          setPlaybackRate(rate);
+      }
+  }
+
   const toggleMute = () => {
       if (videoRef.current) {
           videoRef.current.muted = !isMuted;
@@ -461,9 +466,20 @@ export default function PersonalVideoLibraryPage() {
                                                     />
                                                   </PopoverContent>
                                                 </Popover>
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handleOpenInNewWindow}>
-                                                    <ExternalLink className="w-5 h-5"/>
-                                                </Button>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="ghost" className="h-10 w-14 text-white text-xs font-mono">{playbackRate.toFixed(1)}x</Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent side="top" className="w-auto p-1 border-none bg-black/30 backdrop-blur-sm">
+                                                        <div className="flex flex-col gap-1">
+                                                            {[0.5, 1.0, 1.5, 2.0].map(rate => (
+                                                                <Button key={rate} variant="ghost" size="sm" className="w-full justify-center text-white" onClick={() => handlePlaybackRateChange(rate)}>
+                                                                    {rate.toFixed(1)}x
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
                                                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleFullscreen}>
                                                     {isFullscreen ? <Minimize className="w-5 h-5"/> : <Maximize className="w-5 h-5"/>}
                                                 </Button>
