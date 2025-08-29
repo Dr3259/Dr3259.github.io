@@ -18,7 +18,7 @@ const Bomb = dynamic(() => import('lucide-react').then(mod => mod.Bomb));
 const translations = {
   'zh-CN': {
     pageTitle: '小游戏驿站',
-    backButton: '返回休闲驿站',
+    backButton: '返回休息一下',
     game2048: '2048',
     gameKlotski: '华容道',
     gameTetris: '俄罗斯方块',
