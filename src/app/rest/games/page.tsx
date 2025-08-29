@@ -6,7 +6,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { GameCard } from '@/components/GameCard';
-import { ArrowLeft, Hash, Puzzle, Blocks, Grid3x3, Bomb } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const Hash = dynamic(() => import('lucide-react').then(mod => mod.Hash));
+const Puzzle = dynamic(() => import('lucide-react').then(mod => mod.Puzzle));
+const Blocks = dynamic(() => import('lucide-react').then(mod => mod.Blocks));
+const Grid3x3 = dynamic(() => import('lucide-react').then(mod => mod.Grid3x3));
+const Bomb = dynamic(() => import('lucide-react').then(mod => mod.Bomb));
 
 const translations = {
   'zh-CN': {
