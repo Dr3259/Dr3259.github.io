@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 const translations = {
   'zh-CN': {
     backButton: '返回主页',
-    pageTitle: '休闲驿站',
+    pageTitle: '休息一下',
     pageDescription: '选择一项活动放松身心，或探索实用工具。',
     pinnedTitle: '置顶功能',
     allFeaturesTitle: '所有功能',
