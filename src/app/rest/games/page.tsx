@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -17,7 +16,7 @@ const Bomb = dynamic(() => import('lucide-react').then(mod => mod.Bomb));
 
 const translations = {
   'zh-CN': {
-    pageTitle: '小游戏驿站',
+    pageTitle: '小游戏',
     backButton: '返回休息一下',
     game2048: '2048',
     gameKlotski: '华容道',
@@ -26,7 +25,7 @@ const translations = {
     gameMinesweeper: '扫雷',
   },
   'en': {
-    pageTitle: 'Mini Game Station',
+    pageTitle: 'Mini Games',
     backButton: 'Back to Rest Area',
     game2048: '2048',
     gameKlotski: 'Klotski',
