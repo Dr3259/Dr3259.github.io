@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,8 @@ import { ArrowLeft, Hash, Puzzle, Blocks, Grid3x3, Bomb } from 'lucide-react';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '小游戏列表',
-    backButton: '返回游戏驿站',
+    pageTitle: '小游戏驿站',
+    backButton: '返回休闲驿站',
     game2048: '2048',
     gameKlotski: '华容道',
     gameTetris: '俄罗斯方块',
@@ -19,8 +19,8 @@ const translations = {
     gameMinesweeper: '扫雷',
   },
   'en': {
-    pageTitle: 'Mini Games List',
-    backButton: 'Back to Game Station',
+    pageTitle: 'Mini Game Station',
+    backButton: 'Back to Rest Area',
     game2048: '2048',
     gameKlotski: 'Klotski',
     gameTetris: 'Tetris',
@@ -47,10 +47,21 @@ export default function GamesListPage() {
   const handleGameClick = useCallback((gamePath: string) => {
     router.push(gamePath);
   }, [router]);
+  
+  const games = [
+      { id: '2048', title: t.game2048, icon: Hash, path: '/play/2048' },
+      { id: 'klotski', title: t.gameKlotski, icon: Puzzle, path: '/play/klotski' },
+      { id: 'tetris', title: t.gameTetris, icon: Blocks, path: '/play/tetris' },
+      { id: 'sudoku', title: t.gameSudoku, icon: Grid3x3, path: '/play/sudoku' },
+      { id: 'minesweeper', title: t.gameMinesweeper, icon: Bomb, path: '/play/minesweeper' },
+  ]
+  
+  const mainGame = games[0];
+  const otherGames = games.slice(1);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-      <header className="w-full max-w-lg mb-8 sm:mb-12 self-center">
+      <header className="w-full max-w-4xl mb-8 sm:mb-12 self-center">
         <Link href="/rest" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -59,17 +70,34 @@ export default function GamesListPage() {
         </Link>
       </header>
 
-      <main className="w-full max-w-lg flex flex-col self-center flex-grow items-center">
+      <main className="w-full max-w-4xl flex flex-col self-center flex-grow items-center">
         <h1 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-6 sm:mb-8">
           {t.pageTitle}
         </h1>
         
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 w-full">
-          <GameCard title={t.game2048} icon={Hash} onClick={() => handleGameClick('/play/2048')} ariaLabel={t.game2048} />
-          <GameCard title={t.gameKlotski} icon={Puzzle} onClick={() => handleGameClick('/play/klotski')} ariaLabel={t.gameKlotski} />
-          <GameCard title={t.gameTetris} icon={Blocks} onClick={() => handleGameClick('/play/tetris')} ariaLabel={t.gameTetris} />
-          <GameCard title={t.gameSudoku} icon={Grid3x3} onClick={() => handleGameClick('/play/sudoku')} ariaLabel={t.gameSudoku} />
-          <GameCard title={t.gameMinesweeper} icon={Bomb} onClick={() => handleGameClick('/play/minesweeper')} ariaLabel={t.gameMinesweeper} />
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+            {/* Main Game - Spans 2 columns on md screens */}
+            <div className="sm:col-span-2 md:col-span-4">
+                 <GameCard 
+                    title={mainGame.title}
+                    icon={mainGame.icon} 
+                    onClick={() => handleGameClick(mainGame.path)} 
+                    ariaLabel={mainGame.title}
+                 />
+            </div>
+            
+            {/* Other Games */}
+            {otherGames.map(game => (
+                <div key={game.id} className="sm:col-span-1">
+                    <GameCard 
+                        title={game.title}
+                        icon={game.icon} 
+                        isSmall 
+                        onClick={() => handleGameClick(game.path)} 
+                        ariaLabel={game.title}
+                    />
+                </div>
+            ))}
         </div>
       </main>
     </div>

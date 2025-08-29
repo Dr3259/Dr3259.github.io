@@ -27,7 +27,7 @@ export const GameCard: FC<GameCardProps> = React.memo(({ title, icon: Icon, isSm
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.();}}
     >
       <CardContent className="flex h-full flex-col items-center justify-center p-4 text-center">
-        <div className={cn("mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 transition-colors duration-300 group-hover:bg-primary/20", isSmall && "h-12 w-12")}>
+        <div className={cn("mb-3 flex items-center justify-center rounded-full bg-primary/10 transition-colors duration-300 group-hover:bg-primary/20", isSmall ? "h-12 w-12" : "h-16 w-16" )}>
             <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110", isSmall ? "h-6 w-6" : "h-8 w-8")} />
         </div>
         <p className={cn("font-medium text-foreground", isSmall ? "text-sm" : "text-base")}>{title}</p>
