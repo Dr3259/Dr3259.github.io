@@ -174,6 +174,28 @@ export default function KlotskiPage() {
     setIsMounted(true);
   }, []);
 
+  const moveTile = useCallback((rClicked: number, cClicked: number) => {
+    if (isGameWon || !isMounted || board[rClicked][cClicked] === EMPTY_TILE) return;
+  
+    const emptyTilePos = findEmptyTile(board, GRID_SIZE);
+    if (!emptyTilePos) return;
+  
+    const { r: rEmpty, c: cEmpty } = emptyTilePos;
+  
+    const isAdjacent =
+      (Math.abs(rClicked - rEmpty) === 1 && cClicked === cEmpty) ||
+      (Math.abs(cClicked - cEmpty) === 1 && rClicked === rEmpty);
+  
+    if (isAdjacent) {
+      const newBoard = board.map(row => [...row]);
+      [newBoard[rClicked][cClicked], newBoard[rEmpty][cEmpty]] =
+        [newBoard[rEmpty][cEmpty], newBoard[rClicked][cClicked]];
+  
+      setBoard(newBoard);
+      setMoves(prevMoves => prevMoves + 1);
+    }
+  }, [board, isGameWon, isMounted]);
+
   // Effect for checking win condition
   useEffect(() => {
     if (!isMounted) return;
@@ -187,26 +209,53 @@ export default function KlotskiPage() {
 
 
   const handleTileClick = useCallback((rClicked: number, cClicked: number) => {
-    if (isGameWon || !isMounted || board[rClicked][cClicked] === EMPTY_TILE) return;
+    moveTile(rClicked, cClicked);
+  }, [moveTile]);
+
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (isGameWon) return;
 
     const emptyTilePos = findEmptyTile(board, GRID_SIZE);
     if (!emptyTilePos) return;
 
-    const { r: rEmpty, c: cEmpty } = emptyTilePos;
+    const { r, c } = emptyTilePos;
+    let targetR = r;
+    let targetC = c;
 
-    const isAdjacent = 
-      (Math.abs(rClicked - rEmpty) === 1 && cClicked === cEmpty) ||
-      (Math.abs(cClicked - cEmpty) === 1 && rClicked === rEmpty);
-
-    if (isAdjacent) {
-      const newBoard = board.map(row => [...row]);
-      [newBoard[rClicked][cClicked], newBoard[rEmpty][cEmpty]] = 
-        [newBoard[rEmpty][cEmpty], newBoard[rClicked][cClicked]];
-      
-      setBoard(newBoard); 
-      setMoves(prevMoves => prevMoves + 1);
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'w':
+        targetR = r + 1;
+        break;
+      case 'ArrowDown':
+      case 's':
+        targetR = r - 1;
+        break;
+      case 'ArrowLeft':
+      case 'a':
+        targetC = c + 1;
+        break;
+      case 'ArrowRight':
+      case 'd':
+        targetC = c - 1;
+        break;
+      default:
+        return;
     }
-  }, [board, isGameWon, isMounted]); 
+    
+    event.preventDefault();
+
+    if (targetR >= 0 && targetR < GRID_SIZE && targetC >= 0 && targetC < GRID_SIZE) {
+      moveTile(targetR, targetC);
+    }
+  }, [board, isGameWon, moveTile]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
 
   if (!isMounted) {
