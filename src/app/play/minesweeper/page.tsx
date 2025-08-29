@@ -98,6 +98,13 @@ export default function MinesweeperPage() {
   useEffect(() => {
     initializeGame();
   }, [difficulty, initializeGame]);
+  
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+        const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+        setCurrentLanguage(browserLang);
+    }
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -118,8 +125,10 @@ export default function MinesweeperPage() {
     while (minesPlaced < mines) {
       const r = Math.floor(Math.random() * rows);
       const c = Math.floor(Math.random() * cols);
+      
+      const isClickArea = Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 
-      if (!newBoard[r][c].isMine && (r !== clickedRow || c !== clickedCol)) {
+      if (!newBoard[r][c].isMine && !isClickArea) {
         newBoard[r][c].isMine = true;
         minesPlaced++;
       }
@@ -147,29 +156,41 @@ export default function MinesweeperPage() {
     return newBoard;
   };
   
-  const revealCell = (r: number, c: number, currentBoard: CellState[][]): CellState[][] => {
+  const revealCell = useCallback((r: number, c: number, currentBoard: CellState[][]): CellState[][] => {
     if (r < 0 || r >= rows || c < 0 || c >= cols || currentBoard[r][c].isRevealed || currentBoard[r][c].isFlagged) {
       return currentBoard;
     }
 
-    const newBoard = currentBoard.map(row => row.map(cell => ({...cell})));
+    const newBoard = currentBoard; // Mutate directly for performance in recursion
     newBoard[r][c].isRevealed = true;
 
     if (newBoard[r][c].neighborMines === 0) {
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
           if (dr === 0 && dc === 0) continue;
-          revealCell(r + dr, c + dc, newBoard); // Recursive call on the same board
+          revealCell(r + dr, c + dc, newBoard);
         }
       }
     }
     return newBoard;
-  }
+  }, [rows, cols]);
   
+  const checkWinCondition = (currentBoard: CellState[][]) => {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!currentBoard[r][c].isMine && !currentBoard[r][c].isRevealed) {
+          return;
+        }
+      }
+    }
+    setGameState('won');
+    setIsTimerRunning(false);
+  };
+
   const handleCellClick = (r: number, c: number) => {
     if (gameState !== 'playing' || board[r][c].isRevealed || board[r][c].isFlagged) return;
     
-    let currentBoard = board;
+    let currentBoard = board.map(row => row.map(cell => ({ ...cell })));
     if (firstClick) {
       currentBoard = placeMines(r, c);
       setFirstClick(false);
@@ -181,6 +202,7 @@ export default function MinesweeperPage() {
       setIsTimerRunning(false);
       // Reveal all mines
       const finalBoard = currentBoard.map(row => row.map(cell => ({ ...cell, isRevealed: cell.isMine ? true : cell.isRevealed })));
+      finalBoard[r][c].isRevealed = true; // Make sure the clicked one is shown
       setBoard(finalBoard);
       return;
     }
@@ -198,23 +220,11 @@ export default function MinesweeperPage() {
     newBoard[r][c].isFlagged = !newBoard[r][c].isFlagged;
     setBoard(newBoard);
   };
-  
-  const checkWinCondition = (currentBoard: CellState[][]) => {
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (!currentBoard[r][c].isMine && !currentBoard[r][c].isRevealed) {
-          return;
-        }
-      }
-    }
-    setGameState('won');
-    setIsTimerRunning(false);
-  };
 
   const remainingMines = mines - board.flat().filter(cell => cell.isFlagged).length;
   const numberColors = [
-    'text-blue-500', 'text-green-500', 'text-red-500', 'text-blue-800',
-    'text-red-800', 'text-cyan-500', 'text-black', 'text-gray-500'
+    'text-blue-500', 'text-green-600', 'text-red-500', 'text-blue-800 dark:text-blue-300',
+    'text-red-800 dark:text-red-400', 'text-teal-500', 'text-black dark:text-gray-200', 'text-gray-500'
   ];
 
   return (
@@ -267,7 +277,7 @@ export default function MinesweeperPage() {
         </Button>
         
         <div 
-          className="relative bg-muted/50 p-2 rounded-lg shadow-inner"
+          className="relative bg-muted p-2 rounded-lg shadow-inner"
           onContextMenu={(e) => e.preventDefault()}
         >
           <div 
@@ -284,22 +294,23 @@ export default function MinesweeperPage() {
                   onContextMenu={(e) => handleRightClick(e, rIndex, cIndex)}
                   disabled={gameState !== 'playing'}
                   className={cn(
-                    "w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-sm font-bold text-lg",
+                    "w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-sm font-bold text-lg select-none",
                     "transition-colors duration-75",
-                    !cell.isRevealed && "bg-muted hover:bg-accent",
-                    cell.isRevealed && "bg-background",
+                    !cell.isRevealed && "bg-muted/80 border-t-2 border-l-2 border-white/50 border-b-2 border-r-2 border-gray-500/50 hover:bg-accent active:bg-muted",
+                    cell.isRevealed && "bg-muted/30 border border-muted/50",
                     cell.isFlagged && !cell.isRevealed && "bg-yellow-200/50",
+                    cell.isRevealed && cell.isMine && "bg-red-500"
                   )}
                   aria-label={`Cell at row ${rIndex + 1}, column ${cIndex + 1}`}
                 >
                   {cell.isRevealed ? (
                     cell.isMine ? (
-                      <Bomb className="h-4 w-4 text-destructive" />
+                      <Bomb className="h-4 w-4 text-white" />
                     ) : (
-                      cell.neighborMines > 0 && <span className={cn(numberColors[cell.neighborMines - 1])}>{cell.neighborMines}</span>
+                      cell.neighborMines > 0 && <span className={cn("font-mono font-bold text-lg", numberColors[cell.neighborMines - 1])}>{cell.neighborMines}</span>
                     )
                   ) : (
-                    cell.isFlagged && <Flag className="h-4 w-4 text-destructive" />
+                    cell.isFlagged && <Flag className="h-4 w-4 text-red-600" />
                   )}
                 </button>
               ))
