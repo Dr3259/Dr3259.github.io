@@ -10,7 +10,6 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '2048 游戏',
     backButton: '返回',
     score: '分数',
     highScore: '最高分',
@@ -19,7 +18,6 @@ const translations = {
     tryAgainButton: '再试一次?',
   },
   'en': {
-    pageTitle: '2048 Game',
     backButton: 'Back',
     score: 'Score',
     highScore: 'High Score',
