@@ -97,17 +97,19 @@ export default function TetrisPage() {
 
   const resetPlayer = useCallback(() => {
     const newNextTetromino = getRandomTetromino();
+    // Use a fresh empty board for collision check at spawn point.
+    const emptyBoardForCheck = createEmptyBoard(); 
     const newCurrentTetromino = {
       ...newNextTetromino,
       pos: { x: Math.floor(GRID_WIDTH / 2) - 1, y: 0 },
     };
-    if (checkCollision(newCurrentTetromino.shape, newCurrentTetromino.pos, board)) {
+    if (checkCollision(newCurrentTetromino.shape, newCurrentTetromino.pos, emptyBoardForCheck)) {
       setGameOver(true);
     } else {
       setCurrentTetromino(newCurrentTetromino);
     }
     setNextTetromino(getRandomTetromino());
-  }, [board]);
+  }, []);
 
   const initializeGame = useCallback(() => {
     setBoard(createEmptyBoard());
@@ -126,7 +128,8 @@ export default function TetrisPage() {
     }
     initializeGame();
     setIsMounted(true);
-  }, [initializeGame]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Changed dependency to empty array to run only once on mount
   
   const moveTetromino = (dx: number, dy: number) => {
     if (!currentTetromino) return;
@@ -218,13 +221,13 @@ export default function TetrisPage() {
   }, [handleKeyDown, isMounted]);
 
   useEffect(() => {
-    if (!gameOver) {
+    if (!gameOver && isMounted) {
       const interval = setInterval(() => {
         dropTetromino();
       }, dropInterval);
       return () => clearInterval(interval);
     }
-  }, [dropInterval, gameOver, currentTetromino]);
+  }, [dropInterval, gameOver, currentTetromino, isMounted]);
 
   const renderedBoard = useMemo(() => {
     const newBoard = board.map(row => [...row]);
