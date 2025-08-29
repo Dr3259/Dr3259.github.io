@@ -26,7 +26,7 @@ const translations = {
     mines: '雷数',
     timer: '时间',
     newGame: '新游戏',
-    gameOver: '游戏结束',
+    gameOver: '游戏结束!',
     youWin: '恭喜！你赢了！',
     playAgain: '再玩一局',
   },
@@ -40,7 +40,7 @@ const translations = {
     mines: 'Mines',
     timer: 'Time',
     newGame: 'New Game',
-    gameOver: 'Game Over',
+    gameOver: 'Game Over!',
     youWin: 'Congratulations! You Win!',
     playAgain: 'Play Again',
   }
@@ -270,8 +270,17 @@ export default function MinesweeperPage() {
                 </CardContent>
             </Card>
         </div>
+
+        {gameState !== 'playing' && (
+            <div className={cn("w-full p-4 rounded-lg mb-4 text-center text-white font-bold animate-in fade-in-20", 
+                gameState === 'won' ? 'bg-green-500' : 'bg-destructive'
+            )}>
+                <p className="text-xl">{gameState === 'won' ? t.youWin : t.gameOver}</p>
+                {gameState === 'won' && <p className="text-sm">Time: {timer}s</p>}
+            </div>
+        )}
         
-        <Button onClick={initializeGame} variant="outline" className="w-full mb-6">
+        <Button onClick={initializeGame} variant="outline" className={cn("w-full mb-6", gameState !== 'playing' && "ring-2 ring-primary")}>
             <RotateCcw className="mr-2 h-4 w-4" />
             {t.newGame}
         </Button>
@@ -316,19 +325,6 @@ export default function MinesweeperPage() {
               ))
             )}
           </div>
-          {gameState !== 'playing' && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 animate-in fade-in-50 rounded-lg">
-              <div className="bg-card p-8 rounded-lg shadow-xl text-center">
-                <h2 className={cn("text-3xl font-bold mb-4", gameState === 'won' ? 'text-green-500' : 'text-destructive')}>
-                  {gameState === 'won' ? t.youWin : t.gameOver}
-                </h2>
-                {gameState === 'won' && <p className="text-lg mb-6">Time: {timer}s</p>}
-                <Button onClick={initializeGame} variant="default" size="lg">
-                  {t.playAgain}
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>
