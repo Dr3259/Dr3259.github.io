@@ -21,7 +21,7 @@ const translations = {
     pinLimitReached: '最多只能置顶2个项目',
     dragHandleLabel: '拖动排序',
     items: {
-      games: { title: '小游戏驿站', description: '畅玩 2048、数字华容道等经典益智游戏。', icon: Gamepad2, path: '/rest/games' },
+      games: { title: '小游戏', description: '畅玩 2048、数字华容道等经典益智游戏。', icon: Gamepad2, path: '/rest/games' },
       food: { title: '去哪吃', description: '帮你发现附近的美味餐厅。', icon: Utensils, path: '/food-finder' },
       library: { title: '个人图书馆', description: '管理您的阅读列表和笔记。', icon: Library, path: '/personal-library' },
       cinema: { title: '个人视频库', description: '收藏和追踪您想看的视频。', icon: Film, path: '/personal-video-library' },
@@ -44,7 +44,7 @@ const translations = {
     pinLimitReached: 'You can only pin up to 2 items',
     dragHandleLabel: 'Drag to reorder',
     items: {
-      games: { title: 'Mini Game Station', description: 'Play classic puzzle games like 2048, Klotski, and more.', icon: Gamepad2, path: '/rest/games' },
+      games: { title: 'Mini Games', description: 'Play classic puzzle games like 2048, Klotski, and more.', icon: Gamepad2, path: '/rest/games' },
       food: { title: 'Where to Eat', description: 'Helps you discover delicious restaurants nearby.', icon: Utensils, path: '/food-finder' },
       library: { title: 'Personal Library', description: 'Manage your reading lists and notes.', icon: Library, path: '/personal-library' },
       cinema: { title: 'Personal Video Library', description: 'Collect and track videos you want to watch.', icon: Film, path: '/personal-video-library' },
