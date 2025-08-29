@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 
 const translations = {
   'zh-CN': {
@@ -35,22 +36,21 @@ const LOCAL_STORAGE_KEY_HIGH_SCORE = '2048HighScore';
 
 // Tile styles based on value
 const TILE_STYLES: Record<number, string> = {
-  2: "bg-slate-200 text-slate-800",
-  4: "bg-orange-200 text-orange-800",
-  8: "bg-orange-400 text-white",
-  16: "bg-orange-500 text-white",
-  32: "bg-red-400 text-white",
-  64: "bg-red-500 text-white",
-  128: "bg-yellow-300 text-yellow-800 text-xl",
-  256: "bg-yellow-400 text-yellow-900 text-xl",
-  512: "bg-yellow-500 text-white text-xl",
-  1024: "bg-purple-400 text-white text-lg",
-  2048: "bg-purple-600 text-white text-lg",
-  4096: "bg-indigo-600 text-white text-lg",
-  8192: "bg-teal-600 text-white text-lg",
+  2: 'bg-slate-200 text-slate-800',
+  4: 'bg-orange-200 text-orange-800',
+  8: 'bg-orange-400 text-white',
+  16: 'bg-orange-500 text-white',
+  32: 'bg-red-400 text-white',
+  64: 'bg-red-500 text-white',
+  128: 'bg-yellow-300 text-yellow-800',
+  256: 'bg-yellow-400 text-yellow-900',
+  512: 'bg-yellow-500 text-white',
+  1024: 'bg-purple-400 text-white',
+  2048: 'bg-purple-600 text-white',
+  4096: 'bg-indigo-600 text-white',
+  8192: 'bg-teal-600 text-white',
 };
 const EMPTY_CELL_STYLE = "bg-gray-300/60 dark:bg-gray-700/60";
-const BASE_TILE_TEXT_STYLE = "text-2xl font-bold";
 
 // Helper function to create an empty board
 const createEmptyBoard = (): number[][] => {
@@ -304,7 +304,7 @@ export default function Game2048Page() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
-      <header className="w-full max-w-5xl mb-8 sm:mb-12 self-center">
+      <header className="w-full max-w-sm mb-6">
         <Button variant="outline" size="sm" onClick={() => router.push('/rest/games')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.backButton}
@@ -312,24 +312,24 @@ export default function Game2048Page() {
       </header>
 
       <main className="w-full max-w-sm flex flex-col items-center">
-        <h1 className="text-3xl sm:text-4xl font-headline font-semibold text-primary mb-4">
-          {t.pageTitle}
-        </h1>
-
-        <div className="flex justify-between items-center w-full mb-6 px-2">
-          <div className="text-base sm:text-lg space-x-2 sm:space-x-4">
-            <span>
-                <span className="font-semibold">{t.score}: </span>
-                <span>{score}</span>
-            </span>
-            <span>
-                <span className="font-semibold">{t.highScore}: </span>
-                <span>{highScore}</span>
-            </span>
-          </div>
-          <Button onClick={initializeGame} variant="default" size="sm">
-            {t.newGameButton}
-          </Button>
+        <div className="flex justify-between items-center w-full mb-6">
+            <div className="flex gap-2">
+                <Card className="p-2 text-center w-24">
+                    <CardContent className="p-0">
+                        <p className="text-xs text-muted-foreground font-semibold uppercase">{t.score}</p>
+                        <p className="text-xl font-bold">{score}</p>
+                    </CardContent>
+                </Card>
+                <Card className="p-2 text-center w-24">
+                    <CardContent className="p-0">
+                        <p className="text-xs text-muted-foreground font-semibold uppercase">{t.highScore}</p>
+                        <p className="text-xl font-bold">{highScore}</p>
+                    </CardContent>
+                </Card>
+            </div>
+            <Button onClick={initializeGame} variant="default" size="sm">
+                {t.newGameButton}
+            </Button>
         </div>
 
         <div 
@@ -342,7 +342,7 @@ export default function Game2048Page() {
                 key={`${rIndex}-${cIndex}`}
                 className={cn(
                   "flex items-center justify-center rounded aspect-square",
-                  "transition-colors duration-100",
+                  "transition-all duration-100",
                   getTileStyle(value),
                 )}
               >
@@ -357,7 +357,7 @@ export default function Game2048Page() {
         </div>
 
         {gameOver && (
-          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10">
+          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10 animate-in fade-in-50">
             <div className="bg-card p-8 rounded-lg shadow-xl text-center">
               <h2 className="text-3xl font-bold text-destructive mb-4">{t.gameOverTitle}</h2>
               <p className="text-xl mb-2">{t.score}: {score}</p>
