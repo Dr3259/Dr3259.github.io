@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -75,6 +75,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
   
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPurposes, setSelectedPurposes] = useState<Set<string>>(new Set());
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const isChinese = '流行' in CATEGORY_TYPES_ZH;
 
@@ -93,6 +94,14 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
 
       setSelectedType(foundType || null);
       setSelectedPurposes(new Set(foundPurposes));
+
+      // Move cursor to the end of the input text instead of selecting it all
+      setTimeout(() => {
+        if(titleInputRef.current) {
+            titleInputRef.current.focus();
+            titleInputRef.current.setSelectionRange(titleInputRef.current.value.length, titleInputRef.current.value.length);
+        }
+      }, 100);
 
     }
   }, [isOpen, track, isChinese]);
@@ -169,6 +178,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                     <div className="space-y-1.5">
                         <Label htmlFor="track-title">{translations.titleLabel}</Label>
                         <Input
+                            ref={titleInputRef}
                             id="track-title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
