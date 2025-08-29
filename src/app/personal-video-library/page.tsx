@@ -128,29 +128,35 @@ export default function PersonalVideoLibraryPage() {
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSpeedPopoverOpen, setIsSpeedPopoverOpen] = useState(false);
+  const [isVolumePopoverOpen, setIsVolumePopoverOpen] = useState(false);
+  const [isBrightnessPopoverOpen, setIsBrightnessPopoverOpen] = useState(false);
 
-  const hideControls = () => {
+
+  const hideControls = useCallback(() => {
     if (videoRef.current && !videoRef.current.paused) {
       setIsControlsVisible(false);
+      setIsBrightnessPopoverOpen(false);
+      setIsVolumePopoverOpen(false);
+      setIsSpeedPopoverOpen(false);
     }
-  };
+  }, []);
 
-  const handleMouseMove = () => {
+  const handleMouseMove = useCallback(() => {
     setIsControlsVisible(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
     controlsTimeoutRef.current = setTimeout(hideControls, 3000);
-  };
+  }, [hideControls]);
   
   useEffect(() => {
       const container = playerContainerRef.current;
       if (container) {
           container.addEventListener('mousemove', handleMouseMove);
           container.addEventListener('mouseleave', hideControls);
-          // Show controls when video is paused
+          
           if (isPlaying) {
-             handleMouseMove(); // Start timer when playing
+             handleMouseMove();
           } else {
              setIsControlsVisible(true);
              if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
@@ -165,7 +171,7 @@ export default function PersonalVideoLibraryPage() {
               clearTimeout(controlsTimeoutRef.current);
           }
       };
-  }, [isPlaying]);
+  }, [isPlaying, handleMouseMove, hideControls]);
 
   useEffect(() => {
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -435,11 +441,11 @@ export default function PersonalVideoLibraryPage() {
                                             </div>
 
                                             <div className="flex items-center gap-1">
-                                                <Popover>
+                                                <Popover open={isVolumePopoverOpen} onOpenChange={setIsVolumePopoverOpen}>
                                                     <PopoverTrigger asChild>
                                                       <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
                                                     </PopoverTrigger>
-                                                    <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm flex items-center justify-center">
+                                                    <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
                                                       <Slider 
                                                         orientation="vertical" 
                                                         defaultValue={[75]}
@@ -451,11 +457,11 @@ export default function PersonalVideoLibraryPage() {
                                                       />
                                                     </PopoverContent>
                                                 </Popover>
-                                                <Popover>
+                                                <Popover open={isBrightnessPopoverOpen} onOpenChange={setIsBrightnessPopoverOpen}>
                                                   <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><Sun className="w-5 h-5"/></Button>
                                                   </PopoverTrigger>
-                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm flex items-center justify-center">
+                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
                                                     <Slider 
                                                       orientation="vertical" 
                                                       defaultValue={[100]} 
