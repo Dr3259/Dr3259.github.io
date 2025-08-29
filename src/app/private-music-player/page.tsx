@@ -338,10 +338,6 @@ export default function PrivateMusicPlayerPage() {
           </div>
           <div className="w-full md:w-2/3 flex flex-col justify-end p-6 bg-transparent z-[2]">
               <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
-                <div className="text-center mb-2">
-                      <h3 className="text-2xl font-semibold tracking-tight truncate" title={currentTrack?.title}>{currentTrack ? currentTrack.title : t.nothingPlaying}</h3>
-                      <p className="text-sm text-muted-foreground truncate" title={currentTrack?.artist}>{currentTrack?.artist || 'Unknown Artist'}</p>
-                </div>
                 <div className="space-y-2">
                     <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
                     <div className="flex justify-between text-xs text-muted-foreground font-mono">
@@ -361,25 +357,25 @@ export default function PrivateMusicPlayerPage() {
                             <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
                         </Tooltip>
                         <div className="flex flex-col items-center">
-                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}>
                                 <ChevronUp className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}>
                                 <ChevronDown className="h-4 w-4" />
                             </Button>
                         </div>
                     </div>
                     <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
                         <Button size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
                           {isPlaying ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
                     </div>
                     <div className="w-1/3 flex justify-end">
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={cyclePlayMode}>
+                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent" onClick={cyclePlayMode}>
                                   {playMode === 'repeat-one' && <Repeat1 className="h-6 w-6" />}
                                   {playMode === 'shuffle' && <Shuffle className="h-6 w-6" />}
                                   {playMode === 'repeat' && <Repeat className="h-6 w-6" />}
