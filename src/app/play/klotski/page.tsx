@@ -6,21 +6,22 @@ import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 
 const translations = {
   'zh-CN': {
     pageTitle: '数字华容道',
-    backButton: '返回休息区',
+    backButton: '返回',
     moves: '步数',
-    resetGame: '重置游戏',
+    resetGame: '新游戏',
     youWin: '恭喜你，成功了！',
     playAgain: '再玩一次',
   },
   'en': {
     pageTitle: 'Numeric Klotski',
-    backButton: 'Back to Rest Area',
+    backButton: 'Back',
     moves: 'Moves',
-    resetGame: 'Reset Game',
+    resetGame: 'New Game',
     youWin: 'Congratulations, You Win!',
     playAgain: 'Play Again',
   }
@@ -219,7 +220,7 @@ export default function KlotskiPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
       <header className="w-full max-w-sm mb-6 sm:mb-8">
-        <Button variant="outline" size="sm" onClick={() => router.push('/rest')}>
+        <Button variant="outline" size="sm" onClick={() => router.push('/rest/games')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.backButton}
         </Button>
@@ -230,15 +231,17 @@ export default function KlotskiPage() {
           {t.pageTitle}
         </h1>
 
-        <div className="flex justify-between items-center w-full mb-6 px-1">
-          <div className="text-lg">
-            <span className="font-semibold">{t.moves}: </span>
-            <span>{moves}</span>
-          </div>
-          <Button onClick={initializeNewGame} variant="default" size="sm">
-            <RotateCcw className="mr-2 h-4 w-4" />
-            {t.resetGame}
-          </Button>
+        <div className="flex justify-between items-center w-full mb-6">
+            <Card className="p-2 text-center w-24 shadow-sm">
+                <CardContent className="p-0">
+                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.moves}</p>
+                    <p className="text-xl font-bold">{moves}</p>
+                </CardContent>
+            </Card>
+            <Button onClick={initializeNewGame} variant="outline" size="sm">
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {t.resetGame}
+            </Button>
         </div>
 
         <div 
@@ -270,7 +273,7 @@ export default function KlotskiPage() {
             ))
           )}
            {isGameWon && (
-            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-10 rounded-lg">
+            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10 animate-in fade-in-50 rounded-lg">
               <div className="bg-card p-6 sm:p-8 rounded-lg shadow-xl text-center">
                 <h2 className="text-2xl sm:text-3xl font-bold text-green-500 mb-3">{t.youWin}</h2>
                 <p className="text-lg mb-4">{t.moves}: {moves}</p>
