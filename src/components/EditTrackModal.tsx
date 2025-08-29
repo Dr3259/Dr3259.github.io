@@ -98,8 +98,9 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
       // Move cursor to the end of the input text instead of selecting it all
       setTimeout(() => {
         if(titleInputRef.current) {
+            const end = titleInputRef.current.value.length;
+            titleInputRef.current.setSelectionRange(end, end);
             titleInputRef.current.focus();
-            titleInputRef.current.setSelectionRange(titleInputRef.current.value.length, titleInputRef.current.value.length);
         }
       }, 100);
 
@@ -269,3 +270,5 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
     </Dialog>
   );
 };
+
+    
