@@ -453,25 +453,28 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
           switch (event.key) {
             case ' ':
               if (isVideoPlayerVisible && document.body.contains(activeElement) && activeElement?.tagName !== 'BUTTON') {
-                // If a video player is visible and the focus is not on a button, let the video player handle it.
                 return;
               }
               event.preventDefault();
               handlePlayPause();
               break;
             case 'ArrowRight':
-              handleNextTrack();
+              if (isPlaying) handleNextTrack();
               break;
             case 'ArrowLeft':
-              handlePrevTrack();
+              if (isPlaying) handlePrevTrack();
               break;
             case 'ArrowUp':
-              event.preventDefault();
-              handleVolumeAdjust(0.05);
+              if (isPlaying) {
+                event.preventDefault();
+                handleVolumeAdjust(0.05);
+              }
               break;
             case 'ArrowDown':
-              event.preventDefault();
-              handleVolumeAdjust(-0.05);
+              if (isPlaying) {
+                event.preventDefault();
+                handleVolumeAdjust(-0.05);
+              }
               break;
             default:
               break;
@@ -483,7 +486,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         return () => {
           window.removeEventListener('keydown', handleKeyDown);
         };
-      }, [handlePlayPause, handleNextTrack, handlePrevTrack, handleVolumeAdjust]);
+      }, [isPlaying, handlePlayPause, handleNextTrack, handlePrevTrack, handleVolumeAdjust]);
 
     const value = {
         tracks, currentTrack, currentTrackIndex, isPlaying, progress, volume, isMuted, playMode,
