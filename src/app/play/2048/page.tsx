@@ -1,10 +1,10 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -171,13 +171,18 @@ const canMove = (board: number[][]): boolean => {
 
 
 export default function Game2048Page() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [board, setBoard] = useState<number[][]>(createEmptyBoard());
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [newTiles, setNewTiles] = useState<string[]>([]);
+  const [mergedTiles, setMergedTiles] = useState<string[]>([]);
+
+  const moveAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mergeAudioRef = useRef<HTMLAudioElement | null>(null);
 
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
@@ -192,33 +197,31 @@ export default function Game2048Page() {
   }, []);
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
+    if (typeof window !== 'undefined') {
+      moveAudioRef.current = new Audio('/sounds/move.mp3');
+      mergeAudioRef.current = new Audio('/sounds/merge.mp3');
+
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
-    }
-    
-    // Load high score from localStorage
-    if (typeof window !== 'undefined') {
-        const storedHighScore = localStorage.getItem(LOCAL_STORAGE_KEY_HIGH_SCORE);
-        if (storedHighScore) {
-            setHighScore(parseInt(storedHighScore, 10));
-        }
+      
+      const storedHighScore = localStorage.getItem(LOCAL_STORAGE_KEY_HIGH_SCORE);
+      if (storedHighScore) {
+          setHighScore(parseInt(storedHighScore, 10));
+      }
     }
 
     initializeGame();
     setIsMounted(true);
   }, [initializeGame]);
-
-  // Update high score if current score is higher
-  useEffect(() => {
-    if (score > highScore) {
-      setHighScore(score);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(LOCAL_STORAGE_KEY_HIGH_SCORE, score.toString());
-      }
-    }
-  }, [score, highScore]);
   
+  const playSound = (sound: 'move' | 'merge') => {
+    const audioRef = sound === 'move' ? moveAudioRef : mergeAudioRef;
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(e => console.error("Error playing sound:", e));
+    }
+  };
+
   const checkAndUpdateHighScore = (currentScore: number) => {
     if (currentScore > highScore) {
       setHighScore(currentScore);
@@ -234,32 +237,21 @@ export default function Game2048Page() {
     let result: { newBoard: number[][]; scoreAdded: number; moved: boolean } | null = null;
 
     switch (event.key) {
-      case 'ArrowUp':
-      case 'w':
-      case 'W':
-        result = moveUp(board);
-        break;
-      case 'ArrowDown':
-      case 's':
-      case 'S':
-        result = moveDown(board);
-        break;
-      case 'ArrowLeft':
-      case 'a':
-      case 'A':
-        result = moveLeft(board);
-        break;
-      case 'ArrowRight':
-      case 'd':
-      case 'D':
-        result = moveRight(board);
-        break;
-      default:
-        return; // Ignore other keys
+      case 'ArrowUp': case 'w': case 'W': result = moveUp(board); break;
+      case 'ArrowDown': case 's': case 'S': result = moveDown(board); break;
+      case 'ArrowLeft': case 'a': case 'A': result = moveLeft(board); break;
+      case 'ArrowRight': case 'd': case 'D': result = moveRight(board); break;
+      default: return;
     }
-    event.preventDefault(); // Prevent page scrolling
+    event.preventDefault();
 
     if (result && result.moved) {
+      if (result.scoreAdded > 0) {
+        playSound('merge');
+      } else {
+        playSound('move');
+      }
+
       const boardWithNewTile = addRandomTile(result.newBoard);
       setBoard(boardWithNewTile);
       const newScore = score + result.scoreAdded;
@@ -268,13 +260,7 @@ export default function Game2048Page() {
 
       if (!canMove(boardWithNewTile)) {
         setGameOver(true);
-        checkAndUpdateHighScore(newScore); // Final check on game over
-      }
-    } else if (result && !result.moved) {
-      // Check for game over even if no tiles moved, in case the board is full
-       if (!canMove(board)) {
-        setGameOver(true);
-        checkAndUpdateHighScore(score); // Final check on game over
+        checkAndUpdateHighScore(newScore);
       }
     }
   }, [board, gameOver, score, highScore]); 
@@ -292,10 +278,10 @@ export default function Game2048Page() {
   };
   
   const getTileTextStyle = (value: number) => {
-    let style = "text-xl sm:text-2xl font-bold";
-    if (value >= 128 && value < 1024) style = cn(style, "text-lg sm:text-xl");
-    else if (value >= 1024) style = cn(style, "text-base sm:text-lg");
-    if (value >= 10000) style = cn(style, "text-sm sm:text-base"); // for very large numbers
+    let style = "text-xl sm:text-2xl md:text-3xl font-bold";
+    if (value >= 128 && value < 1024) style = cn(style, "text-lg sm:text-xl md:text-2xl");
+    else if (value >= 1024) style = cn(style, "text-base sm:text-lg md:text-xl");
+    if (value >= 10000) style = cn(style, "text-sm sm:text-base md:text-lg");
     return style;
   }
 
@@ -312,46 +298,54 @@ export default function Game2048Page() {
       <main className="w-full max-w-sm flex flex-col items-center">
         <div className="flex justify-between items-center w-full mb-6">
             <div className="flex gap-2">
-                <Card className="p-2 text-center w-24">
+                <Card className="p-2 text-center w-24 shadow-sm">
                     <CardContent className="p-0">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase">{t.score}</p>
+                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.score}</p>
                         <p className="text-xl font-bold">{score}</p>
                     </CardContent>
                 </Card>
-                <Card className="p-2 text-center w-24">
+                <Card className="p-2 text-center w-24 shadow-sm">
                     <CardContent className="p-0">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase">{t.highScore}</p>
+                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.highScore}</p>
                         <p className="text-xl font-bold">{highScore}</p>
                     </CardContent>
                 </Card>
             </div>
             <Button onClick={initializeGame} variant="outline" size="sm">
+                <RotateCcw className="mr-2 h-4 w-4" />
                 {t.newGameButton}
             </Button>
         </div>
 
-        <div 
-          className="grid grid-cols-4 gap-2 p-2 bg-gray-400 dark:bg-gray-800 rounded-lg shadow-md mb-6 w-full"
-          style={{ maxWidth: '400px', aspectRatio: '1 / 1' }} 
-        >
-          {board.map((row, rIndex) =>
-            row.map((value, cIndex) => (
-              <div
-                key={`${rIndex}-${cIndex}`}
-                className={cn(
-                  "flex items-center justify-center rounded aspect-square",
-                  "transition-all duration-100",
-                  getTileStyle(value),
-                )}
-              >
-                {value > 0 && (
-                  <span className={cn(getTileTextStyle(value))}>
-                    {value}
-                  </span>
-                )}
-              </div>
-            ))
-          )}
+        <div className="relative w-full max-w-xs sm:max-w-sm">
+          <div className="absolute inset-0 bg-gray-400 dark:bg-gray-800 rounded-lg p-2 grid grid-cols-4 gap-2">
+             {Array(16).fill(null).map((_, i) => (
+               <div key={i} className={cn("rounded aspect-square", EMPTY_CELL_STYLE)} />
+             ))}
+          </div>
+
+          <div 
+            className="relative grid grid-cols-4 gap-2 p-2 w-full"
+            style={{ aspectRatio: '1 / 1' }} 
+          >
+            {board.map((row, rIndex) =>
+              row.map((value, cIndex) => (
+                <div
+                  key={`${rIndex}-${cIndex}`}
+                  className={cn(
+                    "flex items-center justify-center rounded aspect-square transition-all duration-100",
+                    getTileStyle(value),
+                  )}
+                >
+                  {value > 0 && (
+                    <span className={cn(getTileTextStyle(value))}>
+                      {value}
+                    </span>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {gameOver && (
@@ -370,5 +364,3 @@ export default function Game2048Page() {
     </div>
   );
 }
-
-    
