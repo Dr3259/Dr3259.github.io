@@ -133,13 +133,14 @@ export default function PersonalVideoLibraryPage() {
 
 
   const hideControls = useCallback(() => {
+    // Do not hide controls if any popover is open
+    if (isVolumePopoverOpen || isBrightnessPopoverOpen || isSpeedPopoverOpen) {
+        return;
+    }
     if (videoRef.current && !videoRef.current.paused) {
       setIsControlsVisible(false);
-      setIsBrightnessPopoverOpen(false);
-      setIsVolumePopoverOpen(false);
-      setIsSpeedPopoverOpen(false);
     }
-  }, []);
+  }, [isVolumePopoverOpen, isBrightnessPopoverOpen, isSpeedPopoverOpen]);
 
   const handleMouseMove = useCallback(() => {
     setIsControlsVisible(true);
