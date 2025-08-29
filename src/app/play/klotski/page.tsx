@@ -13,6 +13,7 @@ const translations = {
     pageTitle: '数字华容道',
     backButton: '返回',
     moves: '步数',
+    bestMoves: '最少步数',
     resetGame: '新游戏',
     youWin: '恭喜你，成功了！',
     playAgain: '再玩一次',
@@ -21,6 +22,7 @@ const translations = {
     pageTitle: 'Numeric Klotski',
     backButton: 'Back',
     moves: 'Moves',
+    bestMoves: 'Best',
     resetGame: 'New Game',
     youWin: 'Congratulations, You Win!',
     playAgain: 'Play Again',
@@ -31,6 +33,8 @@ type LanguageKey = keyof typeof translations;
 
 const GRID_SIZE = 3; // For a 3x3 puzzle
 const EMPTY_TILE = 0;
+const LOCAL_STORAGE_KEY_BEST_MOVES = 'klotskiBestMoves';
+
 
 // --- Game Logic ---
 
@@ -154,6 +158,7 @@ export default function KlotskiPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [board, setBoard] = useState<number[][]>(() => generateUnsolvedSolvableBoard());
   const [moves, setMoves] = useState(0);
+  const [bestMoves, setBestMoves] = useState<number | null>(null);
   const [isGameWon, setIsGameWon] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -170,6 +175,10 @@ export default function KlotskiPage() {
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
+    }
+     const storedBest = localStorage.getItem(LOCAL_STORAGE_KEY_BEST_MOVES);
+    if (storedBest) {
+      setBestMoves(parseInt(storedBest, 10));
     }
     setIsMounted(true);
   }, []);
@@ -203,9 +212,13 @@ export default function KlotskiPage() {
     if (checkIsSolved(board, GRID_SIZE)) {
       if (board.flat().some(tile => tile !== EMPTY_TILE || board.flat().length === GRID_SIZE * GRID_SIZE )) {
           setIsGameWon(true);
+           if (bestMoves === null || moves < bestMoves) {
+            setBestMoves(moves);
+            localStorage.setItem(LOCAL_STORAGE_KEY_BEST_MOVES, moves.toString());
+          }
       }
     }
-  }, [board, isMounted]);
+  }, [board, isMounted, moves, bestMoves]);
 
 
   const handleTileClick = useCallback((rClicked: number, cClicked: number) => {
@@ -278,12 +291,20 @@ export default function KlotskiPage() {
         </h1>
 
         <div className="flex justify-between items-center w-full mb-6">
-            <Card className="p-2 text-center w-24 shadow-sm">
-                <CardContent className="p-0">
-                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.moves}</p>
-                    <p className="text-xl font-bold">{moves}</p>
-                </CardContent>
-            </Card>
+            <div className="flex gap-2">
+                 <Card className="p-2 text-center w-24 shadow-sm">
+                    <CardContent className="p-0">
+                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.moves}</p>
+                        <p className="text-xl font-bold">{moves}</p>
+                    </CardContent>
+                </Card>
+                <Card className="p-2 text-center w-24 shadow-sm">
+                    <CardContent className="p-0">
+                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.bestMoves}</p>
+                        <p className="text-xl font-bold">{bestMoves ?? '—'}</p>
+                    </CardContent>
+                </Card>
+            </div>
             <Button onClick={initializeNewGame} variant="outline" size="sm">
                 <RotateCcw className="mr-2 h-4 w-4" />
                 {t.resetGame}
@@ -323,6 +344,9 @@ export default function KlotskiPage() {
               <div className="bg-card p-6 sm:p-8 rounded-lg shadow-xl text-center">
                 <h2 className="text-2xl sm:text-3xl font-bold text-green-500 mb-3">{t.youWin}</h2>
                 <p className="text-lg mb-4">{t.moves}: {moves}</p>
+                 {bestMoves === moves && (
+                    <p className="text-sm font-semibold text-amber-500 mb-4">New Best Score!</p>
+                  )}
                 <Button onClick={initializeNewGame} variant="default" size="lg" className="px-6 py-3 text-base">
                   {t.playAgain}
                 </Button>
@@ -334,4 +358,3 @@ export default function KlotskiPage() {
     </div>
   );
 }
-
