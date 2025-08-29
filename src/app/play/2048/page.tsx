@@ -325,7 +325,7 @@ export default function Game2048Page() {
                     </CardContent>
                 </Card>
             </div>
-            <Button onClick={initializeGame} variant="default" size="sm">
+            <Button onClick={initializeGame} variant="outline" size="sm">
                 {t.newGameButton}
             </Button>
         </div>
@@ -370,3 +370,5 @@ export default function Game2048Page() {
     </div>
   );
 }
+
+    
