@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 const translations = {
   'zh-CN': {
     pageTitle: '2048 游戏',
-    backButton: '返回游戏列表',
+    backButton: '返回',
     score: '分数',
     highScore: '最高分',
     newGameButton: '新游戏',
@@ -19,7 +19,7 @@ const translations = {
   },
   'en': {
     pageTitle: '2048 Game',
-    backButton: 'Back to Games',
+    backButton: 'Back',
     score: 'Score',
     highScore: 'High Score',
     newGameButton: 'New Game',
@@ -303,8 +303,8 @@ export default function Game2048Page() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
-      <header className="w-full max-w-sm mb-6 sm:mb-8">
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
+      <header className="w-full max-w-5xl mb-8 sm:mb-12 self-center">
         <Button variant="outline" size="sm" onClick={() => router.push('/rest/games')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.backButton}
