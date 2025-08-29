@@ -181,10 +181,6 @@ export default function Game2048Page() {
   const [newTiles, setNewTiles] = useState<string[]>([]);
   const [mergedTiles, setMergedTiles] = useState<string[]>([]);
 
-  const moveAudioRef = useRef<HTMLAudioElement | null>(null);
-  const mergeAudioRef = useRef<HTMLAudioElement | null>(null);
-
-
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   const initializeGame = useCallback(() => {
@@ -198,9 +194,6 @@ export default function Game2048Page() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      moveAudioRef.current = new Audio('/sounds/move.mp3');
-      mergeAudioRef.current = new Audio('/sounds/merge.mp3');
-
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
       
@@ -215,11 +208,7 @@ export default function Game2048Page() {
   }, [initializeGame]);
   
   const playSound = (sound: 'move' | 'merge') => {
-    const audioRef = sound === 'move' ? moveAudioRef : mergeAudioRef;
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(e => console.error("Error playing sound:", e));
-    }
+    // Sound playback logic is temporarily removed to fix error.
   };
 
   const checkAndUpdateHighScore = (currentScore: number) => {
@@ -287,80 +276,80 @@ export default function Game2048Page() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 items-center">
-      <header className="w-full max-w-sm mb-6">
-        <Button variant="outline" size="sm" onClick={() => router.push('/rest/games')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t.backButton}
-        </Button>
-      </header>
-
-      <main className="w-full max-w-sm flex flex-col items-center">
-        <div className="flex justify-between items-center w-full mb-6">
-            <div className="flex gap-2">
-                <Card className="p-2 text-center w-24 shadow-sm">
-                    <CardContent className="p-0">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.score}</p>
-                        <p className="text-xl font-bold">{score}</p>
-                    </CardContent>
-                </Card>
-                <Card className="p-2 text-center w-24 shadow-sm">
-                    <CardContent className="p-0">
-                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.highScore}</p>
-                        <p className="text-xl font-bold">{highScore}</p>
-                    </CardContent>
-                </Card>
-            </div>
-            <Button onClick={initializeGame} variant="outline" size="sm">
-                <RotateCcw className="mr-2 h-4 w-4" />
-                {t.newGameButton}
-            </Button>
-        </div>
-
-        <div className="relative w-full max-w-xs sm:max-w-sm">
-          <div className="absolute inset-0 bg-gray-400 dark:bg-gray-800 rounded-lg p-2 grid grid-cols-4 gap-2">
-             {Array(16).fill(null).map((_, i) => (
-               <div key={i} className={cn("rounded aspect-square", EMPTY_CELL_STYLE)} />
-             ))}
-          </div>
-
-          <div 
-            className="relative grid grid-cols-4 gap-2 p-2 w-full"
-            style={{ aspectRatio: '1 / 1' }} 
-          >
-            {board.map((row, rIndex) =>
-              row.map((value, cIndex) => (
-                <div
-                  key={`${rIndex}-${cIndex}`}
-                  className={cn(
-                    "flex items-center justify-center rounded aspect-square transition-all duration-100",
-                    getTileStyle(value),
-                  )}
-                >
-                  {value > 0 && (
-                    <span className={cn(getTileTextStyle(value))}>
-                      {value}
-                    </span>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {gameOver && (
-          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10 animate-in fade-in-50">
-            <div className="bg-card p-8 rounded-lg shadow-xl text-center">
-              <h2 className="text-3xl font-bold text-destructive mb-4">{t.gameOverTitle}</h2>
-              <p className="text-xl mb-2">{t.score}: {score}</p>
-              <p className="text-lg mb-6">{t.highScore}: {highScore}</p>
-              <Button onClick={initializeGame} variant="default" size="lg">
-                {t.tryAgainButton}
-              </Button>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
+    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 items-center">
+       <header className="w-full max-w-sm mb-6">
+         <Button variant="outline" size="sm" onClick={() => router.push('/rest/games')}>
+           <ArrowLeft className="mr-2 h-4 w-4" />
+           {t.backButton}
+         </Button>
+       </header>
+ 
+       <main className="w-full max-w-sm flex flex-col items-center">
+         <div className="flex justify-between items-center w-full mb-6">
+             <div className="flex gap-2">
+                 <Card className="p-2 text-center w-24 shadow-sm">
+                     <CardContent className="p-0">
+                         <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.score}</p>
+                         <p className="text-xl font-bold">{score}</p>
+                     </CardContent>
+                 </Card>
+                 <Card className="p-2 text-center w-24 shadow-sm">
+                     <CardContent className="p-0">
+                         <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t.highScore}</p>
+                         <p className="text-xl font-bold">{highScore}</p>
+                     </CardContent>
+                 </Card>
+             </div>
+             <Button onClick={initializeGame} variant="outline" size="sm">
+                 <RotateCcw className="mr-2 h-4 w-4" />
+                 {t.newGameButton}
+             </Button>
+         </div>
+ 
+         <div className="relative w-full max-w-xs sm:max-w-sm">
+           <div className="absolute inset-0 bg-gray-400 dark:bg-gray-800 rounded-lg p-2 grid grid-cols-4 gap-2">
+              {Array(16).fill(null).map((_, i) => (
+                <div key={i} className={cn("rounded aspect-square", EMPTY_CELL_STYLE)} />
+              ))}
+           </div>
+ 
+           <div 
+             className="relative grid grid-cols-4 gap-2 p-2 w-full"
+             style={{ aspectRatio: '1 / 1' }} 
+           >
+             {board.map((row, rIndex) =>
+               row.map((value, cIndex) => (
+                 <div
+                   key={`${rIndex}-${cIndex}`}
+                   className={cn(
+                     "flex items-center justify-center rounded aspect-square transition-all duration-100",
+                     getTileStyle(value),
+                   )}
+                 >
+                   {value > 0 && (
+                     <span className={cn(getTileTextStyle(value))}>
+                       {value}
+                     </span>
+                   )}
+                 </div>
+               ))
+             )}
+           </div>
+         </div>
+ 
+         {gameOver && (
+           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10 animate-in fade-in-50">
+             <div className="bg-card p-8 rounded-lg shadow-xl text-center">
+               <h2 className="text-3xl font-bold text-destructive mb-4">{t.gameOverTitle}</h2>
+               <p className="text-xl mb-2">{t.score}: {score}</p>
+               <p className="text-lg mb-6">{t.highScore}: {highScore}</p>
+               <Button onClick={initializeGame} variant="default" size="lg">
+                 {t.tryAgainButton}
+               </Button>
+             </div>
+           </div>
+         )}
+       </main>
+     </div>
   );
 }
