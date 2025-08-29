@@ -128,6 +128,7 @@ export default function PersonalVideoLibraryPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSpeedPopoverOpen, setIsSpeedPopoverOpen] = useState(false);
 
   const hideControls = () => {
     if (videoRef.current && !videoRef.current.paused) {
@@ -334,6 +335,7 @@ export default function PersonalVideoLibraryPage() {
           videoRef.current.playbackRate = rate;
           setPlaybackRate(rate);
       }
+      setIsSpeedPopoverOpen(false);
   }
 
   const toggleMute = () => {
@@ -466,7 +468,7 @@ export default function PersonalVideoLibraryPage() {
                                                     />
                                                   </PopoverContent>
                                                 </Popover>
-                                                <Popover>
+                                                <Popover open={isSpeedPopoverOpen} onOpenChange={setIsSpeedPopoverOpen}>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="ghost" className="h-10 w-14 text-white text-xs font-mono">{playbackRate.toFixed(1)}x</Button>
                                                     </PopoverTrigger>
@@ -551,5 +553,4 @@ export default function PersonalVideoLibraryPage() {
         translations={t.editVideoModal}
       />
     </>
-  );
-}
+    
