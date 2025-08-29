@@ -100,41 +100,47 @@ export function generateSudoku(givens: number): { puzzle: number[][], solvedPuzz
         // This is the fully solved board
         const solvedPuzzle = board.map(row => [...row]);
 
-        // Remove cells to create the puzzle
-        const puzzle = board.map(row => [...row]);
-        let cellsToRemove = SIZE * SIZE - givens;
-        
-        let removalAttempts = 500; // Prevent infinite loop
-        while (cellsToRemove > 0 && removalAttempts > 0) {
-            const row = Math.floor(Math.random() * SIZE);
-            const col = Math.floor(Math.random() * SIZE);
-
-            if (puzzle[row][col] !== 0) {
-                const backup = puzzle[row][col];
-                puzzle[row][col] = 0;
-
-                const puzzleCopy = puzzle.map(r => [...r]);
-                if (!hasUniqueSolution(puzzleCopy)) {
-                    puzzle[row][col] = backup; // Restore if not unique
-                } else {
-                    cellsToRemove--;
-                }
+        // Create a list of all cell coordinates and shuffle them
+        const cells = [];
+        for (let i = 0; i < SIZE; i++) {
+            for (let j = 0; j < SIZE; j++) {
+                cells.push([i, j]);
             }
-            removalAttempts--;
+        }
+        cells.sort(() => Math.random() - 0.5);
+
+        // Remove cells to create the puzzle
+        const puzzle = solvedPuzzle.map(row => [...row]);
+        let removed = 0;
+        const cellsToRemove = SIZE * SIZE - givens;
+
+        for (const [row, col] of cells) {
+            if (removed >= cellsToRemove) break;
+
+            const backup = puzzle[row][col];
+            puzzle[row][col] = 0;
+
+            const puzzleCopy = puzzle.map(r => [...r]);
+            if (!hasUniqueSolution(puzzleCopy)) {
+                puzzle[row][col] = backup; // Restore if not unique
+            } else {
+                removed++;
+            }
         }
         
-        if (removalAttempts === 0) throw new Error("Could not create a unique puzzle.");
+        if (removed < cellsToRemove) {
+             throw new Error("Could not remove enough cells to meet difficulty.");
+        }
 
         return { puzzle, solvedPuzzle };
 
       } catch (e) {
-        console.error("Sudoku generation attempt failed, retrying...", e);
+        console.warn("Sudoku generation attempt failed, retrying...", e);
         attempts--;
       }
   }
   
   // Fallback if generation fails repeatedly
-  console.error("Failed to generate a valid Sudoku puzzle after multiple attempts.");
   // Return a known valid puzzle as a fallback
   const fallbackPuzzle = [
     [5,3,0,0,7,0,0,0,0],
