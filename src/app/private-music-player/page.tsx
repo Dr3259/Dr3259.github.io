@@ -94,7 +94,7 @@ const translations = {
     nowPlaying: 'Now Playing',
     nothingPlaying: 'Nothing Playing',
     noTracks: 'Your music library is empty.',
-    importError: 'Import failed. Please ensure it is a .flac, .mp3, .wav, or .ogg file.',
+    importError: 'Failed to import book. Please ensure it is a .flac, .mp3, .wav, or .ogg file.',
     importSuccess: (count: number) => `Successfully imported ${count} new track(s).`,
     deleteTrack: 'Delete track',
     editTrack: 'Edit info',
@@ -172,7 +172,7 @@ export default function PrivateMusicPlayerPage() {
     handleNextTrack,
     handlePrevTrack,
     handleProgressChange,
-    handleVolumeChange,
+    handleVolumeAdjust,
     toggleMute,
     handleFileImport,
     handleFolderImport,
@@ -180,7 +180,6 @@ export default function PrivateMusicPlayerPage() {
     handleClearPlaylist,
     handleSaveTrackMeta,
     cyclePlayMode,
-    handleVolumeAdjust,
   } = useMusic();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -352,7 +351,7 @@ export default function PrivateMusicPlayerPage() {
                 </div>
                   
                 <div className="flex justify-between items-center gap-4">
-                    <div className="flex items-center gap-2 w-1/3">
+                    <div className="flex items-center gap-1 w-1/3">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={toggleMute} className="h-10 w-10 text-muted-foreground hover:text-foreground">
@@ -361,7 +360,14 @@ export default function PrivateMusicPlayerPage() {
                             </TooltipTrigger>
                             <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
                         </Tooltip>
-                        <Slider value={[isMuted ? 0 : volume * 100]} onValueChange={handleVolumeChange} max={100} step={1} className="w-24"/>
+                        <div className="flex flex-col items-center">
+                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}>
+                                <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}>
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full text-foreground/80 hover:text-foreground" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
