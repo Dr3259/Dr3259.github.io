@@ -55,13 +55,10 @@ export default function GamesListPage() {
       { id: 'sudoku', title: t.gameSudoku, icon: Grid3x3, path: '/play/sudoku' },
       { id: 'minesweeper', title: t.gameMinesweeper, icon: Bomb, path: '/play/minesweeper' },
   ]
-  
-  const mainGame = games[0];
-  const otherGames = games.slice(1);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-      <header className="w-full max-w-4xl mb-8 sm:mb-12 self-center">
+      <header className="w-full max-w-5xl mb-8 sm:mb-12 self-center">
         <Link href="/rest" passHref>
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -70,25 +67,14 @@ export default function GamesListPage() {
         </Link>
       </header>
 
-      <main className="w-full max-w-4xl flex flex-col self-center flex-grow items-center">
+      <main className="w-full max-w-5xl flex flex-col self-center flex-grow items-center">
         <h1 className="text-2xl sm:text-3xl font-headline font-semibold text-primary mb-6 sm:mb-8">
           {t.pageTitle}
         </h1>
         
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-            {/* Main Game - Spans 2 columns on md screens */}
-            <div className="sm:col-span-2 md:col-span-4">
-                 <GameCard 
-                    title={mainGame.title}
-                    icon={mainGame.icon} 
-                    onClick={() => handleGameClick(mainGame.path)} 
-                    ariaLabel={mainGame.title}
-                 />
-            </div>
-            
-            {/* Other Games */}
-            {otherGames.map(game => (
-                <div key={game.id} className="sm:col-span-1">
+        <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+            {games.map(game => (
+                <div key={game.id} className="w-full">
                     <GameCard 
                         title={game.title}
                         icon={game.icon} 
