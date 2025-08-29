@@ -60,6 +60,7 @@ type LanguageKey = keyof typeof translations;
 type Difficulty = 'easy' | 'medium' | 'hard';
 
 const GRID_SIZE = 9;
+const BOX_SIZE = 3;
 
 interface Cell {
   value: number; // 0 for empty
@@ -163,17 +164,48 @@ export default function SudokuPage() {
       setHistory(newHistory);
   };
   
+  const isValidSudokuSet = (arr: number[]): boolean => {
+    const filtered = arr.filter(num => num > 0 && num <= 9);
+    return new Set(filtered).size === filtered.length;
+  };
+
   const checkWinCondition = (currentBoard: Board) => {
-      for(let r = 0; r < GRID_SIZE; r++) {
-          for(let c = 0; c < GRID_SIZE; c++) {
-              if (currentBoard[r][c].value === 0 || currentBoard[r][c].error) {
-                  return;
+      for (let r = 0; r < GRID_SIZE; r++) {
+          for (let c = 0; c < GRID_SIZE; c++) {
+              if (currentBoard[r][c].value === 0) {
+                  return; // Not finished yet
               }
           }
       }
+
+      // Check rows
+      for (let r = 0; r < GRID_SIZE; r++) {
+          if (!isValidSudokuSet(currentBoard[r].map(cell => cell.value))) return;
+      }
+
+      // Check columns
+      for (let c = 0; c < GRID_SIZE; c++) {
+          const colValues = currentBoard.map(row => row[c].value);
+          if (!isValidSudokuSet(colValues)) return;
+      }
+
+      // Check 3x3 boxes
+      for (let boxRow = 0; boxRow < GRID_SIZE; boxRow += BOX_SIZE) {
+          for (let boxCol = 0; boxCol < GRID_SIZE; boxCol += BOX_SIZE) {
+              const boxValues: number[] = [];
+              for (let r = 0; r < BOX_SIZE; r++) {
+                  for (let c = 0; c < BOX_SIZE; c++) {
+                      boxValues.push(currentBoard[boxRow + r][boxCol + c].value);
+                  }
+              }
+              if (!isValidSudokuSet(boxValues)) return;
+          }
+      }
+      
       setIsGameWon(true);
       setIsTimerRunning(false);
   }
+
 
   const handleCellClick = (r: number, c: number) => {
     if (board[r][c].isGiven) {
