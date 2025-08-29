@@ -354,7 +354,7 @@ export default function PrivateMusicPlayerPage() {
                     <div className="flex items-center gap-1 w-1/3">
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={toggleMute} className="h-10 w-10 text-muted-foreground hover:text-foreground">
+                                <Button variant="ghost" size="icon" onClick={toggleMute} className="h-10 w-10">
                                     <VolumeIcon volume={volume} isMuted={isMuted} />
                                 </Button>
                             </TooltipTrigger>
@@ -370,16 +370,16 @@ export default function PrivateMusicPlayerPage() {
                         </div>
                     </div>
                     <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full text-foreground/80 hover:text-foreground" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
                         <Button size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
                           {isPlaying ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full text-foreground/80 hover:text-foreground" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
                     </div>
                     <div className="w-1/3 flex justify-end">
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full text-foreground/80 hover:text-foreground" onClick={cyclePlayMode}>
+                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full" onClick={cyclePlayMode}>
                                   {playMode === 'repeat-one' && <Repeat1 className="h-6 w-6" />}
                                   {playMode === 'shuffle' && <Shuffle className="h-6 w-6" />}
                                   {playMode === 'repeat' && <Repeat className="h-6 w-6" />}
