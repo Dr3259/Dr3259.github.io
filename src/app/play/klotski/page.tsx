@@ -221,23 +221,20 @@ export default function KlotskiPage() {
     const { r, c } = emptyTilePos;
     let targetR = r;
     let targetC = c;
-
+    
+    // Corrected logic: The key indicates which tile to move *into* the empty space
     switch (event.key) {
       case 'ArrowUp':
-      case 'w':
-        targetR = r + 1;
+        targetR = r + 1; // Tile below the empty space moves up
         break;
       case 'ArrowDown':
-      case 's':
-        targetR = r - 1;
+        targetR = r - 1; // Tile above the empty space moves down
         break;
       case 'ArrowLeft':
-      case 'a':
-        targetC = c + 1;
+        targetC = c + 1; // Tile to the right of the empty space moves left
         break;
       case 'ArrowRight':
-      case 'd':
-        targetC = c - 1;
+        targetC = c - 1; // Tile to the left of the empty space moves right
         break;
       default:
         return;
@@ -337,3 +334,4 @@ export default function KlotskiPage() {
     </div>
   );
 }
+
