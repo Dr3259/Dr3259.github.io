@@ -22,7 +22,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, startOfDay } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -1076,37 +1076,28 @@ export default function DayDetailPage() {
   const navigateToDay = (offset: number) => {
     if (!dayProperties.dateObject || !clientPageLoadTime) return;
     const targetDate = offset === 1 ? addDays(dayProperties.dateObject, 1) : subDays(dayProperties.dateObject, 1);
-    const today = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
-
-    const canNavigate = isToday(targetDate) || (dayHasContent(targetDate, allLoadedDataMemo) && !dateIsAfter(targetDate, today));
-
-    if (canNavigate) {
-        const newDateKey = format(targetDate, 'yyyy-MM-dd');
-        const newDayName = format(targetDate, 'EEEE', { locale: dateLocale });
-        router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}`);
+    
+    // Allow navigation as long as it's not a future date
+    if (dateIsAfter(targetDate, startOfDay(new Date()))) {
+        return;
     }
+
+    const newDateKey = format(targetDate, 'yyyy-MM-dd');
+    const newDayName = format(targetDate, 'EEEE', { locale: dateLocale });
+    router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}`);
   };
 
   const isNextDayDisabled = useMemo(() => {
     if (!dayProperties.dateObject || !clientPageLoadTime) return true;
     const nextDay = addDays(dayProperties.dateObject, 1);
-    const today = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
-    
-    // The next day is today, always enabled.
-    if (isToday(nextDay)) return false;
-    
-    // The next day is in the future.
-    if (dateIsAfter(nextDay, today)) return true;
-
-    // The next day is in the past. It's only enabled if it has content.
-    return !dayHasContent(nextDay, allLoadedDataMemo);
-  }, [dayProperties.dateObject, clientPageLoadTime, dayHasContent, allLoadedDataMemo]);
+    return dateIsAfter(nextDay, startOfDay(clientPageLoadTime));
+  }, [dayProperties.dateObject, clientPageLoadTime]);
 
   const isPrevDayDisabled = useMemo(() => {
-    if (!dayProperties.dateObject) return true;
-    const prevDay = subDays(dayProperties.dateObject, 1);
-    return !dayHasContent(prevDay, allLoadedDataMemo);
-  }, [dayProperties.dateObject, dayHasContent, allLoadedDataMemo]);
+    // For now, let's assume we can always go back.
+    // This could be enhanced to stop at the very first day with data.
+    return false;
+  }, []);
 
 
   if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
