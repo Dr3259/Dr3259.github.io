@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
+import React, { useState, useEffect, useMemo, useRef, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -73,8 +73,8 @@ interface StudyItemProps {
   isDragging: boolean;
 }
 
-const LOCAL_STORAGE_KEY_PINNED_STUDY_ITEMS = 'weekglance_pinned_study_items_v1';
-const LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER = 'weekglance_unpinned_study_order_v1';
+const LOCAL_STORAGE_KEY_PINNED_STUDY_ITEMS = 'weekglance_pinned_study_items_v2';
+const LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER = 'weekglance_unpinned_study_order_v2';
 const MAX_PINS = 2;
 
 const StudyItem: React.FC<StudyItemProps> = ({ 
@@ -237,7 +237,6 @@ export default function StudyPage() {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', itemKey);
 
-    // Create a ghost element
     const ghost = e.currentTarget.cloneNode(true) as HTMLElement;
     ghost.style.position = "absolute";
     ghost.style.top = "-9999px";
@@ -250,7 +249,6 @@ export default function StudyPage() {
   const onDragEnd = (e: DragEvent<HTMLDivElement>) => {
     draggedItemRef.current = null;
     setIsDragging(false);
-    // Remove all drop indicators
     document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
   };
   
