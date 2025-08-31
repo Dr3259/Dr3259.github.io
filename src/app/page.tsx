@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem, LayoutGrid, BookOpen, Archive } from "lucide-react";
+import { Languages, Sun, Moon, PauseCircle, ChevronLeft, ChevronRight, CalendarDays, Undo, BarChart, Settings, Check, Mail, MessageCircle, Coffee, HeartPulse, Cpu, Gem, LayoutGrid, BookOpen, Archive, Briefcase } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -40,7 +40,7 @@ const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2'; // Changed key for new
 const LOCAL_STORAGE_KEY_SUMMARY = 'weekGlanceSummary_v2'; // Changed key for new structure
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
-const LOCAL_STORAGE_KEY_FEATURE_ORDER = 'weekGlanceFeatureOrder_v2';
+const LOCAL_STORAGE_KEY_FEATURE_ORDER = 'weekGlanceFeatureOrder_v3';
 
 
 // Keys used by DayDetailPage for its data, now structured with YYYY-MM-DD keys
@@ -85,6 +85,7 @@ const translations = {
     richButtonText: '富豪一下',
     studyButtonText: '学习一下',
     organizeButtonText: '整理一下',
+    workplaceButtonText: '职场一下',
     previousWeek: '上一周',
     nextWeek: '下一周',
     currentWeek: '本周',
@@ -163,6 +164,7 @@ const translations = {
     richButtonText: 'Rich Time',
     studyButtonText: 'Study Time',
     organizeButtonText: 'Get Organized',
+    workplaceButtonText: 'Workplace',
     previousWeek: 'Previous Week',
     nextWeek: 'Next Week',
     currentWeek: 'Current Week',
@@ -420,7 +422,7 @@ export default function WeekGlancePage() {
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState<boolean>(isAfter(new Date(), new Date().setHours(18, 0, 0, 0)));
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState(isAfter(new Date(), new Date().setHours(18, 0, 0, 0)));
   const [currentYear, setCurrentYear] = useState<number | null>(null); 
   const [isClientMounted, setIsClientMounted] = useState(false);
   
@@ -462,6 +464,7 @@ export default function WeekGlancePage() {
   const handleRichButtonClick = () => router.push('/rich');
   const handleStudyButtonClick = () => router.push('/study');
   const handleOrganizeButtonClick = () => router.push('/organize');
+  const handleWorkplaceButtonClick = () => router.push('/workplace');
   
   const [features, setFeatures] = useState<Feature[]>([]);
   
@@ -471,6 +474,7 @@ export default function WeekGlancePage() {
         { id: 'health', icon: HeartPulse, title: t.healthButtonText, onClick: handleHealthButtonClick },
         { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: handleRestButtonClick },
         { id: 'study', icon: BookOpen, title: t.studyButtonText, onClick: handleStudyButtonClick },
+        { id: 'workplace', icon: Briefcase, title: t.workplaceButtonText, onClick: handleWorkplaceButtonClick },
     ];
     
     if (showRichButton) {
