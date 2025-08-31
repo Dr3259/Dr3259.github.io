@@ -1,13 +1,14 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, type DragEvent } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical, Plane, Rss } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Reorder } from "framer-motion";
 
 const translations = {
   'zh-CN': {
@@ -74,15 +75,8 @@ interface RestItemProps {
   pinLimitReachedText: string;
   pinItemText: string;
   unpinItemText: string;
-  isDraggable: boolean;
-  onDragStart?: (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => void;
-  onDragOver?: (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => void;
-  onDragLeave?: (e: DragEvent<HTMLDivElement>) => void;
-  onDrop?: (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => void;
-  onDragEnd?: (e: DragEvent<HTMLDivElement>) => void;
-  isBeingDragged: boolean;
-  isDragOver: boolean;
-  dragHandleLabel: string;
+  isDraggable?: boolean;
+  dragHandleLabel?: string;
 }
 
 const LOCAL_STORAGE_KEY_PINNED_REST_ITEMS = 'weekglance_pinned_rest_items_v1';
@@ -93,17 +87,10 @@ const RestItem: React.FC<RestItemProps> = ({
     itemKey, icon: Icon, title, description, path, 
     isPinned, canPin, onPinToggle, onClick, 
     pinLimitReachedText, pinItemText, unpinItemText,
-    isDraggable, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
-    isBeingDragged, isDragOver, dragHandleLabel
+    isDraggable, dragHandleLabel
 }) => {
   return (
     <div
-      draggable={isDraggable}
-      onDragStart={(e) => onDragStart?.(e, itemKey)}
-      onDragOver={(e) => onDragOver?.(e, itemKey)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop?.(e, itemKey)}
-      onDragEnd={onDragEnd}
       className={cn(
         "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative",
         "focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
@@ -111,8 +98,6 @@ const RestItem: React.FC<RestItemProps> = ({
           ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg"
           : "bg-card/60 hover:bg-card/90 hover:shadow-lg",
         isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-        isBeingDragged && "opacity-50 ring-2 ring-primary",
-        isDragOver && "border-t-4 border-t-primary"
       )}
     >
       {isDraggable && (
@@ -182,9 +167,6 @@ export default function RestHubPage() {
   const allItemKeys = useMemo(() => Object.keys(translations['en'].items) as RestItemKey[], []);
 
   const [unpinnedOrder, setUnpinnedOrder] = useState<RestItemKey[]>([]);
-  const [draggedItem, setDraggedItem] = useState<RestItemKey | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<RestItemKey | null>(null);
-
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -200,9 +182,7 @@ export default function RestHubPage() {
 
       if (savedOrder) {
         const orderedKeys = JSON.parse(savedOrder) as RestItemKey[];
-        // Filter out any keys that might have been pinned or removed since the order was last saved
         const validOrderedKeys = orderedKeys.filter(key => initialUnpinned.includes(key));
-        // Add any new unpinned items that weren't in the saved order
         const newItems = initialUnpinned.filter(key => !validOrderedKeys.includes(key));
         setUnpinnedOrder([...validOrderedKeys, ...newItems]);
       } else {
@@ -213,7 +193,7 @@ export default function RestHubPage() {
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
-  const handleNavigation = useCallback((path: string) => router.push(path), [router]);
+  const handleNavigation = (path: string) => router.push(path);
 
   const handlePinToggle = (itemKey: RestItemKey) => {
     let newPinnedItems;
@@ -229,9 +209,7 @@ export default function RestHubPage() {
     setPinnedItems(newPinnedItems);
     localStorage.setItem(LOCAL_STORAGE_KEY_PINNED_REST_ITEMS, JSON.stringify(newPinnedItems));
 
-    // Update unpinnedOrder state immediately after pinning/unpinning
     const newUnpinnedOrder = allItemKeys.filter(key => !newPinnedItems.includes(key));
-    // Try to maintain existing sort order for the remaining unpinned items
     const reordered = unpinnedOrder.filter(key => newUnpinnedOrder.includes(key));
     const newlyUnpinned = newUnpinnedOrder.filter(key => !reordered.includes(key));
     const finalOrder = [...reordered, ...newlyUnpinned];
@@ -242,44 +220,10 @@ export default function RestHubPage() {
   
   const canPinMore = pinnedItems.length < MAX_PINS;
   
-  // --- Drag and Drop Handlers ---
-  const handleDragStart = (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => {
-      setDraggedItem(itemKey);
-      e.dataTransfer.effectAllowed = "move";
-  };
-  
-  const handleDragOver = (e: DragEvent<HTMLDivElement>, itemKey: RestItemKey) => {
-      e.preventDefault(); 
-      if (draggedItem !== itemKey) {
-        setDragOverItem(itemKey);
-      }
-  };
-
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-    setDragOverItem(null);
-  };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>, dropTargetKey: RestItemKey) => {
-    e.preventDefault();
-    if (!draggedItem || draggedItem === dropTargetKey) {
-        return;
-    }
-
-    const currentIndex = unpinnedOrder.indexOf(draggedItem);
-    const targetIndex = unpinnedOrder.indexOf(dropTargetKey);
-    
-    const newOrder = [...unpinnedOrder];
-    newOrder.splice(currentIndex, 1);
-    newOrder.splice(targetIndex, 0, draggedItem);
-    
-    setUnpinnedOrder(newOrder);
-    localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_ORDER, JSON.stringify(newOrder));
-  };
-
-  const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
-      setDraggedItem(null);
-      setDragOverItem(null);
-  };
+  const handleReorder = (newOrder: RestItemKey[]) => {
+      setUnpinnedOrder(newOrder);
+      localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_ORDER, JSON.stringify(newOrder));
+  }
   
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 sm:px-8 items-center">
@@ -320,8 +264,6 @@ export default function RestHubPage() {
                       pinItemText={t.pinItem}
                       unpinItemText={t.unpinItem}
                       isDraggable={false}
-                      isBeingDragged={false}
-                      isDragOver={false}
                       dragHandleLabel={t.dragHandleLabel}
                     />
                   );
@@ -332,35 +274,34 @@ export default function RestHubPage() {
 
           <section>
               <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.allFeaturesTitle}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <Reorder.Group
+                axis="y"
+                values={unpinnedOrder}
+                onReorder={handleReorder}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              >
                 {unpinnedOrder.map(itemKey => {
                     const item = t.items[itemKey];
-                    if (!item) return null; // Safety check
+                    if (!item) return null;
                     return (
-                        <RestItem
-                          key={itemKey}
-                          itemKey={itemKey}
-                          {...item}
-                          isPinned={false}
-                          canPin={canPinMore}
-                          onPinToggle={handlePinToggle}
-                          onClick={handleNavigation}
-                          pinLimitReachedText={t.pinLimitReached}
-                          pinItemText={t.pinItem}
-                          unpinItemText={t.unpinItem}
-                          isDraggable={true}
-                          onDragStart={handleDragStart}
-                          onDragOver={handleDragOver}
-                          onDragLeave={handleDragLeave}
-                          onDrop={handleDrop}
-                          onDragEnd={handleDragEnd}
-                          isBeingDragged={draggedItem === itemKey}
-                          isDragOver={dragOverItem === itemKey}
-                          dragHandleLabel={t.dragHandleLabel}
-                        />
+                       <Reorder.Item key={itemKey} value={itemKey} className="list-none">
+                           <RestItem
+                                itemKey={itemKey}
+                                {...item}
+                                isPinned={false}
+                                canPin={canPinMore}
+                                onPinToggle={handlePinToggle}
+                                onClick={handleNavigation}
+                                pinLimitReachedText={t.pinLimitReached}
+                                pinItemText={t.pinItem}
+                                unpinItemText={t.unpinItem}
+                                isDraggable={true}
+                                dragHandleLabel={t.dragHandleLabel}
+                            />
+                       </Reorder.Item>
                     );
                 })}
-              </div>
+              </Reorder.Group>
             </section>
         </div>
       </main>
