@@ -58,7 +58,13 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
   async ({ timespan, language }) => {
     try {
       const url = `https://github.com/trending?since=${timespan}`;
-      const response = await fetch(url, { headers: { 'Accept-Language': 'en-US,en;q=0.9' }});
+      const response = await fetch(url, { 
+        headers: { 
+            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+        },
+        cache: 'no-store' // Disable caching for this request
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch GitHub trending page: ${response.statusText}`);
       }
