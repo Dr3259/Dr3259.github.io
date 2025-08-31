@@ -23,6 +23,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
+import { motion } from 'framer-motion';
+import { ClipboardPaste } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface QuickAddTodoModalProps {
   isOpen: boolean;
@@ -37,6 +40,7 @@ interface QuickAddTodoModalProps {
     completedLabel: string;
     saveButton: string;
     cancelButton: string;
+    pasteFromClipboard: string;
   };
   dateLocale: Locale;
 }
@@ -52,14 +56,13 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
   const [todoText, setTodoText] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isCompleted, setIsCompleted] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
-      // Reset state when modal opens
       setTodoText('');
       setIsCompleted(false);
       
-      // Set default date to today or the first day of the week
       const today = new Date();
       const todayString = format(today, 'yyyy-MM-dd');
       const weekDayStrings = weekDays.map(d => format(d, 'yyyy-MM-dd'));
@@ -82,64 +85,85 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     }
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setTodoText(text);
+    } catch (err) {
+      toast({ title: "Failed to paste", description: "Please check clipboard permissions.", variant: "destructive"});
+      console.error('Failed to read clipboard contents: ', err);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card">
-        <DialogHeader>
-          <DialogTitle>{translations.modalTitle}</DialogTitle>
-          <DialogDescription>{translations.modalDescription}</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Input
-              id="todo-text"
-              placeholder={translations.todoPlaceholder}
-              value={todoText}
-              onChange={(e) => setTodoText(e.target.value)}
-              className="col-span-4"
-              autoFocus
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="todo-date" className="text-right">
-              {translations.dateLabel}
-            </Label>
-            <Select value={selectedDate} onValueChange={setSelectedDate}>
-                <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a date" />
-                </SelectTrigger>
-                <SelectContent>
-                    {weekDays.map(day => (
-                        <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')}>
-                            {format(day, 'EEEE, MMM d', { locale: dateLocale })}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-          </div>
-           <div className="flex items-center space-x-2 justify-end mt-2">
-                <Checkbox 
-                    id="completed-checkbox" 
-                    checked={isCompleted}
-                    onCheckedChange={(checked) => setIsCompleted(checked === true)}
-                />
-                <Label
-                    htmlFor="completed-checkbox"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                    {translations.completedLabel}
-                </Label>
+      <DialogContent className="sm:max-w-md bg-card p-0">
+         <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+         >
+            <DialogHeader className="p-6 pb-4">
+                <DialogTitle>{translations.modalTitle}</DialogTitle>
+                <DialogDescription>{translations.modalDescription}</DialogDescription>
+            </DialogHeader>
+            <div className="px-6 py-4 space-y-4">
+                <div className="relative">
+                    <Input
+                        id="todo-text"
+                        placeholder={translations.todoPlaceholder}
+                        value={todoText}
+                        onChange={(e) => setTodoText(e.target.value)}
+                        className="h-12 pl-3 pr-12 text-base"
+                        autoFocus
+                        autoComplete="off"
+                    />
+                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground" onClick={handlePaste} title={translations.pasteFromClipboard}>
+                        <ClipboardPaste className="h-4 w-4"/>
+                    </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="todo-date">{translations.dateLabel}</Label>
+                        <Select value={selectedDate} onValueChange={setSelectedDate}>
+                            <SelectTrigger id="todo-date">
+                                <SelectValue placeholder="Select a date" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {weekDays.map(day => (
+                                    <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')}>
+                                        {format(day, 'EEEE, MMM d', { locale: dateLocale })}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="flex flex-col justify-end items-start space-y-2 pb-1">
+                        <div className="flex items-center space-x-2">
+                           <Checkbox 
+                                id="completed-checkbox" 
+                                checked={isCompleted}
+                                onCheckedChange={(checked) => setIsCompleted(checked === true)}
+                            />
+                           <Label
+                                htmlFor="completed-checkbox"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                {translations.completedLabel}
+                           </Label>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            {translations.cancelButton}
-          </Button>
-          <Button type="submit" onClick={handleSave}>
-            {translations.saveButton}
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="p-6 bg-muted/50 rounded-b-lg">
+                <Button type="button" variant="outline" onClick={onClose}>
+                    {translations.cancelButton}
+                </Button>
+                <Button type="submit" onClick={handleSave}>
+                    {translations.saveButton}
+                </Button>
+            </DialogFooter>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
