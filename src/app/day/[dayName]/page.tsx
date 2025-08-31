@@ -379,6 +379,8 @@ const LOCAL_STORAGE_KEY_ALL_MEETING_NOTES = 'allWeekMeetingNotes_v2';
 const LOCAL_STORAGE_KEY_ALL_SHARE_LINKS = 'allWeekShareLinks_v2';
 const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
+const LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE = 'lastTodoMigrationDate_v1';
+
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 const ALL_DAY_SLOT_KEY = 'all-day';
 
@@ -711,9 +713,44 @@ export default function DayDetailPage() {
 
     const loadData = () => {
         try {
+            const loadedTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}');
+            const lastMigrationDate = localStorage.getItem(LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE);
+            const todayStr = format(now, 'yyyy-MM-dd');
+
+            // --- To-do Migration Logic ---
+            if (dateKey === todayStr && lastMigrationDate !== todayStr) {
+                const yesterdayStr = format(subDays(now, 1), 'yyyy-MM-dd');
+                const yesterdayTodos = loadedTodos[yesterdayStr] || {};
+                
+                const unfinishedTodos: TodoItem[] = [];
+                Object.values(yesterdayTodos).forEach((slot: any) => {
+                    if (Array.isArray(slot)) {
+                        slot.forEach((todo: TodoItem) => {
+                            if (!todo.completed) {
+                                unfinishedTodos.push({ ...todo, id: `${todo.id}-migrated-${Date.now()}` }); // Give new ID to avoid key conflicts
+                            }
+                        });
+                    }
+                });
+
+                if (unfinishedTodos.length > 0) {
+                    const targetSlot = '08:00 - 09:00';
+                    const todayDayTodos = loadedTodos[todayStr] || {};
+                    const todayTargetSlotTodos = todayDayTodos[targetSlot] || [];
+                    
+                    todayDayTodos[targetSlot] = [...unfinishedTodos, ...todayTargetSlotTodos];
+                    loadedTodos[todayStr] = todayDayTodos;
+                    
+                    localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(loadedTodos));
+                    localStorage.setItem(LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE, todayStr);
+                    toast({ title: `已将昨天 ${unfinishedTodos.length} 个未完成事项同步到今天` });
+                }
+            }
+             // --- End of Migration Logic ---
+
+            setAllTodos(loadedTodos);
             setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
             setAllRatings(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS) || '{}'));
-            setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
             setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
             setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
             setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
@@ -722,7 +759,7 @@ export default function DayDetailPage() {
         }
     };
     loadData();
-  }, [dateKey]); // Rerun if dateKey changes to reload data for new day
+  }, [dateKey, toast]); // Rerun if dateKey changes to reload data for new day
 
   const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
     try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, JSON.stringify(updatedNotes)); } 
@@ -1282,7 +1319,7 @@ export default function DayDetailPage() {
                    return null;
                 }
 
-                if (isViewingCurrentDay && !hasContentInAnySlotOfInterval && clientPageLoadTime) {
+                if (isViewingCurrentDay && !hasContentInAnySlotOfInterval && clientPageLoadTime && dayProperties.dateObject) {
                     const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
                     if (match) {
                         const [, , endTimeStr] = match;
