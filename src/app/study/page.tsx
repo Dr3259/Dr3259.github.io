@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, Brain, BookOpen, Music, MoreVertical, Pin, PinOff, GripVertical } from 'lucide-react';
+import { ArrowLeft, Clock, Brain, BookOpen, Music, MoreVertical, Pin, PinOff, GripVertical, Lightbulb } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ const translations = {
       flashcards: { title: '抽认卡', description: '创建和复习卡片，巩固记忆。', icon: Brain, path: '/study/flashcards' },
       knowledgeBase: { title: '知识库', description: '整理和查阅您的学习笔记和资料。', icon: BookOpen, path: '/study/knowledge-base' },
       studyMusic: { title: '学习音乐', description: '精选白噪音和纯音乐，创造沉浸式学习环境。', icon: Music, path: '/study/music' },
+      thinkingModels: { title: '思维模式', description: '掌握经典思维模型，提升认知深度。', icon: Lightbulb, path: '/study/thinking-models' },
     }
   },
   'en': {
@@ -42,6 +43,7 @@ const translations = {
       flashcards: { title: 'Flashcards', description: 'Create and review cards to consolidate knowledge.', icon: Brain, path: '/study/flashcards' },
       knowledgeBase: { title: 'Knowledge Base', description: 'Organize and consult your study notes and materials.', icon: BookOpen, path: '/study/knowledge-base' },
       studyMusic: { title: 'Study Music', description: 'Curated white noise and ambient music for focus.', icon: Music, path: '/study/music' },
+      thinkingModels: { title: 'Thinking Models', description: 'Master classic thinking models to enhance cognitive depth.', icon: Lightbulb, path: '/study/thinking-models' },
     }
   }
 };
@@ -64,11 +66,11 @@ interface StudyItemProps {
   unpinItemText: string;
   isDraggable?: boolean;
   dragHandleLabel?: string;
-  onDragStart: (e: DragEvent, itemKey: StudyItemKey) => void;
-  onDragEnter: (e: DragEvent, itemKey: StudyItemKey) => void;
-  onDragEnd: (e: DragEvent) => void;
-  isBeingDragged: boolean;
-  isDragOver: boolean;
+  onDragStart: (e: DragEvent<HTMLDivElement>) => void;
+  onDragEnter: (e: DragEvent<HTMLDivElement>) => void;
+  onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
+  onDrop: (e: DragEvent<HTMLDivElement>) => void;
+  isDragging: boolean;
 }
 
 const LOCAL_STORAGE_KEY_PINNED_STUDY_ITEMS = 'weekglance_pinned_study_items_v1';
@@ -80,49 +82,39 @@ const StudyItem: React.FC<StudyItemProps> = ({
     isPinned, canPin, onPinToggle, onClick, 
     pinLimitReachedText, pinItemText, unpinItemText,
     isDraggable, dragHandleLabel,
-    onDragStart, onDragEnter, onDragEnd, isBeingDragged, isDragOver,
+    onDragStart, onDragEnter, onDragEnd, onDrop, isDragging
 }) => {
-    const handleDragStart = (e: DragEvent) => {
-        onDragStart(e, itemKey);
-    };
-  
-    const handleDragEnter = (e: DragEvent) => {
-        e.preventDefault();
-        onDragEnter(e, itemKey);
-    }
-
   return (
     <div
       draggable={isDraggable}
-      onDragStart={handleDragStart}
-      onDragEnter={handleDragEnter}
+      onDragStart={onDragStart}
+      onDragEnter={onDragEnter}
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
+      onDrop={onDrop}
       className={cn(
-        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
+        "group w-full text-left rounded-xl transition-all duration-200 flex items-center gap-5 relative focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
         isPinned 
           ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg"
           : "bg-card/60 hover:bg-card/90 hover:shadow-lg",
         isDraggable ? "cursor-grab" : "cursor-pointer",
-        isBeingDragged && "opacity-50",
-        isDragOver && 'border-2 border-primary border-dashed',
+        isDragging ? "opacity-30" : "opacity-100",
       )}
+      data-item-key={itemKey}
     >
-      {isDraggable && (
-        <div className="absolute left-1 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-hover:text-muted-foreground" title={dragHandleLabel}>
-            <GripVertical className="h-5 w-5" />
-        </div>
-      )}
       <div 
-        onClick={() => onClick(path)}
+        className={cn(isDragging && "pointer-events-none", "w-full")}
+        onClick={() => !isDragging && onClick(path)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(path); }}
         role="button"
         tabIndex={0}
-        className={cn(
-            "flex items-center gap-5 w-full focus:outline-none",
-            isDraggable && "pl-5"
-        )}
       >
+        <div className="flex items-center gap-5 p-4 sm:p-5">
+           {isDraggable && (
+            <div className="text-muted-foreground/50 group-hover:text-muted-foreground" title={dragHandleLabel}>
+                <GripVertical className="h-5 w-5" />
+            </div>
+          )}
           <div className={cn(
               "p-2.5 rounded-lg transition-colors",
               isPinned ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"
@@ -133,6 +125,7 @@ const StudyItem: React.FC<StudyItemProps> = ({
             <p className={cn("font-semibold text-foreground text-base")}>{title}</p>
             {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
           </div>
+        </div>
       </div>
       
       <div className="absolute top-2 right-2">
@@ -174,28 +167,34 @@ export default function StudyPage() {
   const allItemKeys = useMemo(() => Object.keys(translations['en'].items) as StudyItemKey[], []);
   const [unpinnedOrder, setUnpinnedOrder] = useState<StudyItemKey[]>([]);
   
-  const [draggedItem, setDraggedItem] = useState<StudyItemKey | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<StudyItemKey | null>(null);
-  
+  const draggedItemRef = useRef<StudyItemKey | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
       
-      const savedPins = localStorage.getItem(LOCAL_STORAGE_KEY_PINNED_STUDY_ITEMS);
-      const savedOrder = localStorage.getItem(LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER);
-      const initialPins = savedPins ? JSON.parse(savedPins) : [];
-      setPinnedItems(initialPins);
+      try {
+          const savedPins = localStorage.getItem(LOCAL_STORAGE_KEY_PINNED_STUDY_ITEMS);
+          const savedOrder = localStorage.getItem(LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER);
+          const initialPins = savedPins ? JSON.parse(savedPins) : [];
+          setPinnedItems(initialPins);
 
-      const initialUnpinned = allItemKeys.filter(key => !initialPins.includes(key));
+          const initialUnpinned = allItemKeys.filter(key => !initialPins.includes(key));
 
-      if (savedOrder) {
-        const orderedKeys = JSON.parse(savedOrder) as StudyItemKey[];
-        const validOrderedKeys = orderedKeys.filter(key => initialUnpinned.includes(key));
-        const newItems = initialUnpinned.filter(key => !validOrderedKeys.includes(key));
-        setUnpinnedOrder([...validOrderedKeys, ...newItems]);
-      } else {
-        setUnpinnedOrder(initialUnpinned);
+          if (savedOrder) {
+            const orderedKeys = JSON.parse(savedOrder) as StudyItemKey[];
+            const validOrderedKeys = orderedKeys.filter(key => initialUnpinned.includes(key));
+            const newItems = initialUnpinned.filter(key => !validOrderedKeys.includes(key));
+            setUnpinnedOrder([...validOrderedKeys, ...newItems]);
+          } else {
+            setUnpinnedOrder(initialUnpinned);
+          }
+      } catch (e) {
+          console.error("Failed to load layout from localStorage:", e);
+          setPinnedItems([]);
+          setUnpinnedOrder(allItemKeys);
       }
     }
   }, [allItemKeys]);
@@ -203,8 +202,7 @@ export default function StudyPage() {
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   const handleNavigation = (path: string) => {
-    console.log(`Navigating to: ${path}`);
-    // router.push(path);
+    router.push(path);
   };
 
   const handlePinToggle = (itemKey: StudyItemKey) => {
@@ -232,23 +230,56 @@ export default function StudyPage() {
   
   const canPinMore = pinnedItems.length < MAX_PINS;
   
-  const handleDragStart = (e: DragEvent, itemKey: StudyItemKey) => {
-    setDraggedItem(itemKey);
+  const onDragStart = (e: DragEvent<HTMLDivElement>) => {
+    const itemKey = e.currentTarget.dataset.itemKey as StudyItemKey;
+    draggedItemRef.current = itemKey;
+    setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', itemKey);
+
+    // Create a ghost element
+    const ghost = e.currentTarget.cloneNode(true) as HTMLElement;
+    ghost.style.position = "absolute";
+    ghost.style.top = "-9999px";
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, e.currentTarget.offsetWidth / 2, e.currentTarget.offsetHeight / 2);
+    
+    setTimeout(() => document.body.removeChild(ghost), 0);
   };
 
-  const handleDragEnter = (e: DragEvent, itemKey: StudyItemKey) => {
-    if (draggedItem !== itemKey) {
-        setDragOverItem(itemKey);
-    }
+  const onDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    draggedItemRef.current = null;
+    setIsDragging(false);
+    // Remove all drop indicators
+    document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+  };
+  
+  const onDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!draggedItemRef.current) return;
+    
+    document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+    
+    const targetElement = e.currentTarget as HTMLDivElement;
+    if (targetElement.dataset.itemKey === draggedItemRef.current) return;
+
+    const indicator = document.createElement('div');
+    indicator.className = 'drop-indicator h-2 bg-primary rounded-full my-1';
+    
+    targetElement.parentElement?.insertBefore(indicator, targetElement);
   };
 
-  const handleDragEnd = (e: DragEvent) => {
-    if (draggedItem && dragOverItem && draggedItem !== dragOverItem) {
-        const currentIndex = unpinnedOrder.indexOf(draggedItem);
-        const targetIndex = unpinnedOrder.indexOf(dragOverItem);
-        
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const draggedItemKey = draggedItemRef.current;
+    const targetItemKey = (e.currentTarget as HTMLDivElement).dataset.itemKey as StudyItemKey;
+    
+    document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+    
+    if (draggedItemKey && targetItemKey && draggedItemKey !== targetItemKey) {
+        const currentIndex = unpinnedOrder.indexOf(draggedItemKey);
+        const targetIndex = unpinnedOrder.indexOf(targetItemKey);
+
         const newOrder = [...unpinnedOrder];
         const [movedItem] = newOrder.splice(currentIndex, 1);
         newOrder.splice(targetIndex, 0, movedItem);
@@ -256,8 +287,6 @@ export default function StudyPage() {
         setUnpinnedOrder(newOrder);
         localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER, JSON.stringify(newOrder));
     }
-    setDraggedItem(null);
-    setDragOverItem(null);
   };
   
   return (
@@ -302,8 +331,8 @@ export default function StudyPage() {
                       onDragStart={() => {}}
                       onDragEnter={() => {}}
                       onDragEnd={() => {}}
-                      isBeingDragged={false}
-                      isDragOver={false}
+                      onDrop={() => {}}
+                      isDragging={false}
                     />
                   );
                 })}
@@ -331,11 +360,11 @@ export default function StudyPage() {
                           unpinItemText={t.unpinItem}
                           isDraggable={true}
                           dragHandleLabel={t.dragHandleLabel}
-                          onDragStart={handleDragStart}
-                          onDragEnter={handleDragEnter}
-                          onDragEnd={handleDragEnd}
-                          isBeingDragged={draggedItem === itemKey}
-                          isDragOver={dragOverItem === itemKey}
+                          onDragStart={onDragStart}
+                          onDragEnter={onDragEnter}
+                          onDragEnd={onDragEnd}
+                          onDrop={onDrop}
+                          isDragging={draggedItemRef.current === itemKey && isDragging}
                       />
                     );
                 })}
