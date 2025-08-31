@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A flow to scrape the GitHub trending repositories page.
+ * @fileOverview A flow to scrape the GitHub trending repositories page using AI.
  *
  * - scrapeGitHubTrending - A function that fetches and parses the trending repositories.
  * - GithubTrendingParams - The input type for the scrapeGitHubTrending function.
@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import * as cheerio from 'cheerio';
 
 const GithubTrendingParamsSchema = z.object({
   timespan: z.enum(['daily', 'weekly', 'monthly']).default('daily')
@@ -24,7 +23,7 @@ const GithubTrendingRepoSchema = z.object({
   description: z.string().describe('The description of the repository.'),
   language: z.string().describe('The primary programming language of the repository.'),
   stars: z.string().describe('The total number of stars for the repository.'),
-  starsToday: z.string().describe('The number of stars gained in the specified timespan.'),
+  starsToday: z.string().describe('The number of stars gained in the specified timespan (e.g., "123 stars today").'),
   url: z.string().url().describe('The URL of the repository.'),
 });
 export type GithubTrendingRepo = z.infer<typeof GithubTrendingRepoSchema>;
@@ -49,66 +48,44 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
       const url = `https://github.com/trending?since=${timespan}`;
       const response = await fetch(url, { 
         headers: { 
-            // Use more robust headers to mimic a real browser request
             'Accept-Language': 'en-US,en;q=0.9',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
         },
-        cache: 'no-store' // Disable caching for this request to ensure fresh data
+        cache: 'no-store'
       });
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch GitHub trending page: ${response.status} ${response.statusText}`);
       }
+      
       const html = await response.text();
-      const $ = cheerio.load(html);
 
-      const trendingRepos: GithubTrendingRepo[] = [];
+      if (!html) {
+          throw new Error('Fetched HTML content is empty.');
+      }
 
-      $('article.Box-row').each((index, element) => {
-        const repoElement = $(element);
-        
-        const repoName = repoElement.find('h2 a').attr('href')?.substring(1).trim() || '';
-        const description = repoElement.find('p').text().trim() || '';
-        const language = repoElement.find('span[itemprop="programmingLanguage"]').text().trim() || 'N/A';
-        
-        const starElement = repoElement.find('a[href$="/stargazers"]');
-        const stars = starElement.text().trim() || '0';
-        
-        const starsTodayElement = repoElement.find('span.d-inline-block.float-sm-right');
-        // More robustly extract just the number part of the "gained stars" text
-        const starsToday = starsTodayElement.text().trim().split(' ')[0] || '0';
+      // Use AI to parse the HTML content
+      const { output } = await ai.generate({
+        prompt: `You are an expert at parsing HTML. Please extract the trending repository information from the following HTML content. 
+        The content is from the GitHub Trending page for the '${timespan}' timespan.
+        For each repository, extract the rank, full repository name (owner/repo), description, programming language, total stars, and the number of stars gained in the current timespan.
+        The URL should be the full URL to the repository.
+        If a field is not present, provide a sensible default like 'N/A' or an empty string for the description.
+        The stars today should be the full string like "123 stars today".
 
-        const repoUrl = `https://github.com${repoElement.find('h2 a').attr('href')}`;
-        
-        if (repoName) {
-            trendingRepos.push({
-                rank: index + 1,
-                repoName,
-                description,
-                language,
-                stars,
-                starsToday,
-                url: repoUrl,
-            });
-        }
+        HTML Content:
+        \`\`\`html
+        ${html}
+        \`\`\`
+        `,
+        output: { schema: GithubTrendingOutputSchema },
       });
       
-      if (trendingRepos.length === 0) {
-        throw new Error('Could not parse any repositories from the GitHub trending page. The website structure may have changed.');
+      if (!output || output.length === 0) {
+        throw new Error('AI parsing failed to extract any repositories. The GitHub page structure might have significantly changed or the fetched content was invalid.');
       }
-      
-      // The original implementation had translation logic which is not needed
-      // for this flow's primary function of scraping. Removing it simplifies
-      // the flow and removes a potential point of failure.
-      let finalRepos = trendingRepos;
 
-      // Slice the results based on the timespan
-      if (timespan === 'daily') {
-        return finalRepos.slice(0, 20);
-      } else if (timespan === 'weekly') {
-        return finalRepos.slice(0, 15);
-      } else { // monthly
-        return finalRepos.slice(0, 10);
-      }
+      return output;
 
     } catch (error: any) {
       console.error('Error in scrapeGitHubTrendingFlow:', error);
