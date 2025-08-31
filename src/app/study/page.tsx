@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Clock, Brain, Music, MoreVertical, Pin, PinOff, GripVertical } from 'lucide-react';
+import { ArrowLeft, Clock, Brain, BookOpen, Music, MoreVertical, Pin, PinOff, GripVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Reorder } from "framer-motion";
