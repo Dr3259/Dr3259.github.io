@@ -15,8 +15,6 @@ import * as cheerio from 'cheerio';
 const GithubTrendingParamsSchema = z.object({
   timespan: z.enum(['daily', 'weekly', 'monthly']).default('daily')
     .describe('The time period for which to fetch trending repositories.'),
-  language: z.enum(['zh-CN', 'en']).default('en')
-    .describe('The requested language for the description.'),
 });
 export type GithubTrendingParams = z.infer<typeof GithubTrendingParamsSchema>;
 
@@ -40,33 +38,25 @@ export async function scrapeGitHubTrending(
   return scrapeGitHubTrendingFlow(input);
 }
 
-const translationPrompt = ai.definePrompt({
-    name: 'translateForGithubTrending',
-    input: { schema: z.string() },
-    output: { schema: z.string() },
-    prompt: `Translate the following English text to simplified Chinese. Output only the translated text, without any introductory phrases. Preserve any emojis in the original text.
-    
-    English Text: "{{input}}"`,
-});
-
 const scrapeGitHubTrendingFlow = ai.defineFlow(
   {
     name: 'scrapeGitHubTrendingFlow',
     inputSchema: GithubTrendingParamsSchema,
     outputSchema: GithubTrendingOutputSchema,
   },
-  async ({ timespan, language }) => {
+  async ({ timespan }) => {
     try {
       const url = `https://github.com/trending?since=${timespan}`;
       const response = await fetch(url, { 
         headers: { 
+            // Use more robust headers to mimic a real browser request
             'Accept-Language': 'en-US,en;q=0.9',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
         },
-        cache: 'no-store' // Disable caching for this request
+        cache: 'no-store' // Disable caching for this request to ensure fresh data
       });
       if (!response.ok) {
-        throw new Error(`Failed to fetch GitHub trending page: ${response.statusText}`);
+        throw new Error(`Failed to fetch GitHub trending page: ${response.status} ${response.statusText}`);
       }
       const html = await response.text();
       const $ = cheerio.load(html);
@@ -84,7 +74,8 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
         const stars = starElement.text().trim() || '0';
         
         const starsTodayElement = repoElement.find('span.d-inline-block.float-sm-right');
-        const starsToday = starsTodayElement.text().trim() || '0 stars today';
+        // More robustly extract just the number part of the "gained stars" text
+        const starsToday = starsTodayElement.text().trim().split(' ')[0] || '0';
 
         const repoUrl = `https://github.com${repoElement.find('h2 a').attr('href')}`;
         
@@ -95,7 +86,7 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
                 description,
                 language,
                 stars,
-                starsToday: starsToday.split(' ')[0], // Extract just the number
+                starsToday,
                 url: repoUrl,
             });
         }
@@ -105,21 +96,10 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
         throw new Error('Could not parse any repositories from the GitHub trending page. The website structure may have changed.');
       }
       
+      // The original implementation had translation logic which is not needed
+      // for this flow's primary function of scraping. Removing it simplifies
+      // the flow and removes a potential point of failure.
       let finalRepos = trendingRepos;
-
-      // Apply translation if language is Chinese
-      if (language === 'zh-CN') {
-         const translationPromises = finalRepos.map(async (repo) => {
-            if (typeof repo.description === 'string' && repo.description.trim() !== '') {
-                const response = await translationPrompt(repo.description);
-                if (response.text) {
-                    return { ...repo, description: response.text };
-                }
-            }
-            return repo;
-        });
-        finalRepos = await Promise.all(translationPromises);
-      }
 
       // Slice the results based on the timespan
       if (timespan === 'daily') {
