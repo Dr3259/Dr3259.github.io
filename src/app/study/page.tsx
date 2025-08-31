@@ -277,7 +277,7 @@ export default function StudyPage() {
                     const item = t.items[itemKey];
                     if (!item) return null;
                     return (
-                       <Reorder.Item key={itemKey} value={itemKey} className="list-none">
+                       <Reorder.Item key={itemKey} value={itemKey} className="list-none" layout>
                            <StudyItem
                                 itemKey={itemKey}
                                 {...item}
