@@ -66,6 +66,7 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
 
       // Use AI to parse the HTML content
       const { output } = await ai.generate({
+        model: 'googleai/gemini-1.5-flash',
         prompt: `You are an expert at parsing HTML. Please extract the trending repository information from the following HTML content. 
         The content is from the GitHub Trending page for the '${timespan}' timespan.
         For each repository, extract the rank, full repository name (owner/repo), description, programming language, total stars, and the number of stars gained in the current timespan.
