@@ -1,14 +1,13 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BrainCircuit, HeartPulse, Sparkles, Leaf, MoreVertical, Pin, PinOff, GripVertical, Eye } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { Reorder } from "framer-motion";
 
 const translations = {
   'zh-CN': {
@@ -67,6 +66,11 @@ interface HealthItemProps {
   unpinItemText: string;
   isDraggable?: boolean;
   dragHandleLabel?: string;
+  onDragStart: (e: DragEvent, itemKey: HealthItemKey) => void;
+  onDragEnter: (e: DragEvent, itemKey: HealthItemKey) => void;
+  onDragEnd: (e: DragEvent) => void;
+  isBeingDragged: boolean;
+  isDragOver: boolean;
 }
 
 const LOCAL_STORAGE_KEY_PINNED_HEALTH_ITEMS = 'weekglance_pinned_health_items_v1';
@@ -77,17 +81,33 @@ const HealthItem: React.FC<HealthItemProps> = ({
     itemKey, icon: Icon, title, description, path, 
     isPinned, canPin, onPinToggle, onClick, 
     pinLimitReachedText, pinItemText, unpinItemText,
-    isDraggable, dragHandleLabel
+    isDraggable, dragHandleLabel,
+    onDragStart, onDragEnter, onDragEnd, isBeingDragged, isDragOver,
 }) => {
+  const handleDragStart = (e: DragEvent) => {
+    onDragStart(e, itemKey);
+  };
+  
+  const handleDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    onDragEnter(e, itemKey);
+  }
+
   return (
     <div
+      draggable={isDraggable}
+      onDragStart={handleDragStart}
+      onDragEnter={handleDragEnter}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => e.preventDefault()}
       className={cn(
-        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative",
-        "focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
+        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
         isPinned 
           ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg"
           : "bg-card/60 hover:bg-card/90 hover:shadow-lg",
-        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+        isDraggable ? "cursor-grab" : "cursor-pointer",
+        isBeingDragged && "opacity-50",
+        isDragOver && 'border-2 border-primary border-dashed',
       )}
     >
       {isDraggable && (
@@ -148,15 +168,17 @@ const HealthItem: React.FC<HealthItemProps> = ({
   );
 };
 
-
 export default function HealthPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [pinnedItems, setPinnedItems] = useState<HealthItemKey[]>([]);
   const router = useRouter();
 
   const allItemKeys = useMemo(() => Object.keys(translations['en'].items) as HealthItemKey[], []);
-
   const [unpinnedOrder, setUnpinnedOrder] = useState<HealthItemKey[]>([]);
+  
+  const [draggedItem, setDraggedItem] = useState<HealthItemKey | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<HealthItemKey | null>(null);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -212,10 +234,33 @@ export default function HealthPage() {
   
   const canPinMore = pinnedItems.length < MAX_PINS;
   
-  const handleReorder = (newOrder: HealthItemKey[]) => {
-      setUnpinnedOrder(newOrder);
-      localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_HEALTH_ORDER, JSON.stringify(newOrder));
-  }
+  const handleDragStart = (e: DragEvent, itemKey: HealthItemKey) => {
+    setDraggedItem(itemKey);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemKey);
+  };
+
+  const handleDragEnter = (e: DragEvent, itemKey: HealthItemKey) => {
+    if (draggedItem !== itemKey) {
+        setDragOverItem(itemKey);
+    }
+  };
+
+  const handleDragEnd = (e: DragEvent) => {
+    if (draggedItem && dragOverItem && draggedItem !== dragOverItem) {
+        const currentIndex = unpinnedOrder.indexOf(draggedItem);
+        const targetIndex = unpinnedOrder.indexOf(dragOverItem);
+        
+        const newOrder = [...unpinnedOrder];
+        const [movedItem] = newOrder.splice(currentIndex, 1);
+        newOrder.splice(targetIndex, 0, movedItem);
+
+        setUnpinnedOrder(newOrder);
+        localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_HEALTH_ORDER, JSON.stringify(newOrder));
+    }
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
   
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
@@ -256,7 +301,11 @@ export default function HealthPage() {
                       pinItemText={t.pinItem}
                       unpinItemText={t.unpinItem}
                       isDraggable={false}
-                      dragHandleLabel={t.dragHandleLabel}
+                      onDragStart={() => {}}
+                      onDragEnter={() => {}}
+                      onDragEnd={() => {}}
+                      isBeingDragged={false}
+                      isDragOver={false}
                     />
                   );
                 })}
@@ -266,34 +315,33 @@ export default function HealthPage() {
 
           <section>
               <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.allFeaturesTitle}</h2>
-              <Reorder.Group
-                axis="y"
-                values={unpinnedOrder}
-                onReorder={handleReorder}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {unpinnedOrder.map(itemKey => {
                     const item = t.items[itemKey];
                     if (!item) return null;
                     return (
-                       <Reorder.Item key={itemKey} value={itemKey} className="list-none">
-                           <HealthItem
-                                itemKey={itemKey}
-                                {...item}
-                                isPinned={false}
-                                canPin={canPinMore}
-                                onPinToggle={handlePinToggle}
-                                onClick={handleNavigation}
-                                pinLimitReachedText={t.pinLimitReached}
-                                pinItemText={t.pinItem}
-                                unpinItemText={t.unpinItem}
-                                isDraggable={true}
-                                dragHandleLabel={t.dragHandleLabel}
-                            />
-                       </Reorder.Item>
+                       <HealthItem
+                          key={itemKey}
+                          itemKey={itemKey}
+                          {...item}
+                          isPinned={false}
+                          canPin={canPinMore}
+                          onPinToggle={handlePinToggle}
+                          onClick={handleNavigation}
+                          pinLimitReachedText={t.pinLimitReached}
+                          pinItemText={t.pinItem}
+                          unpinItemText={t.unpinItem}
+                          isDraggable={true}
+                          dragHandleLabel={t.dragHandleLabel}
+                          onDragStart={handleDragStart}
+                          onDragEnter={handleDragEnter}
+                          onDragEnd={handleDragEnd}
+                          isBeingDragged={draggedItem === itemKey}
+                          isDragOver={dragOverItem === itemKey}
+                      />
                     );
                 })}
-              </Reorder.Group>
+              </div>
             </section>
         </div>
       </main>

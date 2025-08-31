@@ -1,14 +1,13 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Cpu, MoreVertical, Pin, PinOff, GripVertical, BarChart3, Github, BrainCircuit, GitFork } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { Reorder } from "framer-motion";
 
 const translations = {
   'zh-CN': {
@@ -65,6 +64,11 @@ interface TechItemProps {
   unpinItemText: string;
   isDraggable?: boolean;
   dragHandleLabel?: string;
+  onDragStart: (e: DragEvent, itemKey: TechItemKey) => void;
+  onDragEnter: (e: DragEvent, itemKey: TechItemKey) => void;
+  onDragEnd: (e: DragEvent) => void;
+  isBeingDragged: boolean;
+  isDragOver: boolean;
 }
 
 const LOCAL_STORAGE_KEY_PINNED_TECH_ITEMS = 'weekglance_pinned_tech_items_v1';
@@ -75,17 +79,33 @@ const TechItem: React.FC<TechItemProps> = ({
     itemKey, icon: Icon, title, description, path, 
     isPinned, canPin, onPinToggle, onClick, 
     pinLimitReachedText, pinItemText, unpinItemText,
-    isDraggable, dragHandleLabel
+    isDraggable, dragHandleLabel,
+    onDragStart, onDragEnter, onDragEnd, isBeingDragged, isDragOver,
 }) => {
+  const handleDragStart = (e: DragEvent) => {
+    onDragStart(e, itemKey);
+  };
+  
+  const handleDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    onDragEnter(e, itemKey);
+  }
+
   return (
     <div
+      draggable={isDraggable}
+      onDragStart={handleDragStart}
+      onDragEnter={handleDragEnter}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => e.preventDefault()}
       className={cn(
-        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative",
-        "focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
+        "group w-full text-left p-4 sm:p-5 rounded-xl transition-all duration-200 flex items-center gap-5 relative focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
         isPinned 
           ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg"
           : "bg-card/60 hover:bg-card/90 hover:shadow-lg",
-        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+        isDraggable ? "cursor-grab" : "cursor-pointer",
+        isBeingDragged && "opacity-50",
+        isDragOver && 'border-2 border-primary border-dashed',
       )}
     >
       {isDraggable && (
@@ -153,8 +173,11 @@ export default function TechPage() {
   const router = useRouter();
 
   const allItemKeys = useMemo(() => Object.keys(translations['en'].items) as TechItemKey[], []);
-
   const [unpinnedOrder, setUnpinnedOrder] = useState<TechItemKey[]>([]);
+  
+  const [draggedItem, setDraggedItem] = useState<TechItemKey | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<TechItemKey | null>(null);
+
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -210,10 +233,33 @@ export default function TechPage() {
   
   const canPinMore = pinnedItems.length < MAX_PINS;
   
-  const handleReorder = (newOrder: TechItemKey[]) => {
-      setUnpinnedOrder(newOrder);
-      localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_TECH_ORDER, JSON.stringify(newOrder));
-  }
+  const handleDragStart = (e: DragEvent, itemKey: TechItemKey) => {
+    setDraggedItem(itemKey);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemKey);
+  };
+
+  const handleDragEnter = (e: DragEvent, itemKey: TechItemKey) => {
+    if (draggedItem !== itemKey) {
+        setDragOverItem(itemKey);
+    }
+  };
+
+  const handleDragEnd = (e: DragEvent) => {
+    if (draggedItem && dragOverItem && draggedItem !== dragOverItem) {
+        const currentIndex = unpinnedOrder.indexOf(draggedItem);
+        const targetIndex = unpinnedOrder.indexOf(dragOverItem);
+        
+        const newOrder = [...unpinnedOrder];
+        const [movedItem] = newOrder.splice(currentIndex, 1);
+        newOrder.splice(targetIndex, 0, movedItem);
+
+        setUnpinnedOrder(newOrder);
+        localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_TECH_ORDER, JSON.stringify(newOrder));
+    }
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
   
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
@@ -254,7 +300,11 @@ export default function TechPage() {
                       pinItemText={t.pinItem}
                       unpinItemText={t.unpinItem}
                       isDraggable={false}
-                      dragHandleLabel={t.dragHandleLabel}
+                      onDragStart={() => {}}
+                      onDragEnter={() => {}}
+                      onDragEnd={() => {}}
+                      isBeingDragged={false}
+                      isDragOver={false}
                     />
                   );
                 })}
@@ -264,31 +314,30 @@ export default function TechPage() {
 
           <section>
               <h2 className="text-xl font-semibold text-left mb-4 text-foreground/80">{t.allFeaturesTitle}</h2>
-               <Reorder.Group
-                axis="y"
-                values={unpinnedOrder}
-                onReorder={handleReorder}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              >
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {unpinnedOrder.map(itemKey => {
                     const item = t.items[itemKey];
                     if (!item) return null;
                     return (
-                       <Reorder.Item key={itemKey} value={itemKey} className="list-none">
-                           <TechItem
-                                itemKey={itemKey}
-                                {...item}
-                                isPinned={false}
-                                canPin={canPinMore}
-                                onPinToggle={handlePinToggle}
-                                onClick={handleNavigation}
-                                pinLimitReachedText={t.pinLimitReached}
-                                pinItemText={t.pinItem}
-                                unpinItemText={t.unpinItem}
-                                isDraggable={true}
-                                dragHandleLabel={t.dragHandleLabel}
-                            />
-                       </Reorder.Item>
+                       <TechItem
+                          key={itemKey}
+                          itemKey={itemKey}
+                          {...item}
+                          isPinned={false}
+                          canPin={canPinMore}
+                          onPinToggle={handlePinToggle}
+                          onClick={handleNavigation}
+                          pinLimitReachedText={t.pinLimitReached}
+                          pinItemText={t.pinItem}
+                          unpinItemText={t.unpinItem}
+                          isDraggable={true}
+                          dragHandleLabel={t.dragHandleLabel}
+                          onDragStart={handleDragStart}
+                          onDragEnter={handleDragEnter}
+                          onDragEnd={handleDragEnd}
+                          isBeingDragged={draggedItem === itemKey}
+                          isDragOver={dragOverItem === itemKey}
+                      />
                     );
                 })}
                  {unpinnedOrder.length === 0 && pinnedItems.length === 0 && (
@@ -297,7 +346,7 @@ export default function TechPage() {
                         <p className="max-w-xs">更多功能，敬请期待！</p>
                     </div>
                 )}
-              </Reorder.Group>
+              </div>
             </section>
         </div>
       </main>
