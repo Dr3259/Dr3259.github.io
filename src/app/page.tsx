@@ -17,6 +17,9 @@ import { FeatureGrid } from '@/components/page/FeatureGrid';
 import { PageFooter } from '@/components/page/PageFooter';
 import { DaysGrid } from '@/components/page/DaysGrid';
 import type { AllLoadedData, RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme } from '@/lib/page-types';
+import { GameCard } from '@/components/GameCard';
+import { BarChart } from 'lucide-react';
+import Link from 'next/link';
 
 // Local storage keys
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
@@ -638,6 +641,8 @@ export default function WeekGlancePage() {
     );
   }
 
+  const weekStartDate = daysToDisplay.length > 0 ? getDateKey(daysToDisplay[0]) : '';
+
   return (
     <>
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
@@ -664,7 +669,7 @@ export default function WeekGlancePage() {
             <FeatureGrid />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl justify-items-center mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mb-12 sm:mb-16">
             <DaysGrid
                 daysToDisplay={daysToDisplay}
                 dateLocale={dateLocale}
@@ -676,6 +681,13 @@ export default function WeekGlancePage() {
                 onRatingChange={handleRatingChange}
                 onHoverStart={handleDayHoverStart}
                 onHoverEnd={handleDayHoverEnd}
+            />
+             <GameCard 
+                title={t.weeklySummaryTitle}
+                icon={BarChart} 
+                isSmall
+                onClick={() => router.push(`/weekly-summary?weekStart=${weekStartDate}`)}
+                ariaLabel={t.weeklySummaryPlaceholder}
             />
         </div>
         

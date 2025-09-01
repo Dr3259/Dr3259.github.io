@@ -56,8 +56,6 @@ export const DaysGrid: React.FC<DaysGridProps> = ({
     onHoverEnd
 }) => {
 
-    const weekStartDate = daysToDisplay.length > 0 ? getDateKey(daysToDisplay[0]) : '';
-
     return (
         <>
             {daysToDisplay.map((dateInWeek) => {
@@ -95,21 +93,6 @@ export const DaysGrid: React.FC<DaysGridProps> = ({
                     />
                 );
             })}
-            <Link href={`/weekly-summary?weekStart=${weekStartDate}`} passHref className="w-full h-full">
-              <Card 
-                  className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 cursor-pointer"
-                  role="button"
-                  aria-label={t.weeklySummaryPlaceholder}
-              >
-                  <CardHeader className="p-2 pb-1 text-center">
-                      <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-2 flex-grow flex flex-col items-center justify-center">
-                      <BarChart className="w-12 h-12 text-primary/80 mb-2" />
-                      <p className="text-xs text-center text-muted-foreground">{t.weeklySummaryPlaceholder}</p>
-                  </CardContent>
-              </Card>
-            </Link>
         </>
     );
 };
