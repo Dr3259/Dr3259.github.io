@@ -726,6 +726,7 @@ export default function DayDetailPage() {
                     if (Array.isArray(slot)) {
                         slot.forEach((todo: TodoItem) => {
                             if (!todo.completed) {
+                                // Create a copy of the todo item for migration
                                 unfinishedTodos.push({ ...todo, id: `${todo.id}-migrated-${Date.now()}` });
                             }
                         });
@@ -737,6 +738,7 @@ export default function DayDetailPage() {
                     const todayDayTodos = loadedTodos[todayStr] || {};
                     const todayTargetSlotTodos = todayDayTodos[targetSlot] || [];
                     
+                    // Add unfinished todos to the beginning of the target slot's array
                     todayDayTodos[targetSlot] = [...unfinishedTodos, ...todayTargetSlotTodos];
                     loadedTodos[todayStr] = todayDayTodos;
                     
@@ -967,7 +969,7 @@ export default function DayDetailPage() {
     setAllTodos(prev => {
       const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotTodos.filter(t => t.id !== todoId);
-      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
       saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
@@ -1004,7 +1006,7 @@ export default function DayDetailPage() {
     setAllMeetingNotes(prev => {
       const slotNotes = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotNotes.filter(n => n.id !== noteId);
-      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
       saveAllMeetingNotesToLocalStorage(newAll); return newAll;
     });
   };
@@ -1041,7 +1043,7 @@ export default function DayDetailPage() {
     setAllShareLinks(prev => {
         const slotLinks = prev[targetDateKey]?.[targetHourSlot] || [];
         const updatedSlot = slotLinks.filter(l => l.id !== linkId);
-        const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
+        const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
         saveAllShareLinksToLocalStorage(newAll); return newAll;
     });
   };
@@ -1429,7 +1431,7 @@ export default function DayDetailPage() {
                                             htmlFor={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
                                             className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
                                             title={todo.text}
-                                            onClick={(e) => { e.preventDefault(); handleToggleTodoCompletionInPage(dateKey, slot, todo.id); }}
+                                            onMouseDown={(e) => e.preventDefault()}
                                           >
                                             {todo.text}
                                           </label>
