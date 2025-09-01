@@ -93,16 +93,32 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     }
   };
   
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-        if(todoText.trim() === '') {
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+        // Check if the active element is a button within the dialog to avoid double actions
+        if (activeElement && activeElement.tagName === 'BUTTON' && activeElement.closest('[role="dialog"]')) {
+           return;
+        }
+
+        if (todoText.trim() === '') {
             event.preventDefault();
             onClose();
         } else {
             handleSave();
         }
-    }
-  };
+      }
+    };
+    
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [isOpen, todoText, onClose, handleSave]);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -123,10 +139,9 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         placeholder={translations.todoPlaceholder}
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
-                        onKeyDown={handleKeyDown}
                         className={cn(
                           "h-11 pl-4 pr-10 text-base bg-white/50 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700/80 focus-visible:bg-white dark:focus-visible:bg-neutral-800",
-                          "focus-visible:ring-offset-0 focus-visible:ring-2 focus-visible:ring-primary/20"
+                          "focus-visible:ring-offset-0 focus-visible:ring-primary/20"
                         )}
                         autoFocus
                         autoComplete="off"
