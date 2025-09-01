@@ -95,23 +95,18 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
   };
   
   useEffect(() => {
-    const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      if (!isOpen || event.key !== 'Enter') return;
-      
-      event.preventDefault();
-
-      if (todoText.trim() === '') {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isOpen && event.key === 'Escape') {
+        event.preventDefault();
         onClose();
-      } else {
-        handleSave();
       }
     };
     
-    document.addEventListener('keydown', handleGlobalKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, todoText, onClose, handleSave]);
+  }, [isOpen, onClose]);
 
 
   return (
@@ -135,10 +130,16 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         onChange={(e) => setTodoText(e.target.value)}
                         className={cn(
                           "h-11 pl-4 pr-10 text-base bg-white/50 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700/80 focus-visible:bg-white dark:focus-visible:bg-neutral-800",
-                          "focus-visible:ring-offset-0 focus-visible:ring-primary/20"
+                          "focus-visible:ring-primary/20 focus-visible:ring-offset-0"
                         )}
                         autoFocus
                         autoComplete="off"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && todoText.trim() !== '') {
+                            e.preventDefault();
+                            handleSave();
+                          }
+                        }}
                     />
                     <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-neutral-500 hover:text-primary" onClick={handlePaste} title={translations.pasteFromClipboard}>
                         <ClipboardPaste className="h-4 w-4"/>
@@ -180,7 +181,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                 <Button type="button" variant="ghost" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100" onClick={onClose}>
                     {translations.cancelButton}
                 </Button>
-                <Button type="submit" onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white">
+                <Button type="button" onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white">
                     {translations.saveButton}
                 </Button>
             </div>
