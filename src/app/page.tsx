@@ -20,6 +20,7 @@ import type { AllLoadedData, RatingType, ShareLinkItem, ReceivedShareData, Hover
 import { GameCard } from '@/components/GameCard';
 import { BarChart } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 // Local storage keys
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
@@ -522,7 +523,7 @@ export default function WeekGlancePage() {
         }) || 'evening';
         
         const hourlySlots = (() => {
-            const match = timeIntervals[targetIntervalName].match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+            const match = timeIntervals[targetIntervalName].match(/\((\d{2}:\d{2})\s*-\s*(\d{2}):\d{2}\)/);
             if (!match) return [];
             const [, startTimeStr, endTimeStr] = match;
             const startHour = parseInt(startTimeStr.split(':')[0]);
@@ -665,7 +666,7 @@ export default function WeekGlancePage() {
             eventfulDays={eventfulDays}
         />
         
-        <div className="md:hidden">
+        <div className="hidden md:block">
             <FeatureGrid />
         </div>
 
@@ -682,13 +683,14 @@ export default function WeekGlancePage() {
                 onHoverStart={handleDayHoverStart}
                 onHoverEnd={handleDayHoverEnd}
             />
-             <GameCard 
-                title={t.weeklySummaryTitle}
-                icon={BarChart} 
-                isSmall
-                onClick={() => router.push(`/weekly-summary?weekStart=${weekStartDate}`)}
-                ariaLabel={t.weeklySummaryPlaceholder}
-            />
+             <div className="w-full sm:w-40 h-44 sm:h-48 justify-self-center">
+                <GameCard 
+                    title={t.weeklySummaryTitle}
+                    icon={BarChart} 
+                    onClick={() => router.push(`/weekly-summary?weekStart=${weekStartDate}`)}
+                    ariaLabel={t.weeklySummaryPlaceholder}
+                />
+            </div>
         </div>
         
         {hoverPreviewData && (
@@ -702,6 +704,10 @@ export default function WeekGlancePage() {
             onClickPreview={handlePreviewClick}
           />
         )}
+        
+        <div className="block md:hidden">
+            <FeatureGrid />
+        </div>
 
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>

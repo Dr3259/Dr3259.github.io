@@ -17,8 +17,7 @@ export const GameCard: FC<GameCardProps> = React.memo(({ title, icon: Icon, isSm
   return (
     <Card
       className={cn(
-        "group w-full cursor-pointer overflow-hidden rounded-xl border-2 border-transparent bg-card shadow-lg transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-xl hover:scale-105",
-        isSmall ? "h-36" : "h-48"
+        "group w-full h-full cursor-pointer overflow-hidden rounded-xl border-2 border-transparent bg-card shadow-lg transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-xl hover:scale-105",
       )}
       onClick={onClick}
       role="button"
