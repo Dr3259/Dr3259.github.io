@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -98,17 +99,12 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
       if (!isOpen) return;
 
       if (event.key === 'Enter') {
-        const activeElement = document.activeElement;
-        // Check if the active element is a button within the dialog to avoid double actions
-        if (activeElement && activeElement.tagName === 'BUTTON' && activeElement.closest('[role="dialog"]')) {
-           return;
-        }
-
+        event.preventDefault(); 
+        
         if (todoText.trim() === '') {
-            event.preventDefault();
-            onClose();
+          onClose();
         } else {
-            handleSave();
+          handleSave();
         }
       }
     };
