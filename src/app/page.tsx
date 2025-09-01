@@ -660,6 +660,10 @@ export default function WeekGlancePage() {
             eventfulDays={eventfulDays}
         />
         
+        <div className="md:hidden">
+            <FeatureGrid />
+        </div>
+
         <DaysGrid
             daysToDisplay={daysToDisplay}
             dateLocale={dateLocale}
@@ -673,10 +677,6 @@ export default function WeekGlancePage() {
             onHoverEnd={handleDayHoverEnd}
         />
         
-        <div className="md:hidden">
-          <FeatureGrid />
-        </div>
-
         {hoverPreviewData && (
           <DayHoverPreview
             dayName={hoverPreviewData.dayName}
@@ -710,3 +710,4 @@ export default function WeekGlancePage() {
     </>
   );
 }
+

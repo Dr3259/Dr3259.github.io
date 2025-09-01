@@ -59,7 +59,7 @@ export const DaysGrid: React.FC<DaysGridProps> = ({
     const weekStartDate = daysToDisplay.length > 0 ? getDateKey(daysToDisplay[0]) : '';
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
             {daysToDisplay.map((dateInWeek) => {
                 const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
                 const dateKeyForStorage = getDateKey(dateInWeek);
