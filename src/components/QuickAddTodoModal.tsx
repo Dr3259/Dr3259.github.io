@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -93,6 +93,17 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
       console.error('Failed to read clipboard contents: ', err);
     }
   };
+  
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+        if(todoText.trim() === '') {
+            event.preventDefault();
+            onClose();
+        } else {
+            handleSave();
+        }
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -101,10 +112,10 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="rounded-xl border bg-background/80 backdrop-blur-xl shadow-2xl"
+            className="rounded-xl border border-border/80 bg-background/80 backdrop-blur-xl shadow-2xl"
          >
             <DialogHeader className="p-6 pb-4">
-                <DialogTitle className="text-lg font-semibold text-foreground">{translations.modalTitle}</DialogTitle>
+                <DialogTitle className="text-base font-semibold text-foreground">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
             <div className="px-6 pb-6 space-y-4">
                 <div className="relative">
@@ -113,6 +124,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         placeholder={translations.todoPlaceholder}
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className="h-11 pl-4 pr-10 text-sm bg-muted/60 border-border/80 focus:bg-muted text-foreground placeholder:text-muted-foreground"
                         autoFocus
                         autoComplete="off"
@@ -137,7 +149,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                             </SelectContent>
                         </Select>
                     </div>
-                     <div className="flex items-center space-x-2 pb-2">
+                     <div className="flex items-center space-x-2 pb-2 justify-end h-10">
                        <Checkbox 
                             id="completed-checkbox" 
                             checked={isCompleted}
