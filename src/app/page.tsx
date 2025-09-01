@@ -673,7 +673,9 @@ export default function WeekGlancePage() {
             onHoverEnd={handleDayHoverEnd}
         />
         
-        <FeatureGrid />
+        <div className="md:hidden">
+          <FeatureGrid />
+        </div>
 
         {hoverPreviewData && (
           <DayHoverPreview
