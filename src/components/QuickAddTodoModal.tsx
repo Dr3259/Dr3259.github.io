@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import type { Locale } from 'date-fns';
 import { motion } from 'framer-motion';
 import { ClipboardPaste } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface QuickAddTodoModalProps {
   isOpen: boolean;
@@ -97,15 +97,15 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background/80 backdrop-blur-lg border shadow-none p-0">
+      <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none p-0">
          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            initial={{ opacity: 0.8, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="rounded-xl border border-white/10 bg-black/30 backdrop-blur-xl shadow-2xl"
          >
-            <DialogHeader className="p-6 pb-4">
-                <DialogTitle>{translations.modalTitle}</DialogTitle>
-                <DialogDescription>{translations.modalDescription}</DialogDescription>
+            <DialogHeader className="p-6 pb-2">
+                <DialogTitle className="text-white">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
             <div className="px-6 py-4 space-y-4">
                 <div className="relative">
@@ -114,24 +114,24 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         placeholder={translations.todoPlaceholder}
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
-                        className="h-12 pl-3 pr-12 text-base"
+                        className="h-12 pl-3 pr-12 text-base bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-offset-0 focus-visible:ring-primary/50"
                         autoFocus
                         autoComplete="off"
                     />
-                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground" onClick={handlePaste} title={translations.pasteFromClipboard}>
+                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-white" onClick={handlePaste} title={translations.pasteFromClipboard}>
                         <ClipboardPaste className="h-4 w-4"/>
                     </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="todo-date">{translations.dateLabel}</Label>
+                        <Label htmlFor="todo-date" className="text-gray-300">{translations.dateLabel}</Label>
                         <Select value={selectedDate} onValueChange={setSelectedDate}>
-                            <SelectTrigger id="todo-date">
+                            <SelectTrigger id="todo-date" className="bg-white/5 border-white/20 text-white data-[placeholder]:text-gray-400">
                                 <SelectValue placeholder="Select a date" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-background/80 backdrop-blur-lg border-white/20 text-white">
                                 {weekDays.map(day => (
-                                    <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')}>
+                                    <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')} className="focus:bg-white/10 focus:text-white">
                                         {format(day, 'EEEE, MMM d', { locale: dateLocale })}
                                     </SelectItem>
                                 ))}
@@ -144,10 +144,11 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                                 id="completed-checkbox" 
                                 checked={isCompleted}
                                 onCheckedChange={(checked) => setIsCompleted(checked === true)}
+                                className="border-white/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                             />
                            <Label
                                 htmlFor="completed-checkbox"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-200"
                             >
                                 {translations.completedLabel}
                            </Label>
@@ -155,8 +156,8 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                     </div>
                 </div>
             </div>
-            <DialogFooter className="p-6 bg-muted/50 rounded-b-lg">
-                <Button type="button" variant="outline" onClick={onClose}>
+            <DialogFooter className="p-6 bg-black/20 rounded-b-lg">
+                <Button type="button" variant="outline" onClick={onClose} className="bg-white/10 border-white/20 text-white hover:bg-white/20">
                     {translations.cancelButton}
                 </Button>
                 <Button type="submit" onClick={handleSave}>
