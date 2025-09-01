@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,15 +98,15 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none p-0">
          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="rounded-xl border bg-background/80 backdrop-blur-xl shadow-2xl"
          >
             <DialogHeader className="p-6 pb-4">
                 <DialogTitle className="text-lg font-semibold text-foreground">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
-            <div className="px-6 pb-6 space-y-5">
+            <div className="px-6 pb-6 space-y-4">
                 <div className="relative">
                     <Input
                         id="todo-text"
@@ -154,14 +153,14 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                     </div>
                 </div>
             </div>
-            <DialogFooter className="p-4 bg-muted/50 rounded-b-lg border-t">
-                <Button type="button" variant="outline" onClick={onClose}>
+            <div className="p-4 bg-muted/50 rounded-b-lg border-t flex justify-end items-center space-x-2">
+                <Button type="button" variant="ghost" className="py-2.5" onClick={onClose}>
                     {translations.cancelButton}
                 </Button>
-                <Button type="submit" onClick={handleSave}>
+                <Button type="submit" onClick={handleSave} className="py-2.5">
                     {translations.saveButton}
                 </Button>
-            </DialogFooter>
+            </div>
         </motion.div>
       </DialogContent>
     </Dialog>
