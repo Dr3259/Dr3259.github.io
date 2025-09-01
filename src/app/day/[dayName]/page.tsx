@@ -22,7 +22,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, isSameWeek } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -1089,8 +1089,15 @@ export default function DayDetailPage() {
     if (nextIndex >= 0 && nextIndex < eventfulDays.length) {
       const newDateKey = eventfulDays[nextIndex];
       const newDate = parseISO(newDateKey);
-      const newDayName = format(newDate, 'EEEE', { locale: dateLocale });
-      router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}&eventfulDays=${eventfulDaysParam}`);
+      
+      const currentWeekOptions = { weekStartsOn: 1 as const, locale: dateLocale };
+      
+      if(isSameWeek(newDate, parseISO(dateKey), currentWeekOptions)) {
+          const newDayName = format(newDate, 'EEEE', { locale: dateLocale });
+          router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}&eventfulDays=${eventfulDaysParam}`);
+      } else {
+          router.push(`/?weekOf=${newDateKey}`);
+      }
     }
   };
   
@@ -1098,7 +1105,7 @@ export default function DayDetailPage() {
     const currentIndex = eventfulDays.indexOf(dateKey);
     const isPrevDisabled = currentIndex <= 0;
     const isNextDisabled = currentIndex >= eventfulDays.length - 1;
-    return { isPrevDayDisabled, isNextDayDisabled };
+    return { isPrevDayDisabled: isPrevDisabled, isNextDayDisabled: isNextDisabled };
   }, [dateKey, eventfulDays]);
 
 
@@ -1559,3 +1566,4 @@ export default function DayDetailPage() {
     </TooltipProvider>
   );
 }
+
