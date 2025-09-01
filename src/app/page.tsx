@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
@@ -433,6 +433,7 @@ export default function WeekGlancePage() {
 
    useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            if (isQuickAddModalOpen) return;
             const activeElement = document.activeElement;
             const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
             if (!isInputFocused) {
@@ -450,7 +451,7 @@ export default function WeekGlancePage() {
             window.removeEventListener('focus', checkClipboard);
             window.removeEventListener('keydown', handleKeyDown);
         };
-  }, [checkClipboard]);
+  }, [checkClipboard, isQuickAddModalOpen]);
 
   const handleSaveFromClipboard = (data: { category: string }) => {
     if (!clipboardContent) return;
@@ -640,13 +641,16 @@ export default function WeekGlancePage() {
   return (
     <>
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
-        <MainHeader 
-            translations={t}
-            currentLanguage={currentLanguage}
-            onLanguageChange={setCurrentLanguage}
-            theme={theme}
-            onThemeChange={setTheme}
-        />
+        <div className="w-full max-w-4xl">
+            <MainHeader 
+                translations={t}
+                currentLanguage={currentLanguage}
+                onLanguageChange={setCurrentLanguage}
+                theme={theme}
+                onThemeChange={setTheme}
+                router={router}
+            />
+        </div>
         
         <WeekNavigator
             translations={t}
@@ -670,12 +674,10 @@ export default function WeekGlancePage() {
             onHoverEnd={handleDayHoverEnd}
         />
 
-        <div className="w-full max-w-sm">
-            <FeatureGrid 
-                translations={t} 
-                router={router}
-            />
-        </div>
+        <FeatureGrid 
+            translations={t} 
+            router={router}
+        />
 
         {hoverPreviewData && (
           <DayHoverPreview

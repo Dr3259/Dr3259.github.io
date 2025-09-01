@@ -164,22 +164,19 @@ export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, route
           ))}
       </div>
     );
-
-    if (isMobile) {
-        return (
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="sr-only">{t.featureHub}</span>
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-2 md:hidden">
-                     {featureGridContent}
-                </PopoverContent>
-            </Popover>
-        );
-    }
     
-    return featureGridContent;
+    const TriggerButton = isMobile
+      ? <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden"><LayoutGrid className="h-4 w-4" /></Button>
+      : <Button variant="outline" size="icon" className="h-9 w-9"><LayoutGrid className="h-4 w-4" /></Button>;
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                {TriggerButton}
+            </PopoverTrigger>
+            <PopoverContent className={cn("p-2", isMobile ? "w-64" : "w-80")} align={isMobile ? "end" : "center"}>
+                 {featureGridContent}
+            </PopoverContent>
+        </Popover>
+    );
 };
