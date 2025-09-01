@@ -1089,23 +1089,16 @@ export default function DayDetailPage() {
     if (nextIndex >= 0 && nextIndex < eventfulDays.length) {
       const newDateKey = eventfulDays[nextIndex];
       const newDate = parseISO(newDateKey);
-      
-      const currentWeekOptions = { weekStartsOn: 1 as const, locale: dateLocale };
-      
-      if(isSameWeek(newDate, parseISO(dateKey), currentWeekOptions)) {
-          const newDayName = format(newDate, 'EEEE', { locale: dateLocale });
-          router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}&eventfulDays=${eventfulDaysParam}`);
-      } else {
-          router.push(`/?weekOf=${newDateKey}`);
-      }
+      const newDayName = format(newDate, 'EEEE', { locale: dateLocale });
+      router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}&eventfulDays=${eventfulDaysParam}`);
     }
   };
   
-  const { isPrevDayDisabled, isNextDayDisabled } = useMemo(() => {
+  const { isPrevDisabled, isNextDisabled } = useMemo(() => {
     const currentIndex = eventfulDays.indexOf(dateKey);
     const isPrevDisabled = currentIndex <= 0;
     const isNextDisabled = currentIndex >= eventfulDays.length - 1;
-    return { isPrevDayDisabled: isPrevDisabled, isNextDayDisabled: isNextDisabled };
+    return { isPrevDisabled, isNextDisabled };
   }, [dateKey, eventfulDays]);
 
 
@@ -1133,14 +1126,16 @@ export default function DayDetailPage() {
                 {t.backToWeek}
                 </Button>
             </Link>
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => navigateToDay('prev')} aria-label={t.previousDay} disabled={isPrevDayDisabled}>
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
-                 <Button variant="outline" size="icon" onClick={() => navigateToDay('next')} aria-label={t.nextDay} disabled={isNextDayDisabled}>
-                    <ChevronRight className="h-4 w-4" />
-                </Button>
-            </div>
+             {!isFutureDay && (
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={() => navigateToDay('prev')} aria-label={t.previousDay} disabled={isPrevDisabled}>
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => navigateToDay('next')} aria-label={t.nextDay} disabled={isNextDisabled}>
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
         </header>
 
         <main className="w-full max-w-4xl">
@@ -1566,4 +1561,3 @@ export default function DayDetailPage() {
     </TooltipProvider>
   );
 }
-
