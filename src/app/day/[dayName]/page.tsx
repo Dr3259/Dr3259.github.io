@@ -717,7 +717,6 @@ export default function DayDetailPage() {
             const lastMigrationDate = localStorage.getItem(LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE);
             const todayStr = format(now, 'yyyy-MM-dd');
 
-            // --- To-do Migration Logic ---
             if (dateKey === todayStr && lastMigrationDate !== todayStr) {
                 const yesterdayStr = format(subDays(now, 1), 'yyyy-MM-dd');
                 const yesterdayTodos = loadedTodos[yesterdayStr] || {};
@@ -727,7 +726,7 @@ export default function DayDetailPage() {
                     if (Array.isArray(slot)) {
                         slot.forEach((todo: TodoItem) => {
                             if (!todo.completed) {
-                                unfinishedTodos.push({ ...todo, id: `${todo.id}-migrated-${Date.now()}` }); // Give new ID to avoid key conflicts
+                                unfinishedTodos.push({ ...todo, id: `${todo.id}-migrated-${Date.now()}` });
                             }
                         });
                     }
@@ -744,9 +743,10 @@ export default function DayDetailPage() {
                     localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(loadedTodos));
                     localStorage.setItem(LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE, todayStr);
                     toast({ title: `已将昨天 ${unfinishedTodos.length} 个未完成事项同步到今天` });
+                } else {
+                   localStorage.setItem(LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE, todayStr);
                 }
             }
-             // --- End of Migration Logic ---
 
             setAllTodos(loadedTodos);
             setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
@@ -759,7 +759,7 @@ export default function DayDetailPage() {
         }
     };
     loadData();
-  }, [dateKey, toast]); // Rerun if dateKey changes to reload data for new day
+  }, [dateKey, toast]);
 
   const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
     try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, JSON.stringify(updatedNotes)); } 
@@ -955,7 +955,8 @@ export default function DayDetailPage() {
       saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
-  const handleToggleTodoCompletionInPage = (targetDateKey: string, targetHourSlot: string, todoId: string) => {
+  const handleToggleTodoCompletionInPage = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, targetDateKey: string, targetHourSlot: string, todoId: string) => {
+    event.preventDefault();
     setAllTodos(prev => {
       const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotTodos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t);
@@ -967,7 +968,7 @@ export default function DayDetailPage() {
     setAllTodos(prev => {
       const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotTodos.filter(t => t.id !== todoId);
-      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
+      const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [hourSlot]: updatedSlot } };
       saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
@@ -1114,8 +1115,7 @@ export default function DayDetailPage() {
     if (!dayProperties.dateObject || !clientPageLoadTime) return;
     const targetDate = offset === 1 ? addDays(dayProperties.dateObject, 1) : subDays(dayProperties.dateObject, 1);
     
-    // Allow navigation as long as it's not a future date
-    if (dateIsAfter(targetDate, startOfDay(new Date()))) {
+    if (dateIsAfter(targetDate, startOfDay(clientPageLoadTime))) {
         return;
     }
 
@@ -1131,8 +1131,6 @@ export default function DayDetailPage() {
   }, [dayProperties.dateObject, clientPageLoadTime]);
 
   const isPrevDayDisabled = useMemo(() => {
-    // For now, let's assume we can always go back.
-    // This could be enhanced to stop at the very first day with data.
     return false;
   }, []);
 
@@ -1251,61 +1249,6 @@ export default function DayDetailPage() {
               {t.timeIntervalsTitle(dayNameForDisplay)}
             </h2>
             <div className="grid grid-cols-1 gap-6">
-              {false && (
-                <Card className="bg-card p-4 rounded-lg shadow-lg">
-                  <CardHeader className="p-0 pb-3">
-                    <CardTitle className="text-lg font-medium text-foreground flex items-center">
-                      <CalendarIcon className="mr-3 h-5 w-5 text-primary/80" />
-                      {t.allDayTasks}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <ul className="space-y-2 p-px group/todolist">
-                      {allDayTodos.map((todo) => {
-                        const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
-                        const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
-                        return (
-                          <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                            <div className="flex items-center space-x-2 flex-grow min-w-0">
-                              <Checkbox
-                                id={`daypage-todo-${dateKey}-${ALL_DAY_SLOT_KEY}-${todo.id}`}
-                                checked={todo.completed}
-                                onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, ALL_DAY_SLOT_KEY, todo.id)}
-                                aria-label={todo.completed ? t.markIncomplete : t.markComplete}
-                                className="border-primary/50 shrink-0"
-                                disabled={isPastDay}
-                              />
-                              <div className="flex items-center space-x-1 shrink-0">
-                                {CategoryIcon && todo.category && (
-                                  <Tooltip><TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent></Tooltip>
-                                )}
-                                {DeadlineIcon && todo.deadline && (
-                                  <Tooltip><TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent></Tooltip>
-                                )}
-                                {todo.importance === 'important' && (
-                                  <Tooltip><TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger><TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent></Tooltip>
-                                )}
-                              </div>
-                              <label
-                                htmlFor={`daypage-todo-${dateKey}-${ALL_DAY_SLOT_KEY}-${todo.id}`}
-                                className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
-                                title={todo.text}
-                              >
-                                {todo.text}
-                              </label>
-                            </div>
-                            {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
-                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dateKey, ALL_DAY_SLOT_KEY, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
-                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dateKey, ALL_DAY_SLOT_KEY, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
-                            </div>}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-
               {timeIntervals.map(interval => {
                 const hourlySlotsForInterval = generateHourlySlots(interval.label);
                 const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot =>
@@ -1467,7 +1410,7 @@ export default function DayDetailPage() {
                                           <Checkbox
                                             id={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
                                             checked={todo.completed}
-                                            onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, slot, todo.id)}
+                                            onCheckedChange={(e) => { (e as unknown as MouseEvent).preventDefault(); handleToggleTodoCompletionInPage(e as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>, dateKey, slot, todo.id)}}
                                             aria-label={todo.completed ? t.markIncomplete : t.markComplete}
                                             className="border-primary/50 shrink-0"
                                             disabled={isPastDay}
