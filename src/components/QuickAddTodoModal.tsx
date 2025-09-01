@@ -94,6 +94,15 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     }
   };
   
+   const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault(); // This is crucial to prevent page refresh/flicker
+    if (todoText.trim() === '') {
+      onClose();
+    } else {
+      handleSave();
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isOpen && event.key === 'Escape') {
@@ -118,6 +127,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="rounded-xl border bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl shadow-2xl text-neutral-800 dark:text-neutral-200 border-white/50 dark:border-neutral-800"
          >
+          <form onSubmit={handleFormSubmit}>
             <DialogHeader className="p-6 pb-4">
                 <DialogTitle className="text-base font-semibold">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
@@ -134,14 +144,8 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         )}
                         autoFocus
                         autoComplete="off"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && todoText.trim() !== '') {
-                            e.preventDefault();
-                            handleSave();
-                          }
-                        }}
                     />
-                    <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-neutral-500 hover:text-primary" onClick={handlePaste} title={translations.pasteFromClipboard}>
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-neutral-500 hover:text-primary" onClick={handlePaste} title={translations.pasteFromClipboard}>
                         <ClipboardPaste className="h-4 w-4"/>
                     </Button>
                 </div>
@@ -181,10 +185,11 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                 <Button type="button" variant="ghost" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100" onClick={onClose}>
                     {translations.cancelButton}
                 </Button>
-                <Button type="button" onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white">
+                <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">
                     {translations.saveButton}
                 </Button>
             </div>
+          </form>
         </motion.div>
       </DialogContent>
     </Dialog>
