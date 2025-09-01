@@ -665,6 +665,9 @@ export default function WeekGlancePage() {
                 } else if (event.key === '7') {
                     setShowRichButton(prev => !prev);
                 } else if (event.key === 'Enter') {
+                    // Prevent the event from propagating to the new modal
+                    event.preventDefault();
+                    event.stopPropagation();
                     setIsQuickAddModalOpen(true);
                 }
             }

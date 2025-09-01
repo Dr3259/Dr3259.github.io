@@ -94,26 +94,28 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     }
   };
   
-   const handleFormSubmit = (event: React.FormEvent) => {
-    event.preventDefault(); // This is crucial to prevent page refresh/flicker
-    if (todoText.trim() === '') {
-      onClose();
-    } else {
-      handleSave();
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent form submission if it's inside one
+      if (todoText.trim() === '') {
+        onClose();
+      } else {
+        handleSave();
+      }
     }
   };
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
       if (isOpen && event.key === 'Escape') {
         event.preventDefault();
         onClose();
       }
     };
     
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleGlobalKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -127,7 +129,6 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="rounded-xl border bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl shadow-2xl text-neutral-800 dark:text-neutral-200 border-white/50 dark:border-neutral-800"
          >
-          <form onSubmit={handleFormSubmit}>
             <DialogHeader className="p-6 pb-4">
                 <DialogTitle className="text-base font-semibold">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
@@ -138,9 +139,10 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         placeholder={translations.todoPlaceholder}
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
+                        onKeyDown={handleInputKeyDown}
                         className={cn(
-                          "h-11 pl-4 pr-10 text-base bg-white/50 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700/80 focus-visible:bg-white dark:focus-visible:bg-neutral-800",
-                          "focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+                          "h-11 pl-4 pr-10 text-base bg-white/50 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700/80",
+                          "focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-neutral-800"
                         )}
                         autoFocus
                         autoComplete="off"
@@ -185,11 +187,10 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                 <Button type="button" variant="ghost" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100" onClick={onClose}>
                     {translations.cancelButton}
                 </Button>
-                <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">
+                <Button type="button" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={handleSave}>
                     {translations.saveButton}
                 </Button>
             </div>
-          </form>
         </motion.div>
       </DialogContent>
     </Dialog>
