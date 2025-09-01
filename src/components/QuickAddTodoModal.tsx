@@ -97,7 +97,7 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card p-0">
+      <DialogContent className="sm:max-w-md bg-background/80 backdrop-blur-lg border shadow-none p-0">
          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
