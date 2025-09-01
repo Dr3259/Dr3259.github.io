@@ -75,7 +75,8 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
 
   const handleSave = () => {
     if (!todoText.trim() || !selectedDate) return;
-    onSave({ text: todoText, date: new Date(selectedDate), completed: isCompleted });
+    onSave({ text: todoText.trim(), date: new Date(selectedDate), completed: isCompleted });
+    onClose();
   };
   
   const handleOpenChange = (open: boolean) => {
@@ -94,30 +95,30 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     }
   };
   
-  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // Prevent form submission if it's inside one
-      if (todoText.trim() === '') {
-        onClose();
-      } else {
-        handleSave();
-      }
-    }
-  };
-
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      if (isOpen && event.key === 'Escape') {
+      if (!isOpen) return;
+
+      if (event.key === 'Enter') {
+        event.preventDefault(); // This is the key fix to prevent browser default behavior.
+        if (!todoText.trim()) {
+          onClose();
+        } else {
+          handleSave();
+        }
+      }
+      
+      if (event.key === 'Escape') {
         event.preventDefault();
         onClose();
       }
     };
     
-    document.addEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('keydown', handleGlobalKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, todoText, onClose, handleSave]);
 
 
   return (
@@ -139,7 +140,6 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         placeholder={translations.todoPlaceholder}
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
-                        onKeyDown={handleInputKeyDown}
                         className={cn(
                           "h-11 pl-4 pr-10 text-base bg-white/50 dark:bg-neutral-800/50 border-neutral-300 dark:border-neutral-700/80",
                           "focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:bg-white dark:focus-visible:bg-neutral-800"
