@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation';
 import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, subWeeks, isSameWeek, isAfter, parseISO } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subWeeks, isSameWeek, isAfter, parseISO, isBefore } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -15,12 +15,10 @@ import { MainHeader } from '@/components/page/MainHeader';
 import { WeekNavigator } from '@/components/page/WeekNavigator';
 import { FeatureGrid } from '@/components/page/FeatureGrid';
 import { PageFooter } from '@/components/page/PageFooter';
-import { DaysGrid } from '@/components/page/DaysGrid';
 import type { AllLoadedData, RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme } from '@/lib/page-types';
 import { GameCard } from '@/components/GameCard';
 import { BarChart } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 // Local storage keys
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
@@ -736,7 +734,7 @@ export default function WeekGlancePage() {
           />
         )}
         
-        <div className="block md:hidden">
+        <div className="md:hidden">
             <FeatureGrid />
         </div>
 
