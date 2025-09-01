@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter, differenceInDays } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, subDays, isSameWeek, subWeeks, isBefore, startOfMonth, type Locale, isAfter, differenceInDays, parseISO } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -433,9 +433,7 @@ export default function WeekGlancePage() {
   const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
   const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
   const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
-  const [allDataLoaded, setAllDataLoaded] = useState(false);
-  const [firstEverWeekWithDataStart, setFirstEverWeekWithDataStart] = useState<Date | null>(null);
-
+  
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -637,8 +635,6 @@ export default function WeekGlancePage() {
             setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
         } catch (e) {
             console.error("Error loading data from localStorage", e);
-        } finally {
-            setAllDataLoaded(true);
         }
     };
     loadData();
@@ -845,32 +841,26 @@ export default function WeekGlancePage() {
     return false;
   }, []); 
 
-  const weekHasContent = useCallback((weekDate: Date, data: AllLoadedData): boolean => {
-    const weekToCheckStart = startOfWeek(weekDate, { weekStartsOn: 1, locale: dateLocale });
-    for (let i = 0; i < 7; i++) {
-        if (dayHasContent(addDays(weekToCheckStart, i), data)) {
-            return true;
-        }
-    }
-    return false;
-  }, [dayHasContent, dateLocale]);
+  const eventfulDays = useMemo(() => {
+    const allDataKeys = new Set([
+        ...Object.keys(allLoadedDataMemo.notes),
+        ...Object.keys(allLoadedDataMemo.ratings),
+        ...Object.keys(allLoadedDataMemo.allDailyNotes),
+        ...Object.keys(allLoadedDataMemo.allTodos),
+        ...Object.keys(allLoadedDataMemo.allMeetingNotes),
+        ...Object.keys(allLoadedDataMemo.allShareLinks),
+        ...Object.keys(allLoadedDataMemo.allReflections),
+    ]);
+    
+    return Array.from(allDataKeys)
+        .filter(key => dayHasContent(parseISO(key), allLoadedDataMemo))
+        .sort();
+  }, [allLoadedDataMemo, dayHasContent]);
 
-  useEffect(() => {
-    if (!allDataLoaded || !systemToday) return; 
-
-    let searchDate = startOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale });
-    let earliestWeekFound: Date | null = null;
-
-    for (let i = 0; i < MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT; i++) {
-        if (weekHasContent(searchDate, allLoadedDataMemo)) {
-            earliestWeekFound = new Date(searchDate); 
-        }
-        if (i === MAX_WEEKS_TO_SEARCH_BACK_FOR_FIRST_CONTENT - 1) break;
-        searchDate = subWeeks(searchDate, 1);
-    }
-    setFirstEverWeekWithDataStart(earliestWeekFound);
-  }, [allDataLoaded, systemToday, dateLocale, weekHasContent, allLoadedDataMemo]);
-
+  const firstEverWeekWithDataStart = useMemo(() => {
+    if(eventfulDays.length === 0) return null;
+    return startOfWeek(parseISO(eventfulDays[0]), { weekStartsOn: 1, locale: dateLocale });
+  }, [eventfulDays, dateLocale]);
 
   const currentDisplayedWeekStart = useMemo(() => {
     if (!displayedDate) return new Date(); 
@@ -906,8 +896,8 @@ export default function WeekGlancePage() {
     setHoverPreviewData(null);
     isPreviewSuppressedByClickRef.current = true;
     const dateKeyForDetail = getDateKey(dateForDetail);
-    router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${dateKeyForDetail}`);
-  }, [router, clearTimeoutIfNecessary]);
+    router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${dateKeyForDetail}&eventfulDays=${eventfulDays.join(',')}`);
+  }, [router, clearTimeoutIfNecessary, eventfulDays]);
 
   const handleRatingChange = useCallback((dateKey: string, newRating: RatingType) => {
     setRatings(prev => {
@@ -948,47 +938,14 @@ export default function WeekGlancePage() {
   }, [clearTimeoutIfNecessary]);
 
   const handlePreviousWeek = () => {
-    if (!displayedDate || !allDataLoaded) return;
-
-    const currentWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
-
-    if (firstEverWeekWithDataStart) {
-        if (isSameDay(currentWeekStartDate, firstEverWeekWithDataStart)) {
-            return; 
-        }
-        if (isBefore(currentWeekStartDate, firstEverWeekWithDataStart) ) {
-            if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)){
-                 setDisplayedDate(new Date(firstEverWeekWithDataStart));
-            }
-            return;
-        }
-    } else {
-      return;
-    }
-    
-    const potentialPrevWeekStartDate = subWeeks(currentWeekStartDate, 1);
-
-    if (firstEverWeekWithDataStart && isBefore(potentialPrevWeekStartDate, firstEverWeekWithDataStart)) {
-        if (weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo)){
-           setDisplayedDate(new Date(firstEverWeekWithDataStart));
-        } 
-        return;
-    }
-    
-    if (weekHasContent(potentialPrevWeekStartDate, allLoadedDataMemo)) {
-      setDisplayedDate(potentialPrevWeekStartDate);
-    }
+    if (!displayedDate) return;
+    setDisplayedDate(prev => subWeeks(prev!, 1));
   };
 
 
   const handleNextWeek = () => {
-    if (isViewingActualCurrentWeek || !displayedDate || !systemToday) return; 
-    const nextWeekCandidate = addDays(displayedDate, 7);
-    if (isAfter(startOfWeek(nextWeekCandidate, { weekStartsOn: 1, locale: dateLocale }), startOfWeek(systemToday, { weekStartsOn: 1, locale: dateLocale }))) {
-        setDisplayedDate(new Date(systemToday));
-    } else {
-        setDisplayedDate(nextWeekCandidate);
-    }
+    if (isViewingActualCurrentWeek || !displayedDate) return; 
+    setDisplayedDate(prev => addDays(prev!, 7));
   };
 
   const handleGoToCurrentWeek = () => {
@@ -1010,27 +967,9 @@ export default function WeekGlancePage() {
   };
   
   const isPreviousWeekDisabled = useMemo(() => {
-    if (!allDataLoaded || !displayedDate) return true;
-    if (!firstEverWeekWithDataStart) return true; 
-
-    const currentDisplayedWeekStartDate = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
-    
-    if (isSameDay(currentDisplayedWeekStartDate, firstEverWeekWithDataStart)) {
-        return true;
-    }
-
-    let tempDate = subWeeks(currentDisplayedWeekStartDate, 1);
-    while(isAfter(tempDate, firstEverWeekWithDataStart) || isSameDay(tempDate, firstEverWeekWithDataStart)) {
-        if(weekHasContent(tempDate, allLoadedDataMemo)) {
-            return false;
-        }
-        if(isSameDay(tempDate, firstEverWeekWithDataStart)) break; 
-        tempDate = subWeeks(tempDate, 1);
-        if (isBefore(tempDate, firstEverWeekWithDataStart) && !isSameDay(tempDate, firstEverWeekWithDataStart)) break;
-    }
-    
-    return true; 
-  }, [allDataLoaded, displayedDate, firstEverWeekWithDataStart, dateLocale, weekHasContent, allLoadedDataMemo]);
+    if (!displayedDate || !firstEverWeekWithDataStart) return true;
+    return !isAfter(currentDisplayedWeekStart, firstEverWeekWithDataStart);
+  }, [displayedDate, firstEverWeekWithDataStart, currentDisplayedWeekStart]);
 
   const isNextWeekDisabled = useMemo(() => {
     if (!displayedDate || !systemToday) return true;
@@ -1039,22 +978,12 @@ export default function WeekGlancePage() {
 
 
   const calendarDisabledMatcher = useCallback((date: Date) => {
-    if (!allDataLoaded || !systemToday) return true; 
-    
+    if (!systemToday) return true;
     if (isAfter(date, systemToday) && !isSameDay(date, systemToday)) {
         return true;
     }
-
-    if (firstEverWeekWithDataStart && isBefore(startOfWeek(date, { weekStartsOn: 1, locale: dateLocale }), firstEverWeekWithDataStart)) {
-        return true;
-    }
-    
-    if (firstEverWeekWithDataStart && isSameWeek(date, firstEverWeekWithDataStart, {weekStartsOn: 1, locale: dateLocale})) {
-        return !weekHasContent(firstEverWeekWithDataStart, allLoadedDataMemo);
-    }
-
-    return !weekHasContent(date, allLoadedDataMemo);
-  }, [allDataLoaded, weekHasContent, allLoadedDataMemo, firstEverWeekWithDataStart, dateLocale, systemToday]);
+    return false;
+  }, [systemToday]);
   
   const daysForQuickAdd = useMemo(() => {
       if (!systemToday) return [];

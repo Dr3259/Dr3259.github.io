@@ -22,7 +22,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, startOfDay } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, startOfDay, isSameWeek } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -214,8 +214,8 @@ const translations = {
         afternoon: '下午 (14:00 - 18:00)',
         evening: '晚上 (18:00 - 24:00)',
     },
-    previousDay: '前一天',
-    nextDay: '后一天',
+    previousDay: '上一个有内容的日子',
+    nextDay: '下一个有内容的日子',
   },
   'en': {
     dayDetailsTitle: (dayName: string) => `${dayName} - Details`,
@@ -365,8 +365,8 @@ const translations = {
         afternoon: 'Afternoon (14:00 - 18:00)',
         evening: 'Evening (18:00 - 24:00)',
     },
-    previousDay: 'Previous Day',
-    nextDay: 'Next Day',
+    previousDay: 'Previous Eventful Day',
+    nextDay: 'Next Eventful Day',
   }
 };
 
@@ -522,14 +522,6 @@ const getTagColor = (tagName: string | null): string => {
     return `hsl(${h}, 70%, 85%)`; // Using HSL for a wide range of soft colors
 };
 
-interface AllLoadedData {
-  allDailyNotes: Record<string, string>;
-  allTodos: Record<string, Record<string, TodoItem[]>>;
-  allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
-  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
-  allReflections: Record<string, Record<string, ReflectionItem[]>>;
-  allRatings: Record<string, RatingType>;
-}
 
 export default function DayDetailPage() {
   const params = useParams();
@@ -537,6 +529,9 @@ export default function DayDetailPage() {
   const searchParams = useSearchParams();
   const dayNameForDisplay = typeof params.dayName === 'string' ? decodeURIComponent(params.dayName) : "无效日期";
   const dateKey = searchParams.get('date') || ''; // YYYY-MM-DD
+  const eventfulDaysParam = searchParams.get('eventfulDays');
+  const eventfulDays = useMemo(() => eventfulDaysParam ? eventfulDaysParam.split(',') : [], [eventfulDaysParam]);
+
   const { toast } = useToast();
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
@@ -551,11 +546,6 @@ export default function DayDetailPage() {
   const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
   const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
   
-  const allLoadedDataMemo = useMemo((): AllLoadedData => ({
-    allDailyNotes, allRatings, allTodos, allMeetingNotes, allShareLinks, allReflections
-  }), [allDailyNotes, allRatings, allTodos, allMeetingNotes, allShareLinks, allReflections]);
-
-
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
   const [editingTodoItem, setEditingTodoItem] = useState<TodoItem | null>(null);
@@ -587,22 +577,6 @@ export default function DayDetailPage() {
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
   
-  const dayHasContent = useCallback((date: Date, data: AllLoadedData): boolean => {
-    const checkDateKey = getDateKey(date);
-    if (data.allDailyNotes[checkDateKey]?.trim()) return true;
-    if (data.allRatings[checkDateKey]) return true;
-
-    const checkSlotItems = (items: Record<string, any[]> | undefined) =>
-        items && Object.values(items).some(slotItems => slotItems.length > 0);
-
-    if (checkSlotItems(data.allTodos[checkDateKey])) return true;
-    if (checkSlotItems(data.allMeetingNotes[checkDateKey])) return true;
-    if (checkSlotItems(data.allShareLinks[checkDateKey])) return true;
-    if (checkSlotItems(data.allReflections[checkDateKey])) return true;
-
-    return false;
-  }, []);
-
   const checkClipboard = useCallback(async () => {
     if (document.hidden) return;
 
@@ -645,7 +619,7 @@ export default function DayDetailPage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, t]);
   
   useEffect(() => {
         window.addEventListener('focus', checkClipboard);
@@ -1106,28 +1080,30 @@ export default function DayDetailPage() {
   
   const showRatingControls = (isPastDay || (isViewingCurrentDay && isClientAfter6PMToday)) && !isFutureDay;
   
-  const navigateToDay = (offset: number) => {
-    if (!dayProperties.dateObject || !clientPageLoadTime) return;
-    const targetDate = offset === 1 ? addDays(dayProperties.dateObject, 1) : subDays(dayProperties.dateObject, 1);
+  const navigateToDay = (direction: 'next' | 'prev') => {
+    const currentIndex = eventfulDays.indexOf(dateKey);
+    if (currentIndex === -1) return; // Should not happen if page is loaded correctly
+
+    let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
     
-    if (dateIsAfter(targetDate, startOfDay(clientPageLoadTime))) {
-        return;
+    if (nextIndex >= 0 && nextIndex < eventfulDays.length) {
+      const newDateKey = eventfulDays[nextIndex];
+      const newDate = parseISO(newDateKey);
+      const newDayName = format(newDate, 'EEEE', { locale: dateLocale });
+      router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}&eventfulDays=${eventfulDaysParam}`);
+    } else if (direction === 'prev' && isSameWeek(parseISO(dateKey), parseISO(eventfulDays[0]), {weekStartsOn: 1})) {
+        router.push('/');
+    } else if (direction === 'next' && !isSameWeek(parseISO(dateKey), parseISO(eventfulDays[eventfulDays.length - 1]), {weekStartsOn: 1})) {
+        router.push('/');
     }
-
-    const newDateKey = format(targetDate, 'yyyy-MM-dd');
-    const newDayName = format(targetDate, 'EEEE', { locale: dateLocale });
-    router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}`);
   };
-
-  const isNextDayDisabled = useMemo(() => {
-    if (!dayProperties.dateObject || !clientPageLoadTime) return true;
-    const nextDay = addDays(dayProperties.dateObject, 1);
-    return dateIsAfter(nextDay, startOfDay(clientPageLoadTime));
-  }, [dayProperties.dateObject, clientPageLoadTime]);
-
-  const isPrevDayDisabled = useMemo(() => {
-    return false;
-  }, []);
+  
+  const { isPrevDayDisabled, isNextDayDisabled } = useMemo(() => {
+    const currentIndex = eventfulDays.indexOf(dateKey);
+    const isPrevDisabled = currentIndex <= 0;
+    const isNextDisabled = currentIndex >= eventfulDays.length - 1;
+    return { isPrevDayDisabled: isPrevDisabled, isNextDayDisabled: isNextDisabled };
+  }, [dateKey, eventfulDays]);
 
 
   if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
@@ -1155,10 +1131,10 @@ export default function DayDetailPage() {
                 </Button>
             </Link>
             <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => navigateToDay(-1)} aria-label={t.previousDay} disabled={isPrevDayDisabled}>
+                <Button variant="outline" size="icon" onClick={() => navigateToDay('prev')} aria-label={t.previousDay} disabled={isPrevDayDisabled}>
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
-                 <Button variant="outline" size="icon" onClick={() => navigateToDay(1)} aria-label={t.nextDay} disabled={isNextDayDisabled}>
+                 <Button variant="outline" size="icon" onClick={() => navigateToDay('next')} aria-label={t.nextDay} disabled={isNextDayDisabled}>
                     <ChevronRight className="h-4 w-4" />
                 </Button>
             </div>
