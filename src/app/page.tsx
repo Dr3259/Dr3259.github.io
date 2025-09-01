@@ -403,6 +403,27 @@ export default function WeekGlancePage() {
         });
     }
   }, []);
+  
+  const eventfulDays = useMemo(() => {
+    if (!allLoadedData) return [];
+    const allDataKeys = new Set([
+        ...Object.keys(allLoadedData.ratings),
+        ...Object.keys(allLoadedData.allDailyNotes),
+        ...Object.keys(allLoadedData.allTodos),
+        ...Object.keys(allLoadedData.allMeetingNotes),
+        ...Object.keys(allLoadedData.allShareLinks),
+        ...Object.keys(allLoadedData.allReflections),
+    ]);
+    return Array.from(allDataKeys).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
+  }, [allLoadedData]);
+  
+  const onDaySelect = useCallback((dayNameForUrl: string, dateForDetail: Date) => {
+    clearTimeoutIfNecessary();
+    setHoverPreviewData(null);
+    isPreviewSuppressedByClickRef.current = true;
+    const dateKeyForDetail = getDateKey(dateForDetail);
+    router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${dateKeyForDetail}&eventfulDays=${eventfulDays.join(',')}`);
+  }, [router, clearTimeoutIfNecessary, eventfulDays]);
 
   useEffect(() => {
     setIsClientMounted(true);
@@ -573,33 +594,12 @@ export default function WeekGlancePage() {
       if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
     }
   }, [theme, isClientMounted]);
-  
-  const eventfulDays = useMemo(() => {
-    if (!allLoadedData) return [];
-    const allDataKeys = new Set([
-        ...Object.keys(allLoadedData.ratings),
-        ...Object.keys(allLoadedData.allDailyNotes),
-        ...Object.keys(allLoadedData.allTodos),
-        ...Object.keys(allLoadedData.allMeetingNotes),
-        ...Object.keys(allLoadedData.allShareLinks),
-        ...Object.keys(allLoadedData.allReflections),
-    ]);
-    return Array.from(allDataKeys).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
-  }, [allLoadedData]);
 
   const daysToDisplay = useMemo(() => {
     if (!displayedDate) return [];
     const start = startOfWeek(displayedDate, { weekStartsOn: 1, locale: dateLocale });
     return Array.from({ length: 7 }).map((_, i) => addDays(start, i));
   }, [displayedDate, dateLocale]);
-  
-  const handleDaySelect = useCallback((dayNameForUrl: string, dateForDetail: Date) => {
-    clearTimeoutIfNecessary();
-    setHoverPreviewData(null);
-    isPreviewSuppressedByClickRef.current = true;
-    const dateKeyForDetail = getDateKey(dateForDetail);
-    router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${dateKeyForDetail}&eventfulDays=${eventfulDays.join(',')}`);
-  }, [router, clearTimeoutIfNecessary, eventfulDays]);
 
   const handleRatingChange = useCallback((dateKey: string, newRating: RatingType) => {
     setAllLoadedData(prev => {
@@ -643,6 +643,18 @@ export default function WeekGlancePage() {
   }
 
   const weekStartDate = daysToDisplay.length > 0 ? getDateKey(daysToDisplay[0]) : '';
+  
+  const dayHasContent = (date: Date, data: AllLoadedData): boolean => {
+    const dateKey = getDateKey(date);
+    if (data.allDailyNotes[dateKey]?.trim()) return true;
+    if (data.ratings[dateKey]) return true;
+    const checkSlotItems = (items: Record<string, any[]> | undefined) => items && Object.values(items).some(slotItems => slotItems.length > 0);
+    if (checkSlotItems(data.allTodos[dateKey])) return true;
+    if (checkSlotItems(data.allMeetingNotes[dateKey])) return true;
+    if (checkSlotItems(data.allShareLinks[dateKey])) return true;
+    if (checkSlotItems(data.allReflections[dateKey])) return true;
+    return false;
+  };
 
   return (
     <>
@@ -666,24 +678,43 @@ export default function WeekGlancePage() {
             eventfulDays={eventfulDays}
         />
         
-        <div className="hidden md:block">
-            <FeatureGrid />
-        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-4xl mb-12 sm:mb-16 justify-items-center">
+             {daysToDisplay.map((dateInWeek) => {
+                const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
+                const dateKeyForStorage = getDateKey(dateInWeek);
+                
+                const isCurrentActualDay = isSameDay(dateInWeek, systemToday);
+                const isPastActualDay = isBefore(dateInWeek, systemToday) && !isSameDay(dateInWeek, systemToday);
+                const isFutureActualDay = isAfter(dateInWeek, systemToday) && !isSameDay(dateInWeek, systemToday);
+                
+                const noteForThisDayBox = allLoadedData.allDailyNotes[dateKeyForStorage] || '';
+                const ratingForThisDayBox = allLoadedData.ratings[dateKeyForStorage] || null;
+                const hasAnyDataForThisDay = dayHasContent(dateInWeek, allLoadedData);
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mb-12 sm:mb-16">
-            <DaysGrid
-                daysToDisplay={daysToDisplay}
-                dateLocale={dateLocale}
-                systemToday={systemToday}
-                allLoadedData={allLoadedData}
-                isAfter6PMToday={isAfter6PMToday}
-                translations={t}
-                onDaySelect={handleDaySelect}
-                onRatingChange={handleRatingChange}
-                onHoverStart={handleDayHoverStart}
-                onHoverEnd={handleDayHoverEnd}
-            />
-             <div className="w-full sm:w-40 h-44 sm:h-48 justify-self-center">
+                return (
+                    <DayBox
+                        key={dateKeyForStorage}
+                        dayName={dayNameForDisplay}
+                        onClick={() => onDaySelect(dayNameForDisplay, dateInWeek)}
+                        notes={noteForThisDayBox} 
+                        dayHasAnyData={hasAnyDataForThisDay}
+                        rating={ratingForThisDayBox}
+                        onRatingChange={(newRating) => handleRatingChange(dateKeyForStorage, newRating as RatingType)}
+                        isCurrentDay={isCurrentActualDay}
+                        isPastDay={isPastActualDay}
+                        isFutureDay={isFutureActualDay}
+                        isAfter6PMToday={isAfter6PMToday} 
+                        todayLabel={t.todayPrefix}
+                        selectDayLabel={t.selectDayAria(dayNameForDisplay)}
+                        contentIndicatorLabel={t.hasNotesAria}
+                        ratingUiLabels={t.ratingLabels}
+                        onHoverStart={handleDayHoverStart}
+                        onHoverEnd={handleDayHoverEnd}
+                        imageHint="activity memory"
+                    />
+                );
+            })}
+             <div className="w-full sm:w-40 h-48 justify-self-center">
                 <GameCard 
                     title={t.weeklySummaryTitle}
                     icon={BarChart} 
