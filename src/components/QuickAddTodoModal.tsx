@@ -99,13 +99,13 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none p-0">
          <motion.div
-            initial={{ opacity: 0.8, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="rounded-xl border border-white/10 bg-black/30 backdrop-blur-xl shadow-2xl"
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="rounded-xl border border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl"
          >
             <DialogHeader className="p-6 pb-2">
-                <DialogTitle className="text-white">{translations.modalTitle}</DialogTitle>
+                <DialogTitle className="text-foreground">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
             <div className="px-6 py-4 space-y-4">
                 <div className="relative">
@@ -114,24 +114,24 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         placeholder={translations.todoPlaceholder}
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
-                        className="h-12 pl-3 pr-12 text-base bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-offset-0 focus-visible:ring-primary/50"
+                        className="h-12 pl-3 pr-12 text-base bg-muted/50 border-border/80 text-foreground placeholder:text-muted-foreground"
                         autoFocus
                         autoComplete="off"
                     />
-                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-white" onClick={handlePaste} title={translations.pasteFromClipboard}>
+                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handlePaste} title={translations.pasteFromClipboard}>
                         <ClipboardPaste className="h-4 w-4"/>
                     </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="todo-date" className="text-gray-300">{translations.dateLabel}</Label>
+                        <Label htmlFor="todo-date" className="text-muted-foreground">{translations.dateLabel}</Label>
                         <Select value={selectedDate} onValueChange={setSelectedDate}>
-                            <SelectTrigger id="todo-date" className="bg-white/5 border-white/20 text-white data-[placeholder]:text-gray-400">
+                            <SelectTrigger id="todo-date" className="bg-muted/50 border-border/80">
                                 <SelectValue placeholder="Select a date" />
                             </SelectTrigger>
-                            <SelectContent className="bg-background/80 backdrop-blur-lg border-white/20 text-white">
+                            <SelectContent>
                                 {weekDays.map(day => (
-                                    <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')} className="focus:bg-white/10 focus:text-white">
+                                    <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')}>
                                         {format(day, 'EEEE, MMM d', { locale: dateLocale })}
                                     </SelectItem>
                                 ))}
@@ -144,11 +144,11 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                                 id="completed-checkbox" 
                                 checked={isCompleted}
                                 onCheckedChange={(checked) => setIsCompleted(checked === true)}
-                                className="border-white/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                className="border-muted-foreground"
                             />
                            <Label
                                 htmlFor="completed-checkbox"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-200"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground/90"
                             >
                                 {translations.completedLabel}
                            </Label>
@@ -156,8 +156,8 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                     </div>
                 </div>
             </div>
-            <DialogFooter className="p-6 bg-black/20 rounded-b-lg">
-                <Button type="button" variant="outline" onClick={onClose} className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <DialogFooter className="p-6 bg-muted/30 rounded-b-lg">
+                <Button type="button" variant="outline" onClick={onClose}>
                     {translations.cancelButton}
                 </Button>
                 <Button type="submit" onClick={handleSave}>
