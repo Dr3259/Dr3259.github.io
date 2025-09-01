@@ -642,7 +642,7 @@ export default function WeekGlancePage() {
     <>
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <div className="w-full max-w-4xl">
-          <MainHeader 
+           <MainHeader 
               translations={t}
               currentLanguage={currentLanguage}
               onLanguageChange={setCurrentLanguage}
@@ -664,18 +664,20 @@ export default function WeekGlancePage() {
             <FeatureGrid />
         </div>
 
-        <DaysGrid
-            daysToDisplay={daysToDisplay}
-            dateLocale={dateLocale}
-            systemToday={systemToday}
-            allLoadedData={allLoadedData}
-            isAfter6PMToday={isAfter6PMToday}
-            translations={t}
-            onDaySelect={handleDaySelect}
-            onRatingChange={handleRatingChange}
-            onHoverStart={handleDayHoverStart}
-            onHoverEnd={handleDayHoverEnd}
-        />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl justify-items-center mb-12 sm:mb-16">
+            <DaysGrid
+                daysToDisplay={daysToDisplay}
+                dateLocale={dateLocale}
+                systemToday={systemToday}
+                allLoadedData={allLoadedData}
+                isAfter6PMToday={isAfter6PMToday}
+                translations={t}
+                onDaySelect={handleDaySelect}
+                onRatingChange={handleRatingChange}
+                onHoverStart={handleDayHoverStart}
+                onHoverEnd={handleDayHoverEnd}
+            />
+        </div>
         
         {hoverPreviewData && (
           <DayHoverPreview
@@ -710,4 +712,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
