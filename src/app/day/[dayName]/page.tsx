@@ -22,7 +22,7 @@ import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations 
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, startOfDay, isSameWeek } from 'date-fns';
+import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -1082,19 +1082,15 @@ export default function DayDetailPage() {
   
   const navigateToDay = (direction: 'next' | 'prev') => {
     const currentIndex = eventfulDays.indexOf(dateKey);
-    if (currentIndex === -1) return; // Should not happen if page is loaded correctly
+    if (currentIndex === -1) return;
 
-    let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+    const nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
     
     if (nextIndex >= 0 && nextIndex < eventfulDays.length) {
       const newDateKey = eventfulDays[nextIndex];
       const newDate = parseISO(newDateKey);
       const newDayName = format(newDate, 'EEEE', { locale: dateLocale });
       router.push(`/day/${encodeURIComponent(newDayName)}?date=${newDateKey}&eventfulDays=${eventfulDaysParam}`);
-    } else if (direction === 'prev' && isSameWeek(parseISO(dateKey), parseISO(eventfulDays[0]), {weekStartsOn: 1})) {
-        router.push('/');
-    } else if (direction === 'next' && !isSameWeek(parseISO(dateKey), parseISO(eventfulDays[eventfulDays.length - 1]), {weekStartsOn: 1})) {
-        router.push('/');
     }
   };
   
@@ -1102,7 +1098,7 @@ export default function DayDetailPage() {
     const currentIndex = eventfulDays.indexOf(dateKey);
     const isPrevDisabled = currentIndex <= 0;
     const isNextDisabled = currentIndex >= eventfulDays.length - 1;
-    return { isPrevDayDisabled: isPrevDisabled, isNextDayDisabled: isNextDisabled };
+    return { isPrevDayDisabled, isNextDayDisabled };
   }, [dateKey, eventfulDays]);
 
 
@@ -1399,9 +1395,9 @@ export default function DayDetailPage() {
                                           </div>
                                           <label
                                             htmlFor={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
+                                            onMouseDown={(e) => e.preventDefault()}
                                             className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
                                             title={todo.text}
-                                            onMouseDown={(e) => e.preventDefault()}
                                           >
                                             {todo.text}
                                           </label>
