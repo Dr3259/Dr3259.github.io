@@ -578,6 +578,7 @@ export default function DayDetailPage() {
 
   const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
+  const [hasScrolledInitially, setHasScrolledInitially] = useState(false);
 
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
@@ -870,75 +871,68 @@ export default function DayDetailPage() {
 
 
   useEffect(() => {
-    let scrollTimerId: NodeJS.Timeout | null = null;
-    if (!isViewingCurrentDay || !clientPageLoadTime || !dateKey) {
-      setActiveIntervalKey(null);
-      return () => { if (scrollTimerId) clearTimeout(scrollTimerId); };
+    if (hasScrolledInitially || !isViewingCurrentDay || !clientPageLoadTime || !dateKey) {
+        return;
     }
 
-    const now = clientPageLoadTime; // Use the client-side determined time
+    const now = clientPageLoadTime;
     const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTimeTotalMinutes = currentHour * 60 + currentMinute;
+    const currentTimeTotalMinutes = currentHour * 60 + now.getMinutes();
 
     let newActiveKey: string | null = null;
     let firstVisibleIntervalKeyForScroll: string | null = null;
     let currentIntervalKeyForScroll: string | null = null;
 
     for (const interval of timeIntervals) {
-      const hourlySlots = generateHourlySlots(interval.label);
-      const hasContentInInterval = hourlySlots.some(slot =>
-          (allTodos[dateKey]?.[slot]?.length || 0) > 0 ||
-          (allMeetingNotes[dateKey]?.[slot]?.length || 0) > 0 ||
-          (allShareLinks[dateKey]?.[slot]?.length || 0) > 0 ||
-          (allReflections[dateKey]?.[slot]?.length || 0) > 0
-      );
+        const hourlySlots = generateHourlySlots(interval.label);
+        const hasContentInInterval = hourlySlots.some(slot =>
+            (allTodos[dateKey]?.[slot]?.length || 0) > 0 ||
+            (allMeetingNotes[dateKey]?.[slot]?.length || 0) > 0 ||
+            (allShareLinks[dateKey]?.[slot]?.length || 0) > 0 ||
+            (allReflections[dateKey]?.[slot]?.length || 0) > 0
+        );
 
-      const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-      if (!match) continue;
+        const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+        if (!match) continue;
 
-      const [, startTimeStr, endTimeStr] = match;
-      const [startH, startM] = startTimeStr.split(':').map(Number);
-      let [endH, endM] = endTimeStr.split(':').map(Number);
-      if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
+        const [, startTimeStr, endTimeStr] = match;
+        const [startH, startM] = startTimeStr.split(':').map(Number);
+        let [endH, endM] = endTimeStr.split(':').map(Number);
+        if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
 
+        const intervalStartTotalMinutes = startH * 60 + startM;
+        const intervalEndTotalMinutes = endH * 60 + endM;
+        const pageLoadTotalMinutesForIntervalCheck = now.getHours() * 60 + now.getMinutes();
 
-      const intervalStartTotalMinutes = startH * 60 + startM;
-      const intervalEndTotalMinutes = endH * 60 + endM;
+        if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck && !hasContentInInterval) {
+            continue;
+        }
 
-      // Use clientPageLoadTime for this check
-      const pageLoadHourForIntervalCheck = clientPageLoadTime.getHours();
-      const pageLoadMinuteForIntervalCheck = clientPageLoadTime.getMinutes();
-      const pageLoadTotalMinutesForIntervalCheck = pageLoadHourForIntervalCheck * 60 + pageLoadMinuteForIntervalCheck;
+        if (!firstVisibleIntervalKeyForScroll) {
+            firstVisibleIntervalKeyForScroll = interval.key;
+        }
 
-
-      if (intervalEndTotalMinutes <= pageLoadTotalMinutesForIntervalCheck && !hasContentInInterval) {
-        continue;
-      }
-
-      if (!firstVisibleIntervalKeyForScroll) {
-        firstVisibleIntervalKeyForScroll = interval.key;
-      }
-
-      if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
-        newActiveKey = interval.key;
-        currentIntervalKeyForScroll = interval.key;
-      }
-    }
-
-    if (newActiveKey !== activeIntervalKey) {
-        setActiveIntervalKey(newActiveKey);
+        if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
+            newActiveKey = interval.key;
+            currentIntervalKeyForScroll = interval.key;
+        }
     }
     
+    setActiveIntervalKey(newActiveKey);
+
     const targetKeyForScroll = currentIntervalKeyForScroll || firstVisibleIntervalKeyForScroll;
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
-      scrollTimerId = setTimeout(() => {
-        intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
-      }, 100);
+        const scrollTimerId = setTimeout(() => {
+            intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start' });
+            setHasScrolledInitially(true); // Mark that initial scroll has happened
+        }, 100);
+        
+        return () => clearTimeout(scrollTimerId);
+    } else {
+        // If there's no target, we still need to mark the scroll as "done"
+        setHasScrolledInitially(true);
     }
-    
-    return () => { if (scrollTimerId) clearTimeout(scrollTimerId); };
-  }, [dateKey, currentLanguage, timeIntervals, isViewingCurrentDay, clientPageLoadTime, allTodos, allMeetingNotes, allShareLinks, allReflections, activeIntervalKey]);
+  }, [dateKey, clientPageLoadTime, isViewingCurrentDay, hasScrolledInitially, timeIntervals, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
 
   const handleOpenTodoModal = (hourSlot: string) => {
