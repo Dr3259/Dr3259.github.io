@@ -190,18 +190,19 @@ export const FeatureGrid: React.FC = () => {
     
     return (
         <Popover>
+            {/* Mobile Trigger */}
             <PopoverTrigger asChild>
-                <>
-                    {/* Mobile Trigger */}
-                    <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden">
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    {/* Desktop Trigger */}
-                    <Button variant="outline" size="icon" className="h-9 w-9 hidden md:inline-flex">
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                </>
+                <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden">
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
             </PopoverTrigger>
+            {/* Desktop Trigger */}
+            <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="h-9 w-9 hidden md:inline-flex">
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+            </PopoverTrigger>
+            
             <PopoverContent className={cn("p-2", isMobile ? "w-64" : "w-80")} align={isMobile ? "end" : "center"}>
                  {featureGridContent}
             </PopoverContent>
