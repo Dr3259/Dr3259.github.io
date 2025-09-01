@@ -955,8 +955,7 @@ export default function DayDetailPage() {
       saveAllTodosToLocalStorage(newAll); return newAll;
     });
   };
-  const handleToggleTodoCompletionInPage = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, targetDateKey: string, targetHourSlot: string, todoId: string) => {
-    event.preventDefault();
+  const handleToggleTodoCompletionInPage = (targetDateKey: string, targetHourSlot: string, todoId: string) => {
     setAllTodos(prev => {
       const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotTodos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t);
@@ -1410,7 +1409,7 @@ export default function DayDetailPage() {
                                           <Checkbox
                                             id={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
                                             checked={todo.completed}
-                                            onCheckedChange={(e) => { (e as unknown as MouseEvent).preventDefault(); handleToggleTodoCompletionInPage(e as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>, dateKey, slot, todo.id)}}
+                                            onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, slot, todo.id)}
                                             aria-label={todo.completed ? t.markIncomplete : t.markComplete}
                                             className="border-primary/50 shrink-0"
                                             disabled={isPastDay}
@@ -1430,6 +1429,7 @@ export default function DayDetailPage() {
                                             htmlFor={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
                                             className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
                                             title={todo.text}
+                                            onClick={(e) => { e.preventDefault(); handleToggleTodoCompletionInPage(dateKey, slot, todo.id); }}
                                           >
                                             {todo.text}
                                           </label>
