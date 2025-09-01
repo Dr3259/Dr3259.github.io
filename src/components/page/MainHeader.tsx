@@ -7,7 +7,8 @@ import { Languages, Sun, Moon, Settings, Check } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import type { LanguageKey, Theme } from '@/lib/page-types';
 import { FeatureGrid } from './FeatureGrid';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { cn } from '@/lib/utils';
+
 
 interface MainHeaderProps {
   translations: any;
@@ -15,7 +16,6 @@ interface MainHeaderProps {
   onLanguageChange: (lang: LanguageKey) => void;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
-  router: AppRouterInstance;
 }
 
 export const MainHeader: React.FC<MainHeaderProps> = ({
@@ -24,7 +24,6 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
   onLanguageChange,
   theme,
   onThemeChange,
-  router,
 }) => {
   return (
     <header className="mb-8 sm:mb-12 w-full flex justify-between items-center">
@@ -33,9 +32,7 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
       </div>
       <div className="flex items-center gap-2">
-          <div className="hidden md:block">
-             <FeatureGrid translations={t} router={router} />
-          </div>
+          <FeatureGrid />
           <DropdownMenu>
               <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="h-9 w-9">

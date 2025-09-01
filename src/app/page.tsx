@@ -642,14 +642,13 @@ export default function WeekGlancePage() {
     <>
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <div className="w-full max-w-4xl">
-            <MainHeader 
-                translations={t}
-                currentLanguage={currentLanguage}
-                onLanguageChange={setCurrentLanguage}
-                theme={theme}
-                onThemeChange={setTheme}
-                router={router}
-            />
+          <MainHeader 
+              translations={t}
+              currentLanguage={currentLanguage}
+              onLanguageChange={setCurrentLanguage}
+              theme={theme}
+              onThemeChange={setTheme}
+          />
         </div>
         
         <WeekNavigator
@@ -673,11 +672,8 @@ export default function WeekGlancePage() {
             onHoverStart={handleDayHoverStart}
             onHoverEnd={handleDayHoverEnd}
         />
-
-        <FeatureGrid 
-            translations={t} 
-            router={router}
-        />
+        
+        <FeatureGrid />
 
         {hoverPreviewData && (
           <DayHoverPreview

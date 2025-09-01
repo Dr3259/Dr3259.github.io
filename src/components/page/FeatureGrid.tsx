@@ -55,12 +55,33 @@ const FeatureButton: React.FC<{
   </motion.div>
 );
 
-interface FeatureGridProps {
-    translations: any;
-    router: AppRouterInstance;
-}
+const translations = {
+  'zh-CN': {
+    techButtonText: '科技一下',
+    healthButtonText: '健康一下',
+    restButtonText: '休息一下',
+    studyButtonText: '学习一下',
+    workplaceButtonText: '职场一下',
+    richButtonText: '富豪一下',
+    organizeButtonText: '整理一下',
+  },
+  'en': {
+    techButtonText: 'Tech Time',
+    healthButtonText: 'Get Healthy',
+    restButtonText: 'Take a Break',
+    studyButtonText: 'Study Time',
+    workplaceButtonText: 'Workplace',
+    richButtonText: 'Rich Time',
+    organizeButtonText: 'Get Organized',
+  }
+};
 
-export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, router }) => {
+
+export const FeatureGrid: React.FC = () => {
+    const router = useRouter();
+    const [language, setLanguage] = useState<'zh-CN' | 'en'>('zh-CN');
+    const t = translations[language];
+
     const [features, setFeatures] = useState<Feature[]>([]);
     const [draggedItem, setDraggedItem] = useState<Feature | null>(null);
     const [dragOverItem, setDragOverItem] = useState<Feature | null>(null);
@@ -68,8 +89,10 @@ export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, route
     const [showRichButton, setShowRichButton] = useState(false);
     const isMobile = useIsMobile();
     
-    // Add keydown listener for developer mode
     useEffect(() => {
+        const browserLang = navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh-CN';
+        setLanguage(browserLang);
+
         const handleKeyDown = (event: KeyboardEvent) => {
             const activeElement = document.activeElement;
             const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
@@ -165,14 +188,19 @@ export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, route
       </div>
     );
     
-    const TriggerButton = isMobile
-      ? <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden"><LayoutGrid className="h-4 w-4" /></Button>
-      : <Button variant="outline" size="icon" className="h-9 w-9"><LayoutGrid className="h-4 w-4" /></Button>;
-
     return (
         <Popover>
             <PopoverTrigger asChild>
-                {TriggerButton}
+                <>
+                    {/* Mobile Trigger */}
+                    <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden">
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    {/* Desktop Trigger */}
+                    <Button variant="outline" size="icon" className="h-9 w-9 hidden md:inline-flex">
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                </>
             </PopoverTrigger>
             <PopoverContent className={cn("p-2", isMobile ? "w-64" : "w-80")} align={isMobile ? "end" : "center"}>
                  {featureGridContent}
