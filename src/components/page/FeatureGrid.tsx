@@ -8,6 +8,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { PauseCircle, HeartPulse, Cpu, Gem, LayoutGrid, BookOpen, Archive, Briefcase } from "lucide-react";
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 const LOCAL_STORAGE_KEY_FEATURE_ORDER = 'weekGlanceFeatureOrder_v3';
 
@@ -64,6 +66,7 @@ export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, route
     const [dragOverItem, setDragOverItem] = useState<Feature | null>(null);
     const [showOrganizeButton, setShowOrganizeButton] = useState(false);
     const [showRichButton, setShowRichButton] = useState(false);
+    const isMobile = useIsMobile();
     
     // Add keydown listener for developer mode
     useEffect(() => {
@@ -144,31 +147,39 @@ export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, route
             setDragOverItem(item);
         }
     }
-
-    return (
-        <Popover>
-            <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden">
-                <LayoutGrid className="h-4 w-4" />
-                <span className="sr-only">{t.featureHub}</span>
-            </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2 md:hidden">
-                 <div className="grid grid-cols-3 gap-2">
-                    {features.map((feature) => (
-                        <FeatureButton 
-                            key={feature.id} 
-                            item={feature}
-                            onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
-                            onDragOver={handleDragOver}
-                            onDragEnter={handleDragEnter}
-                            isDragging={draggedItem?.id === feature.id}
-                            isDragOver={dragOverItem?.id === feature.id}
-                        />
-                    ))}
-                 </div>
-            </PopoverContent>
-        </Popover>
+    
+    const featureGridContent = (
+      <div className="grid grid-cols-3 gap-2">
+          {features.map((feature) => (
+              <FeatureButton 
+                  key={feature.id} 
+                  item={feature}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  isDragging={draggedItem?.id === feature.id}
+                  isDragOver={dragOverItem?.id === feature.id}
+              />
+          ))}
+      </div>
     );
+
+    if (isMobile) {
+        return (
+            <Popover>
+                <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="h-9 w-9 fixed bottom-4 right-4 z-50 shadow-lg md:hidden">
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="sr-only">{t.featureHub}</span>
+                </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2 md:hidden">
+                     {featureGridContent}
+                </PopoverContent>
+            </Popover>
+        );
+    }
+    
+    return featureGridContent;
 };

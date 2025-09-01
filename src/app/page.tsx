@@ -433,10 +433,10 @@ export default function WeekGlancePage() {
 
    useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Enter') {
-                const activeElement = document.activeElement;
-                const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
-                if (!isInputFocused) {
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
+            if (!isInputFocused) {
+                 if (event.key === 'Enter') {
                     event.preventDefault();
                     setIsQuickAddModalOpen(true);
                 }
@@ -670,7 +670,7 @@ export default function WeekGlancePage() {
             onHoverEnd={handleDayHoverEnd}
         />
 
-        <div className="hidden md:block w-full max-w-sm">
+        <div className="w-full max-w-sm">
             <FeatureGrid 
                 translations={t} 
                 router={router}
@@ -691,13 +691,6 @@ export default function WeekGlancePage() {
 
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>
-
-      <div className="md:hidden">
-          <FeatureGrid 
-              translations={t} 
-              router={router}
-          />
-      </div>
 
       <ClipboardModal
         isOpen={isClipboardModalOpen}
