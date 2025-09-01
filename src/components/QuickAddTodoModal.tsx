@@ -112,10 +112,10 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="rounded-xl border border-border/80 bg-background/80 backdrop-blur-xl shadow-2xl"
+            className="rounded-xl border border-amber-200/50 dark:border-amber-800/50 bg-amber-50/90 dark:bg-amber-950/90 backdrop-blur-xl shadow-2xl text-stone-800 dark:text-stone-200"
          >
             <DialogHeader className="p-6 pb-4">
-                <DialogTitle className="text-base font-semibold text-foreground">{translations.modalTitle}</DialogTitle>
+                <DialogTitle className="text-base font-semibold">{translations.modalTitle}</DialogTitle>
             </DialogHeader>
             <div className="px-6 pb-6 space-y-4">
                 <div className="relative">
@@ -125,19 +125,19 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                         value={todoText}
                         onChange={(e) => setTodoText(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className="h-11 pl-4 pr-10 text-sm bg-muted/60 border-border/80 focus:bg-muted text-foreground placeholder:text-muted-foreground"
+                        className="h-11 pl-4 pr-10 text-sm bg-amber-100/50 dark:bg-amber-900/60 border-amber-200/80 dark:border-amber-800/80 focus:bg-amber-100/70 dark:focus:bg-amber-900/80 placeholder:text-stone-500 dark:placeholder:text-stone-400"
                         autoFocus
                         autoComplete="off"
                     />
-                    <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handlePaste} title={translations.pasteFromClipboard}>
+                    <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200" onClick={handlePaste} title={translations.pasteFromClipboard}>
                         <ClipboardPaste className="h-4 w-4"/>
                     </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-4 items-end">
                     <div className="space-y-1.5">
-                        <Label htmlFor="todo-date" className="text-xs text-muted-foreground">{translations.dateLabel}</Label>
+                        <Label htmlFor="todo-date" className="text-xs text-stone-600 dark:text-stone-300">{translations.dateLabel}</Label>
                         <Select value={selectedDate} onValueChange={setSelectedDate}>
-                            <SelectTrigger id="todo-date" className="h-10 bg-muted/60 border-border/80 text-sm">
+                            <SelectTrigger id="todo-date" className="h-10 bg-amber-100/50 dark:bg-amber-900/60 border-amber-200/80 dark:border-amber-800/80 text-sm">
                                 <SelectValue placeholder="Select a date" />
                             </SelectTrigger>
                             <SelectContent>
@@ -154,22 +154,22 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
                             id="completed-checkbox" 
                             checked={isCompleted}
                             onCheckedChange={(checked) => setIsCompleted(checked === true)}
-                            className="border-muted-foreground"
+                            className="border-stone-400 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
                         />
                        <Label
                             htmlFor="completed-checkbox"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground/90"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
                             {translations.completedLabel}
                        </Label>
                     </div>
                 </div>
             </div>
-            <div className="p-4 bg-muted/50 rounded-b-lg border-t flex justify-end items-center space-x-2">
-                <Button type="button" variant="ghost" className="py-2.5" onClick={onClose}>
+            <div className="p-4 bg-amber-100/50 dark:bg-amber-900/60 rounded-b-lg border-t border-amber-200/60 dark:border-amber-800/60 flex justify-end items-center space-x-2">
+                <Button type="button" variant="ghost" className="hover:bg-amber-200/60 dark:hover:bg-amber-800/60" onClick={onClose}>
                     {translations.cancelButton}
                 </Button>
-                <Button type="submit" onClick={handleSave} className="py-2.5">
+                <Button type="submit" onClick={handleSave} className="bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-600">
                     {translations.saveButton}
                 </Button>
             </div>
