@@ -4,9 +4,10 @@
 import React from 'react';
 import { format, isSameDay, isBefore, isAfter } from 'date-fns';
 import { DayBox } from '@/components/DayBox';
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { BarChart } from "lucide-react";
 import type { AllLoadedData, RatingType } from '@/lib/page-types';
+import Link from 'next/link';
 
 interface DaysGridProps {
     daysToDisplay: Date[];
@@ -55,11 +56,7 @@ export const DaysGrid: React.FC<DaysGridProps> = ({
     onHoverEnd
 }) => {
 
-    const handleWeeklySummaryClick = () => {
-        // This navigation should be handled in the parent component
-        // Or pass router as a prop
-        console.log("Weekly summary clicked");
-    };
+    const weekStartDate = daysToDisplay.length > 0 ? getDateKey(daysToDisplay[0]) : '';
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl place-items-center mb-12 sm:mb-16">
@@ -98,24 +95,21 @@ export const DaysGrid: React.FC<DaysGridProps> = ({
                     />
                 );
             })}
-            <Card 
-                className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 cursor-pointer"
-                onClick={handleWeeklySummaryClick}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWeeklySummaryClick(); }}
-                role="button"
-                tabIndex={0}
-                aria-label={t.weeklySummaryPlaceholder}
-            >
-                <Card.Header className="p-2 pb-1 text-center">
-                    <Card.Title className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</Card.Title>
-                </Card.Header>
-                <Card.Content className="p-2 flex-grow flex flex-col items-center justify-center">
-                    <BarChart className="w-12 h-12 text-primary/80 mb-2" />
-                    <p className="text-xs text-center text-muted-foreground">{t.weeklySummaryPlaceholder}</p>
-                </Card.Content>
-            </Card>
+            <Link href={`/weekly-summary?weekStart=${weekStartDate}`} passHref className="w-full h-full">
+              <Card 
+                  className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 border-transparent hover:border-accent/70 bg-card shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 cursor-pointer"
+                  role="button"
+                  aria-label={t.weeklySummaryPlaceholder}
+              >
+                  <CardHeader className="p-2 pb-1 text-center">
+                      <CardTitle className="text-lg sm:text-xl font-medium text-foreground">{t.weeklySummaryTitle}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-2 flex-grow flex flex-col items-center justify-center">
+                      <BarChart className="w-12 h-12 text-primary/80 mb-2" />
+                      <p className="text-xs text-center text-muted-foreground">{t.weeklySummaryPlaceholder}</p>
+                  </CardContent>
+              </Card>
+            </Link>
         </div>
     );
 };
-
-    
