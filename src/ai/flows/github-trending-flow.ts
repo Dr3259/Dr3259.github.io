@@ -57,7 +57,6 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
   async ({ timespan }) => {
     try {
       const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash',
         prompt: `You are a GitHub trend analyst. Your task is to find the top trending repositories on GitHub for the specified time period.
         
         Timespan: ${timespan}
