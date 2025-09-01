@@ -24,4 +24,15 @@ export interface AllLoadedData {
   allReflections: Record<string, Record<string, ReflectionItem[]>>;
 }
 
-    
+export interface ReceivedShareData {
+  title: string;
+  text: string;
+  url: string;
+}
+
+export interface HoverPreviewData {
+  dayName: string;
+  notes: string;
+  imageHint: string;
+  altText: string;
+}

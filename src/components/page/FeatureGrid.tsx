@@ -172,5 +172,3 @@ export const FeatureGrid: React.FC<FeatureGridProps> = ({ translations: t, route
         </Popover>
     );
 };
-
-    

@@ -16,20 +16,9 @@ import { WeekNavigator } from '@/components/page/WeekNavigator';
 import { FeatureGrid } from '@/components/page/FeatureGrid';
 import { PageFooter } from '@/components/page/PageFooter';
 import { DaysGrid } from '@/components/page/DaysGrid';
+import type { AllLoadedData, RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme } from '@/lib/page-types';
 
-// Types from DayDetailPage - needed for checking content
-type CategoryType = 'work' | 'study' | 'shopping' | 'organizing' | 'relaxing' | 'cooking' | 'childcare' | 'dating';
-interface TodoItem {
-  id: string; text: string; completed: boolean; category: CategoryType | null;
-  deadline: 'hour' | 'today' | 'tomorrow' | 'thisWeek' | 'nextWeek' | 'nextMonth' | null;
-  importance: 'important' | 'notImportant' | null;
-}
-interface MeetingNoteItem { id: string; title: string; notes: string; attendees: string; actionItems: string; }
-interface ShareLinkItem { id: string; url: string; title: string; category: string | null; }
-interface ReflectionItem { id: string; text: string; }
-
-type RatingType = 'excellent' | 'terrible' | 'average' | null;
-
+// Local storage keys
 const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
@@ -40,111 +29,12 @@ const LOCAL_STORAGE_KEY_ALL_REFLECTIONS = 'allWeekReflections_v2';
 const LOCAL_STORAGE_KEY_ALL_DAILY_NOTES = 'allWeekDailyNotes_v2';
 
 
-interface AllLoadedData {
-  ratings: Record<string, RatingType>; // Key is YYYY-MM-DD
-  allDailyNotes: Record<string, string>; // Key is YYYY-MM-DD
-  allTodos: Record<string, Record<string, TodoItem[]>>; // Outer key is YYYY-MM-DD
-  allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>; // Outer key is YYYY-MM-DD
-  allShareLinks: Record<string, Record<string, ShareLinkItem[]>>; // Outer key is YYYY-MM-DD
-  allReflections: Record<string, Record<string, ReflectionItem[]>>; // Outer key is YYYY-MM-DD
-}
-
-interface ReceivedShareData {
-  title: string;
-  text: string;
-  url: string;
-}
-
-
 const SHOW_PREVIEW_DELAY = 2000;
 const HIDE_PREVIEW_DELAY = 200;
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
 const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
-};
-
-const saveUrlToCurrentTimeSlot = (
-    item: { title: string, url: string, category: string | null },
-    setAllShareLinks: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShareLinkItem[]>>>>,
-    t: (typeof translations)['zh-CN']
-): { success: boolean; slotName: string } => {
-
-    const newLink: ShareLinkItem = {
-        id: Date.now().toString(),
-        url: item.url,
-        title: item.title,
-        category: item.category,
-    };
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentDateKey = getDateKey(now);
-
-    const timeIntervals = {
-        midnight: '(00:00 - 05:00)',
-        earlyMorning: '(05:00 - 09:00)',
-        morning: '(09:00 - 12:00)',
-        noon: '(12:00 - 14:00)',
-        afternoon: '(14:00 - 18:00)',
-        evening: '(18:00 - 24:00)',
-    };
-    
-    let targetIntervalName = 'evening';
-    if (currentHour < 5) targetIntervalName = 'midnight';
-    else if (currentHour < 9) targetIntervalName = 'earlyMorning';
-    else if (currentHour < 12) targetIntervalName = 'morning';
-    else if (currentHour < 14) targetIntervalName = 'noon';
-    else if (currentHour < 18) targetIntervalName = 'afternoon';
-    
-    const targetIntervalLabel = timeIntervals[targetIntervalName as keyof typeof timeIntervals];
-
-    const hourlySlots = (() => {
-        const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-        if (!match) return [];
-        const [, startTimeStr, endTimeStr] = match;
-        const startHour = parseInt(startTimeStr.split(':')[0]);
-        let endHour = parseInt(endTimeStr.split(':')[0]);
-        if (endTimeStr === "00:00" && startHour !== 0) endHour = 24;
-        const slots: string[] = [];
-        for (let h = startHour; h < endHour; h++) {
-            slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
-        }
-        return slots;
-    })();
-
-    if (hourlySlots.length === 0) {
-        console.error("Could not find a valid hourly slot for the current time.");
-        return { success: false, slotName: '' };
-    }
-    const targetSlot = hourlySlots.find(slot => {
-        const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
-        if (match) {
-            const startH = parseInt(match[1]);
-            let endH = parseInt(match[2]);
-            if (endH === 0) endH = 24;
-            return currentHour >= startH && currentHour < endH;
-        }
-        return false;
-    }) || hourlySlots[0];
-
-
-    try {
-        const existingData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
-        const dayLinks = existingData[currentDateKey] || {};
-        const slotLinks = dayLinks[targetSlot] || [];
-        const updatedSlotLinks = [...slotLinks, newLink];
-        const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
-        const newAllLinks = { ...existingData, [currentDateKey]: updatedDayLinks };
-        
-        localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
-        setAllShareLinks(newAllLinks);
-        
-        return { success: true, slotName: t.timeIntervals[targetIntervalName as keyof typeof t.timeIntervals] };
-    } catch(e) {
-        console.error("Failed to save link to localStorage", e);
-        return { success: false, slotName: '' };
-    }
 };
 
 const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, ShareLinkItem[]>>): boolean => {
@@ -158,13 +48,6 @@ const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, 
     }
     return false;
 };
-
-interface HoverPreviewData {
-  dayName: string;
-  notes: string;
-  imageHint: string;
-  altText: string;
-}
 
 const translations = {
   'zh-CN': {
@@ -272,7 +155,7 @@ const translations = {
     copyrightText: (year: number, appName: string) => `© ${year} ${appName}`,
     mitLicenseLinkText: 'Released under the MIT License',
     mitLicenseLinkAria: 'View MIT License details',
-    featureHub: '功能中心',
+    featureHub: 'Feature Hub',
     restButtonText: 'Take a Break',
     healthButtonText: 'Get Healthy',
     techButtonText: 'Tech Time',
@@ -327,9 +210,6 @@ const translations = {
   }
 };
 
-type LanguageKey = keyof typeof translations;
-type Theme = 'light' | 'dark';
-
 export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -338,15 +218,10 @@ export default function WeekGlancePage() {
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
-  const [isAfter6PMToday, setIsAfter6PMToday] = useState(isAfter(new Date(), new Date().setHours(18, 0, 0, 0)));
+  const [isAfter6PMToday, setIsAfter6PMToday] = useState(false);
   const [isClientMounted, setIsClientMounted] = useState(false);
   
-  const [ratings, setRatings] = useState<Record<string, RatingType>>({});
-  const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({});
-  const [allTodos, setAllTodos] = useState<Record<string, Record<string, TodoItem[]>>>({});
-  const [allMeetingNotes, setAllMeetingNotes] = useState<Record<string, Record<string, MeetingNoteItem[]>>>({});
-  const [allShareLinks, setAllShareLinks] = useState<Record<string, Record<string, ShareLinkItem[]>>>({});
-  const [allReflections, setAllReflections] = useState<Record<string, Record<string, ReflectionItem[]>>>({});
+  const [allLoadedData, setAllLoadedData] = useState<AllLoadedData | null>(null);
   
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
 
@@ -374,7 +249,88 @@ export default function WeekGlancePage() {
     }
   }, []);
 
-   const handleSaveShareLinkFromPWA = useCallback((shareData: ReceivedShareData) => {
+  const saveUrlToCurrentTimeSlot = useCallback((
+      item: { title: string, url: string, category: string | null },
+  ): { success: boolean; slotName: string } => {
+      const newLink: ShareLinkItem = {
+          id: Date.now().toString(),
+          url: item.url,
+          title: item.title,
+          category: item.category,
+      };
+
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentDateKey = getDateKey(now);
+
+      const timeIntervals = t.timeIntervals;
+      let targetIntervalName = 'evening';
+      if (currentHour < 5) targetIntervalName = 'midnight';
+      else if (currentHour < 9) targetIntervalName = 'earlyMorning';
+      else if (currentHour < 12) targetIntervalName = 'morning';
+      else if (currentHour < 14) targetIntervalName = 'noon';
+      else if (currentHour < 18) targetIntervalName = 'afternoon';
+      
+      const intervalLabels: Record<string, string> = {
+          midnight: '(00:00 - 05:00)',
+          earlyMorning: '(05:00 - 09:00)',
+          morning: '(09:00 - 12:00)',
+          noon: '(12:00 - 14:00)',
+          afternoon: '(14:00 - 18:00)',
+          evening: '(18:00 - 24:00)',
+      };
+      
+      const targetIntervalLabel = intervalLabels[targetIntervalName];
+
+      const hourlySlots = (() => {
+          const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+          if (!match) return [];
+          const [, startTimeStr, endTimeStr] = match;
+          const startHour = parseInt(startTimeStr.split(':')[0]);
+          let endHour = parseInt(endTimeStr.split(':')[0]);
+          if (endTimeStr === "00:00" && startHour !== 0) endHour = 24;
+          const slots: string[] = [];
+          for (let h = startHour; h < endHour; h++) {
+              slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
+          }
+          return slots;
+      })();
+
+      if (hourlySlots.length === 0) {
+          console.error("Could not find a valid hourly slot for the current time.");
+          return { success: false, slotName: '' };
+      }
+      const targetSlot = hourlySlots.find(slot => {
+          const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
+          if (match) {
+              const startH = parseInt(match[1]);
+              let endH = parseInt(match[2]);
+              if (endH === 0) endH = 24;
+              return currentHour >= startH && currentHour < endH;
+          }
+          return false;
+      }) || hourlySlots[0];
+
+
+      try {
+          const existingData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}');
+          const dayLinks = existingData[currentDateKey] || {};
+          const slotLinks = dayLinks[targetSlot] || [];
+          const updatedSlotLinks = [...slotLinks, newLink];
+          const updatedDayLinks = { ...dayLinks, [targetSlot]: updatedSlotLinks };
+          const newAllLinks = { ...existingData, [currentDateKey]: updatedDayLinks };
+          
+          localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(newAllLinks));
+          setAllLoadedData(prev => prev ? { ...prev, allShareLinks: newAllLinks } : null);
+          
+          return { success: true, slotName: t.timeIntervals[targetIntervalName as keyof typeof t.timeIntervals] };
+      } catch(e) {
+          console.error("Failed to save link to localStorage", e);
+          return { success: false, slotName: '' };
+      }
+  }, [t.timeIntervals]);
+
+  const handleSaveShareLinkFromPWA = useCallback((shareData: ReceivedShareData) => {
     if (!shareData) return;
     const { text, url } = shareData;
 
@@ -383,7 +339,7 @@ export default function WeekGlancePage() {
       console.warn("No valid URL found in shared data.");
       return;
     }
-    const { success, slotName } = saveUrlToCurrentTimeSlot({ title: text || url, url: linkUrl, category: null }, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot({ title: text || url, url: linkUrl, category: null });
     if(success) {
         toast({ 
             title: t.shareTarget.linkSavedToastTitle,
@@ -391,10 +347,10 @@ export default function WeekGlancePage() {
             duration: 3000,
         });
     }
-  }, [toast, t]);
+  }, [toast, t.shareTarget, saveUrlToCurrentTimeSlot]);
 
   const checkClipboard = useCallback(async () => {
-    if (document.hidden) return;
+    if (document.hidden || !allLoadedData) return;
 
     try {
         if (typeof navigator?.permissions?.query !== 'function') {
@@ -407,22 +363,11 @@ export default function WeekGlancePage() {
         
         const text = await navigator.clipboard.readText();
         
-        if (!text || text.trim() === '') {
-            return;
-        }
-
+        if (!text || text.trim() === '') return;
         const urlMatches = text.match(URL_REGEX);
-        const url = urlMatches ? urlMatches[0] : null;
-        
-        if (!url) {
-            return;
-        }
-
-        if (text === lastProcessedClipboardText) {
-            return;
-        }
-        
-        if (isUrlAlreadySaved(url, allShareLinks)) {
+        if (!urlMatches) return;
+        if (text === lastProcessedClipboardText) return; 
+        if (isUrlAlreadySaved(urlMatches[0], allLoadedData.allShareLinks)) {
             setLastProcessedClipboardText(text); 
             return; 
         }
@@ -435,43 +380,44 @@ export default function WeekGlancePage() {
            console.error(t.clipboard.checkClipboardError, err);
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, t]);
+  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allLoadedData]);
 
+  const loadAllDataFromStorage = useCallback(() => {
+    try {
+        setAllLoadedData({
+            ratings: JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS) || '{}'),
+            allDailyNotes: JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'),
+            allTodos: JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'),
+            allMeetingNotes: JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'),
+            allShareLinks: JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'),
+            allReflections: JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'),
+        });
+    } catch (e) {
+        console.error("Error loading data from localStorage", e);
+        setAllLoadedData({
+            ratings: {}, allDailyNotes: {}, allTodos: {}, allMeetingNotes: {}, allShareLinks: {}, allReflections: {}
+        });
+    }
+  }, []);
 
   useEffect(() => {
     setIsClientMounted(true);
     
-    // Set today's date and related states immediately
     const today = new Date();
     setSystemToday(today);
     setDisplayedDate(today);
+    setIsAfter6PMToday(isAfter(today, new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0, 0)));
 
-    // Language setting
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
     if (typeof document !== 'undefined') document.documentElement.lang = browserLang;
     
-    // Theme setting
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY_THEME) as Theme | null : null;
     const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
     setTheme(storedTheme || (systemPrefersDark ? 'dark' : 'light'));
     
-    // Load all data from localStorage
-    const loadData = () => {
-        try {
-            setRatings(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RATINGS) || '{}'));
-            setAllDailyNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES) || '{}'));
-            setAllTodos(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_TODOS) || '{}'));
-            setAllMeetingNotes(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES) || '{}'));
-            setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
-            setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
-        } catch (e) {
-            console.error("Error loading data from localStorage", e);
-        }
-    };
-    loadData();
+    loadAllDataFromStorage();
     
-    // Handle PWA Share Target
     const sharedDataString = localStorage.getItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
     if (sharedDataString) {
       try {
@@ -483,16 +429,14 @@ export default function WeekGlancePage() {
           localStorage.removeItem(LOCAL_STORAGE_KEY_SHARE_TARGET);
       }
     }
-  }, [handleSaveShareLinkFromPWA]);
+  }, [loadAllDataFromStorage, handleSaveShareLinkFromPWA]);
 
-  // Effect to check clipboard on focus and handle enter key
    useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            const activeElement = document.activeElement;
-            const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
-
-            if (!isInputFocused) {
-                 if (event.key === 'Enter') {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
+                if (!isInputFocused) {
                     event.preventDefault();
                     setIsQuickAddModalOpen(true);
                 }
@@ -514,7 +458,7 @@ export default function WeekGlancePage() {
     const urlMatches = clipboardContent.match(URL_REGEX);
     const url = urlMatches ? urlMatches[0] : '';
 
-    if (url && isUrlAlreadySaved(url, allShareLinks)) {
+    if (url && allLoadedData && isUrlAlreadySaved(url, allLoadedData.allShareLinks)) {
         toast({
             title: t.clipboard.linkAlreadyExists,
             variant: "default",
@@ -527,13 +471,7 @@ export default function WeekGlancePage() {
     
     const title = url ? clipboardContent.replace(url, '').trim() : clipboardContent;
 
-    const itemToSave = {
-        title: title || url,
-        url: url,
-        category: data.category || null
-    };
-
-    const { success, slotName } = saveUrlToCurrentTimeSlot(itemToSave, setAllShareLinks, t);
+    const { success, slotName } = saveUrlToCurrentTimeSlot({ title: title || url, url: url, category: data.category || null });
     if (success) {
       toast({
         title: t.clipboard.linkSavedToastTitle,
@@ -551,48 +489,36 @@ export default function WeekGlancePage() {
   };
   
   const handleCloseClipboardModal = () => {
-    setLastProcessedClipboardText(clipboardContent); // Mark as handled even if closed
+    setLastProcessedClipboardText(clipboardContent);
     setIsClipboardModalOpen(false);
   };
 
   const handleSaveQuickAddTodo = ({ text, date, completed }: { text: string; date: Date; completed: boolean; }) => {
-    const newTodo: TodoItem = {
-      id: Date.now().toString(),
-      text: text,
-      completed: completed,
-      category: null,
-      deadline: null,
-      importance: null,
+    const newTodo = {
+      id: Date.now().toString(), text, completed, category: null, deadline: null, importance: null,
     };
     
     const dateKey = getDateKey(date);
     let slotKey = 'all-day';
     
-    // If adding for today, find the current time slot
     if (isSameDay(date, new Date())) {
         const now = new Date();
         const currentHour = now.getHours();
-
-        const timeIntervals = {
-            midnight: '(00:00 - 05:00)',
-            earlyMorning: '(05:00 - 09:00)',
-            morning: '(09:00 - 12:00)',
-            noon: '(12:00 - 14:00)',
-            afternoon: '(14:00 - 18:00)',
-            evening: '(18:00 - 24:00)',
+        const timeIntervals: Record<string, string> = {
+            midnight: '(00:00 - 05:00)', earlyMorning: '(05:00 - 09:00)', morning: '(09:00 - 12:00)',
+            noon: '(12:00 - 14:00)', afternoon: '(14:00 - 18:00)', evening: '(18:00 - 24:00)',
         };
-        
-        let targetIntervalName = 'evening';
-        if (currentHour < 5) targetIntervalName = 'midnight';
-        else if (currentHour < 9) targetIntervalName = 'earlyMorning';
-        else if (currentHour < 12) targetIntervalName = 'morning';
-        else if (currentHour < 14) targetIntervalName = 'noon';
-        else if (currentHour < 18) targetIntervalName = 'afternoon';
-
-        const targetIntervalLabel = timeIntervals[targetIntervalName as keyof typeof timeIntervals];
+        let targetIntervalName = Object.keys(timeIntervals).find(key => {
+            const match = timeIntervals[key].match(/\((\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}\)/);
+            if (!match) return false;
+            const startH = parseInt(match[1]);
+            let endH = parseInt(match[2]);
+            if (endH === 0) endH = 24;
+            return currentHour >= startH && currentHour < endH;
+        }) || 'evening';
         
         const hourlySlots = (() => {
-            const match = targetIntervalLabel.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+            const match = timeIntervals[targetIntervalName].match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
             if (!match) return [];
             const [, startTimeStr, endTimeStr] = match;
             const startHour = parseInt(startTimeStr.split(':')[0]);
@@ -606,7 +532,7 @@ export default function WeekGlancePage() {
         })();
 
         if (hourlySlots.length > 0) {
-            const currentSlot = hourlySlots.find(slot => {
+            slotKey = hourlySlots.find(slot => {
                 const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
                 if (match) {
                     const startH = parseInt(match[1]);
@@ -616,26 +542,21 @@ export default function WeekGlancePage() {
                 }
                 return false;
             }) || hourlySlots[0];
-            slotKey = currentSlot;
         }
     }
-
-
-    setAllTodos(prevAllTodos => {
-      const dayTodos = prevAllTodos[dateKey] || {};
-      const slotTodos = dayTodos[slotKey] || [];
-      const updatedSlotTodos = [...slotTodos, newTodo];
-      const updatedDayTodos = { ...dayTodos, [slotKey]: updatedSlotTodos };
-      const newAllTodos = { ...prevAllTodos, [dateKey]: updatedDayTodos };
-
-      localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(newAllTodos));
-      return newAllTodos;
+    
+    setAllLoadedData(prevData => {
+        if (!prevData) return prevData;
+        const newAllTodos = JSON.parse(JSON.stringify(prevData.allTodos));
+        const dayTodos = newAllTodos[dateKey] || {};
+        const slotTodos = dayTodos[slotKey] || [];
+        dayTodos[slotKey] = [...slotTodos, newTodo];
+        newAllTodos[dateKey] = dayTodos;
+        localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(newAllTodos));
+        return { ...prevData, allTodos: newAllTodos };
     });
 
-    toast({
-      title: t.quickAddTodo.successToast,
-      duration: 3000
-    });
+    toast({ title: t.quickAddTodo.successToast, duration: 3000 });
     setIsQuickAddModalOpen(false);
   };
 
@@ -647,24 +568,19 @@ export default function WeekGlancePage() {
       if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
     }
   }, [theme, isClientMounted]);
-
-  const allLoadedDataMemo = useMemo((): AllLoadedData => ({
-    ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections
-  }), [ratings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
   
   const eventfulDays = useMemo(() => {
+    if (!allLoadedData) return [];
     const allDataKeys = new Set([
-        ...Object.keys(allLoadedDataMemo.ratings),
-        ...Object.keys(allLoadedDataMemo.allDailyNotes),
-        ...Object.keys(allLoadedDataMemo.allTodos),
-        ...Object.keys(allLoadedDataMemo.allMeetingNotes),
-        ...Object.keys(allLoadedDataMemo.allShareLinks),
-        ...Object.keys(allLoadedDataMemo.allReflections),
+        ...Object.keys(allLoadedData.ratings),
+        ...Object.keys(allLoadedData.allDailyNotes),
+        ...Object.keys(allLoadedData.allTodos),
+        ...Object.keys(allLoadedData.allMeetingNotes),
+        ...Object.keys(allLoadedData.allShareLinks),
+        ...Object.keys(allLoadedData.allReflections),
     ]);
-    
-    return Array.from(allDataKeys)
-        .sort();
-  }, [allLoadedDataMemo]);
+    return Array.from(allDataKeys).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
+  }, [allLoadedData]);
 
   const daysToDisplay = useMemo(() => {
     if (!displayedDate) return [];
@@ -681,10 +597,11 @@ export default function WeekGlancePage() {
   }, [router, clearTimeoutIfNecessary, eventfulDays]);
 
   const handleRatingChange = useCallback((dateKey: string, newRating: RatingType) => {
-    setRatings(prev => {
-      const updated = { ...prev, [dateKey]: newRating };
-      if (typeof window !== 'undefined') localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updated));
-      return updated;
+    setAllLoadedData(prev => {
+        if (!prev) return null;
+        const updatedRatings = { ...prev.ratings, [dateKey]: newRating };
+        localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings));
+        return { ...prev, ratings: updatedRatings };
     });
   }, []);
 
@@ -712,7 +629,7 @@ export default function WeekGlancePage() {
     isPreviewSuppressedByClickRef.current = true;
   }, [clearTimeoutIfNecessary]);
 
-  if (!isClientMounted || !systemToday || !displayedDate) {
+  if (!isClientMounted || !systemToday || !displayedDate || !allLoadedData) {
     return (
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <div className="text-center p-10">Loading week data...</div>
@@ -744,7 +661,7 @@ export default function WeekGlancePage() {
             daysToDisplay={daysToDisplay}
             dateLocale={dateLocale}
             systemToday={systemToday}
-            allLoadedData={allLoadedDataMemo}
+            allLoadedData={allLoadedData}
             isAfter6PMToday={isAfter6PMToday}
             translations={t}
             onDaySelect={handleDaySelect}
@@ -753,10 +670,12 @@ export default function WeekGlancePage() {
             onHoverEnd={handleDayHoverEnd}
         />
 
-        <FeatureGrid 
-            translations={t} 
-            router={router}
-        />
+        <div className="hidden md:block w-full max-w-sm">
+            <FeatureGrid 
+                translations={t} 
+                router={router}
+            />
+        </div>
 
         {hoverPreviewData && (
           <DayHoverPreview
@@ -772,6 +691,14 @@ export default function WeekGlancePage() {
 
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>
+
+      <div className="md:hidden">
+          <FeatureGrid 
+              translations={t} 
+              router={router}
+          />
+      </div>
+
       <ClipboardModal
         isOpen={isClipboardModalOpen}
         onClose={handleCloseClipboardModal}
@@ -790,5 +717,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
-    
