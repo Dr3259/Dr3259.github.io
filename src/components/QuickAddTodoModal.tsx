@@ -96,16 +96,14 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
   
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpen || event.key !== 'Enter') return;
+      
+      event.preventDefault();
 
-      if (event.key === 'Enter') {
-        event.preventDefault(); 
-        
-        if (todoText.trim() === '') {
-          onClose();
-        } else {
-          handleSave();
-        }
+      if (todoText.trim() === '') {
+        onClose();
+      } else {
+        handleSave();
       }
     };
     
