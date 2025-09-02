@@ -1,4 +1,9 @@
 
+import type { Locale } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
+
+export type LanguageKey = 'zh-CN' | 'en';
+
 export const translations = {
   'zh-CN': {
     pageTitle: '周览',

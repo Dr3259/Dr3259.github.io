@@ -3,9 +3,8 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { DayBox } from '@/components/DayBox';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
-import { format, addDays, startOfWeek, isSameWeek, isAfter, parseISO, isSameDay, isBefore, subDays } from 'date-fns';
+import { format, addDays, startOfWeek, isSameWeek, isAfter, parseISO, isSameDay, subDays } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -15,12 +14,12 @@ import { MainHeader } from '@/components/page/MainHeader';
 import { WeekNavigator } from '@/components/page/WeekNavigator';
 import { FeatureGrid } from '@/components/page/FeatureGrid';
 import { PageFooter } from '@/components/page/PageFooter';
-import type { RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme } from '@/lib/page-types';
+import type { RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme, AllLoadedData } from '@/lib/page-types';
 import { GameCard } from '@/components/GameCard';
 import { BarChart } from 'lucide-react';
-import Link from 'next/link';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations } from '@/lib/translations';
+import { DayBox } from '@/components/DayBox';
 
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
@@ -43,32 +42,16 @@ const dayHasContent = (date: Date, data: ReturnType<typeof usePlannerStore.getSt
     if (checkSlotItems(data.allShareLinks[dateKey])) return true;
     if (checkSlotItems(data.allReflections[dateKey])) return true;
     return false;
-  };
-
+};
 
 export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  // Zustand store selectors
-  const {
-    allRatings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections,
-    setRating, addShareLink, addTodo: addTodoToStore,
-  } = usePlannerStore(state => ({
-    allRatings: state.allRatings,
-    allDailyNotes: state.allDailyNotes,
-    allTodos: state.allTodos,
-    allMeetingNotes: state.allMeetingNotes,
-    allShareLinks: state.allShareLinks,
-    allReflections: state.allReflections,
-    setRating: state.setRating,
-    addShareLink: state.addShareLink,
-    addTodo: state.addTodo,
-  }));
-  const lastTodoMigrationDate = usePlannerStore(state => state.lastTodoMigrationDate);
-  const addUnfinishedTodosToToday = usePlannerStore(state => state.addUnfinishedTodosToToday);
+  const plannerState = usePlannerStore.getState();
+  const { setRating, addShareLink, addTodo: addTodoToStore } = plannerState;
 
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN'); 
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); 
   const [theme, setTheme] = useState<Theme>('light'); 
   const [systemToday, setSystemToday] = useState<Date | null>(null);
   const [displayedDate, setDisplayedDate] = useState<Date | null>(null); 
@@ -76,11 +59,9 @@ export default function WeekGlancePage() {
   const [isClientMounted, setIsClientMounted] = useState(false);
   
   const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
-
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
-  
   const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,33 +70,30 @@ export default function WeekGlancePage() {
 
   const t = translations[currentLanguage];
   const dateLocale = currentLanguage === 'zh-CN' ? zhCN : enUS;
-  
-  const allPlannerData = usePlannerStore.getState();
+
+  const eventfulDays = useMemo(() => {
+    const allDataKeys = new Set([
+        ...Object.keys(plannerState.allRatings), ...Object.keys(plannerState.allDailyNotes), ...Object.keys(plannerState.allTodos),
+        ...Object.keys(plannerState.allMeetingNotes), ...Object.keys(plannerState.allShareLinks), ...Object.keys(plannerState.allReflections),
+    ]);
+    return Array.from(allDataKeys).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
+  }, [plannerState]);
 
   const isUrlAlreadySaved = useCallback((url: string): boolean => {
     if (!url) return false;
-    for (const dateKey in allShareLinks) {
-        for (const hourSlot in allShareLinks[dateKey]) {
-            if (allShareLinks[dateKey][hourSlot].some(item => item.url === url)) {
-                return true;
-            }
+    for (const dateKey in plannerState.allShareLinks) {
+      for (const hourSlot in plannerState.allShareLinks[dateKey]) {
+        if (plannerState.allShareLinks[dateKey][hourSlot].some(item => item.url === url)) {
+          return true;
         }
+      }
     }
     return false;
-  }, [allShareLinks]);
+  }, [plannerState.allShareLinks]);
 
   const saveUrlToCurrentTimeSlot = useCallback((item: { title: string; url: string; category: string | null }): { success: boolean; slotName: string } => {
-    const newLink: ShareLinkItem = {
-      id: Date.now().toString(),
-      url: item.url,
-      title: item.title,
-      category: item.category,
-    };
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentDateKey = getDateKey(now);
-
+    const newLink: ShareLinkItem = { id: Date.now().toString(), url: item.url, title: item.title, category: item.category };
+    const now = new Date(), currentHour = now.getHours(), currentDateKey = getDateKey(now);
     const timeIntervals = t.timeIntervals;
     let targetIntervalName: keyof typeof timeIntervals = 'evening';
     if (currentHour < 5) targetIntervalName = 'midnight';
@@ -123,41 +101,35 @@ export default function WeekGlancePage() {
     else if (currentHour < 12) targetIntervalName = 'morning';
     else if (currentHour < 14) targetIntervalName = 'noon';
     else if (currentHour < 18) targetIntervalName = 'afternoon';
-    
-    const intervalLabels: Record<string, string> = {
-        midnight: '(00:00 - 05:00)', earlyMorning: '(05:00 - 09:00)', morning: '(09:00 - 12:00)',
-        noon: '(12:00 - 14:00)', afternoon: '(14:00 - 18:00)', evening: '(18:00 - 24:00)',
-    };
-    
-    const targetIntervalLabel = intervalLabels[targetIntervalName];
-    const hourlySlots = (() => {
-        const match = targetIntervalLabel.match(/\((\d{2}):\d{2}\s*-\s*(\d{2}):\d{2})\)/);
-        if (!match) return [];
-        const [, startTimeStr, endTimeStr] = match;
-        const startHour = parseInt(startTimeStr.split(':')[0]);
-        let endHour = parseInt(endTimeStr.split(':')[0]);
-        if (endTimeStr === "00:00" && startHour !== 0) endHour = 24;
-        const slots: string[] = [];
-        for (let h = startHour; h < endHour; h++) {
-            slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
-        }
-        return slots;
-    })();
-
+    const hourlySlots = generateHourlySlots(targetIntervalName, t);
     if (hourlySlots.length === 0) return { success: false, slotName: '' };
-    
     const targetSlot = hourlySlots.find(slot => {
         const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
-        if (match) {
-            const startH = parseInt(match[1]), endH = parseInt(match[2] === '00' ? '24' : match[2]);
-            return currentHour >= startH && currentHour < endH;
-        }
+        if (match) { const startH = parseInt(match[1]), endH = parseInt(match[2] === '00' ? '24' : match[2]); return currentHour >= startH && currentHour < endH; }
         return false;
     }) || hourlySlots[0];
-    
     addShareLink(currentDateKey, targetSlot, newLink);
     return { success: true, slotName: t.timeIntervals[targetIntervalName as keyof typeof t.timeIntervals] };
   }, [t.timeIntervals, addShareLink]);
+
+  const generateHourlySlots = (intervalName: keyof typeof t.timeIntervals, translationsObj: any): string[] => {
+    const intervalLabels = {
+        midnight: '(00:00 - 05:00)', earlyMorning: '(05:00 - 09:00)', morning: '(09:00 - 12:00)',
+        noon: '(12:00 - 14:00)', afternoon: '(14:00 - 18:00)', evening: '(18:00 - 24:00)',
+    };
+    const label = intervalLabels[intervalName];
+    const match = label.match(/\((\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}\)/);
+    if (!match) return [];
+    const [, startTimeStr, endTimeStr] = match;
+    const startHour = parseInt(startTimeStr, 10);
+    let endHour = parseInt(endTimeStr, 10);
+    if (endTimeStr === '00:00' && startHour !== 0) endHour = 24;
+    const slots: string[] = [];
+    for (let h = startHour; h < endHour; h++) {
+        slots.push(`${String(h).padStart(2, '0')}:00 - ${String(h + 1).padStart(2, '0')}:00`);
+    }
+    return slots;
+  };
 
   const handleSaveShareLinkFromPWA = useCallback((shareData: ReceivedShareData) => {
     if (!shareData) return;
@@ -166,9 +138,7 @@ export default function WeekGlancePage() {
     if (!linkUrl.match(URL_REGEX)) return;
     
     const { success, slotName } = saveUrlToCurrentTimeSlot({ title: text || url, url: linkUrl, category: null });
-    if(success) {
-        toast({ title: t.shareTarget.linkSavedToastTitle, description: t.shareTarget.linkSavedToastDescription(slotName), duration: 3000 });
-    }
+    if(success) toast({ title: t.shareTarget.linkSavedToastTitle, description: t.shareTarget.linkSavedToastDescription(slotName), duration: 3000 });
   }, [toast, t.shareTarget, saveUrlToCurrentTimeSlot]);
 
   const checkClipboard = useCallback(async () => {
@@ -189,18 +159,8 @@ export default function WeekGlancePage() {
         }
         setClipboardContent(text);
         setIsClipboardModalOpen(true);
-    } catch (err: any) {
-        // Silently fail
-    }
+    } catch (err: any) {}
   }, [lastProcessedClipboardText, isUrlAlreadySaved]);
-
-  const eventfulDays = useMemo(() => {
-    const allDataKeys = new Set([
-        ...Object.keys(allRatings), ...Object.keys(allDailyNotes), ...Object.keys(allTodos),
-        ...Object.keys(allMeetingNotes), ...Object.keys(allShareLinks), ...Object.keys(allReflections),
-    ]);
-    return Array.from(allDataKeys).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
-  }, [allRatings, allDailyNotes, allTodos, allMeetingNotes, allShareLinks, allReflections]);
 
   const onDaySelect = useCallback((dayNameForUrl: string, dateForDetail: Date) => {
     if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
@@ -235,16 +195,13 @@ export default function WeekGlancePage() {
       }
     }
     
-    // Migrate todos
     const todayStr = format(today, 'yyyy-MM-dd');
-    if(lastTodoMigrationDate !== todayStr) {
+    if(plannerState.lastTodoMigrationDate !== todayStr) {
         const yesterdayStr = format(subDays(today, 1), 'yyyy-MM-dd');
-        const migratedCount = addUnfinishedTodosToToday(todayStr, yesterdayStr);
-        if (migratedCount > 0) {
-            toast({ title: `已将昨天 ${migratedCount} 个未完成事项同步到今天` });
-        }
+        const migratedCount = plannerState.addUnfinishedTodosToToday(todayStr, yesterdayStr);
+        if (migratedCount > 0) toast({ title: `已将昨天 ${migratedCount} 个未完成事项同步到今天` });
     }
-  }, []);
+  }, [handleSaveShareLinkFromPWA, plannerState]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -256,7 +213,6 @@ export default function WeekGlancePage() {
             setIsQuickAddModalOpen(true);
         }
     };
-
     window.addEventListener('focus', checkClipboard);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -330,15 +286,12 @@ export default function WeekGlancePage() {
              {daysToDisplay.map((dateInWeek) => {
                 const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
                 const dateKeyForStorage = getDateKey(dateInWeek);
-                const noteForThisDayBox = allDailyNotes[dateKeyForStorage] || '';
-                const ratingForThisDayBox = allRatings[dateKeyForStorage] || null;
-                const hasAnyDataForThisDay = dayHasContent(dateInWeek, allPlannerData);
                 return (
                     <DayBox key={dateKeyForStorage} dayName={dayNameForDisplay}
                         onClick={() => onDaySelect(dayNameForDisplay, dateInWeek)}
-                        notes={noteForThisDayBox} 
-                        dayHasAnyData={hasAnyDataForThisDay}
-                        rating={ratingForThisDayBox}
+                        notes={plannerState.allDailyNotes[dateKeyForStorage] || ''} 
+                        dayHasAnyData={dayHasContent(dateInWeek, plannerState)}
+                        rating={plannerState.allRatings[dateKeyForStorage] || null}
                         onRatingChange={(newRating) => setRating(dateKeyForStorage, newRating)}
                         isCurrentDay={isSameDay(dateInWeek, systemToday)}
                         isPastDay={isBefore(dateInWeek, systemToday) && !isSameDay(dateInWeek, systemToday)}
