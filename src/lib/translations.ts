@@ -6,7 +6,7 @@ export type LanguageKey = 'zh-CN' | 'en';
 
 export const translations = {
   'zh-CN': {
-    pageTitle: '周览',
+    pageTitle: 'WeekGlance',
     pageSubtitle: '规划你的一周，回顾你的每一天。',
     settingsMenuTitle: '设置',
     languageButtonText: '切换语言',
