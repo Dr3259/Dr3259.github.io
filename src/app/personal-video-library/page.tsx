@@ -168,7 +168,6 @@ export default function PersonalVideoLibraryPage() {
       const results = await searchMovies({ query: searchQuery });
       setSearchResults(results);
     } catch (error) {
-      console.error("Movie search failed:", error);
       toast({ title: "Search Error", variant: "destructive" });
     } finally {
       setIsSearching(false);
@@ -191,7 +190,7 @@ export default function PersonalVideoLibraryPage() {
         const videoPlaylist = await getVideos();
         setPlaylist(videoPlaylist);
       } catch (error) {
-        console.error("Failed to load video playlist:", error);
+        // Silently fail in production
       }
   };
 
@@ -231,7 +230,6 @@ export default function PersonalVideoLibraryPage() {
           toast({ title: t.importSuccess });
       } catch (error) {
           toast({ title: t.importError, variant: 'destructive' });
-          console.error("Error saving video:", error);
           setPlaylist(prev => prev.filter(v => v.id !== newVideo.id));
       }
     }

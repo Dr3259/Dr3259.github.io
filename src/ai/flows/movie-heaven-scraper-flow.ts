@@ -38,7 +38,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
     try {
       const baseUrl = 'https://dydytt.net';
       const listUrl = baseUrl + '/html/gndy/dyzz/index.html';
-      console.log(`Fetching movie list from: ${listUrl}`);
       
       const response = await fetch(listUrl);
       if (!response.ok) {
@@ -58,18 +57,14 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
         }
       });
       
-      console.log(`Found ${movieDetailLinks.length} movie links to process.`);
-
       if (movieDetailLinks.length === 0) {
         throw new Error("Could not find any movie links on the main page. The website structure may have changed.");
       }
 
       const detailPromises = movieDetailLinks.slice(0, 10).map(async (detailUrl) => {
         try {
-            console.log(`Processing detail page: ${detailUrl}`);
             const detailResponse = await fetch(detailUrl);
             if (!detailResponse.ok) {
-                console.error(`Failed to fetch detail page ${detailUrl}: Status ${detailResponse.status}`);
                 return null;
             }
 
@@ -81,7 +76,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const downloadUrl = $$('#Zoom table[bgcolor="#fdfddf"] a').attr('href');
             
             if (!title || !downloadUrl) {
-              console.warn(`Skipping ${detailUrl} because title or downloadUrl was not found.`);
               return null;
             }
 
@@ -102,7 +96,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
 
             return { title, downloadUrl, rating, tags, shortIntro };
         } catch (e: any) {
-            console.error(`Error processing detail page ${detailUrl}:`, e.message);
             return null;
         }
       });
@@ -110,8 +103,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       const results = await Promise.all(detailPromises);
       const validMovies = results.filter((m): m is MovieHeavenItem => m !== null);
       
-      console.log(`Successfully parsed ${validMovies.length} movies.`);
-
       if (validMovies.length === 0) {
         throw new Error('Could not parse any movies. The website structure may have changed.');
       }
@@ -119,7 +110,6 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
       return validMovies;
 
     } catch (error: any) {
-      console.error('Error in scrapeMovieHeavenFlow:', error);
       throw new Error(error.message || 'An unknown error occurred while scraping the movie page.');
     }
   }

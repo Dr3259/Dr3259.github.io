@@ -91,7 +91,6 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
       setTodoText(text);
     } catch (err) {
       toast({ title: "Failed to paste", description: "Please check clipboard permissions.", variant: "destructive"});
-      console.error('Failed to read clipboard contents: ', err);
     }
   };
   

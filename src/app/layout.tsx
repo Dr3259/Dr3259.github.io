@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 };
 
 export function reportWebVitals(metric: Metric) {
-  console.log(metric);
+  // console.log(metric); // This can be used to send to an analytics endpoint
 }
 
 export default function RootLayout({

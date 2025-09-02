@@ -112,7 +112,6 @@ export default function FoodFinderPage() {
         } else {
           setError(t.locationError);
         }
-        console.error("Error getting location:", err);
       },
       { timeout: 10000, enableHighAccuracy: true } // 10 second timeout
     );
@@ -126,7 +125,6 @@ export default function FoodFinderPage() {
     setTimeout(() => {
       // In a real app, you would use latitude and longitude to query an API.
       // For now, we just use the placeholder data.
-      console.log(`Fetching restaurants for Lat: ${latitude}, Lon: ${longitude}`);
       setRestaurants(t.placeholderRestaurants);
       setIsLoadingRestaurants(false);
     }, 1500); // Simulate network delay

@@ -62,7 +62,7 @@ export default function PersonalLibraryListPage() {
     getBooksMetadata().then(metadata => {
         setBooks(metadata);
     }).catch(error => {
-        console.error("Failed to load book metadata from DB", error);
+        // Silently fail
     });
 
     setIsMounted(true);
@@ -99,7 +99,6 @@ export default function PersonalLibraryListPage() {
         setBooks(prevBooks => [...prevBooks, { id: newBook.id, title: newBook.title, type: newBook.type, bookmarks: [] }]);
         toast({ title: t.importSuccess });
       } catch (error) {
-        console.error("Failed to save book to IndexedDB", error);
         toast({ title: "Error saving book", variant: 'destructive' });
       }
       
@@ -129,7 +128,6 @@ export default function PersonalLibraryListPage() {
             setBooks(prev => prev.filter(b => b.id !== bookId));
             toast({ title: t.bookDeleted });
         } catch (error) {
-            console.error("Failed to delete book", error);
             toast({ title: "Error deleting book", variant: 'destructive' });
         }
     }

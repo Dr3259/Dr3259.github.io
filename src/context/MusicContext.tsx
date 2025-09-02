@@ -76,7 +76,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         
         getTracksMetadata()
             .then(setTracks)
-            .catch(console.error)
+            .catch(() => {})
             .finally(() => setIsLoading(false));
         
         if (!audioRef.current) {
@@ -126,13 +126,12 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 audioRef.current.src = objectUrl;
-                audioRef.current.play().catch(e => {
-                    console.error("Audio play failed:", e)
+                audioRef.current.play().catch(() => {
                     setIsPlaying(false);
                 });
             }
         } catch (e) {
-            console.error("Failed to play track", e);
+            // Silently fail
         }
     }, [tracks, playMode, playHistory]);
 
@@ -143,7 +142,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         };
         
         if (isPlaying) audioRef.current.pause();
-        else audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+        else audioRef.current.play().catch(() => {});
     }, [currentTrack, isPlaying, playTrack, tracks]);
 
     const handleNextTrack = useCallback(() => {
@@ -224,7 +223,6 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             return new Promise(async (resolve) => {
                 const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
                 if (!supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
-                    console.warn(`Unsupported file type: ${file.name} (${file.type})`);
                     resolve(null);
                     return;
                 }
@@ -262,7 +260,6 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                     });
 
                 } catch (error) {
-                    console.error(`Failed to process or save track: ${fileName}`, error);
                     toast({ title: `Error importing ${fileName}`, variant: 'destructive' });
                     resolve(null);
                 }
@@ -323,7 +320,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 }
                 toast({ title: "Track deleted" });
             } catch (error) {
-                console.error("Failed to delete track", error);
+                // Silently fail in production
             }
         }
     };
@@ -343,7 +340,6 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             setTracks([]);
             toast({ title: "Playlist cleared", duration: 2000 });
         } catch (error) {
-            console.error("Failed to clear playlist", error);
             toast({ title: "Error clearing playlist", variant: "destructive" });
         }
     };

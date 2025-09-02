@@ -455,7 +455,6 @@ const saveUrlToCurrentTimeSlot = (
     })();
 
     if (hourlySlots.length === 0) {
-        console.error("Could not find a valid hourly slot for the current time.");
         return { success: false, slotName: '' };
     }
     const targetSlot = hourlySlots.find(slot => {
@@ -483,7 +482,6 @@ const saveUrlToCurrentTimeSlot = (
         
         return { success: true, slotName: targetIntervalLabel.split(' ')[0] };
     } catch(e) {
-        console.error("Failed to save link to localStorage", e);
         return { success: false, slotName: '' };
     }
 };
@@ -588,10 +586,10 @@ export default function DayDetailPage() {
 
     } catch (err: any) {
         if (err.name !== 'NotAllowedError' && !err.message.includes('Document is not focused')) {
-           console.error(t.clipboard.checkClipboardError, err);
+           // Silently fail in production
         }
     }
-  }, [lastProcessedClipboardText, t.clipboard.checkClipboardError, allShareLinks, t]);
+  }, [lastProcessedClipboardText, allShareLinks]);
   
   useEffect(() => {
         window.addEventListener('focus', checkClipboard);
@@ -635,7 +633,7 @@ export default function DayDetailPage() {
       try {
         copy('');
       } catch (error) {
-        console.warn("Could not clear clipboard.", error);
+        // Silently fail.
       }
     }
     setLastProcessedClipboardText(clipboardContent);
@@ -703,7 +701,7 @@ export default function DayDetailPage() {
             setAllShareLinks(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS) || '{}'));
             setAllReflections(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS) || '{}'));
         } catch (e) {
-            console.error("Failed to parse data from localStorage", e);
+            // Silently fail in production
         }
     };
     loadData();
@@ -713,7 +711,6 @@ export default function DayDetailPage() {
     try {
         localStorage.setItem(dataKey, JSON.stringify(data));
     } catch(e) {
-        console.error(`Failed to save data for key ${dataKey}`, e);
         toast({title: 'Error saving data', variant: 'destructive'});
     }
   }, [toast]);
@@ -754,7 +751,6 @@ export default function DayDetailPage() {
         const parsedDate = parseISO(dateKey); // YYYY-MM-DD should be parsable
         return { isValid: true, dateObject: parsedDate };
     } catch (e) {
-        console.error("Invalid dateKey format:", dateKey);
         return { isValid: false, dateObject: null };
     }
   }, [dateKey]);
@@ -921,7 +917,7 @@ export default function DayDetailPage() {
   };
   const handleDeleteShareLinkInPage = (targetDateKey: string, targetHourSlot: string, linkId: string) => {
     setAllShareLinks(prev => {
-        const slotLinks = prev[targetDateKey]?.[targetHourSlot] || [];
+        const slotLinks = prev[targetDateKey]?.[hourSlot] || [];
         const updatedSlot = slotLinks.filter(l => l.id !== linkId);
         const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
         saveAllData(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, newAll); return newAll;

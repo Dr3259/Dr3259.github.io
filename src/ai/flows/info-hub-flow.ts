@@ -119,7 +119,6 @@ const researchAgent = ai.defineFlow(
                 return output;
 
             } catch (error: any) {
-                console.warn(`URL processing failed: ${error.message}. Falling back to web search.`);
                 // Fallback to web search if direct fetching/parsing fails
                 const { output } = await ai.generate({
                     prompt: `I was unable to directly access the URL: ${input.topic}. Please perform a web search about this URL or its content. Summarize what it is, what it's about, and who might have created it. Provide a summary and any sources you find.`,
@@ -167,5 +166,3 @@ export async function researchTopic(
 ): Promise<ResearchTopicOutput> {
   return researchAgent(input);
 }
-
-    

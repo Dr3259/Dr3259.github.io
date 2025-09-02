@@ -78,14 +78,12 @@ const scrapeGitHubTrendingFlow = ai.defineFlow(
       });
       
       if (!output || output.length === 0) {
-        console.warn('AI search for GitHub trending returned no results.');
         return []; // Return an empty array instead of throwing an error to prevent page crash.
       }
 
       return output;
 
     } catch (error: any) {
-      console.error('Error in scrapeGitHubTrendingFlow (AI Search):', error);
       // Instead of throwing, which crashes the server component, we return an empty array.
       // The frontend will then display a "no data" message.
       return [];

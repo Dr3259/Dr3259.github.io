@@ -56,11 +56,9 @@ function openDB(): Promise<IDBDatabase> {
 
     request.onerror = (event) => {
       const error = (event.target as IDBOpenDBRequest).error;
-      console.error("Database error: ", error);
 
       // Specific handling for version error
       if (error && error.name === 'VersionError') {
-        console.warn("Attempting to fix database VersionError by deleting and reloading.");
         // Close any potential open connection before deleting
         if (db) {
           db.close();
@@ -68,15 +66,12 @@ function openDB(): Promise<IDBDatabase> {
         }
         const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
         deleteRequest.onsuccess = () => {
-          console.log("Database deleted successfully. Reloading page.");
           window.location.reload();
         };
         deleteRequest.onerror = (deleteEvent) => {
-          console.error("Error deleting database: ", (deleteEvent.target as IDBOpenDBRequest).error);
           reject(new Error("Failed to delete and reset the database. Please clear site data manually."));
         };
         deleteRequest.onblocked = () => {
-          console.error("Database deletion blocked. Please close other tabs of this app and reload.");
           reject(new Error("Database reset blocked. Please close other tabs of this app and reload."));
         };
       } else {
@@ -89,7 +84,6 @@ function openDB(): Promise<IDBDatabase> {
       
       // Ensure the onclose event is handled to prevent zombie connections
       db.onclose = () => {
-        console.log('Database connection closed.');
         db = null;
       };
 
@@ -260,5 +254,3 @@ export async function deleteVideo(id: string): Promise<void> {
     request.onerror = () => reject(request.error);
   });
 }
-
-    
