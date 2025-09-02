@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CalendarDays, Undo } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, startOfWeek, endOfWeek, subWeeks, isSameWeek, isAfter, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, subWeeks, isSameWeek, isAfter, parseISO, addDays } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { startOfMonth, isSameDay, differenceInDays } from 'date-fns';
 
@@ -141,5 +141,3 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
         </div>
     );
 };
-
-    
