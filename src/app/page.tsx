@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
-import { format, addDays, startOfWeek, isSameWeek, isAfter, isBefore, parseISO, isSameDay, subDays } from 'date-fns';
+import { format, addDays, startOfWeek, isSameWeek, isAfter, parseISO, isSameDay, subDays, isBefore } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -16,6 +16,8 @@ import { FeatureGrid } from '@/components/page/FeatureGrid';
 import { PageFooter } from '@/components/page/PageFooter';
 import type { RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme, AllLoadedData } from '@/lib/page-types';
 import { GameCard } from '@/components/GameCard';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { BarChart } from 'lucide-react';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations } from '@/lib/translations';
@@ -48,7 +50,7 @@ export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const plannerState = usePlannerStore.getState();
+  const plannerState = usePlannerStore();
   const { setRating, addShareLink, addTodo: addTodoToStore } = plannerState;
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); 
@@ -196,12 +198,13 @@ export default function WeekGlancePage() {
     }
     
     const todayStr = format(today, 'yyyy-MM-dd');
-    if(plannerState.lastTodoMigrationDate !== todayStr) {
+    const {lastTodoMigrationDate, addUnfinishedTodosToToday} = usePlannerStore.getState();
+    if(lastTodoMigrationDate !== todayStr) {
         const yesterdayStr = format(subDays(today, 1), 'yyyy-MM-dd');
-        const migratedCount = plannerState.addUnfinishedTodosToToday(todayStr, yesterdayStr);
+        const migratedCount = addUnfinishedTodosToToday(todayStr, yesterdayStr);
         if (migratedCount > 0) toast({ title: `已将昨天 ${migratedCount} 个未完成事项同步到今天` });
     }
-  }, [handleSaveShareLinkFromPWA, plannerState]);
+  }, [handleSaveShareLinkFromPWA]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -292,7 +295,7 @@ export default function WeekGlancePage() {
                         notes={plannerState.allDailyNotes[dateKeyForStorage] || ''} 
                         dayHasAnyData={dayHasContent(dateInWeek, plannerState)}
                         rating={plannerState.allRatings[dateKeyForStorage] || null}
-                        onRatingChange={(newRating) => setRating(dateKeyForStorage, newRating)}
+                        onRatingChange={(newRating) => setRating(dateKeyForStorage, newRating as RatingType)}
                         isCurrentDay={isSameDay(dateInWeek, systemToday)}
                         isPastDay={isBefore(dateInWeek, systemToday) && !isSameDay(dateInWeek, systemToday)}
                         isFutureDay={isAfter(dateInWeek, systemToday) && !isSameDay(dateInWeek, systemToday)}
@@ -307,9 +310,23 @@ export default function WeekGlancePage() {
                     />
                 );
             })}
-             <div className="w-full sm:w-40 h-44 sm:h-48 justify-self-center">
-                <GameCard title={t.weeklySummaryTitle} icon={BarChart} onClick={() => router.push(`/weekly-summary?weekStart=${getDateKey(daysToDisplay[0])}`)} ariaLabel={t.weeklySummaryPlaceholder}/>
-            </div>
+             <Card
+                className="w-full h-44 sm:w-40 sm:h-48 flex flex-col rounded-xl border-2 transition-all duration-200 ease-in-out cursor-pointer bg-card border-transparent hover:border-accent/70 hover:shadow-xl hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                onClick={() => router.push(`/weekly-summary?weekStart=${getDateKey(daysToDisplay[0])}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/weekly-summary?weekStart=${getDateKey(daysToDisplay[0])}`);}}
+                aria-label={t.weeklySummaryPlaceholder}
+            >
+                <CardHeader className="p-2 pb-1 text-center">
+                    <CardTitle className="text-lg sm:text-xl font-medium text-foreground">
+                        {t.weeklySummaryTitle}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 flex-grow flex items-center justify-center">
+                    <BarChart className="w-10 h-10 text-primary" />
+                </CardContent>
+            </Card>
         </div>
         {hoverPreviewData && (<DayHoverPreview {...hoverPreviewData} onMouseEnterPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); }} onMouseLeavePreview={() => { hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY); }} onClickPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); setHoverPreviewData(null); isPreviewSuppressedByClickRef.current = true; }} />)}
         <FeatureGrid />
