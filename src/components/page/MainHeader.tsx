@@ -32,7 +32,7 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
   return (
     <header className="mb-8 sm:mb-12 w-full flex justify-between items-center">
       <div>
-        <h1 className="text-3xl sm:text-4xl font-headline font-light text-primary">{t.pageTitle}</h1>
+        <h1 className="text-2xl sm:text-3xl font-headline font-extralight text-primary">{t.pageTitle}</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
       </div>
       <div className="flex items-center gap-2">
