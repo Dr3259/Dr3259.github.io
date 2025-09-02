@@ -19,61 +19,92 @@ export interface Movie {
 }
 
 interface MovieState {
-    movies: Movie[];
+    movies: Record<string, Movie>;
     addMovie: (newMovie: Omit<Movie, 'status'>) => boolean;
     updateMovieStatus: (id: string, status: MovieStatus) => void;
     updateMovieRating: (id: string, rating: number) => void;
     updateMovieReview: (id: string, review: string) => void;
     deleteMovie: (id: string) => void;
-    setMovies: (movies: Movie[]) => void;
+    setMovies: (movies: Record<string, Movie>) => void;
 }
 
-const LOCAL_STORAGE_MOVIES_KEY = 'weekglance_personal_video_library_v1';
+const LOCAL_STORAGE_MOVIES_KEY = 'weekglance_personal_video_library_v2_flat';
 
 export const useMovies = create<MovieState>()(
   persist(
     (set, get) => ({
-      movies: [],
+      movies: {},
       addMovie: (newMovie) => {
         const { movies } = get();
-        if (movies.some(movie => movie.id === newMovie.id)) {
+        if (movies[newMovie.id]) {
           return false; // Movie already exists
         }
         const movieWithStatus: Movie = { ...newMovie, status: 'want_to_watch' };
-        set({ movies: [...movies, movieWithStatus] });
+        set((state) => ({
+            movies: {
+                ...state.movies,
+                [newMovie.id]: movieWithStatus,
+            }
+        }));
         return true;
       },
       updateMovieStatus: (id, status) => {
-        set((state) => ({
-          movies: state.movies.map(movie =>
-            movie.id === id ? { ...movie, status } : movie
-          )
-        }));
+        set((state) => {
+          if (!state.movies[id]) return state;
+          return {
+            movies: {
+              ...state.movies,
+              [id]: { ...state.movies[id], status },
+            },
+          };
+        });
       },
       updateMovieRating: (id, rating) => {
-        set((state) => ({
-          movies: state.movies.map(movie =>
-            movie.id === id ? { ...movie, rating } : movie
-          )
-        }));
+        set((state) => {
+          if (!state.movies[id]) return state;
+          return {
+            movies: {
+              ...state.movies,
+              [id]: { ...state.movies[id], rating },
+            },
+          };
+        });
       },
       updateMovieReview: (id, review) => {
-        set((state) => ({
-          movies: state.movies.map(movie =>
-            movie.id === id ? { ...movie, review } : movie
-          )
-        }));
+        set((state) => {
+          if (!state.movies[id]) return state;
+          return {
+            movies: {
+              ...state.movies,
+              [id]: { ...state.movies[id], review },
+            },
+          };
+        });
       },
       deleteMovie: (id) => {
-        set((state) => ({
-          movies: state.movies.filter(movie => movie.id !== id)
-        }));
+        set((state) => {
+          const newMovies = { ...state.movies };
+          delete newMovies[id];
+          return { movies: newMovies };
+        });
       },
       setMovies: (movies) => set({ movies }),
     }),
     {
       name: LOCAL_STORAGE_MOVIES_KEY,
       storage: createJSONStorage(() => localStorage),
+       // Custom migration logic if needed to convert from array to record
+      migrate: (persistedState, version) => {
+        if (version === 0 && Array.isArray((persistedState as any).movies)) {
+          const flatMovies: Record<string, Movie> = {};
+          ((persistedState as any).movies as Movie[]).forEach(movie => {
+            flatMovies[movie.id] = movie;
+          });
+          return { ...(persistedState as any), movies: flatMovies };
+        }
+        return persistedState as MovieState;
+      },
+      version: 1,
     }
   )
 );

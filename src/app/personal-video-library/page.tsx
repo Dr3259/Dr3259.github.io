@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -14,6 +15,11 @@ import { EditVideoModal } from '@/components/EditVideoModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import { useMovies, type Movie } from '@/hooks/useMovies';
+import { searchMovies } from '@/ai/flows/movie-search-flow';
+import { Input } from '@/components/ui/input';
+import { MovieCard } from '@/components/MovieCard';
+import { Separator } from '@/components/ui/separator';
 
 const translations = {
   'zh-CN': {
@@ -31,7 +37,7 @@ const translations = {
     importError: "添加视频到播放列表失败。",
     deleteSuccess: "视频已从播放列表删除。",
     deleteError: "删除视频失败。",
-    playlistTitle: "播放列表",
+    playlistTitle: "本地视频播放列表",
     noPlaylist: "暂无视频。",
     alreadyInPlaylist: "此视频已在播放列表中。",
     editVideo: "编辑视频名称",
@@ -48,6 +54,15 @@ const translations = {
     fullscreen: "全屏",
     exitFullscreen: "退出全屏",
     playbackSpeed: "播放速度",
+    movieSearchPlaceholder: "搜索电影添加到愿望单...",
+    movieSearchButton: "搜索",
+    searching: "搜索中...",
+    noResults: "未找到结果。",
+    wantToWatch: "想看",
+    watched: "已看",
+    addSuccess: (title: string) => `《${title}》已添加到列表!`,
+    addFail: (title: string) => `《${title}》已在列表中。`,
+    deleteMovieConfirm: "您确定要从此列表中删除吗?",
   },
   'en': {
     pageTitle: 'Personal Video Library',
@@ -64,7 +79,7 @@ const translations = {
     importError: "Failed to add video to playlist.",
     deleteSuccess: "Video removed from playlist.",
     deleteError: "Failed to delete video.",
-    playlistTitle: "Playlist",
+    playlistTitle: "Local Video Playlist",
     noPlaylist: "No videos in playlist yet.",
     alreadyInPlaylist: "This video is already in the playlist.",
     editVideo: "Edit video name",
@@ -81,6 +96,15 @@ const translations = {
     fullscreen: "Fullscreen",
     exitFullscreen: "Exit Fullscreen",
     playbackSpeed: "Playback Speed",
+    movieSearchPlaceholder: "Search for movies to add...",
+    movieSearchButton: "Search",
+    searching: "Searching...",
+    noResults: "No results found.",
+    wantToWatch: "Want to Watch",
+    watched: "Watched",
+    addSuccess: (title: string) => `Added "${title}" to your list!`,
+    addFail: (title: string) => `"${title}" is already on your list.`,
+    deleteMovieConfirm: "Are you sure you want to remove this from your list?",
   }
 };
 
@@ -113,6 +137,14 @@ export default function PersonalVideoLibraryPage() {
   const [editingVideo, setEditingVideo] = useState<VideoFile | null>(null);
   const [brightness, setBrightness] = useState(100);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Omit<Movie, 'status'>[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const { movies, addMovie, deleteMovie, updateMovieStatus, updateMovieRating, updateMovieReview } = useMovies();
+
+  const wantToWatchList = useMemo(() => Object.values(movies).filter(m => m.status === 'want_to_watch'), [movies]);
+  const watchedList = useMemo(() => Object.values(movies).filter(m => m.status === 'watched'), [movies]);
+
   useEffect(() => {
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
@@ -127,6 +159,32 @@ export default function PersonalVideoLibraryPage() {
   }, []); 
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    setSearchResults([]);
+    try {
+      const results = await searchMovies({ query: searchQuery });
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Movie search failed:", error);
+      toast({ title: "Search Error", variant: "destructive" });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleAddMovie = (movie: Omit<Movie, 'status'>) => {
+    const success = addMovie(movie);
+    if (success) {
+      toast({ title: t.addSuccess(movie.title) });
+      setSearchQuery('');
+      setSearchResults([]);
+    } else {
+      toast({ title: t.addFail(movie.title), variant: 'destructive' });
+    }
+  };
 
   const loadPlaylist = async () => {
       try {
@@ -259,7 +317,7 @@ export default function PersonalVideoLibraryPage() {
                   </h1>
               </div>
 
-              <Tabs defaultValue="local_cinema" className="w-full">
+              <Tabs defaultValue="video" className="w-full">
                    <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8">
                       <TabsTrigger value="video"><Video className="mr-2 h-4 w-4"/>{t.tabVideo}</TabsTrigger>
                       <TabsTrigger value="local_cinema"><Film className="mr-2 h-4 w-4"/>{t.tabLocalCinema}</TabsTrigger>
@@ -267,10 +325,62 @@ export default function PersonalVideoLibraryPage() {
                   </TabsList>
                   
                   <TabsContent value="video">
-                      <div className="text-center py-24 text-muted-foreground">
-                          <Video className="w-20 h-20 mx-auto mb-4" />
-                          <p className="text-xl">{t.comingSoon}</p>
-                      </div>
+                      <Card>
+                        <CardHeader>
+                            <CardTitle>Movie Wishlist & Watched</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex gap-2">
+                                <Input 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={t.movieSearchPlaceholder}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                                <Button onClick={handleSearch} disabled={isSearching}>
+                                    {isSearching ? <Loader2 className="h-4 w-4 animate-spin"/> : t.movieSearchButton}
+                                </Button>
+                            </div>
+                            
+                            {isSearching ? (
+                                <div className="text-center p-4"><Loader2 className="h-6 w-6 animate-spin mx-auto"/></div>
+                            ) : searchResults.length > 0 ? (
+                                <ScrollArea className="h-72">
+                                    <ul className="space-y-2">
+                                        {searchResults.map(movie => (
+                                            <li key={movie.id} className="flex items-center gap-4 p-2 rounded-md bg-muted/50">
+                                                <img src={movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : 'https://placehold.co/50x75'} alt={movie.title} className="w-[50px] h-[75px] object-cover rounded-sm"/>
+                                                <div className="flex-1">
+                                                    <p className="font-semibold">{movie.title}</p>
+                                                    <p className="text-xs text-muted-foreground">{movie.release_date}</p>
+                                                </div>
+                                                <Button size="sm" onClick={() => handleAddMovie(movie)}>Add</Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </ScrollArea>
+                            ) : (
+                                !isSearching && searchQuery && <p className="text-center text-sm text-muted-foreground">{t.noResults}</p>
+                            )}
+
+                            <Separator />
+
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-4">{t.wantToWatch} ({wantToWatchList.length})</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                        {wantToWatchList.map(movie => <MovieCard key={movie.id} movie={movie} onStatusChange={updateMovieStatus} onRatingChange={updateMovieRating} onReviewChange={updateMovieReview} />)}
+                                    </div>
+                                </div>
+                                 <div>
+                                    <h3 className="text-lg font-semibold mb-4">{t.watched} ({watchedList.length})</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                        {watchedList.map(movie => <MovieCard key={movie.id} movie={movie} onStatusChange={updateMovieStatus} onRatingChange={updateMovieRating} onReviewChange={updateMovieReview} />)}
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                      </Card>
                   </TabsContent>
 
                   <TabsContent value="local_cinema" className="space-y-10">
