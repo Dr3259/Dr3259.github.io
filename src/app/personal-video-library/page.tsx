@@ -104,9 +104,6 @@ const VolumeIcon = ({ volume, isMuted }: { volume: number, isMuted: boolean }) =
 export default function PersonalVideoLibraryPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playerContainerRef = useRef<HTMLDivElement>(null);
-  
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
@@ -114,65 +111,7 @@ export default function PersonalVideoLibraryPage() {
   const { toast } = useToast();
   const currentObjectUrl = useRef<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoFile | null>(null);
-  
-  // Player state
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [volume, setVolume] = useState(0.75);
-  const [isMuted, setIsMuted] = useState(false);
   const [brightness, setBrightness] = useState(100);
-  const [playbackRate, setPlaybackRate] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isControlsVisible, setIsControlsVisible] = useState(true);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isSpeedPopoverOpen, setIsSpeedPopoverOpen] = useState(false);
-  const [isVolumePopoverOpen, setIsVolumePopoverOpen] = useState(false);
-  const [isBrightnessPopoverOpen, setIsBrightnessPopoverOpen] = useState(false);
-
-
-  const hideControls = useCallback(() => {
-    // Do not hide controls if any popover is open
-    if (isVolumePopoverOpen || isBrightnessPopoverOpen || isSpeedPopoverOpen) {
-        return;
-    }
-    if (videoRef.current && !videoRef.current.paused) {
-      setIsControlsVisible(false);
-    }
-  }, [isVolumePopoverOpen, isBrightnessPopoverOpen, isSpeedPopoverOpen]);
-
-  const handleMouseMove = useCallback(() => {
-    setIsControlsVisible(true);
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
-    }
-    controlsTimeoutRef.current = setTimeout(hideControls, 3000);
-  }, [hideControls]);
-  
-  useEffect(() => {
-      const container = playerContainerRef.current;
-      if (container) {
-          container.addEventListener('mousemove', handleMouseMove);
-          container.addEventListener('mouseleave', hideControls);
-          
-          if (isPlaying) {
-             handleMouseMove();
-          } else {
-             setIsControlsVisible(true);
-             if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-          }
-      }
-      return () => {
-          if (container) {
-              container.removeEventListener('mousemove', handleMouseMove);
-              container.removeEventListener('mouseleave', hideControls);
-          }
-          if (controlsTimeoutRef.current) {
-              clearTimeout(controlsTimeoutRef.current);
-          }
-      };
-  }, [isPlaying, handleMouseMove, hideControls]);
 
   useEffect(() => {
     const browserLang: LanguageKey = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -180,13 +119,7 @@ export default function PersonalVideoLibraryPage() {
     
     loadPlaylist();
 
-    const handleFullscreenChange = () => {
-        setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
       if (currentObjectUrl.current) {
         URL.revokeObjectURL(currentObjectUrl.current);
       }
@@ -268,8 +201,6 @@ export default function PersonalVideoLibraryPage() {
         if (selectedVideoFile && playlist.find(v => v.id === videoId)?.content.name === selectedVideoFile.name) {
             setVideoSrc(null);
             setSelectedVideoFile(null);
-            setIsPlaying(false);
-            setProgress(0);
         }
     } catch(e) {
         toast({ title: t.deleteError, variant: 'destructive' });
@@ -296,70 +227,11 @@ export default function PersonalVideoLibraryPage() {
     }
   };
   
-  const handlePlayPause = () => {
-      if (videoRef.current) {
-          if (isPlaying) videoRef.current.pause();
-          else videoRef.current.play();
-      }
-  };
-
-  const handleTimeUpdate = () => {
-      if (videoRef.current) {
-          setCurrentTime(videoRef.current.currentTime);
-          setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
-      }
-  };
-  
-  const handleLoadedMetadata = () => {
-      if (videoRef.current) {
-          setDuration(videoRef.current.duration);
-          videoRef.current.volume = volume;
-          videoRef.current.playbackRate = playbackRate;
-      }
-  };
-
-  const handleProgressSeek = (value: number[]) => {
-      if (videoRef.current) {
-          const newTime = (value[0] / 100) * duration;
-          videoRef.current.currentTime = newTime;
-          setCurrentTime(newTime);
-          setProgress(value[0]);
-      }
-  };
-  
-  const handleVolumeChange = (value: number[]) => {
-      const newVolume = value[0] / 100;
-      if (videoRef.current) {
-          videoRef.current.volume = newVolume;
-      }
-      setVolume(newVolume);
-      setIsMuted(newVolume === 0);
-  };
-  
-  const handlePlaybackRateChange = (rate: number) => {
-      if(videoRef.current) {
-          videoRef.current.playbackRate = rate;
-          setPlaybackRate(rate);
-      }
-      setIsSpeedPopoverOpen(false);
+  const handleOpenInNewWindow = () => {
+    if (videoSrc) {
+      window.open(videoSrc, '_blank');
+    }
   }
-
-  const toggleMute = () => {
-      if (videoRef.current) {
-          videoRef.current.muted = !isMuted;
-          setIsMuted(!isMuted);
-      }
-  };
-  
-  const toggleFullscreen = () => {
-      if (playerContainerRef.current) {
-          if (!document.fullscreenElement) {
-              playerContainerRef.current.requestFullscreen();
-          } else {
-              document.exitFullscreen();
-          }
-      }
-  };
 
   return (
     <>
@@ -403,22 +275,24 @@ export default function PersonalVideoLibraryPage() {
 
                   <TabsContent value="local_cinema" className="space-y-10">
                     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-                        <div ref={playerContainerRef} className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative group/player">
+                        <div className="w-full aspect-video bg-black rounded-lg shadow-lg overflow-hidden flex items-center justify-center text-muted-foreground relative group">
                             {videoSrc ? (
                                 <>
                                     <video 
-                                        ref={videoRef}
+                                        key={videoSrc}
                                         src={videoSrc} 
+                                        controls
+                                        controlsList="nodownload"
                                         autoPlay
-                                        onCanPlay={() => setIsVideoLoading(false)}
-                                        onLoadedMetadata={handleLoadedMetadata}
-                                        onTimeUpdate={handleTimeUpdate}
-                                        onPlay={() => setIsPlaying(true)}
-                                        onPause={() => setIsPlaying(false)}
-                                        onClick={handlePlayPause}
-                                        onDoubleClick={toggleFullscreen}
-                                        className="w-full h-full block cursor-pointer" 
+                                        className="w-full h-full block" 
                                         style={{ filter: `brightness(${brightness}%)`}}
+                                        onCanPlay={() => setIsVideoLoading(false)}
+                                        onError={() => {
+                                            setIsVideoLoading(false);
+                                            toast({ title: 'Error playing video', variant: 'destructive' });
+                                        }}
+                                        playsInline 
+                                        disablePictureInPicture
                                     />
                                     {isVideoLoading && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
@@ -426,73 +300,22 @@ export default function PersonalVideoLibraryPage() {
                                             <p className="text-lg ml-4">{t.videoLoading}</p>
                                         </div>
                                     )}
-                                     <div className={cn(
-                                        "absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300",
-                                        isControlsVisible ? "opacity-100" : "opacity-0"
-                                     )}>
-                                        <div className="px-2">
-                                          <Slider value={[progress]} onValueChange={handleProgressSeek} max={100} step={0.1} className="w-full h-2 group" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Sun className="h-5 w-5 text-white" />
+                                            <Slider
+                                                defaultValue={[100]}
+                                                value={[brightness]}
+                                                onValueChange={(value) => setBrightness(value[0])}
+                                                max={200}
+                                                step={1}
+                                                className="w-32"
+                                            />
                                         </div>
-                                        <div className="flex items-center justify-between text-white mt-1 px-1">
-                                            <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={handlePlayPause}>
-                                                    {isPlaying ? <Pause className="w-6 h-6"/> : <Play className="w-6 h-6" />}
-                                                </Button>
-                                                <span className="text-xs font-mono select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
-                                            </div>
-
-                                            <div className="flex items-center gap-1">
-                                                <Popover open={isVolumePopoverOpen} onOpenChange={setIsVolumePopoverOpen}>
-                                                    <PopoverTrigger asChild>
-                                                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><VolumeIcon volume={volume} isMuted={isMuted} /></Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
-                                                      <Slider 
-                                                        orientation="vertical" 
-                                                        defaultValue={[75]}
-                                                        value={[isMuted ? 0 : volume * 100]} 
-                                                        onValueChange={handleVolumeChange} 
-                                                        max={100} 
-                                                        step={1} 
-                                                        className="h-24 flex flex-col items-center"
-                                                      />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <Popover open={isBrightnessPopoverOpen} onOpenChange={setIsBrightnessPopoverOpen}>
-                                                  <PopoverTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-white"><Sun className="w-5 h-5"/></Button>
-                                                  </PopoverTrigger>
-                                                  <PopoverContent side="top" className="w-auto p-2 border-none bg-black/30 backdrop-blur-sm">
-                                                    <Slider 
-                                                      orientation="vertical" 
-                                                      defaultValue={[100]} 
-                                                      value={[brightness]}
-                                                      onValueChange={(v) => setBrightness(v[0])} 
-                                                      max={200} 
-                                                      step={1} 
-                                                      className="h-24 flex flex-col items-center"
-                                                    />
-                                                  </PopoverContent>
-                                                </Popover>
-                                                <Popover open={isSpeedPopoverOpen} onOpenChange={setIsSpeedPopoverOpen}>
-                                                    <PopoverTrigger asChild>
-                                                        <Button variant="ghost" className="h-10 w-14 text-white text-xs font-mono">{playbackRate.toFixed(1)}x</Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent side="top" className="w-auto p-1 border-none bg-black/30 backdrop-blur-sm">
-                                                        <div className="flex flex-col gap-1">
-                                                            {[0.5, 1.0, 1.5, 2.0].map(rate => (
-                                                                <Button key={rate} variant="ghost" size="sm" className="w-full justify-center text-white" onClick={() => handlePlaybackRateChange(rate)}>
-                                                                    {rate.toFixed(1)}x
-                                                                </Button>
-                                                            ))}
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-white" onClick={toggleFullscreen}>
-                                                    {isFullscreen ? <Minimize className="w-5 h-5"/> : <Maximize className="w-5 h-5"/>}
-                                                </Button>
-                                            </div>
-                                        </div>
+                                         <Button onClick={handleOpenInNewWindow} size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
+                                            <ExternalLink className="mr-2 h-4 w-4"/>
+                                            {t.openInNewWindow}
+                                        </Button>
                                     </div>
                                 </>
                             ) : (
