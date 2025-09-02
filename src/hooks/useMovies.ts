@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useLocalStorage } from './use-local-storage';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type MovieStatus = 'want_to_watch' | 'watched';
 
@@ -18,55 +18,62 @@ export interface Movie {
   review?: string;
 }
 
+interface MovieState {
+    movies: Movie[];
+    addMovie: (newMovie: Omit<Movie, 'status'>) => boolean;
+    updateMovieStatus: (id: string, status: MovieStatus) => void;
+    updateMovieRating: (id: string, rating: number) => void;
+    updateMovieReview: (id: string, review: string) => void;
+    deleteMovie: (id: string) => void;
+    setMovies: (movies: Movie[]) => void;
+}
+
 const LOCAL_STORAGE_MOVIES_KEY = 'weekglance_personal_video_library_v1';
 
-export const useMovies = () => {
-  const [movies, setMovies] = useLocalStorage<Movie[]>(LOCAL_STORAGE_MOVIES_KEY, []);
-
-  const addMovie = useCallback((newMovie: Omit<Movie, 'status'>): boolean => {
-    if (movies.some(movie => movie.id === newMovie.id)) {
-      return false; // Movie already exists
+export const useMovies = create<MovieState>()(
+  persist(
+    (set, get) => ({
+      movies: [],
+      addMovie: (newMovie) => {
+        const { movies } = get();
+        if (movies.some(movie => movie.id === newMovie.id)) {
+          return false; // Movie already exists
+        }
+        const movieWithStatus: Movie = { ...newMovie, status: 'want_to_watch' };
+        set({ movies: [...movies, movieWithStatus] });
+        return true;
+      },
+      updateMovieStatus: (id, status) => {
+        set((state) => ({
+          movies: state.movies.map(movie =>
+            movie.id === id ? { ...movie, status } : movie
+          )
+        }));
+      },
+      updateMovieRating: (id, rating) => {
+        set((state) => ({
+          movies: state.movies.map(movie =>
+            movie.id === id ? { ...movie, rating } : movie
+          )
+        }));
+      },
+      updateMovieReview: (id, review) => {
+        set((state) => ({
+          movies: state.movies.map(movie =>
+            movie.id === id ? { ...movie, review } : movie
+          )
+        }));
+      },
+      deleteMovie: (id) => {
+        set((state) => ({
+          movies: state.movies.filter(movie => movie.id !== id)
+        }));
+      },
+      setMovies: (movies) => set({ movies }),
+    }),
+    {
+      name: LOCAL_STORAGE_MOVIES_KEY,
+      storage: createJSONStorage(() => localStorage),
     }
-    const movieWithStatus: Movie = { ...newMovie, status: 'want_to_watch' };
-    setMovies(prev => [...prev, movieWithStatus]);
-    return true;
-  }, [movies, setMovies]);
-
-  const updateMovieStatus = useCallback((id: string, status: MovieStatus) => {
-    setMovies(prev =>
-      prev.map(movie =>
-        movie.id === id ? { ...movie, status } : movie
-      )
-    );
-  }, [setMovies]);
-
-  const updateMovieRating = useCallback((id: string, rating: number) => {
-    setMovies(prev =>
-      prev.map(movie =>
-        movie.id === id ? { ...movie, rating } : movie
-      )
-    );
-  }, [setMovies]);
-
-  const updateMovieReview = useCallback((id: string, review: string) => {
-    setMovies(prev =>
-      prev.map(movie =>
-        movie.id === id ? { ...movie, review } : movie
-      )
-    );
-  }, [setMovies]);
-
-  const deleteMovie = useCallback((id: string) => {
-    setMovies(prev => prev.filter(movie => movie.id !== id));
-  }, [setMovies]);
-
-  return {
-    movies,
-    setMovies, // Exposing setMovies for direct manipulation like import
-    addMovie,
-    updateMovieStatus,
-    updateMovieRating,
-    updateMovieReview,
-    deleteMovie,
-  };
-};
+  )
+);
