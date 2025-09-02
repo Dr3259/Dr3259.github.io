@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
-import { format, addDays, startOfWeek, isSameWeek, isAfter, parseISO, isSameDay, subDays } from 'date-fns';
+import { format, addDays, startOfWeek, isSameWeek, isAfter, isBefore, parseISO, isSameDay, subDays } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
@@ -320,3 +320,5 @@ export default function WeekGlancePage() {
     </>
   );
 }
+
+    
