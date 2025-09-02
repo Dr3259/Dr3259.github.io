@@ -1,11 +1,13 @@
 
 'use server';
 /**
- * @fileOverview An AI agent that searches for movie information.
+ * @fileOverview An AI agent that searches for movie information using external tools.
+ * This flow takes a user's query, uses a search tool to find relevant movies,
+ * and returns a structured list of results including metadata like poster paths and release dates.
  *
- * - searchMovies - A function that handles the movie search process.
- * - MovieSearchInput - The input type for the searchMovies function.
- * - MovieSearchOutput - The return type for the searchMovies function.
+ * @exports searchMovies - The main function to trigger the movie search flow.
+ * @exports MovieSearchInput - The Zod schema type for the input object.
+ * @exports MovieSearchOutput - The Zod schema type for the array of movie results.
  */
 
 import { ai } from '@/ai/genkit';
@@ -69,6 +71,12 @@ const searchMoviesFlow = ai.defineFlow(
 );
 
 
+/**
+ * An exported wrapper function that directly calls the searchMoviesFlow.
+ * This provides a clean, callable interface for server components.
+ * @param {MovieSearchInput} input - The movie search query.
+ * @returns {Promise<MovieSearchOutput>} A promise that resolves to a list of found movies.
+ */
 export async function searchMovies(
   input: MovieSearchInput
 ): Promise<MovieSearchOutput> {

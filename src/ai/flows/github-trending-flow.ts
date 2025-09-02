@@ -2,10 +2,14 @@
 'use server';
 /**
  * @fileOverview A flow to get GitHub trending repositories using AI-powered search.
+ * This file defines the Genkit flow for scraping GitHub's trending page.
+ * It uses an AI model with search capabilities to find and parse repository information,
+ * providing a structured output of the top trending projects.
  *
- * - scrapeGitHubTrending - A function that fetches and parses the trending repositories.
- * - GithubTrendingParams - The input type for the scrapeGitHubTrending function.
- * - GithubTrendingRepo - The type for a single repository entry.
+ * @exports scrapeGitHubTrending - The main function to trigger the flow.
+ * @exports GithubTrendingParams - The Zod schema type for the input parameters.
+ * @exports GithubTrendingRepo - The Zod schema type for a single repository object.
+ * @exports GithubTrendingOutput - The Zod schema type for the array of repositories returned by the flow.
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,13 +22,13 @@ const GithubTrendingParamsSchema = z.object({
 export type GithubTrendingParams = z.infer<typeof GithubTrendingParamsSchema>;
 
 const GithubTrendingRepoSchema = z.object({
-  rank: z.number().describe('The ranking of the repository.'),
-  repoName: z.string().describe('The name of the repository, including the owner (e.g., "owner/repo").'),
-  description: z.string().describe('The description of the repository.'),
-  language: z.string().describe('The primary programming language of the repository.'),
-  stars: z.string().describe('The total number of stars for the repository.'),
-  starsToday: z.string().describe('The number of stars gained in the specified timespan (e.g., "123 stars today").'),
-  url: z.string().url().describe('The URL of the repository.'),
+  rank: z.number().describe('The numerical rank of the repository on the trending list.'),
+  repoName: z.string().describe('The full name of the repository, including the owner (e.g., "owner/repo").'),
+  description: z.string().describe('A brief, one-sentence description of the repository.'),
+  language: z.string().describe('The primary programming language used in the repository.'),
+  stars: z.string().describe('The total number of stars the repository has, formatted as a string (e.g., "123k").'),
+  starsToday: z.string().describe('The number of new stars gained within the specified timespan (e.g., "123 stars today").'),
+  url: z.string().url().describe('The full GitHub URL for the repository.'),
 });
 export type GithubTrendingRepo = z.infer<typeof GithubTrendingRepoSchema>;
 
@@ -42,6 +46,12 @@ const googleSearchTool = ai.defineTool(
   async (input) => input // The tool is natively implemented, so we just return the input
 );
 
+/**
+ * An exported wrapper function that directly calls the scrapeGitHubTrendingFlow.
+ * This provides a clean, callable interface for server components.
+ * @param {GithubTrendingParams} input - The parameters for fetching trending data, primarily the timespan.
+ * @returns {Promise<GithubTrendingOutput>} A promise that resolves to an array of trending repositories.
+ */
 export async function scrapeGitHubTrending(
   input: GithubTrendingParams
 ): Promise<GithubTrendingOutput> {

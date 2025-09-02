@@ -2,9 +2,13 @@
 'use server';
 /**
  * @fileOverview A flow to scrape the TIOBE index from their website.
+ * This flow directly fetches the HTML from the TIOBE index page,
+ * parses the main rankings table using Cheerio, and returns a structured
+ * list of the top programming languages. It does not use an AI model for parsing.
  *
- * - scrapeTiobe - A function that fetches and parses the TIOBE index page.
- * - TiobeIndexEntry - The type for a single entry in the TIOBE rankings.
+ * @exports scrapeTiobe - The main function to trigger the scraping flow.
+ * @exports TiobeIndexEntry - The Zod schema type for a single language entry.
+ * @exports TiobeIndexOutput - The Zod schema type for the array of rankings.
  */
 
 import { ai } from '@/ai/genkit';
@@ -21,6 +25,11 @@ export type TiobeIndexEntry = z.infer<typeof TiobeIndexEntrySchema>;
 const TiobeIndexOutputSchema = z.array(TiobeIndexEntrySchema);
 export type TiobeIndexOutput = z.infer<typeof TiobeIndexOutputSchema>;
 
+/**
+ * An exported wrapper function that directly calls the scrapeTiobeFlow.
+ * This provides a clean, callable interface for server components.
+ * @returns {Promise<TiobeIndexOutput>} A promise that resolves to an array of TIOBE index entries.
+ */
 export async function scrapeTiobe(): Promise<TiobeIndexOutput> {
   return scrapeTiobeFlow();
 }
@@ -70,7 +79,6 @@ const scrapeTiobeFlow = ai.defineFlow(
       return rankings;
 
     } catch (error: any) {
-      console.error('Error in scrapeTiobeFlow:', error);
       throw new Error(error.message || 'An unknown error occurred while scraping the TIOBE index.');
     }
   }

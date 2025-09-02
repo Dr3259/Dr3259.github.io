@@ -2,10 +2,14 @@
 'use server';
 /**
  * @fileOverview An AI agent that researches a topic online or summarizes a given URL.
+ * This flow can operate in two modes:
+ * 1. If given a URL, it attempts to fetch, parse, and summarize the content directly.
+ * 2. If given a general topic, it uses Google Search to gather information and synthesize a summary.
+ * It also extracts metadata and lists its sources.
  *
- * - researchTopic - A function that handles the research process.
- * - ResearchTopicInput - The input type for the researchTopic function.
- * - ResearchTopicOutput - The return type for the researchTopic function.
+ * @exports researchTopic - The main function to trigger the research flow.
+ * @exports ResearchTopicInput - The Zod schema type for the input object.
+ * @exports ResearchTopicOutput - The Zod schema type for the structured output.
  */
 
 import { ai } from '@/ai/genkit';
@@ -161,6 +165,13 @@ const researchAgent = ai.defineFlow(
     }
 );
 
+
+/**
+ * An exported wrapper function that directly calls the researchAgent flow.
+ * This provides a clean, callable interface for server components.
+ * @param {ResearchTopicInput} input - The research topic or URL.
+ * @returns {Promise<ResearchTopicOutput>} A promise that resolves to the structured research summary.
+ */
 export async function researchTopic(
   input: ResearchTopicInput
 ): Promise<ResearchTopicOutput> {
