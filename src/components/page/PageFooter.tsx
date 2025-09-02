@@ -19,11 +19,16 @@ export const PageFooter: React.FC<PageFooterProps> = ({ translations: t, current
                 <div className="md:order-1">
                 {currentYear && (
                     <p className="text-sm text-muted-foreground">
-                    {t.copyrightText(currentYear, t.pageTitle)}
-                    <span className="mx-1">·</span>
-                    <a href="mailto:your-email@example.com?subject=Week Glance User Feedback" className="hover:text-primary transition-colors" aria-label={t.emailAria}>
-                        {t.mitLicenseLinkText}
-                    </a>
+                        <span>© {currentYear} </span>
+                        <span className="font-thin">
+                            <span>Week</span>
+                            <span className="ml-1">Glance</span>
+                        </span>
+                        .
+                        <span className="mx-1">·</span>
+                        <a href="mailto:your-email@example.com?subject=Week Glance User Feedback" className="hover:text-primary transition-colors" aria-label={t.emailAria}>
+                            {t.mitLicenseLinkText}
+                        </a>
                     </p>
                 )}
                 </div>
@@ -60,5 +65,3 @@ export const PageFooter: React.FC<PageFooterProps> = ({ translations: t, current
       </footer>
     );
 };
-
-    
