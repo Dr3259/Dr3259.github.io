@@ -1,9 +1,10 @@
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { MusicProvider } from '@/context/MusicContext';
 import { MiniMusicPlayer } from '@/components/MiniMusicPlayer';
+import type { Metric } from 'next/dist/compiled/next-server/server.edge';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,6 +19,19 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
 };
 
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  shrinkToFit: false,
+  userScalable: false,
+  viewportFit: 'cover'
+};
+
+export function reportWebVitals(metric: Metric) {
+  console.log(metric);
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,8 +40,6 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="light">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no, viewport-fit=cover" />
-        <meta name="theme-color" content="#000000" />
       </head>
       <body className={`${inter.variable} font-body antialiased`}>
         <MusicProvider>
