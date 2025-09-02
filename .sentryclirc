@@ -1,0 +1,7 @@
+
+# This file is used by the Sentry CLI to connect to your Sentry account.
+# You can generate a new auth token in your Sentry settings.
+# See https://docs.sentry.io/cli/configuration/ for more information.
+
+[auth]
+token = YOUR_SENTRY_AUTH_TOKEN
