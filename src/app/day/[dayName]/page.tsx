@@ -6,7 +6,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import {
     ArrowLeft, ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText,
     Briefcase, BookOpen, ShoppingCart, Archive, Coffee, ChefHat, Baby, CalendarClock,
@@ -14,25 +13,23 @@ import {
     Star as StarIcon, FileEdit, Trash2, Calendar as CalendarIcon, Smile, Meh, Frown,
     ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
 import { MeetingNoteModal, type MeetingNoteItem, type MeetingNoteModalTranslations } from '@/components/MeetingNoteModal';
 import { ShareLinkModal, type ShareLinkItem, type ShareLinkModalTranslations } from '@/components/ShareLinkModal';
 import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations } from '@/components/ReflectionModal';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, isSameWeek } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
 import copy from 'copy-to-clipboard';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { DailySummaryCard } from '@/components/page/day-view/DailySummaryCard';
+import { TimeIntervalSection } from '@/components/page/day-view/TimeIntervalSection';
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
 // Helper function to extract time range and generate hourly slots
-const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
+export const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
   const match = intervalLabelWithTime.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
   if (!match) {
     return [];
@@ -382,15 +379,13 @@ const LOCAL_STORAGE_KEY_RATINGS = 'weekGlanceRatings_v2';
 const LOCAL_STORAGE_KEY_TODO_MIGRATION_DATE = 'lastTodoMigrationDate_v1';
 
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
-const ALL_DAY_SLOT_KEY = 'all-day';
 
-
-interface SlotDetails {
+export interface SlotDetails {
   dateKey: string; // YYYY-MM-DD
   hourSlot: string;
 }
 
-const CategoryIcons: Record<CategoryType, React.ElementType> = {
+export const CategoryIcons: Record<CategoryType, React.ElementType> = {
   work: Briefcase,
   study: BookOpen,
   shopping: ShoppingCart,
@@ -401,7 +396,7 @@ const CategoryIcons: Record<CategoryType, React.ElementType> = {
   dating: CalendarClock,
 };
 
-const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
+export const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
   hour: Hourglass,
   today: CalendarCheck,
   tomorrow: Sunrise,
@@ -410,17 +405,11 @@ const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType
   nextMonth: CalendarPlus,
 };
 
-const RATING_ICONS: Record<string, React.ElementType> = {
+export const RATING_ICONS: Record<string, React.ElementType> = {
   excellent: Smile,
   average: Meh,
   terrible: Frown,
 };
-
-const RATING_ORDER: (keyof typeof RATING_ICONS)[] = ['excellent', 'average', 'terrible'];
-
-
-const MAX_DAILY_NOTE_LENGTH = 1000;
-type DailyNoteDisplayMode = 'read' | 'edit' | 'pending';
 
 const getDateKey = (date: Date): string => {
   return format(date, 'yyyy-MM-dd');
@@ -511,17 +500,6 @@ const isUrlAlreadySaved = (url: string, allLinks: Record<string, Record<string, 
     return false;
 };
 
-// Helper function to get a color for a category tag based on its name
-const getTagColor = (tagName: string | null): string => {
-    if (!tagName) return 'bg-gray-200 text-gray-800';
-    let hash = 0;
-    for (let i = 0; i < tagName.length; i++) {
-        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = hash % 360;
-    return `hsl(${h}, 70%, 85%)`; // Using HSL for a wide range of soft colors
-};
-
 
 export default function DayDetailPage() {
   const params = useParams();
@@ -536,8 +514,6 @@ export default function DayDetailPage() {
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
   const [clientPageLoadTime, setClientPageLoadTime] = useState<Date | null>(null);
-  const [isClientAfter6PMToday, setIsClientAfter6PMToday] = useState<boolean>(false);
-
 
   const [allDailyNotes, setAllDailyNotes] = useState<Record<string, string>>({}); // Keyed by YYYY-MM-DD
   const [allRatings, setAllRatings] = useState<Record<string, RatingType>>({});
@@ -549,22 +525,18 @@ export default function DayDetailPage() {
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
   const [editingTodoItem, setEditingTodoItem] = useState<TodoItem | null>(null);
-  const [editingTodoSlotDetails, setEditingTodoSlotDetails] = useState<SlotDetails | null>(null);
 
   const [isMeetingNoteModalOpen, setIsMeetingNoteModalOpen] = useState(false);
   const [selectedSlotForMeetingNote, setSelectedSlotForMeetingNote] = useState<SlotDetails | null>(null);
   const [editingMeetingNoteItem, setEditingMeetingNoteItem] = useState<MeetingNoteItem | null>(null);
-  const [editingMeetingNoteSlotDetails, setEditingMeetingNoteSlotDetails] = useState<SlotDetails | null>(null);
 
   const [isShareLinkModalOpen, setIsShareLinkModalOpen] = useState(false);
   const [selectedSlotForShareLink, setSelectedSlotForShareLink] = useState<SlotDetails | null>(null);
   const [editingShareLinkItem, setEditingShareLinkItem] = useState<ShareLinkItem | null>(null);
-  const [editingShareLinkSlotDetails, setEditingShareLinkSlotDetails] = useState<SlotDetails | null>(null);
 
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
   const [selectedSlotForReflection, setSelectedSlotForReflection] = useState<SlotDetails | null>(null);
   const [editingReflectionItem, setEditingReflectionItem] = useState<ReflectionItem | null>(null);
-  const [editingReflectionSlotDetails, setEditingReflectionSlotDetails] = useState<SlotDetails | null>(null);
 
   const intervalRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeIntervalKey, setActiveIntervalKey] = useState<string | null>(null);
@@ -679,7 +651,6 @@ export default function DayDetailPage() {
   useEffect(() => {
     const now = new Date();
     setClientPageLoadTime(now);
-    setIsClientAfter6PMToday(now.getHours() >= 18);
 
     if (typeof navigator !== 'undefined') {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
@@ -738,40 +709,20 @@ export default function DayDetailPage() {
     loadData();
   }, [dateKey, toast]);
 
-  const saveAllDailyNotesToLocalStorage = (updatedNotes: Record<string, string>) => {
-    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, JSON.stringify(updatedNotes)); } 
-    catch (e) { console.error("Failed to save daily notes", e); }
-  };
-  const saveAllRatingsToLocalStorage = (updatedRatings: Record<string, RatingType>) => {
-    try { localStorage.setItem(LOCAL_STORAGE_KEY_RATINGS, JSON.stringify(updatedRatings)); }
-    catch (e) { console.error("Failed to save ratings", e); }
-  };
-  const saveAllTodosToLocalStorage = (updatedTodos: Record<string, Record<string, TodoItem[]>>) => {
-    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_TODOS, JSON.stringify(updatedTodos)); }
-    catch (e) { console.error("Failed to save todos", e); }
-  };
-  const saveAllMeetingNotesToLocalStorage = (updatedNotes: Record<string, Record<string, MeetingNoteItem[]>>) => {
-    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES, JSON.stringify(updatedNotes)); }
-    catch (e) { console.error("Failed to save meeting notes", e); }
-  };
-  const saveAllShareLinksToLocalStorage = (updatedLinks: Record<string, Record<string, ShareLinkItem[]>>) => {
-    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, JSON.stringify(updatedLinks)); }
-    catch (e) { console.error("Failed to save share links", e); }
-  };
-  const saveAllReflectionsToLocalStorage = (updatedReflections: Record<string, Record<string, ReflectionItem[]>>) => {
-    try { localStorage.setItem(LOCAL_STORAGE_KEY_ALL_REFLECTIONS, JSON.stringify(updatedReflections)); }
-    catch (e) { console.error("Failed to save reflections", e); }
-  };
+  const saveAllData = useCallback((dataKey: string, data: any) => {
+    try {
+        localStorage.setItem(dataKey, JSON.stringify(data));
+    } catch(e) {
+        console.error(`Failed to save data for key ${dataKey}`, e);
+        toast({title: 'Error saving data', variant: 'destructive'});
+    }
+  }, [toast]);
 
 
-  
   const tTodoModal = translations[currentLanguage].todoModal;
   const tMeetingNoteModal = translations[currentLanguage].meetingNoteModal;
   const tShareLinkModal = translations[currentLanguage].shareLinkModal;
   const tReflectionModal = translations[currentLanguage].reflectionModal;
-
-  const dailyNote = dateKey ? allDailyNotes[dateKey] || "" : "";
-  const rating = dateKey ? allRatings[dateKey] || null : null;
 
   const timeIntervals = useMemo(() => [
     { key: 'midnight', label: t.midnight }, { key: 'earlyMorning', label: t.earlyMorning },
@@ -782,8 +733,8 @@ export default function DayDetailPage() {
   const handleDailyNoteChange = (newNote: string) => {
     if (!dateKey) return;
     setAllDailyNotes(prev => {
-        const updated = {...prev, [dateKey]: newNote.substring(0, MAX_DAILY_NOTE_LENGTH) };
-        saveAllDailyNotesToLocalStorage(updated);
+        const updated = {...prev, [dateKey]: newNote };
+        saveAllData(LOCAL_STORAGE_KEY_ALL_DAILY_NOTES, updated);
         return updated;
     });
   };
@@ -792,31 +743,30 @@ export default function DayDetailPage() {
     if (!dateKey) return;
     setAllRatings(prev => {
       const updated = { ...prev, [dateKey]: newRating };
-      saveAllRatingsToLocalStorage(updated);
+      saveAllData(LOCAL_STORAGE_KEY_RATINGS, updated);
       return updated;
     });
   };
 
   const dayProperties = useMemo(() => {
-    if (!dateKey) return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false, dateObject: null };
+    if (!dateKey) return { isValid: false, dateObject: null };
     try {
         const parsedDate = parseISO(dateKey); // YYYY-MM-DD should be parsable
-        const dayIndex = (parsedDate.getDay() + 6) % 7; // Monday is 0
-        return { numericalIndex: dayIndex, sourceLanguage: currentLanguage, isValid: true, dateObject: parsedDate };
+        return { isValid: true, dateObject: parsedDate };
     } catch (e) {
         console.error("Invalid dateKey format:", dateKey);
-        return { numericalIndex: -1, sourceLanguage: currentLanguage, isValid: false, dateObject: null };
+        return { isValid: false, dateObject: null };
     }
-  }, [dateKey, currentLanguage]);
+  }, [dateKey]);
 
 
   const isViewingCurrentDay = useMemo(() => {
-    if (!clientPageLoadTime || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
+    if (!clientPageLoadTime || !dayProperties.isValid || !dayProperties.dateObject) return false;
     return format(dayProperties.dateObject, 'yyyy-MM-dd') === format(clientPageLoadTime, 'yyyy-MM-dd');
   }, [dayProperties, clientPageLoadTime]);
 
   const isFutureDay = useMemo(() => {
-    if (!clientPageLoadTime || !dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return false;
+    if (!clientPageLoadTime || !dayProperties.isValid || !dayProperties.dateObject) return false;
     const today = new Date(clientPageLoadTime.getTime());
     today.setHours(0,0,0,0); 
     return dayProperties.dateObject > today;
@@ -828,20 +778,6 @@ export default function DayDetailPage() {
     today.setHours(0, 0, 0, 0);
     return isBefore(dayProperties.dateObject, today);
   }, [clientPageLoadTime, dayProperties]);
-
-
-  const dailyNoteDisplayMode: DailyNoteDisplayMode = useMemo(() => {
-    if (isPastDay) return 'read';
-    if (!clientPageLoadTime) return 'pending'; // Default before client hydration
-    if (!dayProperties || !dayProperties.isValid || !dayProperties.dateObject) return 'edit';
-
-    if (!isViewingCurrentDay) {
-        const today = new Date(clientPageLoadTime.getTime());
-        today.setHours(0,0,0,0);
-        return (dayProperties.dateObject < today) ? 'read' : 'edit';
-    }
-    return isClientAfter6PMToday ? 'edit' : 'pending';
-  }, [dayProperties, isViewingCurrentDay, isClientAfter6PMToday, clientPageLoadTime, isPastDay]);
 
 
   useEffect(() => {
@@ -874,7 +810,6 @@ export default function DayDetailPage() {
         let [endH, endM] = endTimeStr.split(':').map(Number);
         if (endTimeStr === "24:00" || (endTimeStr === "00:00" && startH > 0 && endH === 0)) endH = 24;
 
-        const intervalStartTotalMinutes = startH * 60 + startM;
         const intervalEndTotalMinutes = endH * 60 + endM;
         const pageLoadTotalMinutesForIntervalCheck = now.getHours() * 60 + now.getMinutes();
 
@@ -885,7 +820,8 @@ export default function DayDetailPage() {
         if (!firstVisibleIntervalKeyForScroll) {
             firstVisibleIntervalKeyForScroll = interval.key;
         }
-
+        
+        const intervalStartTotalMinutes = startH * 60 + startM;
         if (currentTimeTotalMinutes >= intervalStartTotalMinutes && currentTimeTotalMinutes < intervalEndTotalMinutes) {
             newActiveKey = interval.key;
             currentIntervalKeyForScroll = interval.key;
@@ -898,12 +834,11 @@ export default function DayDetailPage() {
     if (targetKeyForScroll && intervalRefs.current[targetKeyForScroll]) {
         const scrollTimerId = setTimeout(() => {
             intervalRefs.current[targetKeyForScroll]?.scrollIntoView({ behavior: 'auto', block: 'start' });
-            setHasScrolledInitially(true); // Mark that initial scroll has happened
+            setHasScrolledInitially(true);
         }, 100);
         
         return () => clearTimeout(scrollTimerId);
     } else {
-        // If there's no target, we still need to mark the scroll as "done"
         setHasScrolledInitially(true);
     }
   }, [dateKey, clientPageLoadTime, isViewingCurrentDay, hasScrolledInitially, timeIntervals, allTodos, allMeetingNotes, allShareLinks, allReflections]);
@@ -913,24 +848,22 @@ export default function DayDetailPage() {
     if (!dateKey) return;
     setSelectedSlotForTodo({ dateKey, hourSlot });
     setEditingTodoItem(null);
-    setEditingTodoSlotDetails(null);
     setIsTodoModalOpen(true);
   };
-  const handleCloseTodoModal = () => {
-    setIsTodoModalOpen(false); setSelectedSlotForTodo(null); setEditingTodoItem(null); setEditingTodoSlotDetails(null);
-  };
+
   const handleSaveTodosFromModal = (currentDateKey: string, hourSlot: string, updatedTodosInSlot: TodoItem[]) => {
     setAllTodos(prev => {
       const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedTodosInSlot } };
-      saveAllTodosToLocalStorage(newAll); return newAll;
+      saveAllData(LOCAL_STORAGE_KEY_ALL_TODOS, newAll); return newAll;
     });
   };
+
   const handleToggleTodoCompletionInPage = (targetDateKey: string, targetHourSlot: string, todoId: string) => {
     setAllTodos(prev => {
       const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotTodos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t);
       const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
-      saveAllTodosToLocalStorage(newAll); return newAll;
+      saveAllData(LOCAL_STORAGE_KEY_ALL_TODOS, newAll); return newAll;
     });
   };
   const handleDeleteTodoInPage = (targetDateKey: string, targetHourSlot: string, todoId: string) => {
@@ -938,28 +871,20 @@ export default function DayDetailPage() {
       const slotTodos = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotTodos.filter(t => t.id !== todoId);
       const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
-      saveAllTodosToLocalStorage(newAll); return newAll;
+      saveAllData(LOCAL_STORAGE_KEY_ALL_TODOS, newAll); return newAll;
     });
   };
   const handleOpenEditModalInPage = (targetDateKey: string, targetHourSlot: string, todoToEdit: TodoItem) => {
     setEditingTodoItem(todoToEdit);
-    setEditingTodoSlotDetails({ dateKey: targetDateKey, hourSlot: targetHourSlot });
     setSelectedSlotForTodo({ dateKey: targetDateKey, hourSlot: targetHourSlot });
     setIsTodoModalOpen(true);
   };
-  const getTodosForSlot = (targetDateKey: string, targetHourSlot: string): TodoItem[] => {
-    return allTodos[targetDateKey]?.[targetHourSlot] || [];
-  };
-
+  
   const handleOpenMeetingNoteModal = (hourSlot: string, noteToEdit?: MeetingNoteItem) => {
     if (!dateKey) return;
     setSelectedSlotForMeetingNote({ dateKey, hourSlot });
     setEditingMeetingNoteItem(noteToEdit || null);
-    setEditingMeetingNoteSlotDetails(noteToEdit ? { dateKey, hourSlot } : null);
     setIsMeetingNoteModalOpen(true);
-  };
-  const handleCloseMeetingNoteModal = () => {
-    setIsMeetingNoteModalOpen(false); setSelectedSlotForMeetingNote(null); setEditingMeetingNoteItem(null); setEditingMeetingNoteSlotDetails(null);
   };
   const handleSaveMeetingNoteFromModal = (currentDateKey: string, hourSlot: string, savedNote: MeetingNoteItem) => {
     setAllMeetingNotes(prev => {
@@ -967,7 +892,7 @@ export default function DayDetailPage() {
       const idx = slotNotes.findIndex(n => n.id === savedNote.id);
       const updatedSlot = idx > -1 ? slotNotes.map((n, i) => i === idx ? savedNote : n) : [...slotNotes, savedNote];
       const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedSlot } };
-      saveAllMeetingNotesToLocalStorage(newAll); return newAll;
+      saveAllData(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES, newAll); return newAll;
     });
   };
   const handleDeleteMeetingNoteInPage = (targetDateKey: string, targetHourSlot: string, noteId: string) => {
@@ -975,28 +900,15 @@ export default function DayDetailPage() {
       const slotNotes = prev[targetDateKey]?.[targetHourSlot] || [];
       const updatedSlot = slotNotes.filter(n => n.id !== noteId);
       const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
-      saveAllMeetingNotesToLocalStorage(newAll); return newAll;
+      saveAllData(LOCAL_STORAGE_KEY_ALL_MEETING_NOTES, newAll); return newAll;
     });
-  };
-  const handleDeleteNoteFromModal = (noteId: string) => {
-    if (selectedSlotForMeetingNote) handleDeleteMeetingNoteInPage(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId);
-  };
-  const handleOpenEditMeetingNoteModalInPage = (targetDateKey: string, targetHourSlot: string, noteToEdit: MeetingNoteItem) => {
-    handleOpenMeetingNoteModal(hourSlot, noteToEdit);
-  };
-  const getMeetingNotesForSlot = (targetDateKey: string, targetHourSlot: string): MeetingNoteItem[] => {
-    return allMeetingNotes[targetDateKey]?.[targetHourSlot] || [];
   };
 
   const handleOpenShareLinkModal = (hourSlot: string, linkToEdit?: ShareLinkItem) => {
     if (!dateKey) return;
     setSelectedSlotForShareLink({ dateKey, hourSlot });
     setEditingShareLinkItem(linkToEdit || null);
-    setEditingShareLinkSlotDetails(linkToEdit ? { dateKey, hourSlot } : null);
     setIsShareLinkModalOpen(true);
-  };
-  const handleCloseShareLinkModal = () => {
-    setIsShareLinkModalOpen(false); setSelectedSlotForShareLink(null); setEditingShareLinkItem(null); setEditingShareLinkSlotDetails(null);
   };
   const handleSaveShareLinkFromModal = (currentDateKey: string, hourSlot: string, savedLink: ShareLinkItem) => {
     setAllShareLinks(prev => {
@@ -1004,7 +916,7 @@ export default function DayDetailPage() {
         const idx = slotLinks.findIndex(l => l.id === savedLink.id);
         const updatedSlot = idx > -1 ? slotLinks.map((l, i) => i === idx ? savedLink : l) : [...slotLinks, savedLink];
         const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedSlot } };
-        saveAllShareLinksToLocalStorage(newAll); return newAll;
+        saveAllData(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, newAll); return newAll;
     });
   };
   const handleDeleteShareLinkInPage = (targetDateKey: string, targetHourSlot: string, linkId: string) => {
@@ -1012,28 +924,15 @@ export default function DayDetailPage() {
         const slotLinks = prev[targetDateKey]?.[targetHourSlot] || [];
         const updatedSlot = slotLinks.filter(l => l.id !== linkId);
         const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
-        saveAllShareLinksToLocalStorage(newAll); return newAll;
+        saveAllData(LOCAL_STORAGE_KEY_ALL_SHARE_LINKS, newAll); return newAll;
     });
   };
-  const handleDeleteLinkFromModal = (linkId: string) => {
-    if (selectedSlotForShareLink) handleDeleteShareLinkInPage(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId);
-  };
-  const handleOpenEditShareLinkModalInPage = (targetDateKey: string, targetHourSlot: string, linkToEdit: ShareLinkItem) => {
-    handleOpenShareLinkModal(hourSlot, linkToEdit);
-  };
-  const getShareLinksForSlot = (targetDateKey: string, targetHourSlot: string): ShareLinkItem[] => {
-    return allShareLinks[targetDateKey]?.[targetHourSlot] || [];
-  };
-
+  
   const handleOpenReflectionModal = (hourSlot: string, reflectionToEdit?: ReflectionItem) => {
     if (!dateKey) return;
     setSelectedSlotForReflection({ dateKey, hourSlot });
     setEditingReflectionItem(reflectionToEdit || null);
-    setEditingReflectionSlotDetails(reflectionToEdit ? { dateKey, hourSlot } : null);
     setIsReflectionModalOpen(true);
-  };
-  const handleCloseReflectionModal = () => {
-    setIsReflectionModalOpen(false); setSelectedSlotForReflection(null); setEditingReflectionItem(null); setEditingReflectionSlotDetails(null);
   };
   const handleSaveReflectionFromModal = (currentDateKey: string, hourSlot: string, savedReflection: ReflectionItem) => {
     setAllReflections(prev => {
@@ -1041,7 +940,7 @@ export default function DayDetailPage() {
         const idx = slotReflections.findIndex(r => r.id === savedReflection.id);
         const updatedSlot = idx > -1 ? slotReflections.map((r, i) => i === idx ? savedReflection : r) : [...slotReflections, savedReflection];
         const newAll = { ...prev, [currentDateKey]: { ...(prev[currentDateKey] || {}), [hourSlot]: updatedSlot } };
-        saveAllReflectionsToLocalStorage(newAll); return newAll;
+        saveAllData(LOCAL_STORAGE_KEY_ALL_REFLECTIONS, newAll); return newAll;
     });
   };
   const handleDeleteReflectionInPage = (targetDateKey: string, targetHourSlot: string, reflectionId: string) => {
@@ -1049,37 +948,10 @@ export default function DayDetailPage() {
         const slotReflections = prev[currentDateKey]?.[targetHourSlot] || [];
         const updatedSlot = slotReflections.filter(r => r.id !== reflectionId);
         const newAll = { ...prev, [targetDateKey]: { ...(prev[targetDateKey] || {}), [targetHourSlot]: updatedSlot } };
-        saveAllReflectionsToLocalStorage(newAll); return newAll;
+        saveAllData(LOCAL_STORAGE_KEY_ALL_REFLECTIONS, newAll); return newAll;
     });
   };
-  const handleDeleteReflectionFromModal = (reflectionId: string) => {
-    if (selectedSlotForReflection) handleDeleteReflectionInPage(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId);
-  };
-  const handleOpenEditReflectionModalInPage = (targetDateKey: string, targetHourSlot: string, reflectionToEdit: ReflectionItem) => {
-    handleOpenReflectionModal(hourSlot, reflectionToEdit);
-  };
-  const getReflectionsForSlot = (targetDateKey: string, targetHourSlot: string): ReflectionItem[] => {
-    return allReflections[targetDateKey]?.[targetHourSlot] || [];
-  };
 
-
-  const getCategoryTooltipText = (category: CategoryType | null) => {
-    if (!category || !tTodoModal.categories[category]) return '';
-    return `${tTodoModal.categoryLabel} ${tTodoModal.categories[category]}`;
-  };
-  const getDeadlineTooltipText = (deadline: TodoItem['deadline']) => {
-    if (!deadline || !tTodoModal.deadlines[deadline as keyof typeof tTodoModal.deadlines]) return '';
-    return `${tTodoModal.deadlineLabel} ${tTodoModal.deadlines[deadline as keyof typeof tTodoModal.deadlines]}`;
-  };
-  const getImportanceTooltipText = (importance: TodoItem['importance']) => {
-    if (importance === 'important') return `${tTodoModal.importanceLabel} ${tTodoModal.importances.important}`;
-    return '';
-  };
-
-  const allDayTodos = useMemo(() => getTodosForSlot(dateKey, ALL_DAY_SLOT_KEY), [allTodos, dateKey]);
-  
-  const showRatingControls = (isPastDay || (isViewingCurrentDay && isClientAfter6PMToday)) && !isFutureDay;
-  
   const navigateToDay = (direction: 'next' | 'prev') => {
     const currentIndex = eventfulDays.indexOf(dateKey);
     if (currentIndex === -1) return;
@@ -1102,10 +974,9 @@ export default function DayDetailPage() {
   }, [dateKey, eventfulDays]);
 
 
-  if (!dateKey || !clientPageLoadTime) { // Wait for clientPageLoadTime to be set
+  if (!dateKey || !clientPageLoadTime) {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 sm:p-8">
-            {/* Can show a loader here if preferred */}
             <Link href="/" passHref>
                 <Button variant="outline" size="sm" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -1139,415 +1010,100 @@ export default function DayDetailPage() {
         </header>
 
         <main className="w-full max-w-4xl">
-          {dailyNoteDisplayMode !== 'pending' && !isFutureDay && (
-            <>
-              <h1 className="text-3xl font-headline font-semibold text-primary mb-6">
-                {t.dayDetailsTitle(dayNameForDisplay)}
-              </h1>
-              <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-xl font-medium text-foreground mb-2">{t.notesLabel}</h2>
-                    {dailyNoteDisplayMode === 'read' ? (
-                        <div className="p-3 border rounded-md min-h-[100px] bg-background/50">
-                        {dailyNote ? (
-                            <ScrollArea className="max-h-48">
-                            <p className="text-sm text-foreground whitespace-pre-wrap">{dailyNote}</p>
-                            </ScrollArea>
-                        ) : (
-                            <p className="text-muted-foreground italic">{t.noData}</p>
-                        )}
-                        </div>
-                    ) : (
-                        <div>
-                        <Textarea
-                            value={dailyNote}
-                            onChange={(e) => handleDailyNoteChange(e.target.value)}
-                            placeholder={t.notesPlaceholder}
-                            className="min-h-[100px] bg-background/50 text-sm"
-                            maxLength={MAX_DAILY_NOTE_LENGTH}
-                            disabled={isPastDay}
-                            autoComplete="off"
-                        />
-                        <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                            {dailyNote.length}/{MAX_DAILY_NOTE_LENGTH}
-                        </div>
-                        </div>
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
-                    <div className={cn("p-3 border rounded-md bg-background/50", !showRatingControls && "flex items-center")}>
-                      {!showRatingControls ? (
-                        <p className="text-muted-foreground">{rating ? t.ratingUiLabels[rating as keyof typeof t.ratingUiLabels] : t.noData}</p>
-                      ) : (
-                        <div className="flex justify-around w-full">
-                           {RATING_ORDER.map((type) => {
-                            const Icon = RATING_ICONS[type];
-                            const label = t.ratingUiLabels[type as keyof typeof t.ratingUiLabels];
-                            return (
-                                <button
-                                key={type}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRatingChange(rating === type ? null : type as RatingType);
-                                }}
-                                className={cn(
-                                    "p-1 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                    "hover:bg-accent/50",
-                                    rating === type ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                                )}
-                                aria-label={label}
-                                aria-pressed={rating === type}
-                                >
-                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                                </button>
-                            );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
+          <DailySummaryCard
+            translations={t}
+            dateKey={dateKey}
+            dayNameForDisplay={dayNameForDisplay}
+            dailyNote={allDailyNotes[dateKey] || ""}
+            rating={allRatings[dateKey] || null}
+            isPastDay={isPastDay}
+            isViewingCurrentDay={isViewingCurrentDay}
+            isClientAfter6PM={clientPageLoadTime.getHours() >= 18}
+            onDailyNoteChange={handleDailyNoteChange}
+            onRatingChange={handleRatingChange}
+          />
+          
           <div>
             <h2 className="text-2xl font-semibold text-primary mb-4">
               {t.timeIntervalsTitle(dayNameForDisplay)}
             </h2>
             <div className="grid grid-cols-1 gap-6">
-              {timeIntervals.map(interval => {
-                const hourlySlotsForInterval = generateHourlySlots(interval.label);
-                const hasContentInAnySlotOfInterval = hourlySlotsForInterval.some(slot =>
-                  (getTodosForSlot(dateKey, slot).length > 0) ||
-                  (getMeetingNotesForSlot(dateKey, slot).length > 0) ||
-                  (getShareLinksForSlot(dateKey, slot).length > 0) ||
-                  (getReflectionsForSlot(dateKey, slot).length > 0)
-                );
-                
-                if (isPastDay && !hasContentInAnySlotOfInterval) {
-                   return null;
-                }
-
-                if (isViewingCurrentDay && !hasContentInAnySlotOfInterval && clientPageLoadTime && dayProperties.dateObject) {
-                    const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-                    if (match) {
-                        const [, , endTimeStr] = match;
-                        let [endH, endM] = endTimeStr.split(':').map(Number);
-                        if (endH === 0 && endM === 0) endH = 24;
-
-                        const intervalEndTotalMinutes = endH * 60 + endM;
-                        const nowTotalMinutes = clientPageLoadTime.getHours() * 60 + clientPageLoadTime.getMinutes();
-
-                        if (intervalEndTotalMinutes <= nowTotalMinutes) {
-                            return null;
-                        }
-                    }
-                }
-
-
-                const hourlySlots = generateHourlySlots(interval.label);
-                const mainTitle = interval.label.split(' (')[0];
-                const timeRangeSubtext = interval.label.includes('(') ? `(${interval.label.split(' (')[1]}` : '';
-                const isCurrentActiveInterval = isViewingCurrentDay && activeIntervalKey === interval.key;
-
-                return (
-                  <div
+              {timeIntervals.map(interval => (
+                  <TimeIntervalSection
                     key={interval.key}
-                    ref={el => { if (el) intervalRefs.current[interval.key] = el; }}
-                    className={cn(
-                        "bg-card p-4 rounded-lg shadow-lg transition-all duration-300",
-                        isCurrentActiveInterval && "ring-2 ring-primary shadow-xl scale-[1.01]"
-                    )}
-                  >
-                    <h3 className="text-lg font-medium text-foreground mb-1">{mainTitle}</h3>
-                    {timeRangeSubtext && <p className="text-xs text-muted-foreground mb-2">{timeRangeSubtext}</p>}
-                    <div className="h-1 w-full bg-primary/30 rounded-full mb-3"></div>
-
-                    {hourlySlots.length > 0 ? (
-                      <div className="space-y-3 mt-4">
-                        {hourlySlots.map((slot, slotIndex) => {
-                          const todosForSlot = getTodosForSlot(dateKey, slot);
-                          const meetingNotesForSlot = getMeetingNotesForSlot(dateKey, slot);
-                          const shareLinksForSlot = getShareLinksForSlot(dateKey, slot);
-                          const reflectionsForSlot = getReflectionsForSlot(dateKey, slot);
-                          const hasAnyContentForThisSlot = todosForSlot.length > 0 || meetingNotesForSlot.length > 0 || shareLinksForSlot.length > 0 || reflectionsForSlot.length > 0;
-
-                          let isAddingDisabledForThisSlot = isPastDay;
-                          let shouldHideSlot = false;
-                          
-                          if (!isPastDay && isViewingCurrentDay && clientPageLoadTime && dayProperties.dateObject) {
-                            const dateKeyDate = dayProperties.dateObject;
-                            const clientDatePart = new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate());
-                            
-                            if (format(clientDatePart, 'yyyy-MM-dd') === format(dateKeyDate, 'yyyy-MM-dd')) {
-                                const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-                                if (slotTimeMatch) {
-                                    const slotEndTimeStr = slotTimeMatch[2];
-                                    let slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);
-                                    const slotEndMinute = parseInt(slotEndTimeStr.split(':')[1]);
-
-                                    if (slotEndHour === 0 && slotEndMinute === 0 && slotTimeMatch[1].split(':')[0] !== "00") {
-                                        slotEndHour = 24;
-                                    }
-                                    const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
-
-                                    const pageLoadHour = clientPageLoadTime.getHours();
-                                    const pageLoadMinute = clientPageLoadTime.getMinutes();
-                                    const pageLoadTotalMinutes = pageLoadHour * 60 + pageLoadMinute;
-
-                                    if (slotEndTotalMinutes <= pageLoadTotalMinutes) {
-                                        isAddingDisabledForThisSlot = true;
-                                        if (!hasAnyContentForThisSlot) {
-                                            shouldHideSlot = true;
-                                        }
-                                    }
-                                }
-                            }
-                          }
-
-
-                          if (isPastDay && !hasAnyContentForThisSlot) {
-                              return null;
-                          }
-                          
-                          if(shouldHideSlot) {
-                              return null;
-                          }
-
-                          let sectionsRenderedInSlotCount = 0;
-
-                          return (
-                            <div key={slotIndex} className="p-3 border rounded-md bg-muted/20 shadow-sm">
-                              <div className="flex justify-between items-center mb-2">
-                                <div className="flex items-baseline">
-                                  <p className="text-sm font-semibold text-foreground/90">{slot}</p>
-                                  {!hasAnyContentForThisSlot && (
-                                    <p className="text-xs text-muted-foreground italic ml-2">
-                                      {t.noItemsForHour}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex space-x-1">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenTodoModal(slot)} disabled={isAddingDisabledForThisSlot}>
-                                        <ListChecks className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{t.addTodo}</p></TooltipContent>
-                                  </Tooltip>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenMeetingNoteModal(slot)} disabled={isAddingDisabledForThisSlot}>
-                                        <ClipboardList className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{t.addMeetingNote}</p></TooltipContent>
-                                  </Tooltip>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenShareLinkModal(slot)} disabled={isAddingDisabledForThisSlot}>
-                                        <LinkIconLucide className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{t.addLink}</p></TooltipContent>
-                                  </Tooltip>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenReflectionModal(slot)} disabled={isAddingDisabledForThisSlot}>
-                                        <MessageSquareText className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{t.addReflection}</p></TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              </div>
-
-                              {todosForSlot.length > 0 && (() => {
-                                sectionsRenderedInSlotCount++;
-                                return (
-                                <ul className="space-y-2 p-px mb-3 group/todolist">
-                                  {todosForSlot.map((todo) => {
-                                    const CategoryIcon = todo.category ? CategoryIcons[todo.category] : null;
-                                    const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
-                                    return (
-                                      <li key={todo.id} className="flex items-center justify-between group/todoitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                        <div className="flex items-center space-x-2 flex-grow min-w-0">
-                                          <Checkbox
-                                            id={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
-                                            checked={todo.completed}
-                                            onCheckedChange={() => handleToggleTodoCompletionInPage(dateKey, slot, todo.id)}
-                                            aria-label={todo.completed ? t.markIncomplete : t.markComplete}
-                                            className="border-primary/50 shrink-0"
-                                            disabled={isPastDay}
-                                          />
-                                          <div className="flex items-center space-x-1 shrink-0">
-                                            {CategoryIcon && todo.category && (
-                                              <Tooltip><TooltipTrigger asChild><CategoryIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getCategoryTooltipText(todo.category)}</p></TooltipContent></Tooltip>
-                                            )}
-                                            {DeadlineIcon && todo.deadline && (
-                                              <Tooltip><TooltipTrigger asChild><DeadlineIcon className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger><TooltipContent><p>{getDeadlineTooltipText(todo.deadline)}</p></TooltipContent></Tooltip>
-                                            )}
-                                            {todo.importance === 'important' && (
-                                              <Tooltip><TooltipTrigger asChild><StarIcon className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /></TooltipTrigger><TooltipContent><p>{getImportanceTooltipText(todo.importance)}</p></TooltipContent></Tooltip>
-                                            )}
-                                          </div>
-                                          <label
-                                            htmlFor={`daypage-todo-${dateKey}-${slot}-${todo.id}`}
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer" )}
-                                            title={todo.text}
-                                          >
-                                            {todo.text}
-                                          </label>
-                                        </div>
-                                        {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
-                                          <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditModalInPage(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
-                                          <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTodoInPage(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
-                                        </div>}
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                                );
-                              })()}
-
-                              {meetingNotesForSlot.length > 0 && (() => {
-                                const isFirstInSectionGroup = sectionsRenderedInSlotCount === 0;
-                                sectionsRenderedInSlotCount++;
-                                return (
-                                <>
-                                 <h4 className={cn("text-xs font-semibold text-muted-foreground mb-2 pl-1 group/meetingnotelist", !isFirstInSectionGroup && "mt-4")}>{t.meetingNotesSectionTitle}</h4>
-                                    <ul className="space-y-2 p-px mb-3">
-                                      {meetingNotesForSlot.map((note) => (
-                                          <li key={note.id} className="flex items-center justify-between group/noteitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                            <span className="text-xs text-foreground/90 flex-1 min-w-0 truncate" title={note.title}>{note.title || t.noData}</span>
-                                            {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/noteitem:opacity-100 transition-opacity">
-                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditMeetingNoteModalInPage(dateKey, slot, note)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editMeetingNote}</p></TooltipContent></Tooltip>
-                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMeetingNoteInPage(dateKey, slot, note.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteMeetingNote}</p></TooltipContent></Tooltip>
-                                            </div>}
-                                          </li>
-                                        ))}
-                                    </ul>
-                                </>
-                                );
-                              })()}
-
-                              {shareLinksForSlot.length > 0 && (() => {
-                                const isFirstInSectionGroup = sectionsRenderedInSlotCount === 0;
-                                sectionsRenderedInSlotCount++;
-                                return (
-                                <>
-                                  <h4 className={cn("text-xs font-semibold text-muted-foreground mb-2 pl-1 group/linklist", !isFirstInSectionGroup && "mt-4")}>{t.linksSectionTitle}</h4>
-                                    <ul className="space-y-2 p-px mb-3">
-                                      {shareLinksForSlot.map((link) => (
-                                        <li key={link.id} className="flex items-center justify-between group/linkitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                          <div className="flex-1 min-w-0 flex items-center">
-                                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate" title={link.title || link.url}>{link.title || link.url}</a>
-                                            {link.category && (
-                                                <span 
-                                                  className="text-xs rounded-full px-2 py-0.5 ml-2 shrink-0"
-                                                  style={{ backgroundColor: getTagColor(link.category) }}
-                                                >
-                                                  {link.category}
-                                                </span>
-                                            )}
-                                          </div>
-                                          {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/linkitem:opacity-100 transition-opacity">
-                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditShareLinkModalInPage(dateKey, slot, link)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editLink}</p></TooltipContent></Tooltip>
-                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteShareLinkInPage(dateKey, slot, link.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteLink}</p></TooltipContent></Tooltip>
-                                          </div>}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                </>
-                                );
-                              })()}
-
-                              {reflectionsForSlot.length > 0 && (() => {
-                                const isFirstInSectionGroup = sectionsRenderedInSlotCount === 0;
-                                sectionsRenderedInSlotCount++;
-                                return (
-                                <>
-                                  <h4 className={cn("text-xs font-semibold text-muted-foreground mb-2 pl-1 group/reflectionlist", !isFirstInSectionGroup && "mt-4")}>{t.reflectionsSectionTitle}</h4>
-                                    <ul className="space-y-2 p-px"> {/* Removed mb-3 here as it's the last section */}
-                                      {reflectionsForSlot.map((reflection) => (
-                                        <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-muted/30 p-1.5 rounded-md transition-colors">
-                                          <ScrollArea className="max-h-20 w-full mr-2"><p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p></ScrollArea>
-                                          {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
-                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleOpenEditReflectionModalInPage(dateKey, slot, reflection)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editReflection}</p></TooltipContent></Tooltip>
-                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteReflectionInPage(dateKey, slot, reflection.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteReflection}</p></TooltipContent></Tooltip>
-                                          </div>}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                </>
-                                );
-                              })()}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="p-3 border rounded-md bg-background/50 mt-4">
-                        <p className="text-sm text-muted-foreground italic">{t.activitiesPlaceholder(interval.label)}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                    interval={interval}
+                    dateKey={dateKey}
+                    isPastDay={isPastDay}
+                    isViewingCurrentDay={isViewingCurrentDay}
+                    clientPageLoadTime={clientPageLoadTime}
+                    isCurrentActiveInterval={isViewingCurrentDay && activeIntervalKey === interval.key}
+                    intervalRef={el => { if (el) intervalRefs.current[interval.key] = el; }}
+                    allTodos={allTodos}
+                    allMeetingNotes={allMeetingNotes}
+                    allShareLinks={allShareLinks}
+                    allReflections={allReflections}
+                    onToggleTodoCompletion={handleToggleTodoCompletionInPage}
+                    onDeleteTodo={handleDeleteTodoInPage}
+                    onOpenEditTodoModal={handleOpenEditModalInPage}
+                    onOpenMeetingNoteModal={handleOpenMeetingNoteModal}
+                    onOpenShareLinkModal={handleOpenShareLinkModal}
+                    onOpenReflectionModal={handleOpenReflectionModal}
+                    onDeleteMeetingNote={handleDeleteMeetingNoteInPage}
+                    onDeleteShareLink={handleDeleteShareLinkInPage}
+                    onDeleteReflection={handleDeleteReflectionInPage}
+                    translations={t}
+                />
+              ))}
             </div>
           </div>
         </main>
       </div>
+
       {isTodoModalOpen && selectedSlotForTodo && (
         <TodoModal
           isOpen={isTodoModalOpen}
-          onClose={handleCloseTodoModal}
+          onClose={() => setIsTodoModalOpen(false)}
           onSaveTodos={handleSaveTodosFromModal}
           dateKey={selectedSlotForTodo.dateKey}
           hourSlot={selectedSlotForTodo.hourSlot}
-          initialTodos={getTodosForSlot(selectedSlotForTodo.dateKey, selectedSlotForTodo.hourSlot)}
+          initialTodos={allTodos[selectedSlotForTodo.dateKey]?.[selectedSlotForTodo.hourSlot] || []}
           translations={tTodoModal}
-          defaultEditingTodoId={editingTodoItem && editingTodoSlotDetails?.dateKey === selectedSlotForTodo.dateKey && editingTodoSlotDetails?.hourSlot === selectedSlotForTodo.hourSlot ? editingTodoItem.id : undefined}
+          defaultEditingTodoId={editingTodoItem?.id}
         />
       )}
       {isMeetingNoteModalOpen && selectedSlotForMeetingNote && (
         <MeetingNoteModal
             isOpen={isMeetingNoteModalOpen}
-            onClose={handleCloseMeetingNoteModal}
+            onClose={() => setIsMeetingNoteModalOpen(false)}
             onSave={handleSaveMeetingNoteFromModal}
-            onDelete={editingMeetingNoteItem ? handleDeleteNoteFromModal : undefined}
+            onDelete={handleDeleteMeetingNoteInPage.bind(null, selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot)}
             dateKey={selectedSlotForMeetingNote.dateKey}
             hourSlot={selectedSlotForMeetingNote.hourSlot}
-            initialData={editingMeetingNoteItem && editingMeetingNoteSlotDetails?.dateKey === selectedSlotForMeetingNote.dateKey && editingMeetingNoteSlotDetails?.hourSlot === selectedSlotForMeetingNote.hourSlot ? editingMeetingNoteItem : null}
+            initialData={editingMeetingNoteItem}
             translations={tMeetingNoteModal}
         />
       )}
       {isShareLinkModalOpen && selectedSlotForShareLink && (
         <ShareLinkModal
             isOpen={isShareLinkModalOpen}
-            onClose={handleCloseShareLinkModal}
+            onClose={() => setIsShareLinkModalOpen(false)}
             onSave={handleSaveShareLinkFromModal}
-            onDelete={editingShareLinkItem ? handleDeleteLinkFromModal : undefined}
+            onDelete={handleDeleteShareLinkInPage.bind(null, selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot)}
             dateKey={selectedSlotForShareLink.dateKey}
             hourSlot={selectedSlotForShareLink.hourSlot}
-            initialData={editingShareLinkItem && editingShareLinkSlotDetails?.dateKey === selectedSlotForShareLink.dateKey && editingShareLinkSlotDetails?.hourSlot === selectedSlotForShareLink.hourSlot ? editingShareLinkItem : null}
+            initialData={editingShareLinkItem}
             translations={tShareLinkModal}
         />
       )}
       {isReflectionModalOpen && selectedSlotForReflection && (
         <ReflectionModal
             isOpen={isReflectionModalOpen}
-            onClose={handleCloseReflectionModal}
+            onClose={() => setIsReflectionModalOpen(false)}
             onSave={handleSaveReflectionFromModal}
-            onDelete={editingReflectionItem ? handleDeleteReflectionFromModal : undefined}
+            onDelete={handleDeleteReflectionInPage.bind(null, selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot)}
             dateKey={selectedSlotForReflection.dateKey}
             hourSlot={selectedSlotForReflection.hourSlot}
-            initialData={editingReflectionItem && editingReflectionSlotDetails?.dateKey === selectedSlotForReflection.dateKey && editingReflectionSlotDetails?.hourSlot === selectedSlotForReflection.hourSlot ? editingReflectionItem : null}
+            initialData={editingReflectionItem}
             translations={tReflectionModal}
         />
       )}
