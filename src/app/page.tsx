@@ -676,7 +676,7 @@ export default function WeekGlancePage() {
             eventfulDays={eventfulDays}
         />
         
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-4xl mb-12 sm:mb-16 justify-items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mb-12 sm:mb-16">
              {daysToDisplay.map((dateInWeek) => {
                 const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
                 const dateKeyForStorage = getDateKey(dateInWeek);
@@ -712,7 +712,7 @@ export default function WeekGlancePage() {
                     />
                 );
             })}
-             <div className="w-full sm:w-40 h-48 justify-self-center">
+             <div className="w-full sm:w-40 h-44 sm:h-48 justify-self-center">
                 <GameCard 
                     title={t.weeklySummaryTitle}
                     icon={BarChart} 
@@ -734,9 +734,7 @@ export default function WeekGlancePage() {
           />
         )}
         
-        <div className="md:hidden">
-            <FeatureGrid />
-        </div>
+        <FeatureGrid />
 
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>
