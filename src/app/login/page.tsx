@@ -94,7 +94,11 @@ const AuthForm = ({ isRegister, t }: { isRegister?: boolean, t: any }) => {
       router.push('/'); // Redirect to home page on successful login/register
     } catch (err: unknown) {
       const authError = err as AuthError;
-      setError(getFriendlyErrorMessage(t, authError.code));
+      console.error("Firebase Auth Error:", authError);
+      const friendlyMessage = getFriendlyErrorMessage(t, authError.code);
+      // Provide more detailed error for debugging
+      const detailedMessage = `${friendlyMessage} (Code: ${authError.code || 'unknown'})`;
+      setError(detailedMessage);
     } finally {
       setIsLoading(false);
     }
