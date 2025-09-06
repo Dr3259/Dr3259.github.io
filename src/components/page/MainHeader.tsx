@@ -4,7 +4,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, Settings, Check, LayoutGrid, User, LogOut } from "lucide-react";
+import { Languages, Sun, Moon, Settings, Check, LayoutGrid, User, LogOut, LogIn } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import type { LanguageKey, Theme } from '@/lib/page-types';
@@ -116,8 +116,9 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
                     </DropdownMenuContent>
                 </DropdownMenu>
             ) : (
-                <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
-                    登录/注册
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => router.push('/login')}>
+                    <LogIn className="h-4 w-4" />
+                    <span className="sr-only">Login / Register</span>
                 </Button>
             )}
       </div>
