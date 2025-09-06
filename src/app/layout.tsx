@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { MusicProvider } from '@/context/MusicContext';
 import { MiniMusicPlayer } from '@/components/MiniMusicPlayer';
+import { AuthProvider } from '@/context/AuthContext';
 import type { Metric } from 'next/dist/compiled/next-server/server.edge';
 
 const inter = Inter({
@@ -42,10 +43,12 @@ export default function RootLayout({
       <head>
       </head>
       <body className={`${inter.variable} font-body antialiased`}>
-        <MusicProvider>
-          {children}
-          <MiniMusicPlayer />
-        </MusicProvider>
+        <AuthProvider>
+          <MusicProvider>
+            {children}
+            <MiniMusicPlayer />
+          </MusicProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

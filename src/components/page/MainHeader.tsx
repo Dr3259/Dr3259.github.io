@@ -2,13 +2,17 @@
 "use client";
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, Settings, Check, LayoutGrid } from "lucide-react";
+import { Languages, Sun, Moon, Settings, Check, LayoutGrid, User, LogOut } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import type { LanguageKey, Theme } from '@/lib/page-types';
 import { MainFeatureGridContent } from './MainFeatureGridContent';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/context/AuthContext';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 
 
 interface MainHeaderProps {
@@ -26,8 +30,18 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
   theme,
   onThemeChange,
 }) => {
-
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+      try {
+          await signOut(auth);
+          // router.push('/login'); // Optional: redirect to login page after logout
+      } catch (error) {
+          console.error("Error signing out: ", error);
+      }
+  };
 
   return (
     <header className="mb-8 sm:mb-12 w-full flex justify-between items-center">
@@ -84,6 +98,28 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
                   </DropdownMenuItem>
               </DropdownMenuContent>
           </DropdownMenu>
+
+          {user ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-9 w-9">
+                            <User className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>退出</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
+                    登录/注册
+                </Button>
+            )}
       </div>
     </header>
   );
