@@ -26,6 +26,7 @@ import copy from 'copy-to-clipboard';
 import { DailySummaryCard } from '@/components/page/day-view/DailySummaryCard';
 import { TimeIntervalSection } from '@/components/page/day-view/TimeIntervalSection';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
+import { translations, type LanguageKey } from '@/lib/translations';
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -54,10 +55,6 @@ export const generateHourlySlots = (intervalLabelWithTime: string): string[] => 
   }
   return slots;
 };
-
-// Translations and static data
-const translations = { /* ... omitted for brevity ... */ };
-type LanguageKey = keyof typeof translations;
 
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
@@ -131,22 +128,39 @@ export default function DayDetailPage() {
   const saveUrlToCurrentTimeSlot = useCallback((item: { title: string; url: string; category: string | null }): { success: boolean; slotName: string } => {
     const newLink: ShareLinkItem = { id: Date.now().toString(), url: item.url, title: item.title, category: item.category };
     const now = new Date(), currentHour = now.getHours(), currentDateKey = getDateKey(now);
-    const timeIntervals = t.timeIntervals;
-    let targetIntervalLabel = timeIntervals.evening;
-    if (currentHour < 5) targetIntervalLabel = timeIntervals.midnight;
-    else if (currentHour < 9) targetIntervalLabel = timeIntervals.earlyMorning;
-    else if (currentHour < 12) targetIntervalLabel = timeIntervals.morning;
-    else if (currentHour < 14) targetIntervalLabel = timeIntervals.noon;
-    else if (currentHour < 18) targetIntervalLabel = timeIntervals.afternoon;
+    
+    // 定义时间段标签（带时间范围）
+    const intervalLabels = {
+        midnight: `${t.timeIntervals.midnight} (00:00 - 05:00)`,
+        earlyMorning: `${t.timeIntervals.earlyMorning} (05:00 - 09:00)`,
+        morning: `${t.timeIntervals.morning} (09:00 - 12:00)`,
+        noon: `${t.timeIntervals.noon} (12:00 - 14:00)`,
+        afternoon: `${t.timeIntervals.afternoon} (14:00 - 18:00)`,
+        evening: `${t.timeIntervals.evening} (18:00 - 24:00)`,
+    };
+    
+    let targetIntervalKey: keyof typeof intervalLabels = 'evening';
+    if (currentHour < 5) targetIntervalKey = 'midnight';
+    else if (currentHour < 9) targetIntervalKey = 'earlyMorning';
+    else if (currentHour < 12) targetIntervalKey = 'morning';
+    else if (currentHour < 14) targetIntervalKey = 'noon';
+    else if (currentHour < 18) targetIntervalKey = 'afternoon';
+    
+    const targetIntervalLabel = intervalLabels[targetIntervalKey];
     const hourlySlots = generateHourlySlots(targetIntervalLabel);
     if (hourlySlots.length === 0) return { success: false, slotName: '' };
+    
     const targetSlot = hourlySlots.find(slot => {
-        const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
-        if (match) { const startH = parseInt(match[1]), endH = parseInt(match[2]); return currentHour >= startH && currentHour < (endH || 24); }
+        const match = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+        if (match) { 
+            const startH = parseInt(match[1].split(':')[0]), endH = parseInt(match[2].split(':')[0]); 
+            return currentHour >= startH && currentHour < (endH || 24); 
+        }
         return false;
     }) || hourlySlots[0];
+    
     addShareLink(currentDateKey, targetSlot, newLink);
-    return { success: true, slotName: targetIntervalLabel.split(' ')[0] };
+    return { success: true, slotName: t.timeIntervals[targetIntervalKey] };
   }, [t.timeIntervals, addShareLink]);
 
   const checkClipboard = useCallback(async () => {
@@ -206,7 +220,14 @@ export default function DayDetailPage() {
   const tMeetingNoteModal = translations[currentLanguage].meetingNoteModal;
   const tShareLinkModal = translations[currentLanguage].shareLinkModal;
   const tReflectionModal = translations[currentLanguage].reflectionModal;
-  const timeIntervals = useMemo(() => [{ key: 'midnight', label: t.midnight }, { key: 'earlyMorning', label: t.earlyMorning }, { key: 'morning', label: t.morning }, { key: 'noon', label: t.noon }, { key: 'afternoon', label: t.afternoon }, { key: 'evening', label: t.evening }], [t]);
+  const timeIntervals = useMemo(() => [
+    { key: 'midnight', label: `${t.timeIntervals.midnight} (00:00 - 05:00)` }, 
+    { key: 'earlyMorning', label: `${t.timeIntervals.earlyMorning} (05:00 - 09:00)` }, 
+    { key: 'morning', label: `${t.timeIntervals.morning} (09:00 - 12:00)` }, 
+    { key: 'noon', label: `${t.timeIntervals.noon} (12:00 - 14:00)` }, 
+    { key: 'afternoon', label: `${t.timeIntervals.afternoon} (14:00 - 18:00)` }, 
+    { key: 'evening', label: `${t.timeIntervals.evening} (18:00 - 24:00)` }
+  ], [t]);
 
   const dayProperties = useMemo(() => {
     if (!dateKey) return { isValid: false, dateObject: null };

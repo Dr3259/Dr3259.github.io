@@ -52,7 +52,7 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
     }
     
     if (isViewingCurrentDay && !hasContentInAnySlotOfInterval) {
-        const match = interval.label.match(/\((\d{2}):\d{2})\s*-\s*(\d{2}:\d{2})\)/);
+        const match = interval.label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
         if (match) {
             const [, , endTimeStr] = match;
             let [endH, endM] = endTimeStr.split(':').map(Number);
@@ -95,7 +95,7 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                         let shouldHideSlot = false;
                         
                         if (!isPastDay && isViewingCurrentDay) {
-                            const slotTimeMatch = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
+                            const slotTimeMatch = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
                             if (slotTimeMatch) {
                                 const slotEndTimeStr = slotTimeMatch[2];
                                 let slotEndHour = parseInt(slotEndTimeStr.split(':')[0]);

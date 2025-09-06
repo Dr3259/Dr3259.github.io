@@ -106,7 +106,7 @@ export default function WeekGlancePage() {
     const hourlySlots = generateHourlySlots(targetIntervalName, t);
     if (hourlySlots.length === 0) return { success: false, slotName: '' };
     const targetSlot = hourlySlots.find(slot => {
-        const match = slot.match(/(\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}/);
+        const match = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
         if (match) { const startH = parseInt(match[1]), endH = parseInt(match[2] === '00' ? '24' : match[2]); return currentHour >= startH && currentHour < endH; }
         return false;
     }) || hourlySlots[0];
@@ -120,7 +120,7 @@ export default function WeekGlancePage() {
         noon: '(12:00 - 14:00)', afternoon: '(14:00 - 18:00)', evening: '(18:00 - 24:00)',
     };
     const label = intervalLabels[intervalName];
-    const match = label.match(/\((\d{2}):\d{2}\s*-\s*(\d{2}):\d{2}\)/);
+    const match = label.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
     if (!match) return [];
     const [, startTimeStr, endTimeStr] = match;
     const startHour = parseInt(startTimeStr, 10);

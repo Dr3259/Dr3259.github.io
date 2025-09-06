@@ -73,6 +73,7 @@ export const translations = {
         afternoon: "下午",
         evening: "晚上",
     },
+    timeIntervalsTitle: (dayName: string) => `${dayName}的时间安排`,
     weeklySummaryTitle: "本周总结",
     weeklySummaryPlaceholder: "查看本周总结报告",
   },
@@ -144,6 +145,7 @@ export const translations = {
         afternoon: "Afternoon",
         evening: "Evening",
     },
+    timeIntervalsTitle: (dayName: string) => `${dayName}'s Schedule`,
     weeklySummaryTitle: "Weekly Summary",
     weeklySummaryPlaceholder: "View weekly summary report",
   }
