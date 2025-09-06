@@ -123,7 +123,7 @@ export const DayBox: FC<DayBoxProps> = ({
         ) : dayHasAnyData ? (
           <FileText className="w-10 h-10 text-primary" aria-label={contentIndicatorLabel} />
         ) : (
-          <CalendarPlus className="w-12 h-12 text-primary/80" />
+          <CalendarPlus className="w-10 h-10 text-primary/80" />
         )}
       </CardContent>
       {showRatingIcons && (
@@ -158,4 +158,3 @@ export const DayBox: FC<DayBoxProps> = ({
     </Card>
   );
 };
-
