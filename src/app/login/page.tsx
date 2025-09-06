@@ -180,8 +180,9 @@ export default function LoginPage() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
+        className="w-full max-w-sm"
       >
-        <Tabs defaultValue="login" className="w-[350px]">
+        <Tabs defaultValue="login">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">{t.loginTitle}</TabsTrigger>
                 <TabsTrigger value="register">{t.registerTitle}</TabsTrigger>
