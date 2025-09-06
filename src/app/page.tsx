@@ -285,7 +285,7 @@ export default function WeekGlancePage() {
            <MainHeader translations={t} currentLanguage={currentLanguage} onLanguageChange={setCurrentLanguage} theme={theme} onThemeChange={setTheme} />
         </div>
         <WeekNavigator translations={t} dateLocale={dateLocale} displayedDate={displayedDate} setDisplayedDate={setDisplayedDate} systemToday={systemToday} eventfulDays={eventfulDays} />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mb-12 sm:mb-16 justify-items-center">
              {daysToDisplay.map((dateInWeek) => {
                 const dayNameForDisplay = format(dateInWeek, 'EEEE', { locale: dateLocale });
                 const dateKeyForStorage = getDateKey(dateInWeek);
