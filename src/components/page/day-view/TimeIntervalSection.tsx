@@ -22,7 +22,9 @@ interface TimeIntervalSectionProps {
     translations: any;
     onToggleTodoCompletion: (dateKey: string, hourSlot: string, todoId: string) => void;
     onDeleteTodo: (dateKey: string, hourSlot: string, todoId: string) => void;
+    onOpenTodoModal: (hourSlot: string) => void;
     onOpenEditTodoModal: (dateKey: string, hourSlot: string, todo: TodoItem) => void;
+    onMoveTodoModal: (dateKey: string, hourSlot: string, todo: TodoItem) => void;
     onOpenMeetingNoteModal: (hourSlot: string, note?: MeetingNoteItem) => void;
     onDeleteMeetingNote: (dateKey: string, hourSlot: string, noteId: string) => void;
     onOpenShareLinkModal: (hourSlot: string, link?: ShareLinkItem) => void;
@@ -35,7 +37,7 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
     interval, dateKey, isPastDay, isViewingCurrentDay, clientPageLoadTime,
     isCurrentActiveInterval, intervalRef, allTodos, allMeetingNotes, allShareLinks,
     allReflections, translations: t,
-    onToggleTodoCompletion, onDeleteTodo, onOpenEditTodoModal, onOpenMeetingNoteModal,
+    onToggleTodoCompletion, onDeleteTodo, onOpenTodoModal, onOpenEditTodoModal, onMoveTodoModal, onOpenMeetingNoteModal,
     onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection
 }) => {
 
@@ -107,6 +109,8 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                                 const slotEndTotalMinutes = slotEndHour * 60 + slotEndMinute;
                                 const pageLoadTotalMinutes = clientPageLoadTime.getHours() * 60 + clientPageLoadTime.getMinutes();
 
+
+
                                 if (slotEndTotalMinutes <= pageLoadTotalMinutes) {
                                     isAddingDisabledForThisSlot = true;
                                     if (!hasAnyContentForThisSlot) {
@@ -133,7 +137,9 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                                 reflections={allReflections[dateKey]?.[slot] || []}
                                 onToggleTodoCompletion={onToggleTodoCompletion}
                                 onDeleteTodo={onDeleteTodo}
+                                onOpenTodoModal={onOpenTodoModal}
                                 onOpenEditTodoModal={onOpenEditTodoModal}
+                                onMoveTodoModal={onMoveTodoModal}
                                 onOpenMeetingNoteModal={onOpenMeetingNoteModal}
                                 onDeleteMeetingNote={onDeleteMeetingNote}
                                 onOpenShareLinkModal={onOpenShareLinkModal}

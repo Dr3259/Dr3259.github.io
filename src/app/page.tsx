@@ -23,7 +23,7 @@ import { BarChart } from 'lucide-react';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations } from '@/lib/translations';
 import { DayBox } from '@/components/DayBox';
-import { SyncDebugger } from '@/components/SyncDebugger';
+
 
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
@@ -68,6 +68,12 @@ export default function WeekGlancePage() {
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
   const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
+  const [isLoginPromptDismissed, setIsLoginPromptDismissed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('loginPromptDismissed') === 'true';
+    }
+    return false;
+  });
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -286,6 +292,26 @@ export default function WeekGlancePage() {
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <div className="w-full max-w-4xl">
            <MainHeader translations={t} currentLanguage={currentLanguage} onLanguageChange={setCurrentLanguage} theme={theme} onThemeChange={setTheme} />
+           {!user && !isLoginPromptDismissed && (
+             <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg relative">
+               <button
+                 onClick={() => {
+                   setIsLoginPromptDismissed(true);
+                   localStorage.setItem('loginPromptDismissed', 'true');
+                 }}
+                 className="absolute top-2 right-2 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
+                 aria-label={currentLanguage === 'zh-CN' ? '关闭提示' : 'Dismiss'}
+               >
+                 ×
+               </button>
+               <p className="text-sm text-amber-800 dark:text-amber-200 pr-6">
+                 {currentLanguage === 'zh-CN' 
+                   ? '💾 当前使用本地模式，数据仅保存在此设备。登录后可云端同步数据。' 
+                   : '💾 Currently in local mode. Data is saved on this device only. Sign in to sync data to the cloud.'
+                 }
+               </p>
+             </div>
+           )}
         </div>
         <WeekNavigator translations={t} dateLocale={dateLocale} displayedDate={displayedDate} setDisplayedDate={setDisplayedDate} systemToday={systemToday} eventfulDays={eventfulDays} />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mb-12 sm:mb-16 justify-items-center">
@@ -332,8 +358,7 @@ export default function WeekGlancePage() {
             </Card>
         </div>
         {hoverPreviewData && (<DayHoverPreview {...hoverPreviewData} onMouseEnterPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); }} onMouseLeavePreview={() => { hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY); }} onClickPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); setHoverPreviewData(null); isPreviewSuppressedByClickRef.current = true; }} />)}
-        {/* 临时调试组件 - 用于诊断同步问题 */}
-        {user && <SyncDebugger />}
+
         
         <FeatureGrid />
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />

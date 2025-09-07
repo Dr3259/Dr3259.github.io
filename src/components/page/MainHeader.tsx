@@ -36,6 +36,8 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
 
   const handleLogout = async () => {
       try {
+          // 添加一个短暂的延迟，让UI有时间平滑过渡
+          await new Promise(resolve => setTimeout(resolve, 100));
           await signOut(auth);
           // router.push('/login'); // Optional: redirect to login page after logout
       } catch (error) {
@@ -44,14 +46,14 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
   };
 
   return (
-    <header className="mb-8 sm:mb-12 w-full flex justify-between items-center">
-      <div>
+    <header className="mb-8 sm:mb-12 w-full flex justify-between items-center relative">
+      <div className="flex-1">
         <h1 className="text-2xl sm:text-3xl font-thin text-primary">
             <span>Week</span><span className="ml-2">Glance</span>
         </h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t.pageSubtitle}</p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 absolute right-0 top-0">
           <div className="hidden md:block">
             <Popover>
                 <PopoverTrigger asChild>
@@ -99,28 +101,37 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
               </DropdownMenuContent>
           </DropdownMenu>
 
-          {user ? (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-9 w-9">
-                            <User className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>退出</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ) : (
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => router.push('/login')}>
-                    <LogIn className="h-4 w-4" />
-                    <span className="sr-only">Login / Register</span>
-                </Button>
-            )}
+          <div className="relative w-9 h-9">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className={`h-9 w-9 absolute inset-0 transition-opacity duration-200 ${user ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                    >
+                        <User className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>退出</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button 
+                variant="outline" 
+                size="icon" 
+                className={`h-9 w-9 absolute inset-0 transition-opacity duration-200 ${!user ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => router.push('/login')}
+            >
+                <LogIn className="h-4 w-4" />
+                <span className="sr-only">Login / Register</span>
+            </Button>
+          </div>
       </div>
     </header>
   );

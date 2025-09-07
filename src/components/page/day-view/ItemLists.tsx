@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { getTagColor } from '@/lib/utils';
 import {
     ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText, FileEdit, Trash2,
-    Star as StarIcon
+    Star as StarIcon, ArrowRight
 } from 'lucide-react';
 import { CategoryIcons, DeadlineIcons, type TodoItem, type MeetingNoteItem, type ShareLinkItem, type ReflectionItem, type CategoryType } from '@/app/day/[dayName]/page';
 
@@ -27,7 +27,9 @@ interface ItemListsProps {
     translations: any;
     onToggleTodoCompletion: (dateKey: string, hourSlot: string, todoId: string) => void;
     onDeleteTodo: (dateKey: string, hourSlot: string, todoId: string) => void;
+    onOpenTodoModal: (hourSlot: string) => void;
     onOpenEditTodoModal: (dateKey: string, hourSlot: string, todo: TodoItem) => void;
+    onMoveTodoModal: (dateKey: string, hourSlot: string, todo: TodoItem) => void;
     onOpenMeetingNoteModal: (hourSlot: string, note?: MeetingNoteItem) => void;
     onDeleteMeetingNote: (dateKey: string, hourSlot: string, noteId: string) => void;
     onOpenShareLinkModal: (hourSlot: string, link?: ShareLinkItem) => void;
@@ -39,7 +41,7 @@ interface ItemListsProps {
 export const ItemLists: React.FC<ItemListsProps> = ({
     dateKey, slot, isPastDay, isAddingDisabledForThisSlot, hasAnyContentForThisSlot,
     todos, meetingNotes, shareLinks, reflections, translations: t,
-    onToggleTodoCompletion, onDeleteTodo, onOpenEditTodoModal, onOpenMeetingNoteModal,
+    onToggleTodoCompletion, onDeleteTodo, onOpenTodoModal, onOpenEditTodoModal, onMoveTodoModal, onOpenMeetingNoteModal,
     onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection
 }) => {
     
@@ -70,7 +72,7 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                     )}
                 </div>
                 <div className="flex space-x-1">
-                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenMeetingNoteModal(slot, undefined)} disabled={isAddingDisabledForThisSlot}><ListChecks className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addTodo}</p></TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenTodoModal(slot)} disabled={isAddingDisabledForThisSlot}><ListChecks className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addTodo}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenMeetingNoteModal(slot)} disabled={isAddingDisabledForThisSlot}><ClipboardList className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addMeetingNote}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenShareLinkModal(slot)} disabled={isAddingDisabledForThisSlot}><LinkIconLucide className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addLink}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenReflectionModal(slot)} disabled={isAddingDisabledForThisSlot}><MessageSquareText className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addReflection}</p></TooltipContent></Tooltip>
@@ -93,7 +95,18 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                                     </div>
                                     <label htmlFor={`todo-${dateKey}-${slot}-${todo.id}`} onMouseDown={(e) => e.preventDefault()} className={cn("text-xs flex-1 min-w-0 truncate", todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90', !isPastDay && "cursor-pointer")} title={todo.text}>{todo.text}</label>
                                 </div>
-                                {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity"><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenEditTodoModal(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteTodo(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip></div>}
+                                {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
+                                    {isAddingDisabledForThisSlot ? (
+                                        // 过去的时间段：只有未完成的待办事项才显示移动按钮
+                                        !todo.completed && (
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-blue-500" onClick={() => onMoveTodoModal(dateKey, slot, todo)}><ArrowRight className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.moveTodo}</p></TooltipContent></Tooltip>
+                                        )
+                                    ) : (
+                                        // 当前和未来的时间段：显示编辑按钮
+                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenEditTodoModal(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
+                                    )}
+                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteTodo(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
+                                </div>}
                             </li>
                         );
                     })}
