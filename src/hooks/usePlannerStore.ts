@@ -2,7 +2,6 @@
 "use client";
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, RatingType } from '@/lib/page-types';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, type User } from 'firebase/auth';
@@ -258,6 +257,9 @@ onAuthStateChanged(auth, async (user) => {
                  });
             }
             usePlannerStore.setState({ isFirebaseConnected: true });
+        }, (error) => {
+             console.error("Firestore snapshot error:", error);
+             usePlannerStore.setState({ isFirebaseConnected: false });
         });
 
     } else {
