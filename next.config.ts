@@ -9,6 +9,26 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config, { isServer }) => {
+    // Use canvas mock to prevent build issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: require.resolve('./canvas-mock.js'),
+    };
+    
+    // Fallback for Node.js modules in client-side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: require.resolve('./canvas-mock.js'),
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
+    
+    return config;
+  },
   images: {
     remotePatterns: [
       {
