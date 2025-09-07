@@ -6,7 +6,7 @@ import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, RatingTy
 import { doc, setDoc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { produce } from 'immer';
+// 移除 immer 依赖，使用原生 JavaScript 进行状态更新
 
 export interface PlannerData {
     allTodos: Record<string, Record<string, TodoItem[]>>;
@@ -69,50 +69,70 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     _setStore: (data) => set(data),
 
     setTodosForSlot: (dateKey, hourSlot, todos) => {
-        const newState = produce(get(), draft => {
-            if (!draft.allTodos[dateKey]) draft.allTodos[dateKey] = {};
-            draft.allTodos[dateKey][hourSlot] = todos;
-        });
-        set(newState);
-        updateFirestore('allTodos', newState.allTodos);
+        const currentState = get();
+        const newAllTodos = {
+            ...currentState.allTodos,
+            [dateKey]: {
+                ...currentState.allTodos[dateKey],
+                [hourSlot]: todos
+            }
+        };
+        set({ allTodos: newAllTodos });
+        updateFirestore('allTodos', newAllTodos);
     },
     setMeetingNotesForSlot: (dateKey, hourSlot, notes) => {
-        const newState = produce(get(), draft => {
-            if (!draft.allMeetingNotes[dateKey]) draft.allMeetingNotes[dateKey] = {};
-            draft.allMeetingNotes[dateKey][hourSlot] = notes;
-        });
-        set(newState);
-        updateFirestore('allMeetingNotes', newState.allMeetingNotes);
+        const currentState = get();
+        const newAllMeetingNotes = {
+            ...currentState.allMeetingNotes,
+            [dateKey]: {
+                ...currentState.allMeetingNotes[dateKey],
+                [hourSlot]: notes
+            }
+        };
+        set({ allMeetingNotes: newAllMeetingNotes });
+        updateFirestore('allMeetingNotes', newAllMeetingNotes);
     },
     setShareLinksForSlot: (dateKey, hourSlot, links) => {
-        const newState = produce(get(), draft => {
-            if (!draft.allShareLinks[dateKey]) draft.allShareLinks[dateKey] = {};
-            draft.allShareLinks[dateKey][hourSlot] = links;
-        });
-        set(newState);
-        updateFirestore('allShareLinks', newState.allShareLinks);
+        const currentState = get();
+        const newAllShareLinks = {
+            ...currentState.allShareLinks,
+            [dateKey]: {
+                ...currentState.allShareLinks[dateKey],
+                [hourSlot]: links
+            }
+        };
+        set({ allShareLinks: newAllShareLinks });
+        updateFirestore('allShareLinks', newAllShareLinks);
     },
     setReflectionsForSlot: (dateKey, hourSlot, reflections) => {
-        const newState = produce(get(), draft => {
-            if (!draft.allReflections[dateKey]) draft.allReflections[dateKey] = {};
-            draft.allReflections[dateKey][hourSlot] = reflections;
-        });
-        set(newState);
-        updateFirestore('allReflections', newState.allReflections);
+        const currentState = get();
+        const newAllReflections = {
+            ...currentState.allReflections,
+            [dateKey]: {
+                ...currentState.allReflections[dateKey],
+                [hourSlot]: reflections
+            }
+        };
+        set({ allReflections: newAllReflections });
+        updateFirestore('allReflections', newAllReflections);
     },
     setDailyNote: (dateKey, note) => {
-        const newState = produce(get(), draft => {
-            draft.allDailyNotes[dateKey] = note;
-        });
-        set(newState);
-        updateFirestore('allDailyNotes', newState.allDailyNotes);
+        const currentState = get();
+        const newAllDailyNotes = {
+            ...currentState.allDailyNotes,
+            [dateKey]: note
+        };
+        set({ allDailyNotes: newAllDailyNotes });
+        updateFirestore('allDailyNotes', newAllDailyNotes);
     },
     setRating: (dateKey, rating) => {
-        const newState = produce(get(), draft => {
-            draft.allRatings[dateKey] = rating;
-        });
-        set(newState);
-        updateFirestore('allRatings', newState.allRatings);
+        const currentState = get();
+        const newAllRatings = {
+            ...currentState.allRatings,
+            [dateKey]: rating
+        };
+        set({ allRatings: newAllRatings });
+        updateFirestore('allRatings', newAllRatings);
     },
     setLastTodoMigrationDate: (date) => {
         set({ lastTodoMigrationDate: date });

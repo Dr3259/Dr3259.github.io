@@ -23,6 +23,7 @@ import { BarChart } from 'lucide-react';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations } from '@/lib/translations';
 import { DayBox } from '@/components/DayBox';
+import { SyncDebugger } from '@/components/SyncDebugger';
 
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
@@ -331,6 +332,9 @@ export default function WeekGlancePage() {
             </Card>
         </div>
         {hoverPreviewData && (<DayHoverPreview {...hoverPreviewData} onMouseEnterPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); }} onMouseLeavePreview={() => { hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY); }} onClickPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); setHoverPreviewData(null); isPreviewSuppressedByClickRef.current = true; }} />)}
+        {/* 临时调试组件 - 用于诊断同步问题 */}
+        {user && <SyncDebugger />}
+        
         <FeatureGrid />
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>
