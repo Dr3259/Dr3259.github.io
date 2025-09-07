@@ -44,11 +44,15 @@ let currentUser: User | null = null;
 const updateFirestore = async (field: keyof PlannerData, data: any) => {
     if (currentUser) {
         try {
+            console.log(`正在更新 Firestore 字段 ${field}:`, data);
             const docRef = doc(db, FIRESTORE_COLLECTION, currentUser.uid);
             await setDoc(docRef, { [field]: data }, { merge: true });
+            console.log(`成功更新 Firestore 字段 ${field}`);
         } catch (error) {
             console.error(`Error updating field ${field} in Firestore:`, error);
         }
+    } else {
+        console.log(`用户未登录，跳过 Firestore 更新字段 ${field}`);
     }
 };
 
@@ -186,8 +190,18 @@ const syncFromLocalStorage = () => {
 };
 
 const mergeAndSyncData = async (localData: PlannerData, remoteData: PlannerData) => {
-    // A simple merge: remote data takes precedence. A more complex strategy could be implemented here.
-    const mergedData = { ...localData, ...remoteData };
+    // 更智能的合并策略：保留本地和远程的数据
+    const mergedData: PlannerData = {
+        allTodos: { ...localData.allTodos, ...remoteData.allTodos },
+        allMeetingNotes: { ...localData.allMeetingNotes, ...remoteData.allMeetingNotes },
+        allShareLinks: { ...localData.allShareLinks, ...remoteData.allShareLinks },
+        allReflections: { ...localData.allReflections, ...remoteData.allReflections },
+        allDailyNotes: { ...localData.allDailyNotes, ...remoteData.allDailyNotes },
+        allRatings: { ...localData.allRatings, ...remoteData.allRatings },
+        lastTodoMigrationDate: remoteData.lastTodoMigrationDate || localData.lastTodoMigrationDate,
+    };
+    
+    console.log('合并数据:', { localData, remoteData, mergedData });
     
     // Update the store with the merged data
     usePlannerStore.getState()._setStore(mergedData);
@@ -197,6 +211,7 @@ const mergeAndSyncData = async (localData: PlannerData, remoteData: PlannerData)
         try {
             const docRef = doc(db, FIRESTORE_COLLECTION, currentUser.uid);
             await setDoc(docRef, mergedData);
+            console.log('数据已同步到 Firestore');
         } catch (error) {
             console.error("Error syncing merged data to Firestore:", error);
         }

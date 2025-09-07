@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DayHoverPreview } from '@/components/DayHoverPreview';
+import { useAuth } from '@/context/AuthContext';
 import { format, addDays, startOfWeek, isSameWeek, isAfter, parseISO, isSameDay, subDays, isBefore } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +50,7 @@ const dayHasContent = (date: Date, data: ReturnType<typeof usePlannerStore.getSt
 export default function WeekGlancePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const plannerState = usePlannerStore();
   const { setRating, addShareLink, addTodo: addTodoToStore } = plannerState;
