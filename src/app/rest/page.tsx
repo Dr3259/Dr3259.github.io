@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical, Plane, Rss } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Utensils, Scale, Brain, Globe, Library, Film, Music, MoreVertical, Pin, PinOff, GripVertical, Plane, Rss, Sparkles } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,7 @@ const translations = {
       cinema: { title: '个人视频库', description: '收藏和追踪您想看的视频。', icon: Film, path: '/personal-video-library' },
       music: { title: '私人音乐播放器', description: '创建和聆听您的专属歌单。', icon: Music, path: '/private-music-player' },
       travelGuide: { title: '旅行攻略', description: '探索世界，规划你的下一次冒险。', icon: Plane, path: '/travel-guide' },
+      mentalGarden: { title: '精神花园', description: '观赏美丽的视觉效果，让心灵得到平静与放松。', icon: Sparkles, path: '/mental-garden' },
       infoHub: { title: '聚合信息', description: '汇集 你感兴趣的 热点、新闻和实用资讯。', icon: Rss, path: '/info-hub' },
       websites: { title: '网络宝藏', description: '发现有趣和实用的网站。', icon: Globe, path: '/recommended-websites' },
       legal: { title: '法律普及', description: '了解与生活相关的法律常识。', icon: Scale, path: '/legal-info' },
@@ -50,6 +51,7 @@ const translations = {
       cinema: { title: 'Personal Video Library', description: 'Collect and track videos you want to watch.', icon: Film, path: '/personal-video-library' },
       music: { title: 'Private Music Player', description: 'Create and listen to your exclusive playlists.', icon: Music, path: '/private-music-player' },
       travelGuide: { title: 'Travel Guide', description: 'Explore the world and plan your next adventure.', icon: Plane, path: '/travel-guide' },
+      mentalGarden: { title: 'Mental Garden', description: 'Watch beautiful visual effects to find peace and relaxation.', icon: Sparkles, path: '/mental-garden' },
       infoHub: { title: 'Info Hub', description: 'Your daily digest of news, trends, and useful info.', icon: Rss, path: '/info-hub' },
       websites: { title: 'Recommended Websites', description: 'Discover interesting and useful websites.', icon: Globe, path: '/recommended-websites' },
       legal: { title: 'Legal Info', description: 'Learn about legal knowledge relevant to daily life.', icon: Scale, path: '/legal-info' },
