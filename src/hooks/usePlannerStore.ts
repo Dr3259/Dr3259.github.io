@@ -3,10 +3,8 @@
 
 import { create } from 'zustand';
 import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, RatingType } from '@/lib/page-types';
-import { doc, setDoc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-// 移除 immer 依赖，使用原生 JavaScript 进行状态更新
+import { dataProvider } from '@/lib/data-provider';
+import type { User } from 'firebase/auth';
 
 export interface PlannerData {
     allTodos: Record<string, Record<string, TodoItem[]>>;
@@ -19,7 +17,8 @@ export interface PlannerData {
 }
 
 export interface PlannerState extends PlannerData {
-    isFirebaseConnected: boolean;
+    isFirebaseConnected: boolean; // Note: This name is kept for now, but it represents any backend connection.
+    currentUser: User | null;
     setTodosForSlot: (dateKey: string, hourSlot: string, todos: TodoItem[]) => void;
     setMeetingNotesForSlot: (dateKey: string, hourSlot: string, notes: MeetingNoteItem[]) => void;
     setShareLinksForSlot: (dateKey: string, hourSlot: string, links: ShareLinkItem[]) => void;
@@ -31,30 +30,13 @@ export interface PlannerState extends PlannerData {
     addShareLink: (dateKey: string, hourSlot: string, link: ShareLinkItem) => void;
     addTodo: (dateKey: string, hourSlot: string, todo: Omit<TodoItem, 'id'>) => void;
     clearAllPlannerData: () => void;
+    _initialize: (user: User | null) => void;
     _setStore: (data: Partial<PlannerData>) => void;
 }
 
 const LOCAL_STORAGE_PLANNER_KEY = 'weekglance_planner_data_v3';
-const FIRESTORE_COLLECTION = 'plannerData';
 
 let firestoreUnsubscribe: (() => void) | null = null;
-let currentUser: User | null = null;
-
-// Function to update Firestore with a specific part of the state
-const updateFirestore = async (field: keyof PlannerData, data: any) => {
-    if (currentUser) {
-        try {
-            console.log(`正在更新 Firestore 字段 ${field}:`, data);
-            const docRef = doc(db, FIRESTORE_COLLECTION, currentUser.uid);
-            await setDoc(docRef, { [field]: data }, { merge: true });
-            console.log(`成功更新 Firestore 字段 ${field}`);
-        } catch (error) {
-            console.error(`Error updating field ${field} in Firestore:`, error);
-        }
-    } else {
-        console.log(`用户未登录，跳过 Firestore 更新字段 ${field}`);
-    }
-};
 
 const usePlannerStore = create<PlannerState>()((set, get) => ({
     allTodos: {},
@@ -65,78 +47,135 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     allRatings: {},
     lastTodoMigrationDate: null,
     isFirebaseConnected: false,
+    currentUser: null,
 
     _setStore: (data) => set(data),
 
+    _initialize: (user) => {
+        if (firestoreUnsubscribe) firestoreUnsubscribe();
+        
+        if (user) {
+            set({ currentUser: user, isFirebaseConnected: true });
+
+            firestoreUnsubscribe = dataProvider.onDataSnapshot(user.uid, (remoteData) => {
+                if (remoteData) {
+                    console.log("Firestore data received:", remoteData);
+                    get()._setStore(remoteData);
+                } else {
+                    // No data on remote, check local and upload if exists
+                    const localDataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
+                    if (localDataString) {
+                        try {
+                            const { state: localData } = JSON.parse(localDataString);
+                            if (localData) {
+                                dataProvider.saveData(user.uid, localData);
+                                localStorage.removeItem(LOCAL_STORAGE_PLANNER_KEY);
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse or upload local data:", e);
+                        }
+                    }
+                }
+            });
+        } else {
+            // User logged out
+            set({
+                currentUser: null,
+                isFirebaseConnected: false,
+                allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
+                allReflections: {}, allDailyNotes: {}, allRatings: {},
+                lastTodoMigrationDate: null,
+            });
+            try {
+                const dataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
+                if (dataString) {
+                    const { state } = JSON.parse(dataString);
+                    if (state) get()._setStore(state);
+                }
+            } catch (e) {
+                console.error("Failed to load local data after logout:", e);
+            }
+        }
+    },
+    
     setTodosForSlot: (dateKey, hourSlot, todos) => {
-        const currentState = get();
-        const newAllTodos = {
-            ...currentState.allTodos,
+        const newState = {
+            ...get().allTodos,
             [dateKey]: {
-                ...currentState.allTodos[dateKey],
+                ...(get().allTodos[dateKey] || {}),
                 [hourSlot]: todos
             }
         };
-        set({ allTodos: newAllTodos });
-        updateFirestore('allTodos', newAllTodos);
+        set({ allTodos: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allTodos: newState });
+        }
     },
     setMeetingNotesForSlot: (dateKey, hourSlot, notes) => {
-        const currentState = get();
-        const newAllMeetingNotes = {
-            ...currentState.allMeetingNotes,
+        const newState = {
+            ...get().allMeetingNotes,
             [dateKey]: {
-                ...currentState.allMeetingNotes[dateKey],
+                ...(get().allMeetingNotes[dateKey] || {}),
                 [hourSlot]: notes
             }
         };
-        set({ allMeetingNotes: newAllMeetingNotes });
-        updateFirestore('allMeetingNotes', newAllMeetingNotes);
+        set({ allMeetingNotes: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allMeetingNotes: newState });
+        }
     },
     setShareLinksForSlot: (dateKey, hourSlot, links) => {
-        const currentState = get();
-        const newAllShareLinks = {
-            ...currentState.allShareLinks,
+        const newState = {
+            ...get().allShareLinks,
             [dateKey]: {
-                ...currentState.allShareLinks[dateKey],
+                ...(get().allShareLinks[dateKey] || {}),
                 [hourSlot]: links
             }
         };
-        set({ allShareLinks: newAllShareLinks });
-        updateFirestore('allShareLinks', newAllShareLinks);
+        set({ allShareLinks: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allShareLinks: newState });
+        }
     },
     setReflectionsForSlot: (dateKey, hourSlot, reflections) => {
-        const currentState = get();
-        const newAllReflections = {
-            ...currentState.allReflections,
+        const newState = {
+            ...get().allReflections,
             [dateKey]: {
-                ...currentState.allReflections[dateKey],
+                ...(get().allReflections[dateKey] || {}),
                 [hourSlot]: reflections
             }
         };
-        set({ allReflections: newAllReflections });
-        updateFirestore('allReflections', newAllReflections);
+        set({ allReflections: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allReflections: newState });
+        }
     },
     setDailyNote: (dateKey, note) => {
-        const currentState = get();
-        const newAllDailyNotes = {
-            ...currentState.allDailyNotes,
-            [dateKey]: note
-        };
-        set({ allDailyNotes: newAllDailyNotes });
-        updateFirestore('allDailyNotes', newAllDailyNotes);
+        const newState = { ...get().allDailyNotes, [dateKey]: note };
+        set({ allDailyNotes: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allDailyNotes: newState });
+        }
     },
     setRating: (dateKey, rating) => {
-        const currentState = get();
-        const newAllRatings = {
-            ...currentState.allRatings,
-            [dateKey]: rating
-        };
-        set({ allRatings: newAllRatings });
-        updateFirestore('allRatings', newAllRatings);
+        const newState = { ...get().allRatings, [dateKey]: rating };
+        set({ allRatings: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allRatings: newState });
+        }
     },
     setLastTodoMigrationDate: (date) => {
         set({ lastTodoMigrationDate: date });
-        updateFirestore('lastTodoMigrationDate', date);
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { lastTodoMigrationDate: date });
+        }
     },
     addTodo: (dateKey, hourSlot, todo) => {
         const newTodo = { ...todo, id: Date.now().toString() };
@@ -148,17 +187,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     addUnfinishedTodosToToday: (today, yesterday) => {
         const state = get();
         const yesterdayTodos = state.allTodos[yesterday] || {};
-        const unfinishedTodos: TodoItem[] = [];
-
-        Object.values(yesterdayTodos).forEach(slot => {
-            if (Array.isArray(slot)) {
-                slot.forEach((todo: TodoItem) => {
-                    if (!todo.completed) {
-                        unfinishedTodos.push({ ...todo, id: `${todo.id}-migrated-${Date.now()}` });
-                    }
-                });
-            }
-        });
+        const unfinishedTodos: TodoItem[] = Object.values(yesterdayTodos).flat().filter(todo => !todo.completed).map(todo => ({ ...todo, id: `${todo.id}-migrated-${Date.now()}` }));
 
         if (unfinishedTodos.length > 0) {
             const targetSlot = '08:00 - 09:00';
@@ -166,14 +195,13 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
             const todayTargetSlotTodos = todayDayTodos[targetSlot] || [];
             todayDayTodos[targetSlot] = [...unfinishedTodos, ...todayTargetSlotTodos];
             
-            const newState = {
-                ...state,
-                allTodos: { ...state.allTodos, [today]: todayDayTodos },
-                lastTodoMigrationDate: today
-            };
-            set(newState);
-            updateFirestore('allTodos', newState.allTodos);
-            updateFirestore('lastTodoMigrationDate', newState.lastTodoMigrationDate);
+            set({ allTodos: { ...state.allTodos, [today]: todayDayTodos }, lastTodoMigrationDate: today });
+            if (state.currentUser) {
+                dataProvider.saveData(state.currentUser.uid, {
+                    allTodos: get().allTodos,
+                    lastTodoMigrationDate: today
+                });
+            }
         } else {
             get().setLastTodoMigrationDate(today);
         }
@@ -186,102 +214,46 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
             lastTodoMigrationDate: get().lastTodoMigrationDate
         };
         set(emptyState);
+        const { currentUser } = get();
         if (currentUser) {
-            const docRef = doc(db, FIRESTORE_COLLECTION, currentUser.uid);
-            setDoc(docRef, emptyState).catch(error => {
-                console.error("Error clearing Firestore data:", error);
-            });
+            dataProvider.saveData(currentUser.uid, emptyState);
         }
     },
 }));
 
-const syncFromLocalStorage = () => {
-    try {
-        const dataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
-        if (dataString) {
-            const { state } = JSON.parse(dataString);
-            if (state) {
-                usePlannerStore.getState()._setStore(state);
-            }
-        }
-    } catch (e) {
-        console.error("Failed to parse local storage data:", e);
-    }
-};
+// This listener should be initialized once in the app, e.g. in a top-level component or context.
+// We're placing it here to keep the logic self-contained for now.
+dataProvider.onAuthStateChanged(usePlannerStore.getState()._initialize);
 
-const mergeAndSyncData = async (localData: PlannerData, remoteData: PlannerData) => {
-    // 更智能的合并策略：保留本地和远程的数据
-    const mergedData: PlannerData = {
-        allTodos: { ...localData.allTodos, ...remoteData.allTodos },
-        allMeetingNotes: { ...localData.allMeetingNotes, ...remoteData.allMeetingNotes },
-        allShareLinks: { ...localData.allShareLinks, ...remoteData.allShareLinks },
-        allReflections: { ...localData.allReflections, ...remoteData.allReflections },
-        allDailyNotes: { ...localData.allDailyNotes, ...remoteData.allDailyNotes },
-        allRatings: { ...localData.allRatings, ...remoteData.allRatings },
-        lastTodoMigrationDate: remoteData.lastTodoMigrationDate || localData.lastTodoMigrationDate,
-    };
-    
-    console.log('合并数据:', { localData, remoteData, mergedData });
-    
-    // Update the store with the merged data
-    usePlannerStore.getState()._setStore(mergedData);
-
-    // Write the merged data back to Firestore to ensure consistency
-    if (currentUser) {
+// Sync local storage to zustand state for non-logged-in users
+if (typeof window !== 'undefined' && !usePlannerStore.getState().currentUser) {
+    const dataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
+    if (dataString) {
         try {
-            const docRef = doc(db, FIRESTORE_COLLECTION, currentUser.uid);
-            await setDoc(docRef, mergedData);
-            console.log('数据已同步到 Firestore');
-        } catch (error) {
-            console.error("Error syncing merged data to Firestore:", error);
+            const { state } = JSON.parse(dataString);
+            if (state) usePlannerStore.getState()._setStore(state);
+        } catch (e) { console.error("Failed to parse local data:", e); }
+    }
+}
+
+// Persist to localStorage only when not logged in
+usePlannerStore.subscribe(
+    (state) => {
+        if (!state.currentUser) {
+            const dataToSave = {
+                allTodos: state.allTodos,
+                allMeetingNotes: state.allMeetingNotes,
+                allShareLinks: state.allShareLinks,
+                allReflections: state.allReflections,
+                allDailyNotes: state.allDailyNotes,
+                allRatings: state.allRatings,
+                lastTodoMigrationDate: state.lastTodoMigrationDate
+            };
+            localStorage.setItem(LOCAL_STORAGE_PLANNER_KEY, JSON.stringify({ state: dataToSave }));
         }
     }
-};
-
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // User logged in
-        if (firestoreUnsubscribe) firestoreUnsubscribe();
-        currentUser = user;
-
-        const docRef = doc(db, FIRESTORE_COLLECTION, user.uid);
-        
-        firestoreUnsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const firestoreData = docSnap.data() as PlannerData;
-                // Directly set the store state from Firestore
-                usePlannerStore.getState()._setStore(firestoreData);
-            } else {
-                // If no remote data, check for local data and upload it on first login.
-                const dataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
-                if (dataString) {
-                    const { state: localData } = JSON.parse(dataString);
-                    if (localData) {
-                        setDoc(docRef, localData).then(() => {
-                           localStorage.removeItem(LOCAL_STORAGE_PLANNER_KEY);
-                        });
-                    }
-                }
-            }
-            usePlannerStore.setState({ isFirebaseConnected: true });
-        }, (error) => {
-            console.error("Firestore snapshot error:", error);
-            usePlannerStore.setState({ isFirebaseConnected: false });
-        });
-
-    } else {
-        // User logged out
-        if (firestoreUnsubscribe) firestoreUnsubscribe();
-        currentUser = null;
-        usePlannerStore.setState({
-            isFirebaseConnected: false,
-            allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
-            allReflections: {}, allDailyNotes: {}, allRatings: {},
-            lastTodoMigrationDate: null,
-        });
-        syncFromLocalStorage();
-    }
-});
-
+);
 
 export { usePlannerStore };
+
+    
