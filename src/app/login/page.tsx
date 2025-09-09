@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, WifiOff } from 'lucide-react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
@@ -35,7 +35,9 @@ const translations = {
     error_email_already_in_use: '该邮箱地址已被注册。',
     error_weak_password: '密码应至少包含6个字符。',
     error_invalid_email: '请输入有效的邮箱地址。',
-    error_unknown: '发生未知错误，请稍后重试。'
+    error_network_request_failed: '网络请求失败，请检查您的网络连接或代理设置。',
+    error_unknown: '发生未知错误，请稍后重试。',
+    skipLogin: '跳过登录，先本地使用'
   },
   'en': {
     backButton: 'Back to Home',
@@ -56,7 +58,9 @@ const translations = {
     error_email_already_in_use: 'This email is already registered.',
     error_weak_password: 'Password should be at least 6 characters.',
     error_invalid_email: 'Please enter a valid email address.',
-    error_unknown: 'An unknown error occurred. Please try again later.'
+    error_network_request_failed: 'Network request failed. Please check your connection or proxy settings.',
+    error_unknown: 'An unknown error occurred. Please try again later.',
+    skipLogin: 'Skip login and use locally'
   }
 };
 
@@ -69,6 +73,7 @@ const getFriendlyErrorMessage = (t: any, errorCode: string) => {
         case 'auth/email-already-in-use': return t.error_email_already_in_use;
         case 'auth/weak-password': return t.error_weak_password;
         case 'auth/invalid-email': return t.error_invalid_email;
+        case 'auth/network-request-failed': return t.error_network_request_failed;
         default: return t.error_unknown;
     }
 }
@@ -96,7 +101,6 @@ const AuthForm = ({ isRegister, t }: { isRegister?: boolean, t: any }) => {
       const authError = err as AuthError;
       console.error("Firebase Auth Error:", authError);
       const friendlyMessage = getFriendlyErrorMessage(t, authError.code);
-      // Provide more detailed error for debugging
       const detailedMessage = `${friendlyMessage} (Code: ${authError.code || 'unknown'})`;
       setError(detailedMessage);
     } finally {
@@ -155,7 +159,6 @@ export default function LoginPage() {
       const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
       setCurrentLanguage(browserLang);
     }
-    // If user is already logged in, redirect them away from login page
     if (user) {
         router.replace('/');
     }
@@ -214,6 +217,12 @@ export default function LoginPage() {
                 </Card>
             </TabsContent>
         </Tabs>
+         <div className="mt-6 text-center">
+            <Button variant="link" className="text-muted-foreground" onClick={() => router.push('/')}>
+                <WifiOff className="mr-2 h-4 w-4"/>
+                {t.skipLogin}
+            </Button>
+        </div>
       </motion.div>
     </div>
   );

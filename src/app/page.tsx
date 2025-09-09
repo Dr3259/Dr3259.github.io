@@ -15,14 +15,14 @@ import { MainHeader } from '@/components/page/MainHeader';
 import { WeekNavigator } from '@/components/page/WeekNavigator';
 import { FeatureGrid } from '@/components/page/FeatureGrid';
 import { PageFooter } from '@/components/page/PageFooter';
-import type { RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme, AllLoadedData } from '@/lib/page-types';
-import { GameCard } from '@/components/GameCard';
+import type { RatingType, ShareLinkItem, ReceivedShareData, HoverPreviewData, LanguageKey, Theme } from '@/lib/page-types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { BarChart } from 'lucide-react';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations } from '@/lib/translations';
 import { DayBox } from '@/components/DayBox';
+import { SyncDebugger } from '@/components/SyncDebugger';
 
 
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
@@ -74,6 +74,10 @@ export default function WeekGlancePage() {
     }
     return false;
   });
+  
+  const [showDebugger, setShowDebugger] = useState(false);
+  const debugKeySequence = useRef<string[]>([]);
+
 
   const showPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hidePreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -213,13 +217,28 @@ export default function WeekGlancePage() {
         const migratedCount = addUnfinishedTodosToToday(todayStr, yesterdayStr);
         if (migratedCount > 0) toast({ title: `已将昨天 ${migratedCount} 个未完成事项同步到今天` });
     }
-  }, [handleSaveShareLinkFromPWA]);
-
+  }, [handleSaveShareLinkFromPWA, toast]);
+  
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
         if (isQuickAddModalOpen) return;
         const activeElement = document.activeElement;
         const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
+        
+        // Debugger sequence
+        if (event.key.toLowerCase() === 'd') {
+          debugKeySequence.current.push('d');
+          if (debugKeySequence.current.length > 3) {
+            debugKeySequence.current.shift();
+          }
+          if (debugKeySequence.current.join('') === 'ddd') {
+            setShowDebugger(prev => !prev);
+            debugKeySequence.current = [];
+          }
+        } else {
+          debugKeySequence.current = [];
+        }
+
         if (!isInputFocused && event.key === 'Enter') {
             event.preventDefault();
             setIsQuickAddModalOpen(true);
@@ -361,6 +380,9 @@ export default function WeekGlancePage() {
 
         
         <FeatureGrid />
+        
+        {showDebugger && <SyncDebugger />}
+
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>
       <ClipboardModal isOpen={isClipboardModalOpen} onClose={handleCloseClipboardModal} onSave={handleSaveFromClipboard} content={clipboardContent} translations={t.clipboard} />
