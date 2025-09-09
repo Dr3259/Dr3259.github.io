@@ -11,9 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Loader2, WifiOff } from 'lucide-react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, AuthError } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { type AuthError } from 'firebase/auth';
 import { useAuth } from '@/context/AuthContext';
+import { dataProvider } from '@/lib/data-provider';
 
 const translations = {
   'zh-CN': {
@@ -92,14 +92,14 @@ const AuthForm = ({ isRegister, t }: { isRegister?: boolean, t: any }) => {
 
     try {
       if (isRegister) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await dataProvider.register(email, password);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        await dataProvider.login(email, password);
       }
       router.push('/'); // Redirect to home page on successful login/register
     } catch (err: unknown) {
       const authError = err as AuthError;
-      console.error("Firebase Auth Error:", authError);
+      console.error("Auth Error:", authError);
       const friendlyMessage = getFriendlyErrorMessage(t, authError.code);
       const detailedMessage = `${friendlyMessage} (Code: ${authError.code || 'unknown'})`;
       setError(detailedMessage);
