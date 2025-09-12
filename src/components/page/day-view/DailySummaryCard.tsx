@@ -90,13 +90,13 @@ export const DailySummaryCard: React.FC<DailySummaryCardProps> = ({
                         <h2 className="text-xl font-medium text-foreground mb-2">{t.ratingLabel}</h2>
                         <div className={cn("p-3 border rounded-md bg-background/50", !showRatingControls && "flex items-center")}>
                             {!showRatingControls ? (
-                                <p className="text-muted-foreground">{rating ? t.ratingUiLabels[rating] : t.noData}</p>
+                                <p className="text-muted-foreground">{rating ? t.ratingLabels[rating] : t.noData}</p>
                             ) : (
                                 <div className="flex justify-around w-full">
                                     {RATING_ORDER.map((type) => {
                                         if(!type) return null;
                                         const Icon = RATING_ICONS[type];
-                                        const label = t.ratingUiLabels[type];
+                                        const label = t.ratingLabels[type];
                                         return (
                                             <button
                                                 key={type}
