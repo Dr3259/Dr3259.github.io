@@ -1,4 +1,5 @@
 
+
 import type { Locale } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 
@@ -8,6 +9,7 @@ export const translations = {
   'zh-CN': {
     pageTitle: 'WeekGlance',
     pageSubtitle: '规划你的一周，回顾你的每一天。',
+    dayDetailsTitle: (dayName: string) => `${dayName} 详情`,
     settingsMenuTitle: '设置',
     languageButtonText: '切换语言',
     themeButtonText: '切换主题',
@@ -80,6 +82,7 @@ export const translations = {
   'en': {
     pageTitle: 'Week Glance',
     pageSubtitle: 'Plan your week, reflect on your days.',
+    dayDetailsTitle: (dayName: string) => `${dayName} Details`,
     settingsMenuTitle: 'Settings',
     languageButtonText: 'Switch Language',
     themeButtonText: 'Switch Theme',
