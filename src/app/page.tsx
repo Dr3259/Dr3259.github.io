@@ -28,7 +28,7 @@ import { SyncDebugger } from '@/components/SyncDebugger';
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
 
-const SHOW_PREVIEW_DELAY = 1000; // Reduced delay for better UX
+const SHOW_PREVIEW_DELAY = 1000;
 const HIDE_PREVIEW_DELAY = 200;
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
@@ -187,6 +187,7 @@ export default function WeekGlancePage() {
   
    const handleHoverStart = (date: Date) => {
     if (isPreviewSuppressedByClickRef.current) return;
+    if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
     showPreviewTimerRef.current = setTimeout(() => {
       setHoveredDate(date);
     }, SHOW_PREVIEW_DELAY);
