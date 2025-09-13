@@ -54,7 +54,7 @@ export default function WeekGlancePage() {
   const { user } = useAuth();
   
   const plannerState = usePlannerStore();
-  const { setRating, addShareLink, addTodo: addTodoToStore } = plannerState;
+  const { setRating, addShareLink, addTodo: addTodoToStore, lastTodoMigrationDate, addUnfinishedTodosToToday } = plannerState;
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); 
   const [theme, setTheme] = useState<Theme>('light'); 
@@ -120,7 +120,7 @@ export default function WeekGlancePage() {
     if (hourlySlots.length === 0) return { success: false, slotName: '' };
     const targetSlot = hourlySlots.find(slot => {
         const match = slot.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-        if (match) { const startH = parseInt(match[1]), endH = parseInt(match[2] === '00' ? '24' : match[2]); return currentHour >= startH && currentHour < endH; }
+        if (match) { const startH = parseInt(match[1]), endH = parseInt(match[2] === '00:00' ? '24' : match[2].split(':')[0]); return currentHour >= startH && currentHour < endH; }
         return false;
     }) || hourlySlots[0];
     addShareLink(currentDateKey, targetSlot, newLink);
@@ -137,7 +137,7 @@ export default function WeekGlancePage() {
     if (!match) return [];
     const [, startTimeStr, endTimeStr] = match;
     const startHour = parseInt(startTimeStr, 10);
-    let endHour = parseInt(endTimeStr, 10);
+    let endHour = parseInt(endTimeStr.split(':')[0], 10);
     if (endTimeStr === '00:00' && startHour !== 0) endHour = 24;
     const slots: string[] = [];
     for (let h = startHour; h < endHour; h++) {
@@ -211,13 +211,17 @@ export default function WeekGlancePage() {
     }
     
     const todayStr = format(today, 'yyyy-MM-dd');
-    const {lastTodoMigrationDate, addUnfinishedTodosToToday} = usePlannerStore.getState();
     if(lastTodoMigrationDate !== todayStr) {
         const yesterdayStr = format(subDays(today, 1), 'yyyy-MM-dd');
         const migratedCount = addUnfinishedTodosToToday(todayStr, yesterdayStr);
-        if (migratedCount > 0) toast({ title: `已将昨天 ${migratedCount} 个未完成事项同步到今天` });
+        if (migratedCount > 0) {
+            const toastMessage = currentLanguage === 'zh-CN' 
+                ? `已将昨天 ${migratedCount} 个未完成事项同步到今天。`
+                : `Moved ${migratedCount} unfinished to-dos from yesterday to today.`;
+            toast({ title: toastMessage });
+        }
     }
-  }, [handleSaveShareLinkFromPWA, toast]);
+  }, [handleSaveShareLinkFromPWA, toast, lastTodoMigrationDate, addUnfinishedTodosToToday, currentLanguage]);
   
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -390,5 +394,3 @@ export default function WeekGlancePage() {
     </>
   );
 }
-
-    
