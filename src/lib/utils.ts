@@ -308,11 +308,20 @@ const calendar = (() => {
     
     const zodiacYear = (y - 4) % 12;
     // The zodiac year is determined by "Lichun" (start of spring)
-    const zodiac = zxArr[((y - 4) % 12 + 12) % 12];
+    const zodiac = zxArr[((Y - 4) % 12 + 12) % 12];
     let finalZodiac = zodiac;
     if(lichunY == y && (m < lichunM || (m == lichunM && d < lichunD))) {
-        finalZodiac = zxArr[((y - 5) % 12 + 12) % 12];
+        finalZodiac = zxArr[((Y - 5) % 12 + 12) % 12];
     }
+    
+    const gzYear = gzArr[(Y - 4) % 10] + dzArr[(Y - 4) % 12];
+    
+    const dayOffset = (sDObj.getTime() - new Date('1900-01-01').getTime()) / 86400000;
+    const gzDay = gzArr[dayOffset % 10] + dzArr[dayOffset % 12];
+
+    const monthStart = new Date(Y, M-1, 1);
+    const baseOffset = (monthStart.getFullYear() - 1900) * 12 + monthStart.getMonth() + 1;
+    const gzMonth = gzArr[baseOffset % 10] + dzArr[baseOffset % 12];
 
 
     return {
@@ -321,9 +330,9 @@ const calendar = (() => {
       lunarDay: D,
       lunarMonthName: lunarMonthName(M),
       lunarDayName: lunarDayName(D),
-      GanZhiYear: gzArr[(y - 4) % 10] + dzArr[(y - 4) % 12],
-      GanZhiMonth: gzArr[((Y - 1900) * 12 + M + 13) % 10] + dzArr[(M + 1) % 12],
-      GanZhiDay: gzArr[((sDObj.getTime() - new Date('1900-01-01').getTime()) / 86400000 + 40) % 10] + dzArr[((sDObj.getTime() - new Date('1900-01-01').getTime()) / 86400000 + 12) % 12],
+      GanZhiYear: gzYear,
+      GanZhiMonth: gzMonth,
+      GanZhiDay: gzDay,
       zodiac: finalZodiac,
       astro: astroArr[m - (d < [20,19,21,20,21,22,23,23,23,24,23,22][m-1] ? 1 : 0)],
       term: solarTerms
@@ -348,9 +357,9 @@ const badActivities = ["作灶", "安葬", "伐木", "作梁", "词讼", "针灸
 export const getHuangliData = (date: Date): HuangliData => {
     const lunarData = calendar.solar2lunar(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
-    const lunarDateStr = `${lunarData.lunarMonthName}${lunarData.lunarDayName}`;
-    const GanzhiDay = `${lunarData.GanZhiYear}年 ${lunarData.GanZhiMonth}月 ${lunarData.GanZhiDay}日`;
-    const zodiac = `属${lunarData.zodiac} | ${lunarData.astro}`;
+    const lunarDateStr = `${lunarData.lunarMonthName || ''}月${lunarData.lunarDayName || ''}`;
+    const GanzhiDay = `${lunarData.GanZhiYear || ''} ${lunarData.GanZhiMonth || ''}月 ${lunarData.GanZhiDay || ''}日`;
+    const zodiac = `属${lunarData.zodiac || ''} | ${lunarData.astro || ''}`;
     
     // Deterministic "random" selection based on the day of the year
     const dayOfYear = (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 86400000;
