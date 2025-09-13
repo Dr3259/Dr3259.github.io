@@ -2,7 +2,7 @@
 // src/app/day/[dayName]/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense, lazy } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,15 @@ import {
     ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { TodoModal, type TodoItem, type CategoryType } from '@/components/TodoModal';
-import { MeetingNoteModal, type MeetingNoteItem, type MeetingNoteModalTranslations } from '@/components/MeetingNoteModal';
-import { ShareLinkModal, type ShareLinkItem, type ShareLinkModalTranslations } from '@/components/ShareLinkModal';
-import { ReflectionModal, type ReflectionItem, type ReflectionModalTranslations } from '@/components/ReflectionModal';
+// 懒加载模态框组件以减少初始包大小
+const TodoModal = lazy(() => import('@/components/TodoModal').then(module => ({ default: module.TodoModal })));
+const MeetingNoteModal = lazy(() => import('@/components/MeetingNoteModal').then(module => ({ default: module.MeetingNoteModal })));
+const ShareLinkModal = lazy(() => import('@/components/ShareLinkModal').then(module => ({ default: module.ShareLinkModal })));
+const ReflectionModal = lazy(() => import('@/components/ReflectionModal').then(module => ({ default: module.ReflectionModal })));
+import type { TodoItem, CategoryType } from '@/components/TodoModal';
+import type { MeetingNoteItem } from '@/components/MeetingNoteModal';
+import type { ShareLinkItem } from '@/components/ShareLinkModal';
+import type { ReflectionItem } from '@/components/ReflectionModal';
 import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, isSameWeek } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -32,10 +37,19 @@ import { useAuth } from '@/context/AuthContext';
 
 type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
-// Helper function to extract time range and generate hourly slots
+// 优化的时间段生成函数，使用缓存避免重复计算
+const slotsCache = new Map<string, string[]>();
+
 export const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
+  if (slotsCache.has(intervalLabelWithTime)) {
+    return slotsCache.get(intervalLabelWithTime)!;
+  }
+
   const match = intervalLabelWithTime.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-  if (!match) return [];
+  if (!match) {
+    slotsCache.set(intervalLabelWithTime, []);
+    return [];
+  }
 
   const startTimeStr = match[1];
   const endTimeStr = match[2];
@@ -46,7 +60,10 @@ export const generateHourlySlots = (intervalLabelWithTime: string): string[] => 
 
   const slots: string[] = [];
   if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
-     if (!(startHour < 24 && endHour === 0)) return [];
+     if (!(startHour < 24 && endHour === 0)) {
+       slotsCache.set(intervalLabelWithTime, []);
+       return [];
+     }
   }
 
   for (let h = startHour; h < endHour; h++) {
@@ -55,6 +72,8 @@ export const generateHourlySlots = (intervalLabelWithTime: string): string[] => 
     const currentSlotEnd = `${String(nextHour).padStart(2, '0')}:00`;
     slots.push(`${currentSlotStart} - ${currentSlotEnd}`);
   }
+  
+  slotsCache.set(intervalLabelWithTime, slots);
   return slots;
 };
 
@@ -92,8 +111,22 @@ export default function DayDetailPage() {
     return false;
   });
 
-  // Zustand Store Integration
-  const { allDailyNotes, allRatings, allTodos, allMeetingNotes, allShareLinks, allReflections, setDailyNote, setRating, setTodosForSlot, setMeetingNotesForSlot, setShareLinksForSlot, setReflectionsForSlot, addShareLink } = usePlannerStore();
+  // 优化：仅获取当前日期相关的数据，避免加载全部数据
+  const plannerStore = usePlannerStore();
+  const { setDailyNote, setRating, setTodosForSlot, setMeetingNotesForSlot, setShareLinksForSlot, setReflectionsForSlot, addShareLink } = plannerStore;
+  
+  // 仅获取当前日期的数据
+  const currentDayData = useMemo(() => {
+    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {} };
+    return {
+      dailyNote: plannerStore.allDailyNotes[dateKey] || '',
+      rating: plannerStore.allRatings[dateKey] || null,
+      todos: plannerStore.allTodos[dateKey] || {},
+      meetingNotes: plannerStore.allMeetingNotes[dateKey] || {},
+      shareLinks: plannerStore.allShareLinks[dateKey] || {},
+      reflections: plannerStore.allReflections[dateKey] || {}
+    };
+  }, [dateKey, plannerStore.allDailyNotes, plannerStore.allRatings, plannerStore.allTodos, plannerStore.allMeetingNotes, plannerStore.allShareLinks, plannerStore.allReflections]);
 
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
@@ -122,33 +155,21 @@ export default function DayDetailPage() {
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
 
+  // 优化：使用静态翻译对象避免重复创建
   const t = useMemo(() => {
-    const baseTranslations = translations[currentLanguage];
-    const isZh = currentLanguage === 'zh-CN';
-    
-    // 扩展翻译对象，添加缺失的 tooltip 文本
     return {
-      ...baseTranslations,
-      addTodo: isZh ? '添加待办事项' : 'Add Todo',
-      addMeetingNote: isZh ? '添加会议记录' : 'Add Meeting Note',
-      addLink: isZh ? '添加链接' : 'Add Link',
-      addReflection: isZh ? '添加反思' : 'Add Reflection',
-      editItem: isZh ? '编辑' : 'Edit',
-      deleteItem: isZh ? '删除' : 'Delete',
-      moveTodo: isZh ? '移动到其他时间段' : 'Move to another time slot',
-      editMeetingNote: isZh ? '编辑会议记录' : 'Edit Meeting Note',
-      deleteMeetingNote: isZh ? '删除会议记录' : 'Delete Meeting Note',
-      editLink: isZh ? '编辑链接' : 'Edit Link',
-      deleteLink: isZh ? '删除链接' : 'Delete Link',
-      editReflection: isZh ? '编辑反思' : 'Edit Reflection',
-      deleteReflection: isZh ? '删除反思' : 'Delete Reflection',
-      noItemsForHour: isZh ? '暂无内容' : 'No items for this hour',
-      meetingNotesSectionTitle: isZh ? '会议记录' : 'Meeting Notes',
-      linksSectionTitle: isZh ? '链接' : 'Links',
-      reflectionsSectionTitle: isZh ? '反思' : 'Reflections',
-      noData: isZh ? '无数据' : 'No data',
-      markComplete: isZh ? '标记为完成' : 'Mark as complete',
-      markIncomplete: isZh ? '标记为未完成' : 'Mark as incomplete'
+      ...translations[currentLanguage],
+      // 仅添加必要的扩展翻译
+      addTodo: currentLanguage === 'zh-CN' ? '添加待办事项' : 'Add Todo',
+      addMeetingNote: currentLanguage === 'zh-CN' ? '添加会议记录' : 'Add Meeting Note',
+      addLink: currentLanguage === 'zh-CN' ? '添加链接' : 'Add Link',
+      addReflection: currentLanguage === 'zh-CN' ? '添加反思' : 'Add Reflection',
+      editItem: currentLanguage === 'zh-CN' ? '编辑' : 'Edit',
+      deleteItem: currentLanguage === 'zh-CN' ? '删除' : 'Delete',
+      moveTodo: currentLanguage === 'zh-CN' ? '移动到其他时间段' : 'Move to another time slot',
+      noItemsForHour: currentLanguage === 'zh-CN' ? '暂无内容' : 'No items for this hour',
+      markComplete: currentLanguage === 'zh-CN' ? '标记为完成' : 'Mark as complete',
+      markIncomplete: currentLanguage === 'zh-CN' ? '标记为未完成' : 'Mark as incomplete'
     };
   }, [currentLanguage]);
   
@@ -156,15 +177,15 @@ export default function DayDetailPage() {
 
   const isUrlAlreadySaved = useCallback((url: string): boolean => {
     if (!url) return false;
-    for (const dateKey in allShareLinks) {
-        for (const hourSlot in allShareLinks[dateKey]) {
-            if (allShareLinks[dateKey][hourSlot].some(item => item.url === url)) {
+    for (const dateKey in plannerStore.allShareLinks) {
+        for (const hourSlot in plannerStore.allShareLinks[dateKey]) {
+            if (plannerStore.allShareLinks[dateKey][hourSlot].some(item => item.url === url)) {
                 return true;
             }
         }
     }
     return false;
-  }, [allShareLinks]);
+  }, [plannerStore.allShareLinks]);
 
   const saveUrlToCurrentTimeSlot = useCallback((item: { title: string; url: string; category: string | null }): { success: boolean; slotName: string } => {
     const newLink: ShareLinkItem = { id: Date.now().toString(), url: item.url, title: item.title, category: item.category };
@@ -370,8 +391,15 @@ export default function DayDetailPage() {
     } 
   };
   const handleOpenEditTodoModal = (targetDateKey: string, targetHourSlot: string, todoToEdit: TodoItem) => { setEditingTodoItem(todoToEdit); setSelectedSlotForTodo({ dateKey: targetDateKey, hourSlot: targetHourSlot }); setIsTodoModalOpen(true); };
-  const handleToggleTodoCompletion = (dateKey: string, hourSlot: string, todoId: string) => { const todos = allTodos[dateKey]?.[hourSlot] || []; setTodosForSlot(dateKey, hourSlot, todos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t)); };
-  const handleDeleteTodo = (dateKey: string, hourSlot: string, todoId: string) => { const todos = allTodos[dateKey]?.[hourSlot] || []; setTodosForSlot(dateKey, hourSlot, todos.filter(t => t.id !== todoId)); };
+  const handleToggleTodoCompletion = useCallback((dateKey: string, hourSlot: string, todoId: string) => { 
+    const todos = currentDayData.todos[hourSlot] || []; 
+    setTodosForSlot(dateKey, hourSlot, todos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t)); 
+  }, [currentDayData.todos, setTodosForSlot]);
+  
+  const handleDeleteTodo = useCallback((dateKey: string, hourSlot: string, todoId: string) => { 
+    const todos = currentDayData.todos[hourSlot] || []; 
+    setTodosForSlot(dateKey, hourSlot, todos.filter(t => t.id !== todoId)); 
+  }, [currentDayData.todos, setTodosForSlot]);
 
   const handleOpenMeetingNoteModal = (hourSlot: string, noteToEdit?: MeetingNoteItem) => { 
     if (dateKey) { 
@@ -380,35 +408,62 @@ export default function DayDetailPage() {
       setIsMeetingNoteModalOpen(true); 
     } 
   };
-  const handleSaveMeetingNote = (dateKey: string, hourSlot: string, savedNote: MeetingNoteItem) => { const notes = allMeetingNotes[dateKey]?.[hourSlot] || []; const idx = notes.findIndex(n => n.id === savedNote.id); const updated = idx > -1 ? notes.map((n, i) => i === idx ? savedNote : n) : [...notes, savedNote]; setMeetingNotesForSlot(dateKey, hourSlot, updated); };
-  const handleDeleteMeetingNote = (dateKey: string, hourSlot: string, noteId: string) => { const notes = allMeetingNotes[dateKey]?.[hourSlot] || []; setMeetingNotesForSlot(dateKey, hourSlot, notes.filter(n => n.id !== noteId)); };
+  const handleSaveMeetingNote = useCallback((dateKey: string, hourSlot: string, savedNote: MeetingNoteItem) => { 
+    const notes = currentDayData.meetingNotes[hourSlot] || []; 
+    const idx = notes.findIndex(n => n.id === savedNote.id); 
+    const updated = idx > -1 ? notes.map((n, i) => i === idx ? savedNote : n) : [...notes, savedNote]; 
+    setMeetingNotesForSlot(dateKey, hourSlot, updated); 
+  }, [currentDayData.meetingNotes, setMeetingNotesForSlot]);
+  
+  const handleDeleteMeetingNote = useCallback((dateKey: string, hourSlot: string, noteId: string) => { 
+    const notes = currentDayData.meetingNotes[hourSlot] || []; 
+    setMeetingNotesForSlot(dateKey, hourSlot, notes.filter(n => n.id !== noteId)); 
+  }, [currentDayData.meetingNotes, setMeetingNotesForSlot]);
 
   const handleOpenShareLinkModal = (hourSlot: string, linkToEdit?: ShareLinkItem) => { if (dateKey) { setSelectedSlotForShareLink({ dateKey, hourSlot }); setEditingShareLinkItem(linkToEdit || null); setIsShareLinkModalOpen(true); } };
-  const handleSaveShareLink = (dateKey: string, hourSlot: string, savedLink: ShareLinkItem) => { const links = allShareLinks[dateKey]?.[hourSlot] || []; const idx = links.findIndex(l => l.id === savedLink.id); const updated = idx > -1 ? links.map((l, i) => i === idx ? savedLink : l) : [...links, savedLink]; setShareLinksForSlot(dateKey, hourSlot, updated); };
-  const handleDeleteShareLink = (dateKey: string, hourSlot: string, linkId: string) => { const links = allShareLinks[dateKey]?.[hourSlot] || []; setShareLinksForSlot(dateKey, hourSlot, links.filter(l => l.id !== linkId)); };
+  const handleSaveShareLink = useCallback((dateKey: string, hourSlot: string, savedLink: ShareLinkItem) => { 
+    const links = currentDayData.shareLinks[hourSlot] || []; 
+    const idx = links.findIndex(l => l.id === savedLink.id); 
+    const updated = idx > -1 ? links.map((l, i) => i === idx ? savedLink : l) : [...links, savedLink]; 
+    setShareLinksForSlot(dateKey, hourSlot, updated); 
+  }, [currentDayData.shareLinks, setShareLinksForSlot]);
+  
+  const handleDeleteShareLink = useCallback((dateKey: string, hourSlot: string, linkId: string) => { 
+    const links = currentDayData.shareLinks[hourSlot] || []; 
+    setShareLinksForSlot(dateKey, hourSlot, links.filter(l => l.id !== linkId)); 
+  }, [currentDayData.shareLinks, setShareLinksForSlot]);
 
   const handleOpenReflectionModal = (hourSlot: string, reflectionToEdit?: ReflectionItem) => { if (dateKey) { setSelectedSlotForReflection({ dateKey, hourSlot }); setEditingReflectionItem(reflectionToEdit || null); setIsReflectionModalOpen(true); } };
-  const handleSaveReflection = (dateKey: string, hourSlot: string, savedReflection: ReflectionItem) => { const reflections = allReflections[dateKey]?.[hourSlot] || []; const idx = reflections.findIndex(r => r.id === savedReflection.id); const updated = idx > -1 ? reflections.map((r, i) => i === idx ? savedReflection : r) : [...reflections, savedReflection]; setReflectionsForSlot(dateKey, hourSlot, updated); };
-  const handleDeleteReflection = (dateKey: string, hourSlot: string, reflectionId: string) => { const reflections = allReflections[dateKey]?.[hourSlot] || []; setReflectionsForSlot(dateKey, hourSlot, reflections.filter(r => r.id !== reflectionId)); };
+  const handleSaveReflection = useCallback((dateKey: string, hourSlot: string, savedReflection: ReflectionItem) => { 
+    const reflections = currentDayData.reflections[hourSlot] || []; 
+    const idx = reflections.findIndex(r => r.id === savedReflection.id); 
+    const updated = idx > -1 ? reflections.map((r, i) => i === idx ? savedReflection : r) : [...reflections, savedReflection]; 
+    setReflectionsForSlot(dateKey, hourSlot, updated); 
+  }, [currentDayData.reflections, setReflectionsForSlot]);
+  
+  const handleDeleteReflection = useCallback((dateKey: string, hourSlot: string, reflectionId: string) => { 
+    const reflections = currentDayData.reflections[hourSlot] || []; 
+    setReflectionsForSlot(dateKey, hourSlot, reflections.filter(r => r.id !== reflectionId)); 
+  }, [currentDayData.reflections, setReflectionsForSlot]);
 
   const handleMoveTodoModal = (dateKey: string, hourSlot: string, todo: TodoItem) => {
     setTodoToMove({ todo, fromSlot: hourSlot });
     setIsMoveModalOpen(true);
   };
 
-  const handleMoveTodo = (toSlot: string) => {
+  const handleMoveTodo = useCallback((toSlot: string) => {
     if (todoToMove && dateKey) {
       // 从原时间段删除
       handleDeleteTodo(dateKey, todoToMove.fromSlot, todoToMove.todo.id);
       // 添加到新时间段
-      const todos = allTodos[dateKey]?.[toSlot] || [];
+      const todos = currentDayData.todos[toSlot] || [];
       const newTodo = { ...todoToMove.todo, id: Date.now().toString() }; // 生成新ID避免冲突
       setTodosForSlot(dateKey, toSlot, [...todos, newTodo]);
       // 关闭模态框
       setIsMoveModalOpen(false);
       setTodoToMove(null);
     }
-  };
+  }, [todoToMove, dateKey, handleDeleteTodo, currentDayData.todos, setTodosForSlot]);
 
   const navigateToDay = (direction: 'next' | 'prev') => {
     const currentIndex = eventfulDays.indexOf(dateKey);
@@ -461,20 +516,36 @@ export default function DayDetailPage() {
               </p>
             </div>
           )}
-          <DailySummaryCard translations={t} dateKey={dateKey} dayNameForDisplay={dayNameForDisplay} dailyNote={allDailyNotes[dateKey] || ""} rating={allRatings[dateKey] || null} isPastDay={isPastDay} isViewingCurrentDay={isViewingCurrentDay} isClientAfter6PM={clientPageLoadTime.getHours() >= 18} onDailyNoteChange={(note) => setDailyNote(dateKey, note)} onRatingChange={(rating) => setRating(dateKey, rating)} />
+          <DailySummaryCard translations={t} dateKey={dateKey} dayNameForDisplay={dayNameForDisplay} dailyNote={currentDayData.dailyNote} rating={currentDayData.rating} isPastDay={isPastDay} isViewingCurrentDay={isViewingCurrentDay} isClientAfter6PM={clientPageLoadTime.getHours() >= 18} onDailyNoteChange={(note) => setDailyNote(dateKey, note)} onRatingChange={(rating) => setRating(dateKey, rating)} />
           <div>
             <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle(dayNameForDisplay)}</h2>
             <div className="grid grid-cols-1 gap-6">
-              {timeIntervals.map(interval => ( <TimeIntervalSection key={interval.key} interval={interval} dateKey={dateKey} isPastDay={isPastDay} isViewingCurrentDay={isViewingCurrentDay} clientPageLoadTime={clientPageLoadTime} isCurrentActiveInterval={isViewingCurrentDay && activeIntervalKey === interval.key} intervalRef={el => { if (el) intervalRefs.current[interval.key] = el; }} allTodos={allTodos} allMeetingNotes={allMeetingNotes} allShareLinks={allShareLinks} allReflections={allReflections} onToggleTodoCompletion={handleToggleTodoCompletion} onDeleteTodo={handleDeleteTodo} onOpenTodoModal={handleOpenTodoModal} onOpenEditTodoModal={handleOpenEditTodoModal} onMoveTodoModal={handleMoveTodoModal} onOpenMeetingNoteModal={handleOpenMeetingNoteModal} onOpenShareLinkModal={handleOpenShareLinkModal} onOpenReflectionModal={handleOpenReflectionModal} onDeleteMeetingNote={handleDeleteMeetingNote} onDeleteShareLink={handleDeleteShareLink} onDeleteReflection={handleDeleteReflection} translations={t} /> ))}
+              {timeIntervals.map(interval => ( <TimeIntervalSection key={interval.key} interval={interval} dateKey={dateKey} isPastDay={isPastDay} isViewingCurrentDay={isViewingCurrentDay} clientPageLoadTime={clientPageLoadTime} isCurrentActiveInterval={isViewingCurrentDay && activeIntervalKey === interval.key} intervalRef={el => { if (el) intervalRefs.current[interval.key] = el; }} allTodos={{[dateKey]: currentDayData.todos}} allMeetingNotes={{[dateKey]: currentDayData.meetingNotes}} allShareLinks={{[dateKey]: currentDayData.shareLinks}} allReflections={{[dateKey]: currentDayData.reflections}} onToggleTodoCompletion={handleToggleTodoCompletion} onDeleteTodo={handleDeleteTodo} onOpenTodoModal={handleOpenTodoModal} onOpenEditTodoModal={handleOpenEditTodoModal} onMoveTodoModal={handleMoveTodoModal} onOpenMeetingNoteModal={handleOpenMeetingNoteModal} onOpenShareLinkModal={handleOpenShareLinkModal} onOpenReflectionModal={handleOpenReflectionModal} onDeleteMeetingNote={handleDeleteMeetingNote} onDeleteShareLink={handleDeleteShareLink} onDeleteReflection={handleDeleteReflection} translations={t} /> ))}
             </div>
           </div>
         </main>
       </div>
 
-      {isTodoModalOpen && selectedSlotForTodo && ( <TodoModal isOpen={isTodoModalOpen} onClose={() => setIsTodoModalOpen(false)} onSaveTodos={setTodosForSlot} dateKey={selectedSlotForTodo.dateKey} hourSlot={selectedSlotForTodo.hourSlot} initialTodos={allTodos[selectedSlotForTodo.dateKey]?.[selectedSlotForTodo.hourSlot] || []} translations={tTodoModal} defaultEditingTodoId={editingTodoItem?.id} /> )}
-      {isMeetingNoteModalOpen && selectedSlotForMeetingNote && ( <MeetingNoteModal isOpen={isMeetingNoteModalOpen} onClose={() => setIsMeetingNoteModalOpen(false)} onSave={handleSaveMeetingNote} onDelete={(noteId) => handleDeleteMeetingNote(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId)} dateKey={selectedSlotForMeetingNote.dateKey} hourSlot={selectedSlotForMeetingNote.hourSlot} initialData={editingMeetingNoteItem} translations={tMeetingNoteModal} /> )}
-      {isShareLinkModalOpen && selectedSlotForShareLink && ( <ShareLinkModal isOpen={isShareLinkModalOpen} onClose={() => setIsShareLinkModalOpen(false)} onSave={handleSaveShareLink} onDelete={(linkId) => handleDeleteShareLink(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId)} dateKey={selectedSlotForShareLink.dateKey} hourSlot={selectedSlotForShareLink.hourSlot} initialData={editingShareLinkItem} translations={tShareLinkModal} /> )}
-      {isReflectionModalOpen && selectedSlotForReflection && ( <ReflectionModal isOpen={isReflectionModalOpen} onClose={() => setIsReflectionModalOpen(false)} onSave={handleSaveReflection} onDelete={(reflectionId) => handleDeleteReflection(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId)} dateKey={selectedSlotForReflection.dateKey} hourSlot={selectedSlotForReflection.hourSlot} initialData={editingReflectionItem} translations={tReflectionModal} /> )}
+      {isTodoModalOpen && selectedSlotForTodo && ( 
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+          <TodoModal isOpen={isTodoModalOpen} onClose={() => setIsTodoModalOpen(false)} onSaveTodos={setTodosForSlot} dateKey={selectedSlotForTodo.dateKey} hourSlot={selectedSlotForTodo.hourSlot} initialTodos={currentDayData.todos[selectedSlotForTodo.hourSlot] || []} translations={tTodoModal} defaultEditingTodoId={editingTodoItem?.id} /> 
+        </Suspense>
+      )}
+      {isMeetingNoteModalOpen && selectedSlotForMeetingNote && ( 
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+          <MeetingNoteModal isOpen={isMeetingNoteModalOpen} onClose={() => setIsMeetingNoteModalOpen(false)} onSave={handleSaveMeetingNote} onDelete={(noteId) => handleDeleteMeetingNote(selectedSlotForMeetingNote.dateKey, selectedSlotForMeetingNote.hourSlot, noteId)} dateKey={selectedSlotForMeetingNote.dateKey} hourSlot={selectedSlotForMeetingNote.hourSlot} initialData={editingMeetingNoteItem} translations={tMeetingNoteModal} /> 
+        </Suspense>
+      )}
+      {isShareLinkModalOpen && selectedSlotForShareLink && ( 
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+          <ShareLinkModal isOpen={isShareLinkModalOpen} onClose={() => setIsShareLinkModalOpen(false)} onSave={handleSaveShareLink} onDelete={(linkId) => handleDeleteShareLink(selectedSlotForShareLink.dateKey, selectedSlotForShareLink.hourSlot, linkId)} dateKey={selectedSlotForShareLink.dateKey} hourSlot={selectedSlotForShareLink.hourSlot} initialData={editingShareLinkItem} translations={tShareLinkModal} /> 
+        </Suspense>
+      )}
+      {isReflectionModalOpen && selectedSlotForReflection && ( 
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+          <ReflectionModal isOpen={isReflectionModalOpen} onClose={() => setIsReflectionModalOpen(false)} onSave={handleSaveReflection} onDelete={(reflectionId) => handleDeleteReflection(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId)} dateKey={selectedSlotForReflection.dateKey} hourSlot={selectedSlotForReflection.hourSlot} initialData={editingReflectionItem} translations={tReflectionModal} /> 
+        </Suspense>
+      )}
 
       {/* 移动待办事项模态框 */}
       {isMoveModalOpen && todoToMove && (

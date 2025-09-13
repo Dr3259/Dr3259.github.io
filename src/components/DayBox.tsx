@@ -28,7 +28,7 @@ interface DayBoxProps {
     average: string;
     terrible: string;
   };
-  onHoverStart: (data: { dayName: string; notes: string; imageHint: string }) => void;
+  onHoverStart: (data: { dayName: string; notes: string; imageHint: string }, event?: React.MouseEvent) => void;
   onHoverEnd: () => void;
   imageHint: string;
 }
@@ -66,19 +66,15 @@ export const DayBox: FC<DayBoxProps> = ({
   const isDisabled = isPastDay && !dayHasAnyData;
   const ariaLabel = isCurrentDay ? `${todayLabel} - ${selectDayLabel}` : selectDayLabel;
 
-  const handleCardMouseEnter = () => {
+  const handleCardMouseEnter = (event: React.MouseEvent) => {
     setIsHovered(true);
-    // Only trigger hover preview for past days that are NOT disabled (i.e., past days with content)
-    if (isPastDay && !isDisabled) {
-      onHoverStart({ dayName, notes, imageHint });
-    }
+    // 显示黄历：对所有日期都显示黄历，包括没有任何事件的日子
+    onHoverStart({ dayName, notes, imageHint }, event);
   };
 
   const handleCardMouseLeave = () => {
     setIsHovered(false);
-    if (isPastDay && !isDisabled) {
-      onHoverEnd();
-    }
+    onHoverEnd();
   };
 
   const showRatingIcons =

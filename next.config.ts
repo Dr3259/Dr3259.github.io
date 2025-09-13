@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    turbo: {
+      // Turbopack specific configuration
+    },
+  },
   webpack: (config, { isServer }) => {
     // Use canvas mock to prevent build issues
     config.resolve.alias = {

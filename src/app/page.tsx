@@ -28,8 +28,8 @@ import { SyncDebugger } from '@/components/SyncDebugger';
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
 
-const SHOW_PREVIEW_DELAY = 1000;
-const HIDE_PREVIEW_DELAY = 200;
+const SHOW_PREVIEW_DELAY = 1000; // 1秒延迟显示，符合用户期望
+const HIDE_PREVIEW_DELAY = 0; // 立即隐藏，不延迟
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
 const getDateKey = (date: Date): string => {
@@ -64,6 +64,7 @@ export default function WeekGlancePage() {
   const [isClientMounted, setIsClientMounted] = useState(false);
   
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+  const [cardPosition, setCardPosition] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
@@ -185,9 +186,36 @@ export default function WeekGlancePage() {
     router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${getDateKey(dateForDetail)}&eventfulDays=${eventfulDays.join(',')}`);
   }, [router, eventfulDays]);
   
-   const handleHoverStart = (date: Date) => {
+   const handleHoverStart = (date: Date, event?: React.MouseEvent) => {
     if (isPreviewSuppressedByClickRef.current) return;
+    
+    // 立即清除旧的黄历显示，确保不会有内容错配
     if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
+    if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
+    setHoveredDate(null); // 立即隐藏当前黄历
+    
+    // 记录日期卡片的位置信息
+    if (event?.currentTarget) {
+      const target = event.currentTarget as HTMLElement;
+      if (target && typeof target.getBoundingClientRect === 'function') {
+        try {
+          const rect = target.getBoundingClientRect();
+          setCardPosition({
+            x: rect.left,
+            y: rect.top,
+            width: rect.width,
+            height: rect.height
+          });
+        } catch (error) {
+          console.warn('Failed to get element position:', error);
+          setCardPosition(null);
+        }
+      }
+    } else {
+      setCardPosition(null);
+    }
+    
+    // 延迟1秒显示新的黄历
     showPreviewTimerRef.current = setTimeout(() => {
       setHoveredDate(date);
     }, SHOW_PREVIEW_DELAY);
@@ -196,9 +224,10 @@ export default function WeekGlancePage() {
   const handleHoverEnd = () => {
     isPreviewSuppressedByClickRef.current = false;
     if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
-    hidePreviewTimerRef.current = setTimeout(() => {
-      setHoveredDate(null);
-    }, HIDE_PREVIEW_DELAY);
+    if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
+    
+    // 鼠标离开时立即隐藏黄历，不延迟
+    setHoveredDate(null);
   };
 
   useEffect(() => {
@@ -372,7 +401,7 @@ export default function WeekGlancePage() {
                         selectDayLabel={t.selectDayAria(dayNameForDisplay)}
                         contentIndicatorLabel={t.hasNotesAria}
                         ratingUiLabels={t.ratingLabels}
-                        onHoverStart={() => handleHoverStart(dateInWeek)}
+                        onHoverStart={(data, event) => handleHoverStart(dateInWeek, event)}
                         onHoverEnd={handleHoverEnd}
                         imageHint="activity memory"
                     />
@@ -399,6 +428,7 @@ export default function WeekGlancePage() {
         {hoveredDate && (
           <DayHoverPreview 
             date={hoveredDate} 
+            cardPosition={cardPosition || undefined}
             onMouseEnterPreview={() => { 
                 if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); 
                 if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); 
