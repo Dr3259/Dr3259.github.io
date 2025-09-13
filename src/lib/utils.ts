@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -159,3 +158,196 @@ export const getHslColorsFromCategory = (categories: string | null | undefined):
         return [h, 70, 65]; // Hue, Saturation, Base Lightness
     });
 }
+
+// --- Huangli (Chinese Almanac) Data Generation ---
+// Integrated calendar conversion logic
+const calendar = (() => {
+  const lunarInfo = [
+    0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0,
+    0x09ad0, 0x055d2, 0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540,
+    0x0d6a0, 0x0ada2, 0x095b0, 0x14977, 0x04970, 0x0a4b0, 0x0b4b5, 0x06a50,
+    0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970, 0x06566, 0x0d4a0,
+    0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
+    0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2,
+    0x0a950, 0x0b557, 0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5d0, 0x14573,
+    0x052d0, 0x0a9a8, 0x0e950, 0x06aa0, 0x0aea6, 0x0ab50, 0x04b60, 0x0aae4,
+    0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0, 0x096d0, 0x04dd5,
+    0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b5a0, 0x195a6,
+    0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46,
+    0x0ab60, 0x09570, 0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58,
+    0x055c0, 0x0ab60, 0x096d5, 0x092e0, 0x0c960, 0x0d954, 0x0d4a0, 0x0da50,
+    0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5, 0x0a950, 0x0b4a0,
+    0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
+    0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260,
+    0x0ea65, 0x0d530, 0x05aa0, 0x076a3, 0x096d0, 0x04bd7, 0x04ad0, 0x0a4d0,
+    0x1d0b6, 0x0d250, 0x0d520, 0x0dd45, 0x0b5a0, 0x056d0, 0x055b2, 0x049b0,
+    0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,
+  ];
+
+  const nStr1 = '日一二三四五六七八九十';
+  const nStr2 = '初十廿卅';
+  const nStr3 = ['零','一','二','三','四','五','六','七','八','九'];
+  const nStr4 = ['','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','-'.repeat(256)];
+  
+  function getBit(m: number, n: number) {
+    return (m >> n) & 1;
+  }
+  
+  function lunarYearDays(y: number) {
+    let i, sum = 348;
+    for (i = 0x8000; i > 0x8; i >>= 1) sum += getBit(lunarInfo[y - 1900], i);
+    return sum + lunarLeapDays(y);
+  }
+
+  function lunarLeapMonth(y: number) {
+    return lunarInfo[y - 1900] & 0xf;
+  }
+
+  function lunarLeapDays(y: number) {
+    if (lunarLeapMonth(y)) return getBit(lunarInfo[y - 1900], 0x10000) ? 30 : 29;
+    return 0;
+  }
+  
+  function solar2lunar(y: number, m: number, d: number) {
+    let i;
+    const sDObj = new Date(y, m - 1, d);
+    const lDObj = new Date(1900, 0, 31);
+    let offDate = (sDObj.getTime() - lDObj.getTime()) / 86400000;
+
+    let D = 0, M = 0, Y = 0;
+    for (i = 1900; i < 2050 && offDate > 0; i++) {
+      D = lunarYearDays(i);
+      offDate -= D;
+    }
+    if (offDate < 0) {
+      offDate += D;
+      i--;
+    }
+    Y = i;
+    const leap = lunarLeapMonth(Y);
+    let isLeap = false;
+    let isLeapMonth = false;
+    for (i = 1; i < 13 && offDate > 0; i++) {
+      if (leap > 0 && i == leap + 1 && isLeap === false) {
+        --i;
+        isLeap = true;
+        M = lunarLeapDays(Y);
+      } else {
+        M = (lunarInfo[Y - 1900] & (0x10000 >> i)) ? 30 : 29;
+      }
+      if (isLeap === true && i == leap + 1) isLeapMonth = true;
+      offDate -= M;
+      if (isLeap === true && i == leap + 1) isLeap = false;
+      if (isLeapMonth === true) --i;
+    }
+    if (offDate === 0 && leap > 0 && i === leap + 1) {
+      if (isLeapMonth) {
+        isLeapMonth = false;
+      } else {
+        isLeapMonth = true;
+        --i;
+      }
+    }
+    if (offDate < 0) {
+      offDate += M;
+      --i;
+    }
+    M = i;
+    D = offDate + 1;
+
+    const lunarDayName = (d: number) => {
+        let s;
+        switch (d) {
+            case 10: s = '初十'; break;
+            case 20: s = '二十'; break;
+            case 30: s = '三十'; break;
+            default: s = nStr2[Math.floor(d / 10)]; s += nStr1[d % 10];
+        }
+        return s;
+    };
+    
+    const lunarMonthName = (m: number) => {
+        if(m > 12) return '';
+        const s = ['正','二','三','四','五','六','七','八','九','十','十一','十二'];
+        return `${isLeapMonth ? '闰' : ''}${s[m-1]}`;
+    }
+
+    const gzArr = '甲乙丙丁戊己庚辛壬癸'.split('');
+    const dzArr = '子丑寅卯辰巳午未申酉戌亥'.split('');
+    const zxArr = '鼠牛虎兔龙蛇马羊猴鸡狗猪'.split('');
+    const astroArr = '摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯'.split('');
+    const solarTerm = [
+      "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", 
+      "清明", "谷雨", "立夏", "小满", "芒种", "夏至", 
+      "小暑", "大暑", "立秋", "处暑", "白露", "秋分", 
+      "寒露", "霜降", "立冬", "小雪", "大雪", "冬至",
+    ];
+
+    const sTermInfo = [
+      0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 
+      173149, 195551, 218072, 240693, 263343, 285989, 308563, 
+      331033, 353350, 375494, 397447, 419210, 440795, 462224, 
+      483532, 504758
+    ];
+    let solarTerms = '';
+    const tmp1 = new Date((31556925974.7*(y-1900)+sTermInfo[m*2-2]*60000)+Date.UTC(1900,0,6,2,5));
+    const tmp2 = tmp1.getUTCDate();
+
+    if(tmp2==d) solarTerms = solarTerm[m*2-2];
+    const tmp3 = new Date((31556925974.7*(y-1900)+sTermInfo[m*2-1]*60000)+Date.UTC(1900,0,6,2,5));
+    const tmp4 = tmp3.getUTCDate();
+    if(tmp4==d) solarTerms = solarTerm[m*2-1];
+
+
+    return {
+      lunarYear: Y,
+      lunarMonth: M,
+      lunarDay: D,
+      lunarMonthName: lunarMonthName(M),
+      lunarDayName: lunarDayName(D),
+      GanZhiYear: gzArr[(Y - 4) % 10] + dzArr[(Y - 4) % 12],
+      GanZhiMonth: gzArr[((Y - 1900) * 12 + M + 13) % 10] + dzArr[(M + 1) % 12],
+      GanZhiDay: gzArr[((sDObj.getTime() - new Date('1900-01-01').getTime()) / 86400000 + 40) % 10] + dzArr[((sDObj.getTime() - new Date('1900-01-01').getTime()) / 86400000 + 12) % 12],
+      zodiac: zxArr[(Y - 4) % 12],
+      astro: astroArr[m - (d < [20,19,21,20,21,22,23,23,23,24,23,22][m-1] ? 1 : 0)],
+      term: solarTerms
+    };
+  }
+  return { solar2lunar };
+})();
+
+
+export interface HuangliData {
+    lunarDateStr: string;
+    GanzhiDay: string;
+    zodiac: string;
+    good: string[];
+    bad: string[];
+    term: string | undefined;
+}
+
+const goodActivities = ["祭祀", "祈福", "求嗣", "开光", "嫁娶", "出行", "入宅", "安床", "修造", "动土", "纳采", "订盟", "交易", "立券", "栽种"];
+const badActivities = ["作灶", "安葬", "伐木", "作梁", "词讼", "针灸", "行丧", "破土"];
+
+export const getHuangliData = (date: Date): HuangliData => {
+    const lunarData = calendar.solar2lunar(date.getFullYear(), date.getMonth() + 1, date.getDate());
+
+    const lunarDateStr = `${lunarData.lunarMonthName}${lunarData.lunarDayName}`;
+    const GanzhiDay = `${lunarData.GanZhiYear}年 ${lunarData.GanZhiMonth}月 ${lunarData.GanZhiDay}日`;
+    const zodiac = `属${lunarData.zodiac} | ${lunarData.astro}`;
+    
+    // Deterministic "random" selection based on the day of the year
+    const dayOfYear = (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 86400000;
+
+    const good = [...goodActivities].sort((a, b) => (a.charCodeAt(0) * dayOfYear % 13) - (b.charCodeAt(0) * dayOfYear % 13)).slice(0, 4);
+    const bad = [...badActivities].sort((a, b) => (a.charCodeAt(0) * dayOfYear % 11) - (b.charCodeAt(0) * dayOfYear % 11)).slice(0, 4);
+
+    return {
+        lunarDateStr,
+        GanzhiDay,
+        zodiac,
+        good,
+        bad,
+        term: lunarData.term,
+    };
+};

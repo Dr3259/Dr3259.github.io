@@ -28,7 +28,7 @@ import { SyncDebugger } from '@/components/SyncDebugger';
 const LOCAL_STORAGE_KEY_THEME = 'weekGlanceTheme';
 const LOCAL_STORAGE_KEY_SHARE_TARGET = 'weekGlanceShareTarget_v1';
 
-const SHOW_PREVIEW_DELAY = 2000;
+const SHOW_PREVIEW_DELAY = 1000; // Reduced delay for better UX
 const HIDE_PREVIEW_DELAY = 200;
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
@@ -63,7 +63,7 @@ export default function WeekGlancePage() {
   const [isAfter6PMToday, setIsAfter6PMToday] = useState(false);
   const [isClientMounted, setIsClientMounted] = useState(false);
   
-  const [hoverPreviewData, setHoverPreviewData] = useState<HoverPreviewData | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
@@ -180,10 +180,25 @@ export default function WeekGlancePage() {
   const onDaySelect = useCallback((dayNameForUrl: string, dateForDetail: Date) => {
     if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
     if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
-    setHoverPreviewData(null);
+    setHoveredDate(null);
     isPreviewSuppressedByClickRef.current = true;
     router.push(`/day/${encodeURIComponent(dayNameForUrl)}?date=${getDateKey(dateForDetail)}&eventfulDays=${eventfulDays.join(',')}`);
   }, [router, eventfulDays]);
+  
+   const handleHoverStart = (date: Date) => {
+    if (isPreviewSuppressedByClickRef.current) return;
+    showPreviewTimerRef.current = setTimeout(() => {
+      setHoveredDate(date);
+    }, SHOW_PREVIEW_DELAY);
+  };
+
+  const handleHoverEnd = () => {
+    isPreviewSuppressedByClickRef.current = false;
+    if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
+    hidePreviewTimerRef.current = setTimeout(() => {
+      setHoveredDate(null);
+    }, HIDE_PREVIEW_DELAY);
+  };
 
   useEffect(() => {
     setIsClientMounted(true);
@@ -356,8 +371,8 @@ export default function WeekGlancePage() {
                         selectDayLabel={t.selectDayAria(dayNameForDisplay)}
                         contentIndicatorLabel={t.hasNotesAria}
                         ratingUiLabels={t.ratingLabels}
-                        onHoverStart={(data) => { if (!isPreviewSuppressedByClickRef.current) showPreviewTimerRef.current = setTimeout(() => setHoverPreviewData({ ...data, altText: t.thumbnailPreviewAlt(data.dayName) }), SHOW_PREVIEW_DELAY); }}
-                        onHoverEnd={() => { isPreviewSuppressedByClickRef.current = false; if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY); }}
+                        onHoverStart={() => handleHoverStart(dateInWeek)}
+                        onHoverEnd={handleHoverEnd}
                         imageHint="activity memory"
                     />
                 );
@@ -380,7 +395,22 @@ export default function WeekGlancePage() {
                 </CardContent>
             </Card>
         </div>
-        {hoverPreviewData && (<DayHoverPreview {...hoverPreviewData} onMouseEnterPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); }} onMouseLeavePreview={() => { hidePreviewTimerRef.current = setTimeout(() => setHoverPreviewData(null), HIDE_PREVIEW_DELAY); }} onClickPreview={() => { if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); setHoverPreviewData(null); isPreviewSuppressedByClickRef.current = true; }} />)}
+        {hoveredDate && (
+          <DayHoverPreview 
+            date={hoveredDate} 
+            onMouseEnterPreview={() => { 
+                if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); 
+                if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); 
+            }} 
+            onMouseLeavePreview={handleHoverEnd} 
+            onClickPreview={() => { 
+                if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current); 
+                if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current); 
+                setHoveredDate(null);
+                isPreviewSuppressedByClickRef.current = true;
+            }}
+           />
+        )}
 
         
         <FeatureGrid />
