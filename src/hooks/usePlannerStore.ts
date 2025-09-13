@@ -190,7 +190,10 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         const unfinishedTodos: TodoItem[] = Object.values(yesterdayTodos).flat().filter(todo => !todo.completed).map(todo => ({ ...todo, id: `${todo.id}-migrated-${Date.now()}` }));
 
         if (unfinishedTodos.length > 0) {
-            const targetSlot = '08:00 - 09:00';
+            const now = new Date();
+            const currentHour = now.getHours();
+            const targetSlot = `${String(currentHour).padStart(2, '0')}:00 - ${String(currentHour + 1).padStart(2, '0')}:00`;
+            
             const todayDayTodos = { ...(state.allTodos[today] || {}) };
             const todayTargetSlotTodos = todayDayTodos[targetSlot] || [];
             todayDayTodos[targetSlot] = [...unfinishedTodos, ...todayTargetSlotTodos];
