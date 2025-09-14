@@ -122,111 +122,180 @@ export const MeetingNoteModal: React.FC<MeetingNoteModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl bg-card p-6">
-        <DialogHeader className="mb-6">
-          <DialogTitle className="text-xl font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            {initialData ? translations.modalTitleEdit(initialData.title || 'Note') : translations.modalTitleNew}
-          </DialogTitle>
-          <DialogDescription>
-            {translations.modalDescription}
-          </DialogDescription>
+      <DialogContent className="sm:max-w-3xl border-none shadow-2xl bg-gradient-to-br from-background via-background/95 to-background/90 backdrop-blur-xl overflow-hidden">
+        {/* 顶部装饰线 */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 rounded-t-lg" />
+        
+        <DialogHeader className="relative pt-8 pb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-2">
+                {initialData ? translations.modalTitleEdit(initialData.title || 'Note') : translations.modalTitleNew}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground/80 text-base leading-relaxed">
+                {translations.modalDescription}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
-          <div className="space-y-4 p-2">
-            <div>
-              <Label htmlFor="meeting-title" className="text-xs font-medium text-muted-foreground mb-1 block">
+        <div className="px-6 pb-6">
+          <div className="grid gap-6">
+            {/* 会议标题 */}
+            <div className="group">
+              <Label htmlFor="meeting-title" className="text-sm font-semibold text-foreground/90 mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
                 {translations.titleLabel}
               </Label>
-              <Input
-                id="meeting-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value.substring(0, MAX_TITLE_LENGTH))}
-                placeholder={translations.titlePlaceholder}
-                className="bg-background text-base py-2.5"
-                maxLength={MAX_TITLE_LENGTH}
-                autoComplete="off"
-              />
-              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                {title.length}/{MAX_TITLE_LENGTH}
+              <div className="relative">
+                <Input
+                  id="meeting-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value.substring(0, MAX_TITLE_LENGTH))}
+                  placeholder={translations.titlePlaceholder}
+                  className="h-12 text-base border-2 border-border/50 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 focus:outline-none focus:shadow-lg focus:shadow-amber-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/15 focus-visible:ring-offset-0 transition-all duration-500 bg-background/50 backdrop-blur-sm rounded-xl px-4 shadow-sm hover:shadow-md hover:border-amber-400/60 hover:bg-background/70"
+                  maxLength={MAX_TITLE_LENGTH}
+                  autoComplete="off"
+                  style={{ 
+                    boxShadow: 'none',
+                    outline: 'none',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                />
+                <div className="absolute -bottom-6 right-0 text-xs text-muted-foreground/60">
+                  {title.length}/{MAX_TITLE_LENGTH}
+                </div>
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="meeting-notes" className="text-xs font-medium text-muted-foreground mb-1 block">
+            {/* 会议记录 */}
+            <div className="group">
+              <Label htmlFor="meeting-notes" className="text-sm font-semibold text-foreground/90 mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
                 {translations.notesLabel}
               </Label>
-              <Textarea
-                id="meeting-notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value.substring(0, MAX_NOTES_LENGTH))}
-                placeholder={translations.notesPlaceholder}
-                className="bg-background min-h-[120px] text-base"
-                maxLength={MAX_NOTES_LENGTH}
-                autoComplete="off"
-              />
-              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                {notes.length}/{MAX_NOTES_LENGTH}
+              <div className="relative">
+                <Textarea
+                  id="meeting-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value.substring(0, MAX_NOTES_LENGTH))}
+                  placeholder={translations.notesPlaceholder}
+                  className="min-h-[140px] text-base border-2 border-border/50 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 focus:outline-none focus:shadow-lg focus:shadow-amber-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/15 focus-visible:ring-offset-0 transition-all duration-500 bg-background/50 backdrop-blur-sm rounded-xl p-4 shadow-sm resize-none hover:shadow-md hover:border-amber-400/60 hover:bg-background/70"
+                  maxLength={MAX_NOTES_LENGTH}
+                  autoComplete="off"
+                  style={{ 
+                    boxShadow: 'none',
+                    outline: 'none',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                />
+                <div className="absolute -bottom-6 right-0 text-xs text-muted-foreground/60">
+                  {notes.length}/{MAX_NOTES_LENGTH}
+                </div>
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="meeting-attendees" className="text-xs font-medium text-muted-foreground mb-1 block">
-                {translations.attendeesLabel}
-              </Label>
-              <Input
-                id="meeting-attendees"
-                value={attendees}
-                onChange={(e) => setAttendees(e.target.value.substring(0, MAX_ATTENDEES_LENGTH))}
-                placeholder={translations.attendeesPlaceholder}
-                className="bg-background text-base py-2.5"
-                maxLength={MAX_ATTENDEES_LENGTH}
-                autoComplete="off"
-              />
-              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                {attendees.length}/{MAX_ATTENDEES_LENGTH}
+            {/* 双列布局：参会人员 & 行动项 */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* 参会人员 */}
+              <div className="group">
+                <Label htmlFor="meeting-attendees" className="text-sm font-semibold text-foreground/90 mb-3 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  {translations.attendeesLabel}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="meeting-attendees"
+                    value={attendees}
+                    onChange={(e) => setAttendees(e.target.value.substring(0, MAX_ATTENDEES_LENGTH))}
+                    placeholder={translations.attendeesPlaceholder}
+                    className="h-12 text-base border-2 border-border/50 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 focus:outline-none focus:shadow-lg focus:shadow-amber-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/15 focus-visible:ring-offset-0 transition-all duration-500 bg-background/50 backdrop-blur-sm rounded-xl px-4 shadow-sm hover:shadow-md hover:border-amber-400/60 hover:bg-background/70"
+                    maxLength={MAX_ATTENDEES_LENGTH}
+                    autoComplete="off"
+                    style={{ 
+                      boxShadow: 'none',
+                      outline: 'none',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
+                  />
+                  <div className="absolute -bottom-6 right-0 text-xs text-muted-foreground/60">
+                    {attendees.length}/{MAX_ATTENDEES_LENGTH}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="meeting-action-items" className="text-xs font-medium text-muted-foreground mb-1 block">
-                {translations.actionItemsLabel}
-              </Label>
-              <Textarea
-                id="meeting-action-items"
-                value={actionItems}
-                onChange={(e) => setActionItems(e.target.value.substring(0, MAX_ACTION_ITEMS_LENGTH))}
-                placeholder={translations.actionItemsPlaceholder}
-                className="bg-background min-h-[80px] text-base"
-                maxLength={MAX_ACTION_ITEMS_LENGTH}
-                autoComplete="off"
-              />
-              <div className="text-xs text-muted-foreground text-right mt-1 pr-1">
-                {actionItems.length}/{MAX_ACTION_ITEMS_LENGTH}
+              {/* 行动项 */}
+              <div className="group">
+                <Label htmlFor="meeting-action-items" className="text-sm font-semibold text-foreground/90 mb-3 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  {translations.actionItemsLabel}
+                </Label>
+                <div className="relative">
+                  <Textarea
+                    id="meeting-action-items"
+                    value={actionItems}
+                    onChange={(e) => setActionItems(e.target.value.substring(0, MAX_ACTION_ITEMS_LENGTH))}
+                    placeholder={translations.actionItemsPlaceholder}
+                    className="min-h-[100px] text-base border-2 border-border/50 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 focus:outline-none focus:shadow-lg focus:shadow-amber-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/15 focus-visible:ring-offset-0 transition-all duration-500 bg-background/50 backdrop-blur-sm rounded-xl p-4 shadow-sm resize-none hover:shadow-md hover:border-amber-400/60 hover:bg-background/70"
+                    maxLength={MAX_ACTION_ITEMS_LENGTH}
+                    autoComplete="off"
+                    style={{ 
+                      boxShadow: 'none',
+                      outline: 'none',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
+                  />
+                  <div className="absolute -bottom-6 right-0 text-xs text-muted-foreground/60">
+                    {actionItems.length}/{MAX_ACTION_ITEMS_LENGTH}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          {initialData && onDelete && (
-            <Button
-              variant="destructive"
-              onClick={handleDeleteClick}
-              className="py-2.5 mt-2 sm:mt-0 sm:mr-auto"
-            >
-              {translations.deleteButton}
-            </Button>
-          )}
-           <Button onClick={handleSaveOrUpdate} className="py-2.5">
-            {initialData ? translations.updateButton : translations.saveButton}
-          </Button>
-          <DialogClose asChild>
-            <Button variant="outline" onClick={onClose} className="py-2.5 mt-2 sm:mt-0">
-                {translations.cancelButton}
-            </Button>
-          </DialogClose>
-        </DialogFooter>
+        {/* 操作按钮区域 */}
+        <div className="relative">
+          {/* 分隔线 */}
+          <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          
+          <DialogFooter className="px-6 py-6 bg-gradient-to-r from-background/50 to-background/30 backdrop-blur-sm">
+            <div className="flex items-center justify-between w-full">
+              {/* 删除按钮 */}
+              {initialData && onDelete && (
+                <Button
+                  variant="ghost"
+                  onClick={handleDeleteClick}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-300 px-6 py-2.5 rounded-xl"
+                >
+                  {translations.deleteButton}
+                </Button>
+              )}
+              
+              {/* 右侧按钮组 */}
+              <div className="flex items-center gap-3 ml-auto">
+                <Button 
+                  variant="outline" 
+                  onClick={onClose} 
+                  className="px-6 py-2.5 rounded-xl border-2 hover:bg-background/80 transition-all duration-300"
+                >
+                  {translations.cancelButton}
+                </Button>
+                <Button 
+                  onClick={handleSaveOrUpdate} 
+                  className="px-8 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  {initialData ? translations.updateButton : translations.saveButton}
+                </Button>
+              </div>
+            </div>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

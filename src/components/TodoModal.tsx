@@ -81,7 +81,7 @@ interface TodoModalProps {
   defaultEditingTodoId?: string;
 }
 
-const CategoryIcons: Record<CategoryType, React.ElementType> = {
+export const CategoryIcons: Record<CategoryType, React.ElementType> = {
   work: Briefcase,
   study: BookOpen,
   shopping: ShoppingCart,
@@ -92,7 +92,7 @@ const CategoryIcons: Record<CategoryType, React.ElementType> = {
   dating: CalendarClock,
 };
 
-const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
+export const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = {
   hour: Hourglass,
   today: CalendarCheck,
   tomorrow: Sunrise,
@@ -261,10 +261,17 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-card p-6">
-        <DialogHeader className="mb-4">
-          <DialogTitle className="text-xl font-semibold">{translations.modalTitle(hourSlot)}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background/95 to-background/90 backdrop-blur-xl border border-purple-200/20 shadow-2xl">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 rounded-t-lg"></div>
+        
+        <DialogHeader className="mb-6 space-y-3">
+          <DialogTitle className="text-xl font-medium text-foreground flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-200/30 flex items-center justify-center backdrop-blur-sm">
+              <CalendarClock className="w-6 h-6 text-purple-600" />
+            </div>
+            {translations.modalTitle(hourSlot)}
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground/80 leading-relaxed">
             {translations.modalDescription}
           </DialogDescription>
         </DialogHeader>
@@ -280,75 +287,80 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                   setNewItemText(value.substring(0, 50));
                 }}
                 placeholder={translations.addItemPlaceholder}
-                className="bg-background pr-14 py-2.5 text-base"
+                className="h-12 text-base border-2 border-border/50 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 focus:outline-none focus:shadow-lg focus:shadow-purple-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-500/15 focus-visible:ring-offset-0 transition-all duration-500 bg-background/50 backdrop-blur-sm rounded-xl pr-14 py-3 shadow-sm hover:shadow-md hover:border-purple-400/60 hover:bg-background/70"
                 maxLength={50}
                 autoComplete="off"
+                style={{ 
+                  boxShadow: 'none',
+                  outline: 'none',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
               />
-              <div className="absolute bottom-1/2 right-3 translate-y-1/2 text-xs text-muted-foreground">
+              <div className="absolute bottom-1/2 right-3 translate-y-1/2 text-xs text-muted-foreground/60">
                 {newItemText.length} / 50
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <Label htmlFor="todo-category" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.categoryLabel}</Label>
+                <Label htmlFor="todo-category" className="text-xs font-medium text-muted-foreground/80 mb-2 block">{translations.categoryLabel}</Label>
                  <Select
                     value={newCategory || undefined}
                     onValueChange={(value) => setNewCategory(value as CategoryType)}
                  >
-                  <SelectTrigger id="todo-category" className="w-full bg-background">
+                  <SelectTrigger id="todo-category" className="w-full bg-background/80 backdrop-blur-sm border-purple-200/30 hover:border-purple-300/50 focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/15 focus:outline-none transition-all duration-200">
                     <SelectValue placeholder={translations.selectPlaceholder} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
                     {Object.entries(translations.categories).map(([key, label]) => (
-                         <SelectItem key={key} value={key}>{label}</SelectItem>
+                         <SelectItem key={key} value={key} className="hover:bg-purple-50/50 focus:bg-purple-50/50">{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="todo-deadline" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.deadlineLabel}</Label>
+                <Label htmlFor="todo-deadline" className="text-xs font-medium text-muted-foreground/80 mb-2 block">{translations.deadlineLabel}</Label>
                 <Select
                   value={newDeadline || undefined}
                   onValueChange={(value) => setNewDeadline(value as TodoItem['deadline'])}
                 >
-                  <SelectTrigger id="todo-deadline" className="w-full bg-background">
+                  <SelectTrigger id="todo-deadline" className="w-full bg-background/80 backdrop-blur-sm border-purple-200/30 hover:border-purple-300/50 focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/15 focus:outline-none transition-all duration-200">
                     <SelectValue placeholder={translations.selectPlaceholder} />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hour">{translations.deadlines.hour}</SelectItem>
-                    <SelectItem value="today">{translations.deadlines.today}</SelectItem>
-                    <SelectItem value="tomorrow">{translations.deadlines.tomorrow}</SelectItem>
-                    <SelectItem value="thisWeek">{translations.deadlines.thisWeek}</SelectItem>
-                    <SelectItem value="nextWeek">{translations.deadlines.nextWeek}</SelectItem>
-                    <SelectItem value="nextMonth">{translations.deadlines.nextMonth}</SelectItem>
+                  <SelectContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
+                    <SelectItem value="hour" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.deadlines.hour}</SelectItem>
+                    <SelectItem value="today" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.deadlines.today}</SelectItem>
+                    <SelectItem value="tomorrow" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.deadlines.tomorrow}</SelectItem>
+                    <SelectItem value="thisWeek" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.deadlines.thisWeek}</SelectItem>
+                    <SelectItem value="nextWeek" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.deadlines.nextWeek}</SelectItem>
+                    <SelectItem value="nextMonth" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.deadlines.nextMonth}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="todo-importance" className="text-xs font-medium text-muted-foreground mb-1 block">{translations.importanceLabel}</Label>
+                <Label htmlFor="todo-importance" className="text-xs font-medium text-muted-foreground/80 mb-2 block">{translations.importanceLabel}</Label>
                 <Select
                   value={newImportance || undefined}
                   onValueChange={(value) => setNewImportance(value as TodoItem['importance'])}
                 >
-                  <SelectTrigger id="todo-importance" className="w-full bg-background">
+                  <SelectTrigger id="todo-importance" className="w-full bg-background/80 backdrop-blur-sm border-purple-200/30 hover:border-purple-300/50 focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/15 focus:outline-none transition-all duration-200">
                     <SelectValue placeholder={translations.selectPlaceholder} />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="important">{translations.importances.important}</SelectItem>
-                    <SelectItem value="notImportant">{translations.importances.notImportant}</SelectItem>
+                  <SelectContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
+                    <SelectItem value="important" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.importances.important}</SelectItem>
+                    <SelectItem value="notImportant" className="hover:bg-purple-50/50 focus:bg-purple-50/50">{translations.importances.notImportant}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <Button onClick={handleAddOrUpdateItem} className="w-full py-2.5 text-base">
+            <Button onClick={handleAddOrUpdateItem} className="w-full py-3 text-base bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200">
               {editingTodoId ? translations.updateButton : translations.addButton}
             </Button>
           </div>
 
-          <ScrollArea className="h-[220px] w-full rounded-lg border p-3 bg-background/30 shadow-inner">
+          <ScrollArea className="h-[220px] w-full rounded-xl border border-purple-200/30 p-3 bg-gradient-to-br from-background/60 via-background/40 to-background/60 backdrop-blur-sm shadow-inner">
            <TooltipProvider>
             {todos.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">{translations.noTodos}</p>
+              <p className="text-sm text-muted-foreground/60 text-center py-8">{translations.noTodos}</p>
             ) : (
               <ul className="space-y-2.5 p-px">
                 {todos.map(todo => {
@@ -356,22 +368,22 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                   const DeadlineIcon = todo.deadline ? DeadlineIcons[todo.deadline] : null;
 
                   return (
-                    <li key={todo.id} className="flex items-center justify-between p-2.5 rounded-md bg-background hover:bg-muted/60 group shadow-sm transition-shadow hover:shadow-md">
-                      <div className="flex items-center space-x-2.5 flex-grow min-w-0">
+                    <li key={todo.id} className="flex items-center justify-between p-3 rounded-lg bg-background/60 backdrop-blur-sm border border-purple-100/20 hover:bg-background/80 hover:border-purple-200/40 group shadow-sm hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center space-x-3 flex-grow min-w-0">
                          <Checkbox
                           id={`modal-todo-${todo.id}`}
                           checked={todo.completed}
                           onCheckedChange={() => toggleTodoCompletion(todo.id)}
                           aria-label={todo.completed ? translations.markIncomplete : translations.markComplete}
-                          className="border-primary/50 shrink-0"
+                          className="border-purple-300/50 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 shrink-0"
                         />
                         <div className="flex items-center space-x-1.5 shrink-0">
                           {CategoryIcon && todo.category && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <CategoryIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground/80 transition-colors" />
+                                <CategoryIcon className="h-4 w-4 text-muted-foreground/60 group-hover:text-purple-600 transition-colors" />
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
                                 <p>{getCategoryTooltip(todo.category)}</p>
                               </TooltipContent>
                             </Tooltip>
@@ -379,9 +391,9 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           {DeadlineIcon && todo.deadline && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <DeadlineIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground/80 transition-colors" />
+                                <DeadlineIcon className="h-4 w-4 text-muted-foreground/60 group-hover:text-purple-600 transition-colors" />
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
                                 <p>{getDeadlineTooltip(todo.deadline)}</p>
                               </TooltipContent>
                             </Tooltip>
@@ -389,9 +401,9 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                           {todo.importance === 'important' && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <StarIcon className="h-4 w-4 text-amber-400 fill-amber-400 group-hover:text-amber-500 group-hover:fill-amber-500 transition-colors" />
+                                <StarIcon className="h-4 w-4 text-purple-400 fill-purple-400 group-hover:text-purple-500 group-hover:fill-purple-500 transition-colors" />
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
                                 <p>{getImportanceTooltip(todo.importance)}</p>
                               </TooltipContent>
                             </Tooltip>
@@ -399,26 +411,26 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                         </div>
                         <label
                           htmlFor={`modal-todo-${todo.id}`}
-                          className={`text-sm cursor-pointer flex-1 min-w-0 ${todo.completed ? 'line-through text-muted-foreground/80' : 'text-foreground/90'}`}
+                          className={`text-sm cursor-pointer flex-1 min-w-0 transition-colors ${todo.completed ? 'line-through text-muted-foreground/60' : 'text-foreground/90 group-hover:text-foreground'}`}
                           title={todo.text}
                         >
                           {todo.text.length > 20 ? todo.text.substring(0, 20) + '...' : todo.text}
                         </label>
                       </div>
-                      <div className="flex items-center space-x-1 ml-2 shrink-0">
+                      <div className="flex items-center space-x-1 ml-3 shrink-0">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-primary opacity-30 group-hover:opacity-100 transition-opacity"
+                              className="h-8 w-8 text-muted-foreground/60 hover:text-purple-600 hover:bg-purple-50/50 opacity-30 group-hover:opacity-100 transition-all duration-200"
                               onClick={() => handleStartEdit(todo)}
                               aria-label={translations.editTodo}
                             >
                               <FileEdit className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>
+                          <TooltipContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
                             <p>{translations.editTodo}</p>
                           </TooltipContent>
                         </Tooltip>
@@ -427,14 +439,14 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                              <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-30 group-hover:opacity-100 transition-opacity"
+                              className="h-8 w-8 text-muted-foreground/60 hover:text-red-500 hover:bg-red-50/50 opacity-30 group-hover:opacity-100 transition-all duration-200"
                               onClick={() => handleDeleteTodo(todo.id)}
                               aria-label={translations.deleteTodo}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>
+                          <TooltipContent className="bg-background/95 backdrop-blur-xl border-purple-200/30">
                             <p>{translations.deleteTodo}</p>
                           </TooltipContent>
                         </Tooltip>
@@ -447,11 +459,11 @@ export const TodoModal: React.FC<TodoModalProps> = ({
             </TooltipProvider>
           </ScrollArea>
         </div>
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 gap-3">
           <DialogClose asChild>
-            <Button variant="outline" onClick={onClose} className="py-2.5">Cancel</Button>
+            <Button variant="outline" onClick={onClose} className="py-3 border-purple-200/30 hover:bg-purple-50/50 hover:border-purple-300/50 transition-all duration-200">取消</Button>
           </DialogClose>
-          <Button onClick={handleSave} className="py-2.5" disabled={isSaveDisabled}>{translations.saveButton}</Button>
+          <Button onClick={handleSave} className="py-3 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSaveDisabled}>{translations.saveButton}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

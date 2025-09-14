@@ -163,13 +163,23 @@ export default function DayDetailPage() {
       addTodo: currentLanguage === 'zh-CN' ? '添加待办事项' : 'Add Todo',
       addMeetingNote: currentLanguage === 'zh-CN' ? '添加会议记录' : 'Add Meeting Note',
       addLink: currentLanguage === 'zh-CN' ? '添加链接' : 'Add Link',
-      addReflection: currentLanguage === 'zh-CN' ? '添加反思' : 'Add Reflection',
+      addReflection: currentLanguage === 'zh-CN' ? '记录思维灵感' : 'Record Inspiration',
       editItem: currentLanguage === 'zh-CN' ? '编辑' : 'Edit',
       deleteItem: currentLanguage === 'zh-CN' ? '删除' : 'Delete',
       moveTodo: currentLanguage === 'zh-CN' ? '移动到其他时间段' : 'Move to another time slot',
       noItemsForHour: currentLanguage === 'zh-CN' ? '暂无内容' : 'No items for this hour',
       markComplete: currentLanguage === 'zh-CN' ? '标记为完成' : 'Mark as complete',
-      markIncomplete: currentLanguage === 'zh-CN' ? '标记为未完成' : 'Mark as incomplete'
+      markIncomplete: currentLanguage === 'zh-CN' ? '标记为未完成' : 'Mark as incomplete',
+      backToWeek: currentLanguage === 'zh-CN' ? '返回周视图' : 'Back to Week',
+      previousDay: currentLanguage === 'zh-CN' ? '上一天' : 'Previous Day',
+      nextDay: currentLanguage === 'zh-CN' ? '下一天' : 'Next Day',
+      // 添加缺失的翻译键
+      editMeetingNote: currentLanguage === 'zh-CN' ? '编辑会议记录' : 'Edit Meeting Note',
+      deleteMeetingNote: currentLanguage === 'zh-CN' ? '删除会议记录' : 'Delete Meeting Note',
+      editLink: currentLanguage === 'zh-CN' ? '编辑链接' : 'Edit Link',
+      deleteLink: currentLanguage === 'zh-CN' ? '删除链接' : 'Delete Link',
+      editReflection: currentLanguage === 'zh-CN' ? '编辑思维灵感' : 'Edit Reflection',
+      deleteReflection: currentLanguage === 'zh-CN' ? '删除思维灵感' : 'Delete Reflection'
     };
   }, [currentLanguage]);
   
@@ -326,10 +336,17 @@ export default function DayDetailPage() {
   const tMeetingNoteModal = useMemo(() => {
     const isZh = currentLanguage === 'zh-CN';
     return {
-      modalTitle: (hourSlot: string) => isZh ? `${hourSlot} 会议记录` : `Meeting Notes for ${hourSlot}`,
+      modalTitleNew: isZh ? '新建会议记录' : 'New Meeting Note',
+      modalTitleEdit: (title: string) => isZh ? `编辑: ${title}` : `Edit: ${title}`,
       modalDescription: isZh ? '为这个时间段添加和管理会议记录。' : 'Add and manage meeting notes for this time slot.',
+      titleLabel: isZh ? '会议标题' : 'Meeting Title',
       titlePlaceholder: isZh ? '会议标题...' : 'Meeting title...',
-      contentPlaceholder: isZh ? '会议记录和详情...' : 'Meeting notes and details...',
+      notesLabel: isZh ? '会议记录' : 'Meeting Notes',
+      notesPlaceholder: isZh ? '会议记录和详情...' : 'Meeting notes and details...',
+      attendeesLabel: isZh ? '参会人员' : 'Attendees',
+      attendeesPlaceholder: isZh ? '参会人员...' : 'Attendees...',
+      actionItemsLabel: isZh ? '行动项' : 'Action Items',
+      actionItemsPlaceholder: isZh ? '行动项和待办事项...' : 'Action items and follow-ups...',
       saveButton: isZh ? '保存记录' : 'Save Note',
       updateButton: isZh ? '更新记录' : 'Update Note',
       deleteButton: isZh ? '删除记录' : 'Delete Note',
@@ -340,10 +357,14 @@ export default function DayDetailPage() {
   const tShareLinkModal = useMemo(() => {
     const isZh = currentLanguage === 'zh-CN';
     return {
-      modalTitle: (hourSlot: string) => isZh ? `${hourSlot} 链接` : `Links for ${hourSlot}`,
+      modalTitleNew: isZh ? '新建链接' : 'New Link',
+      modalTitleEdit: (titleOrUrl: string) => isZh ? `编辑: ${titleOrUrl}` : `Edit: ${titleOrUrl}`,
       modalDescription: isZh ? '为这个时间段添加和管理链接。' : 'Add and manage links for this time slot.',
+      urlLabel: isZh ? '网址' : 'URL',
       urlPlaceholder: isZh ? '输入网址...' : 'Enter URL...',
+      titleLabel: isZh ? '链接标题' : 'Link Title',
       titlePlaceholder: isZh ? '链接标题（可选）...' : 'Link title (optional)...',
+      categoryLabel: isZh ? '分类' : 'Category',
       categoryPlaceholder: isZh ? '分类（可选）...' : 'Category (optional)...',
       saveButton: isZh ? '保存链接' : 'Save Link',
       updateButton: isZh ? '更新链接' : 'Update Link',
@@ -355,12 +376,14 @@ export default function DayDetailPage() {
   const tReflectionModal = useMemo(() => {
     const isZh = currentLanguage === 'zh-CN';
     return {
-      modalTitle: (hourSlot: string) => isZh ? `${hourSlot} 反思` : `Reflection for ${hourSlot}`,
-      modalDescription: isZh ? '为这个时间段添加你的想法和反思。' : 'Add your thoughts and reflections for this time slot.',
-      contentPlaceholder: isZh ? '你对这个时间段有什么想法？' : 'What are your thoughts about this time period?',
-      saveButton: isZh ? '保存反思' : 'Save Reflection',
-      updateButton: isZh ? '更新反思' : 'Update Reflection',
-      deleteButton: isZh ? '删除反思' : 'Delete Reflection',
+      modalTitleNew: isZh ? '记录思维灵感' : 'Record Inspiration',
+      modalTitleEdit: isZh ? '编辑思维灵感' : 'Edit Inspiration',
+      modalDescription: isZh ? '为这个时间段记录你的思维火花和创意灵感。' : 'Record your thoughts and creative inspirations for this time slot.',
+      textLabel: isZh ? '灵感内容' : 'Inspiration Content',
+      textPlaceholder: isZh ? '记录下你的思维灵感、创意想法或深度思考...' : 'Record your inspirations, creative ideas or deep thoughts...',
+      saveButton: isZh ? '保存灵感' : 'Save Inspiration',
+      updateButton: isZh ? '更新灵感' : 'Update Inspiration',
+      deleteButton: isZh ? '删除灵感' : 'Delete Inspiration',
       cancelButton: isZh ? '取消' : 'Cancel'
     };
   }, [currentLanguage]);
