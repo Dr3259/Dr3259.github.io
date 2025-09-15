@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
       // Turbopack specific configuration
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/flow/:path*',
+        destination: 'http://localhost:3400/api/flow/:path*', // Proxy to Genkit dev server
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     // Use canvas mock to prevent build issues
     config.resolve.alias = {

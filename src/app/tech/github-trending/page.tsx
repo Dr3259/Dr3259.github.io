@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -6,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Star, TrendingUp, Loader2, GitBranch } from 'lucide-react';
-import { scrapeGitHubTrending, type GithubTrendingRepo, type GithubTrendingParams } from '@/ai/flows/github-trending-flow';
+import { type GithubTrendingRepo, type GithubTrendingParams } from '@/ai/flows/github-trending-flow';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
@@ -50,6 +49,23 @@ const translations = {
 type LanguageKey = keyof typeof translations;
 type Timespan = GithubTrendingParams['timespan'];
 
+// New function to fetch data from the API endpoint
+async function fetchTrendingFromApi(params: GithubTrendingParams): Promise<GithubTrendingRepo[]> {
+    const response = await fetch('/api/flow/scrapeGitHubTrendingFlow', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    return data;
+}
+
 export default function GitHubTrendingPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
   const [trendingRepos, setTrendingRepos] = useState<GithubTrendingRepo[]>([]);
@@ -69,8 +85,9 @@ export default function GitHubTrendingPage() {
   const fetchTrendingData = useCallback(async (timespan: Timespan) => {
     setIsLoading(true);
     setError(null);
+    setTrendingRepos([]);
     try {
-      const data = await scrapeGitHubTrending({ timespan });
+      const data = await fetchTrendingFromApi({ timespan });
       setTrendingRepos(data);
     } catch (err: any) {
       setError(err.message || t.error);

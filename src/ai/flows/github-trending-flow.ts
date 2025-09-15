@@ -14,7 +14,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { unstable_cache as cache } from 'next/cache';
 
 const GithubTrendingParamsSchema = z.object({
   timespan: z.enum(['daily', 'weekly', 'monthly']).default('daily')
@@ -48,21 +47,16 @@ const googleSearchTool = ai.defineTool(
 );
 
 /**
- * An exported wrapper function that directly calls the cached scrapeGitHubTrendingFlow.
- * This provides a clean, callable interface for server components.
+ * An exported wrapper function that directly calls the scrapeGitHubTrendingFlow.
+ * This function is kept for potential future use in server-side components that
+ * might still want to call the flow directly without an API call.
  * @param {GithubTrendingParams} input - The parameters for fetching trending data, primarily the timespan.
  * @returns {Promise<GithubTrendingOutput>} A promise that resolves to an array of trending repositories.
  */
 export async function scrapeGitHubTrending(
   input: GithubTrendingParams
 ): Promise<GithubTrendingOutput> {
-  // Cache the results for 1 hour. The cache is keyed by the timespan.
-  const cachedScrape = cache(
-    async (timespan: GithubTrendingParams['timespan']) => scrapeGitHubTrendingFlow({ timespan }),
-    ['github-trending', input.timespan], // Cache key includes the dynamic timespan
-    { revalidate: 3600 } // Revalidate every hour
-  );
-  return cachedScrape(input.timespan);
+  return scrapeGitHubTrendingFlow(input);
 }
 
 const scrapeGitHubTrendingFlow = ai.defineFlow(
