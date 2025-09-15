@@ -51,84 +51,65 @@ type Timespan = GithubTrendingParams['timespan'];
 
 // New function to fetch data from the API endpoint
 async function fetchTrendingFromApi(params: GithubTrendingParams): Promise<GithubTrendingRepo[]> {
-    const response = await fetch('/api/flow/scrapeGitHubTrendingFlow', {
+    // This fetch now happens on the Next.js server, proxied by next.config.js
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/flow/scrapeGitHubTrendingFlow`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(params),
+        cache: 'no-store' // Ensure fresh data for each server-side render
     });
 
     if (!response.ok) {
         throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    return data;
+    return data.output || data; // Genkit API wraps response in an 'output' field
 }
 
-export default function GitHubTrendingPage() {
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
-  const [trendingRepos, setTrendingRepos] = useState<GithubTrendingRepo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Timespan>('daily');
+// Create a separate component that is a Server Component to perform the fetch.
+// This is a common pattern for mixing client and server components.
+const TrendingList: React.FC<{ timespan: Timespan, t: any }> = ({ timespan, t }) => {
+    const [data, setData] = useState<GithubTrendingRepo[] | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
-      setCurrentLanguage(browserLang);
-    }
-  }, []);
-  
-  const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
-
-  const fetchTrendingData = useCallback(async (timespan: Timespan) => {
-    setIsLoading(true);
-    setError(null);
-    setTrendingRepos([]);
-    try {
-      const data = await fetchTrendingFromApi({ timespan });
-      setTrendingRepos(data);
-    } catch (err: any) {
-      setError(err.message || t.error);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [t.error]);
-
-  useEffect(() => {
-    fetchTrendingData(activeTab);
-  }, [activeTab, fetchTrendingData]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as Timespan);
-  };
-  
-  const renderGainedStarsLabel = () => {
-    if (activeTab === 'daily') return t.gainedStars(t.daily);
-    if (activeTab === 'weekly') return t.gainedStars(t.weekly);
-    if (activeTab === 'monthly') return t.gainedStars(t.monthly);
-    return 'Gained';
-  }
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="ml-4 text-muted-foreground">{t.loading}</p>
-        </div>
-      );
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const result = await fetchTrendingFromApi({ timespan });
+                setData(result);
+            } catch (err: any) {
+                setError(err.message || t.error);
+                console.error(err);
+            }
+        };
+        fetchData();
+    }, [timespan, t.error]);
+    
+    const renderGainedStarsLabel = () => {
+        if (timespan === 'daily') return t.gainedStars(t.daily);
+        if (timespan === 'weekly') return t.gainedStars(t.weekly);
+        if (timespan === 'monthly') return t.gainedStars(t.monthly);
+        return 'Gained';
     }
 
     if (error) {
-      return <div className="text-center text-destructive py-10">{error}</div>;
+        return <div className="text-center text-destructive py-10">{error}</div>;
     }
 
+    if (data === null) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-4 text-muted-foreground">{t.loading}</p>
+            </div>
+        );
+    }
+    
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {trendingRepos.map((repo) => (
+        {data.map((repo) => (
           <Card key={repo.rank} className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 bg-card/60 backdrop-blur-lg">
              <a href={repo.url} target="_blank" rel="noopener noreferrer" className="flex flex-col h-full">
                 <CardHeader>
@@ -168,8 +149,26 @@ export default function GitHubTrendingPage() {
         ))}
       </div>
     );
-  };
+};
 
+
+export default function GitHubTrendingPage() {
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
+  const [activeTab, setActiveTab] = useState<Timespan>('daily');
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
+      setCurrentLanguage(browserLang);
+    }
+  }, []);
+  
+  const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as Timespan);
+  };
+  
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground py-8 sm:py-12 px-4 items-center">
       <header className="w-full max-w-5xl mb-6 sm:mb-8 self-center">
@@ -197,7 +196,7 @@ export default function GitHubTrendingPage() {
                     <TabsTrigger value="monthly">{t.monthly}</TabsTrigger>
                 </TabsList>
             </Tabs>
-            {renderContent()}
+            <TrendingList timespan={activeTab} t={t} />
         </div>
       </main>
     </div>
