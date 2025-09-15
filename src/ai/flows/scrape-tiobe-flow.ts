@@ -14,6 +14,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import * as cheerio from 'cheerio';
+import { unstable_cache as cache } from 'next/cache';
 
 const TiobeIndexEntrySchema = z.object({
   rank: z.number().describe('The current ranking of the programming language.'),
@@ -26,12 +27,18 @@ const TiobeIndexOutputSchema = z.array(TiobeIndexEntrySchema);
 export type TiobeIndexOutput = z.infer<typeof TiobeIndexOutputSchema>;
 
 /**
- * An exported wrapper function that directly calls the scrapeTiobeFlow.
+ * An exported wrapper function that directly calls the cached scrapeTiobeFlow.
  * This provides a clean, callable interface for server components.
  * @returns {Promise<TiobeIndexOutput>} A promise that resolves to an array of TIOBE index entries.
  */
 export async function scrapeTiobe(): Promise<TiobeIndexOutput> {
-  return scrapeTiobeFlow();
+  // Cache the results for 1 hour.
+  const cachedScrape = cache(
+    async () => scrapeTiobeFlow(),
+    ['tiobe-index'], // Static cache key as there are no parameters
+    { revalidate: 3600 } // Revalidate every hour
+  );
+  return cachedScrape();
 }
 
 const scrapeTiobeFlow = ai.defineFlow(
