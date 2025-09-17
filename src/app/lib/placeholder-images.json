@@ -1,0 +1,31 @@
+
+{
+  "spices": {
+    "starAnise": { "seed": "101", "hint": "star anise" },
+    "sichuanPepper": { "seed": "102", "hint": "sichuan pepper" },
+    "cassia": { "seed": "103", "hint": "cinnamon sticks" },
+    "bayLeaf": { "seed": "104", "hint": "bay leaves" },
+    "caoguo": { "seed": "105", "hint": "black cardamom" },
+    "chenpi": { "seed": "106", "hint": "dried orange" },
+    "cuminChinese": { "seed": "107", "hint": "cumin seeds" },
+    "perilla": { "seed": "108", "hint": "shiso leaf" },
+    "gardenia": { "seed": "109", "hint": "gardenia fruit" },
+    "monkFruit": { "seed": "110", "hint": "monk fruit" },
+    "rosemary": { "seed": "111", "hint": "rosemary sprig" },
+    "basil": { "seed": "112", "hint": "basil leaves" },
+    "thyme": { "seed": "113", "hint": "thyme sprigs" },
+    "parsley": { "seed": "114", "hint": "parsley" },
+    "oregano": { "seed": "115", "hint": "oregano" },
+    "dill": { "seed": "116", "hint": "dill" },
+    "lemongrass": { "seed": "117", "hint": "lemongrass" },
+    "galangal": { "seed": "118", "hint": "galangal root" },
+    "kaffirLime": { "seed": "119", "hint": "lime leaves" },
+    "galangalAlt": { "seed": "120", "hint": "ginger root" },
+    "pandan": { "seed": "121", "hint": "pandan leaves" },
+    "cuminMiddleEast": { "seed": "122", "hint": "cumin spice" },
+    "corianderSeed": { "seed": "123", "hint": "coriander seeds" },
+    "turmeric": { "seed": "124", "hint": "turmeric powder" },
+    "cardamom": { "seed": "125", "hint": "cardamom pods" },
+    "fenugreek": { "seed": "126", "hint": "fenugreek seeds" }
+  }
+}
