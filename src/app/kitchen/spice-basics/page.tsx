@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Leaf, CookingPot, ChefHat, Star, Utensils, Lightbulb, Scale, BookOpen, ShieldAlert, Globe, Wind } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import placeholderImageData from '@/lib/placeholder-images.json';
 
 const translations = {
   'zh-CN': {
@@ -229,21 +230,23 @@ const InfoRow: React.FC<{ icon: React.ElementType, label: string, content?: stri
 };
 
 const SpiceCard: React.FC<{ spice: Spice, labels: any, lang: LanguageKey }> = ({ spice, labels, lang }) => {
-    const englishName = spiceData['en'][spice.id.replace(/Chinese|MiddleEast/,'').toLowerCase() as keyof typeof spiceData['en']]?.name || spice.name;
-    const imageUrl = `https://placehold.co/600x400/2a2a2a/ffffff?text=${encodeURIComponent(englishName)}`;
+    const { id, name } = spice;
+    const imageData = (placeholderImageData as Record<string, { seed: number; hint: string }>)[id] || { seed: 1, hint: 'spice' };
+    const imageUrl = `https://picsum.photos/seed/${imageData.seed}/600/400`;
 
     return (
         <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm shadow-lg border-border/20 hover:border-primary/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
             <div className="relative aspect-[16/9] w-full">
                 <Image
                     src={imageUrl}
-                    alt={spice.name}
+                    alt={name}
                     fill
                     className="object-cover"
+                    data-ai-hint={imageData.hint}
                 />
             </div>
             <CardHeader>
-                <CardTitle className="text-lg font-bold text-foreground">{spice.name}</CardTitle>
+                <CardTitle className="text-lg font-bold text-foreground">{name}</CardTitle>
                 <CardDescription>{spice.features}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow space-y-4 text-sm">
