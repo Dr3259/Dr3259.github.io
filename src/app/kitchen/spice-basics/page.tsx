@@ -242,7 +242,6 @@ const UniversalTipsSection: React.FC<{ t: any }> = ({ t }) => (
 
 export default function SpiceBasicsPage() {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en');
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {
@@ -252,26 +251,6 @@ export default function SpiceBasicsPage() {
   }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
-
-  const filteredData = useMemo(() => {
-    if (!searchTerm) {
-        return spiceData[currentLanguage];
-    }
-    const lowercasedFilter = searchTerm.toLowerCase();
-    const filtered: Record<string, Spice[]> = {};
-    Object.entries(spiceData[currentLanguage]).forEach(([category, spices]) => {
-        const filteredSpices = spices.filter(spice => 
-            Object.values(spice).some(value => 
-                String(value).toLowerCase().includes(lowercasedFilter)
-            )
-        );
-        if (filteredSpices.length > 0) {
-            filtered[category] = filteredSpices;
-        }
-    });
-    return filtered as typeof spiceData['en'];
-  }, [searchTerm, currentLanguage]);
-
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-amber-50/20 to-green-50/20 text-foreground py-10 px-4 sm:px-8 items-center">
@@ -294,19 +273,6 @@ export default function SpiceBasicsPage() {
               {t.pageDescription}
             </p>
         </div>
-        
-        <div className="w-full max-w-lg mb-8 sticky top-4 z-10">
-            <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                    type="search"
-                    placeholder={t.searchPlaceholder}
-                    className="w-full pl-12 h-12 text-base rounded-full shadow-lg bg-background/80 backdrop-blur-md"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
-        </div>
 
         <Tabs defaultValue="chinese" className="w-full">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-8 bg-card/60 backdrop-blur-md">
@@ -319,10 +285,10 @@ export default function SpiceBasicsPage() {
                 <TabsTrigger value="tips">{t.tabGeneralTips}</TabsTrigger>
             </TabsList>
             
-            {(Object.keys(filteredData) as SpiceCategory[]).map(categoryKey => (
+            {(Object.keys(spiceData[currentLanguage]) as SpiceCategory[]).map(categoryKey => (
                  <TabsContent key={categoryKey} value={categoryKey}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredData[categoryKey].map((spice, index) => (
+                        {spiceData[currentLanguage][categoryKey].map((spice, index) => (
                            <SpiceCard key={index} spice={spice} labels={t.cardLabels}/>
                         ))}
                     </div>
