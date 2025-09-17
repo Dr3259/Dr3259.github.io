@@ -5,10 +5,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Leaf, Search, Info } from 'lucide-react';
+import { ArrowLeft, Leaf, Search, Info, ChefHat, Star, Heart, Brain, CookingPot, ExternalLink, Lightbulb, Scale } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
 
 const translations = {
   'zh-CN': {
@@ -21,12 +23,11 @@ const translations = {
     tabSEA: '东南亚辛香',
     tabMidEastIndian: '中东/印度',
     tabGeneralTips: '通用技巧',
-    tableHeader: {
-      name: '香料名称',
-      features: '核心特点',
-      usage: '经典用途',
-      pairing: '适配食材',
-      tips: '使用提示',
+    cardLabels: {
+        features: '核心特点',
+        usage: '经典用途',
+        pairing: '适配食材',
+        tips: '使用提示',
     },
     universalTips: {
       title: '全球香料通用技巧',
@@ -37,6 +38,7 @@ const translations = {
       braiseFormula: '炖肉通用公式',
       braiseFormulaDesc: '祛腥（白芷/南姜）+ 增香（八角/迷迭香）+ 解腻（陈皮/欧芹）',
       freshVsDryTitle: '“新鲜vs干燥”香料替换原则',
+      freshVsDryContent: '新鲜草本（如罗勒）香味清新，替换比例约为 3:1（鲜:干），适合出锅前加入。干燥香料（如八角）香味浓缩，替换比例约为 1:3（干:鲜），适合烹饪初期加入。',
       storageTitle: '储存与预处理技巧',
       storageDesc: '新鲜草本用湿纸包裹冷藏；干燥香料密封避光。干香料使用前小火微炒或温水浸泡可激发香味。',
     },
@@ -57,12 +59,11 @@ const translations = {
     tabSEA: 'Southeast Asian',
     tabMidEastIndian: 'Mid-East/Indian',
     tabGeneralTips: 'Universal Tips',
-    tableHeader: {
-      name: 'Spice Name',
-      features: 'Core Features',
-      usage: 'Classic Uses',
-      pairing: 'Pairs With',
-      tips: 'Usage Tips',
+    cardLabels: {
+        features: 'Core Features',
+        usage: 'Classic Uses',
+        pairing: 'Pairs With',
+        tips: 'Usage Tips',
     },
      universalTips: {
       title: 'Universal Spice Techniques',
@@ -73,6 +74,7 @@ const translations = {
       braiseFormula: 'Braise Formula',
       braiseFormulaDesc: 'De-Fishing (Angelica/Galangal) + Aroma (Star Anise/Rosemary) + Degreasing (Orange Peel/Parsley)',
       freshVsDryTitle: 'Fresh vs. Dry Replacement Principle',
+      freshVsDryContent: 'Fresh herbs (like basil) have a delicate aroma; use a 3:1 ratio (fresh:dry) and add at the end. Dried spices (like star anise) are concentrated; use a 1:3 ratio (dry:fresh) and add at the beginning.',
       storageTitle: 'Storage & Prep',
       storageDesc: 'Wrap fresh herbs in damp paper and refrigerate; store dry spices sealed from light. Toasting or soaking dry spices before use enhances flavor.',
     },
@@ -159,29 +161,82 @@ type LanguageKey = keyof typeof translations;
 type SpiceCategory = keyof typeof spiceData['en'];
 type Spice = typeof spiceData['en']['chinese'][0];
 
-const SpiceTable: React.FC<{ data: Spice[], headers: any }> = ({ data, headers }) => (
-    <Table>
-        <TableHeader>
-            <TableRow>
-                <TableHead>{headers.name}</TableHead>
-                <TableHead>{headers.features}</TableHead>
-                <TableHead>{headers.usage}</TableHead>
-                <TableHead>{headers.pairing}</TableHead>
-                <TableHead>{headers.tips}</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            {data.map((spice, index) => (
-                <TableRow key={index}>
-                    <TableCell className="font-medium">{spice.name}</TableCell>
-                    <TableCell>{spice.features}</TableCell>
-                    <TableCell>{spice.usage}</TableCell>
-                    <TableCell>{spice.pairing}</TableCell>
-                    <TableCell>{spice.tips}</TableCell>
-                </TableRow>
-            ))}
-        </TableBody>
-    </Table>
+const categoryIcons: Record<SpiceCategory, React.ElementType> = {
+  chinese: CookingPot,
+  euroAmerican: ChefHat,
+  sea: Leaf,
+  midEastIndian: Star,
+}
+
+const InfoRow: React.FC<{ icon: React.ElementType, label: string, content: string }> = ({ icon: Icon, label, content }) => (
+    <div>
+        <h4 className="flex items-center text-sm font-semibold text-primary/80 mb-1">
+            <Icon className="w-4 h-4 mr-2" />
+            {label}
+        </h4>
+        <p className="text-xs text-muted-foreground pl-6">{content}</p>
+    </div>
+);
+
+const SpiceCard: React.FC<{ spice: Spice, labels: any }> = ({ spice, labels }) => (
+    <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm shadow-lg border-border/20 hover:border-primary/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <CardHeader>
+            <CardTitle className="text-lg font-bold text-foreground">{spice.name}</CardTitle>
+            <CardDescription>{spice.features}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow space-y-3 text-sm">
+            <InfoRow icon={CookingPot} label={labels.usage} content={spice.usage} />
+            <InfoRow icon={Heart} label={labels.pairing} content={spice.pairing} />
+            <InfoRow icon={Lightbulb} label={labels.tips} content={spice.tips} />
+        </CardContent>
+    </Card>
+);
+
+const UniversalTipsSection: React.FC<{ t: any }> = ({ t }) => (
+     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Brain className="w-5 h-5 text-primary"/>{t.universalTips.basicFormulaTitle}</CardTitle>
+                <CardDescription>{t.universalTips.basicFormulaDesc}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+                <div>
+                    <h4 className="font-semibold">{t.universalTips.braiseFormula}</h4>
+                    <p className="text-xs text-muted-foreground">{t.universalTips.braiseFormulaDesc}</p>
+                </div>
+                <div>
+                    <h4 className="font-semibold">{t.universalTips.roastFormula}</h4>
+                    <p className="text-xs text-muted-foreground">{t.universalTips.roastFormulaDesc}</p>
+                </div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Scale className="w-5 h-5 text-primary"/>{t.universalTips.freshVsDryTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <p className="text-sm text-muted-foreground">{t.universalTips.freshVsDryContent}</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                 <CardTitle className="flex items-center gap-2"><Lightbulb className="w-5 h-5 text-primary"/>{t.universalTips.storageTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground">{t.universalTips.storageDesc}</p>
+            </CardContent>
+        </Card>
+        <Card className="md:col-span-2 lg:col-span-3">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ExternalLink className="w-5 h-5 text-primary"/>{t.fusionCases.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p>1. {t.fusionCases.case1}</p>
+                <p>2. {t.fusionCases.case2}</p>
+                <p>3. {t.fusionCases.case3}</p>
+            </CardContent>
+        </Card>
+    </div>
 );
 
 
@@ -219,10 +274,10 @@ export default function SpiceBasicsPage() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground py-10 px-4 sm:px-8 items-center">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-amber-50/20 to-green-50/20 text-foreground py-10 px-4 sm:px-8 items-center">
       <header className="w-full max-w-6xl mb-8 self-center">
         <Link href="/kitchen" passHref>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="bg-background/50 backdrop-blur-sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t.backButton}
           </Button>
@@ -240,13 +295,13 @@ export default function SpiceBasicsPage() {
             </p>
         </div>
         
-        <div className="w-full max-w-lg mb-8">
+        <div className="w-full max-w-lg mb-8 sticky top-4 z-10">
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                     type="search"
                     placeholder={t.searchPlaceholder}
-                    className="w-full pl-10 h-12 text-base rounded-full shadow-lg"
+                    className="w-full pl-12 h-12 text-base rounded-full shadow-lg bg-background/80 backdrop-blur-md"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -254,60 +309,28 @@ export default function SpiceBasicsPage() {
         </div>
 
         <Tabs defaultValue="chinese" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6">
-                <TabsTrigger value="chinese">{t.tabChinese}</TabsTrigger>
-                <TabsTrigger value="euroAmerican">{t.tabEuroAmerican}</TabsTrigger>
-                <TabsTrigger value="sea">{t.tabSEA}</TabsTrigger>
-                <TabsTrigger value="midEastIndian">{t.tabMidEastIndian}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-8 bg-card/60 backdrop-blur-md">
+                {(Object.keys(spiceData.en) as SpiceCategory[]).map(key => (
+                     <TabsTrigger key={key} value={key} className="flex items-center gap-2">
+                        {React.createElement(categoryIcons[key], {className: "w-4 h-4"})}
+                        {t[`tab${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof t]}
+                    </TabsTrigger>
+                ))}
                 <TabsTrigger value="tips">{t.tabGeneralTips}</TabsTrigger>
             </TabsList>
             
             {(Object.keys(filteredData) as SpiceCategory[]).map(categoryKey => (
                  <TabsContent key={categoryKey} value={categoryKey}>
-                    <Card>
-                        <CardContent className="p-0">
-                            <SpiceTable data={filteredData[categoryKey]} headers={t.tableHeader} />
-                        </CardContent>
-                    </Card>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredData[categoryKey].map((spice, index) => (
+                           <SpiceCard key={index} spice={spice} labels={t.cardLabels}/>
+                        ))}
+                    </div>
                 </TabsContent>
             ))}
 
             <TabsContent value="tips">
-                <div className="grid gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t.universalTips.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <h4 className="font-semibold">{t.universalTips.basicFormulaTitle}</h4>
-                                <p className="text-sm text-muted-foreground">{t.universalTips.basicFormulaDesc}</p>
-                                <ul className="text-sm list-disc pl-5 mt-2 space-y-1">
-                                    <li><strong>{t.universalTips.braiseFormula}:</strong> {t.universalTips.braiseFormulaDesc}</li>
-                                    <li><strong>{t.universalTips.roastFormula}:</strong> {t.universalTips.roastFormulaDesc}</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold">{t.universalTips.freshVsDryTitle}</h4>
-                                 <p className="text-sm text-muted-foreground">新鲜草本（如罗勒）香味清新，替换比例约为 3:1（鲜:干），适合出锅前加入。干燥香料（如八角）香味浓缩，替换比例约为 1:3（干:鲜），适合烹饪初期加入。</p>
-                            </div>
-                             <div>
-                                <h4 className="font-semibold">{t.universalTips.storageTitle}</h4>
-                                <p className="text-sm text-muted-foreground">{t.universalTips.storageDesc}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>{t.fusionCases.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <p>1. {t.fusionCases.case1}</p>
-                            <p>2. {t.fusionCases.case2}</p>
-                            <p>3. {t.fusionCases.case3}</p>
-                        </CardContent>
-                    </Card>
-                </div>
+                <UniversalTipsSection t={t} />
             </TabsContent>
         </Tabs>
       </main>
@@ -315,3 +338,4 @@ export default function SpiceBasicsPage() {
   );
 }
 
+```
