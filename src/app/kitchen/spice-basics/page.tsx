@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -6,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Leaf, CookingPot, ChefHat, Star, Utensils, Lightbulb, Scale, BookOpen, ShieldAlert, Globe } from 'lucide-react';
+import { ArrowLeft, Leaf, CookingPot, ChefHat, Star, Utensils, Lightbulb, Scale, BookOpen, ShieldAlert, Globe, Wind, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const translations = {
@@ -15,7 +14,9 @@ const translations = {
     pageDescription: '探索跨越地域与菜系的“风味密码”。',
     backButton: '返回厨房',
     tabChinese: '中式传统',
-    tabInternational: '国际经典',
+    tabEuropean: '欧美草本',
+    tabSEA: '东南亚辛香',
+    tabMiddleEast: '中东/印度',
     tabTips: '通用技巧',
     tabFusion: '融合案例',
     cardLabels: {
@@ -28,7 +29,7 @@ const translations = {
     tips: {
         title: '通用使用技巧与避坑指南',
         principleTitle: '用量原则：“浓味香料”宜少不宜多',
-        principleContent: '浓烈香料（如丁香、肉豆蔻）过量易掩盖食材本味。热性香料（如桂皮、草果）夏季需减量。',
+        principleContent: '浓烈香料（丁香、肉豆蔻）过量易掩盖食材本味。热性香料（如桂皮、草果）夏季需减量。',
         prepTitle: '预处理黄金法则',
         prepContent: '干香料温水浸泡或小火微炒可激发香味；新鲜香料出锅前加入保持风味。带籽香料（如草果）去籽可减苦涩。',
         pairingTitle: '搭配逻辑：“功能互补”更出味',
@@ -50,8 +51,10 @@ const translations = {
     pageTitle: 'Practical Global Spice Guide',
     pageDescription: 'Explore the "flavor codes" that transcend regions and cuisines.',
     backButton: 'Back to Kitchen',
-    tabChinese: 'Chinese Traditional',
-    tabInternational: 'International Classics',
+    tabChinese: 'Chinese',
+    tabEuropean: 'European',
+    tabSEA: 'Southeast Asian',
+    tabMiddleEast: 'Mid-East/Indian',
     tabTips: 'General Tips',
     tabFusion: 'Fusion Cases',
     cardLabels: {
@@ -98,50 +101,76 @@ const spiceData = {
       { name: '黄栀子', features: '微苦，天然黄色色素', preprocessing: '整颗敲裂，温水浸泡取液', pairing: '卤菜（猪蹄、鸡）、炖菜', usage: '卤猪蹄：2-3颗敲裂黄栀子，使卤菜呈金黄色', suggestions: '八角、桂皮、酱油' },
       { name: '罗汉果', features: '味甜，天然甜味剂', preprocessing: '敲开取果肉+果核', pairing: '卤菜、甜汤、饮品', usage: '1. 卤菜：1/4个罗汉果替代部分糖\n2. 罗汉果雪梨汤：与雪梨同煮', suggestions: '雪梨、百合、卤料包' },
     ],
-    international: [
-      { name: '迷迭香（欧美）', features: '木质香+松针感，微苦', preprocessing: '取嫩枝使用', pairing: '羊肉、牛肉、鸡肉、土豆', usage: '1. 烤羊排：迷迭香嫩枝+橄榄油+大蒜\n2. 烤土豆：迷迭香+盐+黑胡椒', suggestions: '橄榄油、大蒜、黑胡椒、土豆' },
-      { name: '罗勒（欧美）', features: '甜香带薄荷感，清新浓郁', preprocessing: '烹饪前切碎', pairing: '意大利菜、番茄、鸡肉、披萨', usage: '1. 番茄意面：出锅前加切碎罗勒\n2. 煎鸡胸：罗勒+大蒜腌制', suggestions: '番茄、大蒜、橄榄油、芝士' },
-      { name: '百里香（欧美）', features: '柔和花香+柠檬味', preprocessing: '取叶片，去硬枝', pairing: '鸡肉、鱼肉、炖菜、奶油酱', usage: '1. 鸡汤：3-4枝+洋葱+胡萝卜\n2. 奶油蘑菇汤：加入平衡厚重感', suggestions: '洋葱、胡萝卜、奶油、蘑菇' },
-      { name: '香茅（东南亚）', features: '浓烈柠檬香+草本涩感', preprocessing: '去外层老皮，取白色茎部拍裂', pairing: '海鲜、鸡肉、椰浆料理', usage: '1. 冬阴功汤：1段香茅+南姜+柠檬叶\n2. 越南河粉：香茅煮汤底', suggestions: '南姜、柠檬叶、椰浆' },
-      { name: '南姜（东南亚）', features: '辛辣带柑橘香，比生姜冲', preprocessing: '去皮后切片/拍碎', pairing: '泰式咖喱、海鲜', usage: '1. 红咖喱酱：南姜+香茅+柠檬叶\n2. 烤鱿鱼：南姜碎+鱼露腌制', suggestions: '香茅、柠檬叶、鱼露' },
-      { name: '柠檬叶（东南亚）', features: '强烈柠檬香，微苦', preprocessing: '新鲜叶片撕碎', pairing: '椰香鸡汤、叻沙、虾仁', usage: '1. 椰香鸡汤：2片柠檬叶+香茅+南姜\n2. 炒虾仁：柠檬叶碎+蒜末', suggestions: '香茅、南姜、椰浆' },
-      { name: '孜然籽（中东）', features: '辛辣带坚果香，比孜然粉清新', preprocessing: '干炒1-2分钟，研磨成粉', pairing: '中东烤肉、鹰嘴豆、咖喱', usage: '1. 烤羊肉串：孜然籽粉+小豆蔻+柠檬汁\n2. 鹰嘴豆泥：撒孜然籽粉+橄榄油', suggestions: '芫荽籽、小豆蔻、柠檬汁' },
-      { name: '姜黄（中东/印度）', features: '微苦姜香，天然黄色色素', preprocessing: '干姜黄粉直接用', pairing: '咖喱、鸡肉、米饭、汤羹', usage: '1. 黄咖喱：1-2茶匙姜黄粉+咖喱块\n2. 姜黄饭：与米饭同蒸呈金黄色', suggestions: '咖喱、洋葱、大蒜、椰浆' },
+    european: [
+      { name: '迷迭香', features: '木质香+松针感，微苦', preprocessing: '取嫩枝使用', pairing: '鸡胸肉、羊排、土豆', usage: '1. 烤羊排：迷迭香嫩枝+橄榄油+大蒜\n2. 烤土豆：迷迭香+盐+黑胡椒', suggestions: '橄榄油、大蒜、黑胡椒、土豆' },
+      { name: '罗勒', features: '甜香带薄荷感，清新浓郁', preprocessing: '烹饪前切碎', pairing: '番茄、奶酪、虾仁', usage: '1. 番茄意面：出锅前加切碎罗勒\n2. 煎鸡胸：罗勒+大蒜腌制', suggestions: '番茄、大蒜、橄榄油、芝士' },
+      { name: '百里香', features: '柔和花香+柠檬味', preprocessing: '取叶片，去硬枝', pairing: '鳕鱼、牛肉、蘑菇', usage: '1. 鸡汤：3-4枝+洋葱+胡萝卜\n2. 奶油蘑菇汤：加入平衡厚重感', suggestions: '洋葱、胡萝卜、奶油、蘑菇' },
+      { name: '欧芹', features: '清新芹菜香，脆嫩爽口', preprocessing: '不可久煮，避免香味流失', pairing: '三文鱼、牛排、蔬菜', usage: '沙拉点缀、酱汁基底、汤品收尾', suggestions: '三文鱼、牛排、蔬菜' },
+      { name: '牛至', features: '辛辣微苦，带茴香感', preprocessing: '干燥品香味比新鲜品浓', pairing: '牛肉、猪肉、豆类', usage: '披萨、意式肉酱、墨西哥塔可', suggestions: '牛肉、猪肉、豆类' },
+      { name: '莳萝', features: '甜香带茴香，清爽解腻', preprocessing: '新鲜品易蔫，用湿纸包裹冷藏', pairing: '三文鱼、虾、黄瓜', usage: '北欧腌三文鱼、俄式冷汤', suggestions: '三文鱼、虾、黄瓜' },
     ],
+    southeastAsian: [
+      { name: '香茅', features: '浓烈柠檬香+草本涩感', preprocessing: '取白色茎部切段拍裂', pairing: '海鲜、鸡肉、椰浆', usage: '1. 冬阴功汤：1段香茅+南姜+柠檬叶\n2. 越南河粉：香茅煮汤底', suggestions: '南姜、柠檬叶、椰浆' },
+      { name: '南姜', features: '辛辣带柑橘香，比生姜冲', preprocessing: '去皮后切片/拍碎', pairing: '贻贝、鱿鱼、牛肉', usage: '1. 红咖喱酱：南姜+香茅+柠檬叶\n2. 烤鱿鱼：南姜碎+鱼露腌制', suggestions: '香茅、柠檬叶、鱼露' },
+      { name: '柠檬叶', features: '强烈柠檬香，微苦', preprocessing: '新鲜叶片撕碎', pairing: '鸡肉、虾、米粉', usage: '1. 椰香鸡汤：2片柠檬叶+香茅\n2. 炒虾仁：柠檬叶碎+蒜末', suggestions: '香茅、南姜、椰浆' },
+      { name: '高良姜', features: '辛辣微甜，带樟木香气', preprocessing: '可替代部分生姜', pairing: '羊肉串、螃蟹、牛肉', usage: '印尼沙爹、新加坡辣椒蟹', suggestions: '椰浆、鱼露、牛肉' },
+      { name: '香兰叶', features: '清甜椰香，自带绿色', preprocessing: '多用作包裹食材蒸煮', pairing: '米饭、蛋糕、椰浆汤', usage: '香兰叶包鸡、榨汁调色', suggestions: '米饭、蛋糕、椰浆' },
+    ],
+    middleEastern: [
+        { name: '孜然籽', features: '辛辣带坚果香', preprocessing: '干炒后研磨成粉', pairing: '中东烤肉、鹰嘴豆', usage: '1. 烤羊肉串：孜然籽粉+小豆蔻\n2. 鹰嘴豆泥：撒孜然籽粉', suggestions: '芫荽籽、小豆蔻、柠檬汁' },
+        { name: '芫荽籽', features: '温和柑橘香+木质香', preprocessing: '炒后风味更突出', pairing: '豆类、鸡肉、牛肉', usage: '印度马萨拉、中东蘸料', suggestions: '孜然籽、咖喱粉' },
+        { name: '姜黄', features: '微苦姜香，天然黄色素', preprocessing: '干姜黄粉直接用', pairing: '咖喱、鸡肉、米饭', usage: '1. 黄咖喱：1-2茶匙姜黄粉\n2. 姜黄饭：与米饭同蒸', suggestions: '咖喱、洋葱、大蒜' },
+        { name: '小豆蔻', features: '清新花香+柑橘香', preprocessing: '带壳使用', pairing: '牛奶、羊肉、蛋糕', usage: '印度奶茶、咖喱、甜点', suggestions: '牛奶、羊肉、蛋糕' },
+        { name: '葫芦巴籽', features: '微苦带烟熏香', preprocessing: '提前浸泡去苦味', pairing: '牛肉、豆类、蔬菜', usage: '印度咖喱、中东烤肉腌料', suggestions: '姜黄、芫荽籽' },
+    ]
   },
   'en': {
     chinese: [
-        { name: 'Star Anise', features: 'Sweet & fragrant, full-bodied', preprocessing: 'Use whole; soak in warm water for 10 mins before braising', pairing: 'Pork, beef, lamb, poultry', usage: '1. Braised Pork Knuckle: 2-3 pods + cassia + bay leaves\n2. Stewed Ribs: 1 pod + ginger + scallion', suggestions: 'Cassia, bay leaf, fennel' },
-        { name: 'Sichuan Pepper', features: 'Numbing & fragrant, complex', preprocessing: 'Use dry; sizzle in hot oil to infuse flavor', pairing: 'Sichuan cuisine, beef, lamb, tofu', usage: '1. Mapo Tofu: Sizzle 20 peppercorns, then add bean paste\n2. Grilled Lamb Skewers: Sprinkle with ground pepper + cumin', suggestions: 'Chili, cumin, ginger' },
-        { name: 'Cassia/Cinnamon', features: 'Pungent & sweet, long-lasting', preprocessing: 'Use whole sections; can be broken into smaller pieces', pairing: 'Pork, beef, braised dishes, desserts', usage: '1. Braised Beef: 1 stick + 2 star anise + 1 clove\n2. Sweet Tea: A small piece for aroma', suggestions: 'Star anise, clove, caoguo' },
-        { name: 'Bay Leaf', features: 'Mildly pungent, enhances flavor', preprocessing: 'Use dried leaves directly, do not wash', pairing: 'All meats, braised dishes, stews', usage: '1. Beef Stew: 1 leaf + star anise + Sichuan pepper\n2. Braised Chicken Feet: 2 leaves + cassia + fennel', suggestions: 'Star anise, cassia, Sichuan pepper' },
-        { name: 'Caoguo', features: 'Strongly pungent, de-fishing', preprocessing: 'Remove seeds (bitter); crush to release flavor', pairing: 'Beef, lamb, offal', usage: 'Lamb Stew: 1-2 deseeded caoguo + angelica root + ginger', suggestions: 'Angelica root, ginger, dried tangerine peel' },
-        { name: 'Dried Tangerine Peel', features: 'Bitter & fruity, cuts grease', preprocessing: 'Soften in warm water, scrape off white pith', pairing: 'Beef, lamb, poultry, desserts', usage: '1. Lamb Stew: 2-3 pieces + red dates\n2. Red Bean Soup: Cook with red beans', suggestions: 'Ginger, red dates, red beans' },
-        { name: 'Cumin (Chinese)', features: 'Spicy & rich, exotic', preprocessing: 'Dry-toast whole seeds for 1-2 mins, then grind', pairing: 'Lamb, beef, BBQ, fried foods', usage: '1. Grilled Lamb: Brush with oil, sprinkle cumin + chili flakes\n2. Cumin Beef: Stir-fry cumin seeds first, then beef', suggestions: 'Chili, lamb, onion' },
-        { name: 'Perilla', features: 'Pungent & fresh, anti-fishy', preprocessing: 'Wash and drain fresh leaves', pairing: 'Fish, crab, snails, beef', usage: '1. Steamed Fish: Place leaves on fish with ginger\n2. Stir-fried Snails: Minced perilla + chili + garlic', suggestions: 'Chili, garlic, ginger, fish' },
-        { name: 'Gardenia Fruit', features: 'Slightly bitter, natural yellow dye', preprocessing: 'Crack open, soak in warm water to extract color', pairing: 'Braised dishes (pork, chicken)', usage: 'Braised Pork Knuckle: 2-3 cracked fruits for golden color', suggestions: 'Star anise, cassia, soy sauce' },
-        { name: 'Monk Fruit', features: 'Sweet, natural sweetener', preprocessing: 'Break open, use pulp and seeds', pairing: 'Braised dishes, sweet soups, drinks', usage: '1. Braise: 1/4 fruit to replace some sugar\n2. Pear Soup: Cook with pear for a soothing drink', suggestions: 'Pear, lily bulb, master stock' },
+      { name: 'Star Anise', features: 'Sweet & fragrant, full-bodied', preprocessing: 'Use whole; soak in warm water for 10 mins', pairing: 'Pork, beef, lamb, poultry', usage: '1. Braised Pork Knuckle: 2-3 pods\n2. Stewed Ribs: 1 pod', suggestions: 'Cassia, bay leaf, fennel' },
+      { name: 'Sichuan Pepper', features: 'Numbing & fragrant, complex', preprocessing: 'Use dry; sizzle in hot oil', pairing: 'Sichuan cuisine, beef, lamb', usage: '1. Mapo Tofu: Sizzle 20 peppercorns\n2. Grilled Lamb Skewers: Ground pepper + cumin', suggestions: 'Chili, cumin, ginger' },
+      { name: 'Cassia/Cinnamon', features: 'Pungent & sweet, long-lasting', preprocessing: 'Use whole sections; can be broken', pairing: 'Pork, beef, braised dishes', usage: '1. Braised Beef: 1 stick\n2. Sweet Tea: A small piece for aroma', suggestions: 'Star anise, clove, caoguo' },
+      { name: 'Bay Leaf', features: 'Mildly pungent, enhances flavor', preprocessing: 'Use dried leaves directly', pairing: 'All meats, stews', usage: '1. Beef Stew: 1 leaf\n2. Braised Chicken Feet: 2 leaves', suggestions: 'Star anise, cassia, Sichuan pepper' },
+      { name: 'Caoguo', features: 'Strongly pungent, de-fishing', preprocessing: 'Remove seeds (bitter); crush', pairing: 'Beef, lamb, offal', usage: 'Lamb Stew: 1-2 deseeded caoguo', suggestions: 'Angelica root, ginger, dried tangerine peel' },
+      { name: 'Dried Tangerine Peel', features: 'Bitter & fruity, cuts grease', preprocessing: 'Soften, scrape off white pith', pairing: 'Beef, lamb, poultry, desserts', usage: '1. Lamb Stew: 2-3 pieces\n2. Red Bean Soup: Cook with red beans', suggestions: 'Ginger, red dates' },
+      { name: 'Cumin (Chinese)', features: 'Spicy & rich, exotic', preprocessing: 'Dry-toast then grind', pairing: 'Lamb, beef, BBQ, fried foods', usage: '1. Grilled Lamb: Sprinkle cumin\n2. Cumin Beef: Stir-fry cumin first', suggestions: 'Chili, lamb, onion' },
+      { name: 'Perilla', features: 'Pungent & fresh, anti-fishy', preprocessing: 'Wash and drain fresh leaves', pairing: 'Fish, crab, snails', usage: '1. Steamed Fish: Place leaves on fish\n2. Stir-fried Snails: Minced perilla + chili', suggestions: 'Chili, garlic, ginger' },
+      { name: 'Gardenia Fruit', features: 'Slightly bitter, natural yellow dye', preprocessing: 'Crack open, soak in water', pairing: 'Braised dishes (pork, chicken)', usage: 'Braised Pork Knuckle: 2-3 fruits for color', suggestions: 'Star anise, cassia, soy sauce' },
+      { name: 'Monk Fruit', features: 'Sweet, natural sweetener', preprocessing: 'Break open, use pulp and seeds', pairing: 'Braised dishes, sweet soups', usage: '1. Braise: 1/4 fruit to replace sugar\n2. Pear Soup: Cook with pear', suggestions: 'Pear, lily bulb' },
     ],
-    international: [
-      { name: 'Rosemary (EU/US)', features: 'Woody & pine-like, slightly bitter', preprocessing: 'Use tender sprigs', pairing: 'Lamb, beef, chicken, potatoes', usage: '1. Roast Lamb: Sprigs + olive oil + garlic\n2. Roast Potatoes: Rosemary + salt + black pepper', suggestions: 'Olive oil, garlic, black pepper, potatoes' },
-      { name: 'Basil (EU/US)', features: 'Sweet & peppery, fresh & intense', preprocessing: 'Chop just before use', pairing: 'Italian food, tomatoes, chicken, pizza', usage: '1. Tomato Pasta: Add chopped basil before serving\n2. Grilled Chicken: Marinate with basil + garlic', suggestions: 'Tomato, garlic, olive oil, cheese' },
-      { name: 'Thyme (EU/US)', features: 'Mild, floral & lemony', preprocessing: 'Use leaves, discard stems', pairing: 'Chicken, fish, stews, cream sauces', usage: '1. Chicken Soup: 3-4 sprigs + onion + carrot\n2. Mushroom Soup: Balances creaminess', suggestions: 'Onion, carrot, cream, mushrooms' },
-      { name: 'Lemongrass (SEA)', features: 'Strong lemon aroma, herbal', preprocessing: 'Remove outer layer, use bruised white stalk', pairing: 'Seafood, chicken, coconut dishes', usage: '1. Tom Yum Soup: 1 stalk + galangal + lime leaves\n2. Pho Broth: Infuse for freshness', suggestions: 'Galangal, kaffir lime leaf, coconut milk' },
-      { name: 'Galangal (SEA)', features: 'Pungent & citrusy, stronger than ginger', preprocessing: 'Peel and slice/crush', pairing: 'Thai curries, seafood', usage: '1. Red Curry Paste: Base ingredient\n2. Grilled Squid: Marinate with minced galangal + fish sauce', suggestions: 'Lemongrass, kaffir lime leaf, fish sauce' },
-      { name: 'Kaffir Lime Leaf (SEA)', features: 'Intense lemon scent, slightly bitter', preprocessing: 'Tear fresh leaves to release aroma', pairing: 'Coconut chicken soup, laksa, shrimp', usage: '1. Coconut Chicken Soup: 2 leaves + lemongrass\n2. Stir-fried Shrimp: Minced leaves + garlic', suggestions: 'Lemongrass, galangal, coconut milk' },
-      { name: 'Cumin Seed (Mid-East)', features: 'Pungent & nutty, fresher than powder', preprocessing: 'Dry-toast and grind for best flavor', pairing: 'Middle Eastern BBQ, hummus, curries', usage: '1. Lamb Skewers: Ground cumin + cardamom + lemon juice\n2. Hummus: Sprinkle ground cumin + olive oil', suggestions: 'Coriander seed, cardamom, lemon juice' },
-      { name: 'Turmeric (Mid-East/India)', features: 'Earthy, slightly bitter, natural yellow dye', preprocessing: 'Use dried powder directly', pairing: 'Curries, chicken, rice, soups', usage: '1. Yellow Curry: 1-2 tsp turmeric powder\n2. Turmeric Rice: Steam with rice for color', suggestions: 'Curry, onion, garlic, coconut milk' },
+    european: [
+      { name: 'Rosemary', features: 'Woody & pine-like, slightly bitter', preprocessing: 'Use tender sprigs', pairing: 'Chicken, lamb, potatoes', usage: '1. Roast Lamb: Sprigs + olive oil\n2. Roast Potatoes: Rosemary + salt', suggestions: 'Olive oil, garlic, black pepper, potatoes' },
+      { name: 'Basil', features: 'Sweet & peppery, fresh & intense', preprocessing: 'Chop just before use', pairing: 'Tomatoes, cheese, shrimp', usage: '1. Tomato Pasta: Add at the end\n2. Grilled Chicken: Marinate with basil', suggestions: 'Tomato, garlic, olive oil, cheese' },
+      { name: 'Thyme', features: 'Mild, floral & lemony', preprocessing: 'Use leaves, discard stems', pairing: 'Fish, beef, mushrooms', usage: '1. Chicken Soup: 3-4 sprigs\n2. Mushroom Soup: Balances creaminess', suggestions: 'Onion, carrot, cream, mushrooms' },
+      { name: 'Parsley', features: 'Fresh celery flavor, crisp', preprocessing: 'Do not overcook', pairing: 'Salmon, steak, vegetables', usage: 'Garnish, sauce base, finish soups', suggestions: 'Salmon, steak, vegetables' },
+      { name: 'Oregano', features: 'Pungent & slightly bitter', preprocessing: 'Dried is more potent', pairing: 'Beef, pork, beans', usage: 'Pizza, meat sauces, tacos', suggestions: 'Beef, pork, beans' },
+      { name: 'Dill', features: 'Sweet & anise-like, refreshing', preprocessing: 'Fresh dill wilts easily', pairing: 'Salmon, shrimp, cucumber', usage: 'Cured salmon (gravlax), cold soups', suggestions: 'Salmon, shrimp, cucumber' },
     ],
+    southeastAsian: [
+      { name: 'Lemongrass', features: 'Strong lemon aroma, herbal', preprocessing: 'Bruise the white stalk', pairing: 'Seafood, chicken, coconut milk', usage: '1. Tom Yum Soup: 1 stalk\n2. Pho Broth: Infuse for freshness', suggestions: 'Galangal, kaffir lime leaf, coconut milk' },
+      { name: 'Galangal', features: 'Pungent & citrusy, stronger than ginger', preprocessing: 'Peel and slice/crush', pairing: 'Mussels, squid, beef', usage: '1. Red Curry Paste: Base ingredient\n2. Grilled Squid: Marinate with minced galangal', suggestions: 'Lemongrass, kaffir lime leaf, fish sauce' },
+      { name: 'Kaffir Lime Leaf', features: 'Intense lemon scent, slightly bitter', preprocessing: 'Tear fresh leaves', pairing: 'Chicken, shrimp, rice noodles', usage: '1. Coconut Chicken Soup: 2 leaves\n2. Stir-fried Shrimp: Minced leaves', suggestions: 'Lemongrass, galangal, coconut milk' },
+      { name: 'Greater Galangal', features: 'Spicy & sweet, with camphor notes', preprocessing: 'Can replace some ginger', pairing: 'Lamb skewers, crab, beef', usage: 'Indonesian satay, Singapore chili crab', suggestions: 'Coconut milk, fish sauce' },
+      { name: 'Pandan Leaf', features: 'Sweet, coconut-like aroma', preprocessing: 'Wrap food or juice it', pairing: 'Rice, cakes, coconut soup', usage: 'Pandan chicken, colorant for desserts', suggestions: 'Rice, cakes, coconut milk' },
+    ],
+    middleEastern: [
+      { name: 'Cumin Seed', features: 'Pungent & nutty', preprocessing: 'Dry-toast and grind', pairing: 'Middle Eastern BBQ, hummus', usage: '1. Lamb Skewers: Ground cumin\n2. Hummus: Sprinkle on top', suggestions: 'Coriander seed, cardamom, lemon juice' },
+      { name: 'Coriander Seed', features: 'Mild citrus & woody notes', preprocessing: 'Toast for more flavor', pairing: 'Legumes, chicken, beef', usage: 'Masalas, Middle Eastern dips', suggestions: 'Cumin seed, curry powder' },
+      { name: 'Turmeric', features: 'Earthy, slightly bitter, yellow dye', preprocessing: 'Use dried powder directly', pairing: 'Curries, chicken, rice', usage: '1. Yellow Curry: 1-2 tsp\n2. Turmeric Rice: Steam with rice', suggestions: 'Curry, onion, garlic' },
+      { name: 'Cardamom', features: 'Floral & citrusy, slightly spicy', preprocessing: 'Use whole pods', pairing: 'Milk, lamb, cakes', usage: 'Chai tea, curries, desserts', suggestions: 'Milk, lamb, cakes' },
+      { name: 'Fenugreek Seed', features: 'Slightly bitter, smoky, maple-like', preprocessing: 'Soak to reduce bitterness', pairing: 'Beef, legumes, vegetables', usage: 'Curries, BBQ marinades', suggestions: 'Turmeric, coriander seed' },
+    ]
   },
 };
 
 type LanguageKey = keyof typeof translations;
-type SpiceCategory = keyof typeof spiceData['en'];
-type Spice = typeof spiceData['en']['chinese'][0];
+type SpiceCategoryKey = keyof typeof spiceData['en'];
+type Spice = (typeof spiceData)['en']['chinese'][0];
 
 const categoryIcons: Record<string, React.ElementType> = {
   chinese: CookingPot,
-  international: Globe,
+  european: Leaf,
+  southeastAsian: Wind,
+  middleEastern: Sun,
   tips: Lightbulb,
   fusion: Utensils,
 };
@@ -229,9 +258,11 @@ export default function SpiceBasicsPage() {
         </div>
 
         <Tabs defaultValue="chinese" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-8 bg-card/60 backdrop-blur-md">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-8 bg-card/60 backdrop-blur-md">
                 <TabsTrigger value="chinese" className="flex items-center gap-2"><CookingPot className="w-4 h-4"/>{t.tabChinese}</TabsTrigger>
-                <TabsTrigger value="international" className="flex items-center gap-2"><Globe className="w-4 h-4"/>{t.tabInternational}</TabsTrigger>
+                <TabsTrigger value="european" className="flex items-center gap-2"><Leaf className="w-4 h-4"/>{t.tabEuropean}</TabsTrigger>
+                <TabsTrigger value="southeastAsian" className="flex items-center gap-2"><Wind className="w-4 h-4"/>{t.tabSEA}</TabsTrigger>
+                <TabsTrigger value="middleEastern" className="flex items-center gap-2"><Sun className="w-4 h-4"/>{t.tabMiddleEast}</TabsTrigger>
                 <TabsTrigger value="tips" className="flex items-center gap-2"><Lightbulb className="w-4 h-4"/>{t.tabTips}</TabsTrigger>
                 <TabsTrigger value="fusion" className="flex items-center gap-2"><Utensils className="w-4 h-4"/>{t.tabFusion}</TabsTrigger>
             </TabsList>
@@ -244,9 +275,25 @@ export default function SpiceBasicsPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="international">
+            <TabsContent value="european">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spiceData[currentLanguage].international.map((spice, index) => (
+                  {spiceData[currentLanguage].european.map((spice, index) => (
+                     <SpiceCard key={index} spice={spice} labels={t.cardLabels}/>
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="southeastAsian">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {spiceData[currentLanguage].southeastAsian.map((spice, index) => (
+                     <SpiceCard key={index} spice={spice} labels={t.cardLabels}/>
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="middleEastern">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {spiceData[currentLanguage].middleEastern.map((spice, index) => (
                      <SpiceCard key={index} spice={spice} labels={t.cardLabels}/>
                   ))}
               </div>
@@ -278,4 +325,3 @@ export default function SpiceBasicsPage() {
     </div>
   );
 }
-
