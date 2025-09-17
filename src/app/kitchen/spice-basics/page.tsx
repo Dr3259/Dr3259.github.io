@@ -234,7 +234,7 @@ const SpiceCard: React.FC<{ spice: Spice, labels: any, lang: LanguageKey }> = ({
 
     return (
         <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm shadow-lg border-border/20 hover:border-primary/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-            <div className="relative aspect-[16/9] w-full">
+             <div className="relative aspect-[16/9] w-full">
                 <Image
                     src={imageUrl}
                     alt={spice.name}
