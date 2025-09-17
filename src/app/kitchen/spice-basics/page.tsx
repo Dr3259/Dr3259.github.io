@@ -337,5 +337,3 @@ export default function SpiceBasicsPage() {
     </div>
   );
 }
-
-```
