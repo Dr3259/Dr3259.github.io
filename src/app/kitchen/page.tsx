@@ -206,9 +206,16 @@ export default function KitchenPage() {
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
   const handleNavigation = (path: string) => {
-      // For now, we can just log this or show an alert, as the pages don't exist yet.
-      alert(`Navigating to ${path} (page not yet implemented)`);
-      // router.push(path);
+      const isExternal = path.startsWith('http');
+      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list', '/kitchen/timer'].includes(path);
+      
+      if(isExternal) {
+          window.open(path, '_blank');
+      } else if (isPlaceholder) {
+          alert(`Navigating to ${path} (page not yet implemented)`);
+      } else {
+          router.push(path);
+      }
   };
 
   const handlePinToggle = (itemKey: KitchenItemKey) => {
