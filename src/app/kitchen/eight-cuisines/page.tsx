@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -6,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Utensils, BookOpen, CookingPot, Flame, Star, Soup, University, ChefHat, Map } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import placeholderImageData from '@/lib/placeholder-images.json';
 
@@ -63,7 +64,7 @@ interface Cuisine {
   classicDishes: ClassicDish[];
 }
 
-const cuisineData: Record<string, Cuisine> = {
+const cuisineData: Record<string, Record<string, Cuisine>> = {
     'zh-CN': {
         lu: {
             id: 'lu', name: '鲁菜 (Shandong)', tagline: '北方菜系之首，宫廷菜的基石',
@@ -241,6 +242,19 @@ const summaryData = [
   { cuisine: '徽菜', flavor: '醇厚咸香', ingredients: '山珍、腌腊、发酵食材', technique: '烧、炖、腌制发酵', label: '山野风味、徽商文化' }
 ];
 
+const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
+    <div>
+        <h4 className="flex items-center text-lg font-semibold mb-3 text-primary/90">
+            <Icon className="mr-2 h-5 w-5"/>
+            {title}
+        </h4>
+        <div className="text-sm text-muted-foreground pl-7 space-y-2 prose prose-sm dark:prose-invert max-w-none">
+            {children}
+        </div>
+    </div>
+);
+
+
 const CuisineCard: React.FC<{ cuisine: Cuisine, t: any }> = ({ cuisine, t }) => {
     const featureIcons = {
         '技法': ChefHat,
@@ -255,51 +269,46 @@ const CuisineCard: React.FC<{ cuisine: Cuisine, t: any }> = ({ cuisine, t }) => 
                 </CardTitle>
                 <CardDescription>{cuisine.tagline}</CardDescription>
             </CardHeader>
-            <CardContent>
-                 <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="origin">
-                        <AccordionTrigger className="text-base font-semibold"><University className="mr-2 h-4 w-4 text-muted-foreground"/>{t.originTitle}</AccordionTrigger>
-                        <AccordionContent className="text-sm text-muted-foreground pl-2">{cuisine.origin}</AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="features">
-                        <AccordionTrigger className="text-base font-semibold"><Star className="mr-2 h-4 w-4 text-muted-foreground"/>{t.featuresTitle}</AccordionTrigger>
-                        <AccordionContent className="text-sm text-muted-foreground pl-2 space-y-2">
-                           {(cuisine.features as React.ReactElement).props.children.filter((c: any) => c.type === 'b').map((feature: any, index: number) => {
-                                const Icon = featureIcons[feature.props.children as keyof typeof featureIcons] || Star;
-                                return (
-                                <div key={index} className="flex items-start">
-                                    <Icon className="h-4 w-4 mt-0.5 mr-2 text-primary/70 shrink-0"/>
-                                    <div>{(cuisine.features as React.ReactElement).props.children[index*2+1]}</div>
+            <CardContent className="space-y-6">
+                 <Section title={t.originTitle} icon={University}>
+                    <p>{cuisine.origin}</p>
+                 </Section>
+                 <Separator />
+                 <Section title={t.featuresTitle} icon={Star}>
+                    {(cuisine.features as React.ReactElement).props.children.filter((c: any) => c.type === 'b').map((feature: any, index: number) => {
+                        const Icon = featureIcons[feature.props.children as keyof typeof featureIcons] || Star;
+                        return (
+                        <div key={index} className="flex items-start">
+                            <Icon className="h-4 w-4 mt-1 mr-2 text-primary/70 shrink-0"/>
+                            <div>{(cuisine.features as React.ReactElement).props.children[index*2+1]}</div>
+                        </div>
+                        )
+                    })}
+                 </Section>
+                 <Separator />
+                 <Section title={t.dishesTitle} icon={CookingPot}>
+                    <div className="space-y-4">
+                        {cuisine.classicDishes.map((dish, index) => {
+                            const imageData = (placeholderImageData as Record<string, { seed: number; hint: string }>)[dish.imageHint.replace(/\s/g, '')] || { seed: Math.floor(Math.random() * 1000), hint: 'food' };
+                            return (
+                            <div key={index} className="flex flex-col sm:flex-row items-start gap-4 p-2 rounded-lg hover:bg-muted/50">
+                                <div className="w-full sm:w-32 h-24 sm:h-20 relative shrink-0 rounded-md overflow-hidden">
+                                    <Image
+                                        src={`https://picsum.photos/seed/${imageData.seed}/400/300`}
+                                        alt={dish.name}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint={dish.imageHint}
+                                    />
                                 </div>
-                                )
-                           })}
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="dishes">
-                        <AccordionTrigger className="text-base font-semibold"><CookingPot className="mr-2 h-4 w-4 text-muted-foreground"/>{t.dishesTitle}</AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-2">
-                            {cuisine.classicDishes.map((dish, index) => {
-                                const imageData = (placeholderImageData as Record<string, { seed: number; hint: string }>)[dish.imageHint.replace(/\s/g, '')] || { seed: Math.floor(Math.random() * 1000), hint: 'food' };
-                                return (
-                                <div key={index} className="flex flex-col sm:flex-row items-start gap-4 p-2 rounded-lg hover:bg-muted/50">
-                                    <div className="w-full sm:w-32 h-24 sm:h-20 relative shrink-0 rounded-md overflow-hidden">
-                                        <Image
-                                            src={`https://picsum.photos/seed/${imageData.seed}/400/300`}
-                                            alt={dish.name}
-                                            fill
-                                            className="object-cover"
-                                            data-ai-hint={dish.imageHint}
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold text-sm">{dish.name}</h4>
-                                        <p className="text-xs text-muted-foreground mt-1">{dish.description}</p>
-                                    </div>
+                                <div className="flex-1">
+                                    <h4 className="font-semibold text-sm text-foreground">{dish.name}</h4>
+                                    <p className="text-xs text-muted-foreground mt-1">{dish.description}</p>
                                 </div>
-                            )})}
-                        </AccordionContent>
-                    </AccordionItem>
-                 </Accordion>
+                            </div>
+                        )})}
+                    </div>
+                 </Section>
             </CardContent>
         </Card>
     );
@@ -378,3 +387,4 @@ export default function EightCuisinesPage() {
     </div>
   );
 }
+
