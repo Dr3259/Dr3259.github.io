@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Leaf, CookingPot, ChefHat, Star, Utensils, Lightbulb, Scale, BookOpen, ShieldAlert, Globe, Wind } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import placeholderImageData from '@/lib/placeholder-images.json';
 import { Badge } from '@/components/ui/badge';
 
 const translations = {
@@ -229,10 +228,9 @@ const InfoRow: React.FC<{ icon: React.ElementType, label: string, content?: stri
     );
 };
 
-const SpiceCard: React.FC<{ spice: Spice, labels: any }> = ({ spice, labels }) => {
-    const {spices} = placeholderImageData as any;
-    const imageData = spices[spice.id as keyof typeof spices];
-    const imageUrl = `https://picsum.photos/seed/${imageData?.seed || 'spice'}/600/400`;
+const SpiceCard: React.FC<{ spice: Spice, labels: any, lang: LanguageKey }> = ({ spice, labels, lang }) => {
+    const englishName = spiceData['en'][spice.id.replace(/Chinese|MiddleEast/,'').toLowerCase() as keyof typeof spiceData['en']]?.name || spice.name;
+    const imageUrl = `https://placehold.co/600x400/2a2a2a/ffffff?text=${encodeURIComponent(englishName)}`;
 
     return (
         <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm shadow-lg border-border/20 hover:border-primary/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
@@ -242,7 +240,6 @@ const SpiceCard: React.FC<{ spice: Spice, labels: any }> = ({ spice, labels }) =
                     alt={spice.name}
                     fill
                     className="object-cover"
-                    data-ai-hint={imageData?.hint || 'spice'}
                 />
             </div>
             <CardHeader>
@@ -337,7 +334,7 @@ export default function SpiceBasicsPage() {
             <TabsContent value="chinese">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {spiceData[currentLanguage].chinese.map((spice) => (
-                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
+                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels} lang={currentLanguage}/>
                   ))}
               </div>
             </TabsContent>
@@ -345,7 +342,7 @@ export default function SpiceBasicsPage() {
             <TabsContent value="european">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {spiceData[currentLanguage].european.map((spice) => (
-                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
+                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels} lang={currentLanguage}/>
                   ))}
               </div>
             </TabsContent>
@@ -353,7 +350,7 @@ export default function SpiceBasicsPage() {
             <TabsContent value="southeastAsian">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {spiceData[currentLanguage].southeastAsian.map((spice) => (
-                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
+                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels} lang={currentLanguage}/>
                   ))}
               </div>
             </TabsContent>
@@ -361,7 +358,7 @@ export default function SpiceBasicsPage() {
             <TabsContent value="middleEastern">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {spiceData[currentLanguage].middleEastern.map((spice) => (
-                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
+                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels} lang={currentLanguage}/>
                   ))}
               </div>
             </TabsContent>
