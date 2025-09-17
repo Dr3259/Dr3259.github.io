@@ -105,23 +105,15 @@ const spiceData = {
       { name: '迷迭香', features: '木质香+松针感，微苦', preprocessing: '取嫩枝使用', pairing: '鸡胸肉、羊排、土豆', usage: '1. 烤羊排：迷迭香嫩枝+橄榄油+大蒜\n2. 烤土豆：迷迭香+盐+黑胡椒', suggestions: '橄榄油、大蒜、黑胡椒、土豆' },
       { name: '罗勒', features: '甜香带薄荷感，清新浓郁', preprocessing: '烹饪前切碎', pairing: '番茄、奶酪、虾仁', usage: '1. 番茄意面：出锅前加切碎罗勒\n2. 煎鸡胸：罗勒+大蒜腌制', suggestions: '番茄、大蒜、橄榄油、芝士' },
       { name: '百里香', features: '柔和花香+柠檬味', preprocessing: '取叶片，去硬枝', pairing: '鳕鱼、牛肉、蘑菇', usage: '1. 鸡汤：3-4枝+洋葱+胡萝卜\n2. 奶油蘑菇汤：加入平衡厚重感', suggestions: '洋葱、胡萝卜、奶油、蘑菇' },
-      { name: '欧芹', features: '清新芹菜香，脆嫩爽口', preprocessing: '不可久煮，避免香味流失', pairing: '三文鱼、牛排、蔬菜', usage: '沙拉点缀、酱汁基底、汤品收尾', suggestions: '三文鱼、牛排、蔬菜' },
-      { name: '牛至', features: '辛辣微苦，带茴香感', preprocessing: '干燥品香味比新鲜品浓', pairing: '牛肉、猪肉、豆类', usage: '披萨、意式肉酱、墨西哥塔可', suggestions: '牛肉、猪肉、豆类' },
-      { name: '莳萝', features: '甜香带茴香，清爽解腻', preprocessing: '新鲜品易蔫，用湿纸包裹冷藏', pairing: '三文鱼、虾、黄瓜', usage: '北欧腌三文鱼、俄式冷汤', suggestions: '三文鱼、虾、黄瓜' },
     ],
     southeastAsian: [
       { name: '香茅', features: '浓烈柠檬香+草本涩感', preprocessing: '取白色茎部切段拍裂', pairing: '海鲜、鸡肉、椰浆', usage: '1. 冬阴功汤：1段香茅+南姜+柠檬叶\n2. 越南河粉：香茅煮汤底', suggestions: '南姜、柠檬叶、椰浆' },
       { name: '南姜', features: '辛辣带柑橘香，比生姜冲', preprocessing: '去皮后切片/拍碎', pairing: '贻贝、鱿鱼、牛肉', usage: '1. 红咖喱酱：南姜+香茅+柠檬叶\n2. 烤鱿鱼：南姜碎+鱼露腌制', suggestions: '香茅、柠檬叶、鱼露' },
       { name: '柠檬叶', features: '强烈柠檬香，微苦', preprocessing: '新鲜叶片撕碎', pairing: '鸡肉、虾、米粉', usage: '1. 椰香鸡汤：2片柠檬叶+香茅\n2. 炒虾仁：柠檬叶碎+蒜末', suggestions: '香茅、南姜、椰浆' },
-      { name: '高良姜', features: '辛辣微甜，带樟木香气', preprocessing: '可替代部分生姜', pairing: '羊肉串、螃蟹、牛肉', usage: '印尼沙爹、新加坡辣椒蟹', suggestions: '椰浆、鱼露、牛肉' },
-      { name: '香兰叶', features: '清甜椰香，自带绿色', preprocessing: '多用作包裹食材蒸煮', pairing: '米饭、蛋糕、椰浆汤', usage: '香兰叶包鸡、榨汁调色', suggestions: '米饭、蛋糕、椰浆' },
     ],
     middleEastern: [
         { name: '孜然籽', features: '辛辣带坚果香', preprocessing: '干炒后研磨成粉', pairing: '中东烤肉、鹰嘴豆', usage: '1. 烤羊肉串：孜然籽粉+小豆蔻\n2. 鹰嘴豆泥：撒孜然籽粉', suggestions: '芫荽籽、小豆蔻、柠檬汁' },
-        { name: '芫荽籽', features: '温和柑橘香+木质香', preprocessing: '炒后风味更突出', pairing: '豆类、鸡肉、牛肉', usage: '印度马萨拉、中东蘸料', suggestions: '孜然籽、咖喱粉' },
         { name: '姜黄', features: '微苦姜香，天然黄色素', preprocessing: '干姜黄粉直接用', pairing: '咖喱、鸡肉、米饭', usage: '1. 黄咖喱：1-2茶匙姜黄粉\n2. 姜黄饭：与米饭同蒸', suggestions: '咖喱、洋葱、大蒜' },
-        { name: '小豆蔻', features: '清新花香+柑橘香', preprocessing: '带壳使用', pairing: '牛奶、羊肉、蛋糕', usage: '印度奶茶、咖喱、甜点', suggestions: '牛奶、羊肉、蛋糕' },
-        { name: '葫芦巴籽', features: '微苦带烟熏香', preprocessing: '提前浸泡去苦味', pairing: '牛肉、豆类、蔬菜', usage: '印度咖喱、中东烤肉腌料', suggestions: '姜黄、芫荽籽' },
     ]
   },
   'en': {
@@ -141,23 +133,15 @@ const spiceData = {
       { name: 'Rosemary', features: 'Woody & pine-like, slightly bitter', preprocessing: 'Use tender sprigs', pairing: 'Chicken, lamb, potatoes', usage: '1. Roast Lamb: Sprigs + olive oil\n2. Roast Potatoes: Rosemary + salt', suggestions: 'Olive oil, garlic, black pepper, potatoes' },
       { name: 'Basil', features: 'Sweet & peppery, fresh & intense', preprocessing: 'Chop just before use', pairing: 'Tomatoes, cheese, shrimp', usage: '1. Tomato Pasta: Add at the end\n2. Grilled Chicken: Marinate with basil', suggestions: 'Tomato, garlic, olive oil, cheese' },
       { name: 'Thyme', features: 'Mild, floral & lemony', preprocessing: 'Use leaves, discard stems', pairing: 'Fish, beef, mushrooms', usage: '1. Chicken Soup: 3-4 sprigs\n2. Mushroom Soup: Balances creaminess', suggestions: 'Onion, carrot, cream, mushrooms' },
-      { name: 'Parsley', features: 'Fresh celery flavor, crisp', preprocessing: 'Do not overcook', pairing: 'Salmon, steak, vegetables', usage: 'Garnish, sauce base, finish soups', suggestions: 'Salmon, steak, vegetables' },
-      { name: 'Oregano', features: 'Pungent & slightly bitter', preprocessing: 'Dried is more potent', pairing: 'Beef, pork, beans', usage: 'Pizza, meat sauces, tacos', suggestions: 'Beef, pork, beans' },
-      { name: 'Dill', features: 'Sweet & anise-like, refreshing', preprocessing: 'Fresh dill wilts easily', pairing: 'Salmon, shrimp, cucumber', usage: 'Cured salmon (gravlax), cold soups', suggestions: 'Salmon, shrimp, cucumber' },
     ],
     southeastAsian: [
       { name: 'Lemongrass', features: 'Strong lemon aroma, herbal', preprocessing: 'Bruise the white stalk', pairing: 'Seafood, chicken, coconut milk', usage: '1. Tom Yum Soup: 1 stalk\n2. Pho Broth: Infuse for freshness', suggestions: 'Galangal, kaffir lime leaf, coconut milk' },
       { name: 'Galangal', features: 'Pungent & citrusy, stronger than ginger', preprocessing: 'Peel and slice/crush', pairing: 'Mussels, squid, beef', usage: '1. Red Curry Paste: Base ingredient\n2. Grilled Squid: Marinate with minced galangal', suggestions: 'Lemongrass, kaffir lime leaf, fish sauce' },
       { name: 'Kaffir Lime Leaf', features: 'Intense lemon scent, slightly bitter', preprocessing: 'Tear fresh leaves', pairing: 'Chicken, shrimp, rice noodles', usage: '1. Coconut Chicken Soup: 2 leaves\n2. Stir-fried Shrimp: Minced leaves', suggestions: 'Lemongrass, galangal, coconut milk' },
-      { name: 'Greater Galangal', features: 'Spicy & sweet, with camphor notes', preprocessing: 'Can replace some ginger', pairing: 'Lamb skewers, crab, beef', usage: 'Indonesian satay, Singapore chili crab', suggestions: 'Coconut milk, fish sauce' },
-      { name: 'Pandan Leaf', features: 'Sweet, coconut-like aroma', preprocessing: 'Wrap food or juice it', pairing: 'Rice, cakes, coconut soup', usage: 'Pandan chicken, colorant for desserts', suggestions: 'Rice, cakes, coconut milk' },
     ],
     middleEastern: [
-      { name: 'Cumin Seed', features: 'Pungent & nutty', preprocessing: 'Dry-toast and grind', pairing: 'Middle Eastern BBQ, hummus', usage: '1. Lamb Skewers: Ground cumin\n2. Hummus: Sprinkle on top', suggestions: 'Coriander seed, cardamom, lemon juice' },
-      { name: 'Coriander Seed', features: 'Mild citrus & woody notes', preprocessing: 'Toast for more flavor', pairing: 'Legumes, chicken, beef', usage: 'Masalas, Middle Eastern dips', suggestions: 'Cumin seed, curry powder' },
-      { name: 'Turmeric', features: 'Earthy, slightly bitter, yellow dye', preprocessing: 'Use dried powder directly', pairing: 'Curries, chicken, rice', usage: '1. Yellow Curry: 1-2 tsp\n2. Turmeric Rice: Steam with rice', suggestions: 'Curry, onion, garlic' },
-      { name: 'Cardamom', features: 'Floral & citrusy, slightly spicy', preprocessing: 'Use whole pods', pairing: 'Milk, lamb, cakes', usage: 'Chai tea, curries, desserts', suggestions: 'Milk, lamb, cakes' },
-      { name: 'Fenugreek Seed', features: 'Slightly bitter, smoky, maple-like', preprocessing: 'Soak to reduce bitterness', pairing: 'Beef, legumes, vegetables', usage: 'Curries, BBQ marinades', suggestions: 'Turmeric, coriander seed' },
+        { name: 'Cumin Seed', features: 'Pungent & nutty', preprocessing: 'Dry-toast and grind', pairing: 'Middle Eastern BBQ, hummus', usage: '1. Lamb Skewers: Ground cumin\n2. Hummus: Sprinkle on top', suggestions: 'Coriander seed, cardamom, lemon juice' },
+        { name: 'Turmeric', features: 'Earthy, slightly bitter, yellow dye', preprocessing: 'Use dried powder directly', pairing: 'Curries, chicken, rice', usage: '1. Yellow Curry: 1-2 tsp\n2. Turmeric Rice: Steam with rice', suggestions: 'Curry, onion, garlic' },
     ]
   },
 };
