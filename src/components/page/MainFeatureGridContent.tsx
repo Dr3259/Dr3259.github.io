@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { PauseCircle, HeartPulse, Cpu, Gem, BookOpen, Archive, Briefcase } from "lucide-react";
+import { PauseCircle, HeartPulse, Cpu, Gem, BookOpen, Archive, Briefcase, ChefHat } from "lucide-react";
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -60,6 +60,7 @@ const translations = {
     workplaceButtonText: '职场一下',
     richButtonText: '富豪一下',
     organizeButtonText: '整理一下',
+    kitchenButtonText: '厨房一下',
   },
   'en': {
     techButtonText: 'Tech Time',
@@ -69,6 +70,7 @@ const translations = {
     workplaceButtonText: 'Workplace',
     richButtonText: 'Rich Time',
     organizeButtonText: 'Get Organized',
+    kitchenButtonText: 'Kitchen Time',
   }
 };
 
@@ -110,6 +112,7 @@ export const MainFeatureGridContent: React.FC = () => {
             { id: 'rest', icon: PauseCircle, title: t.restButtonText, onClick: () => handleNavigation('/rest') },
             { id: 'study', icon: BookOpen, title: t.studyButtonText, onClick: () => handleNavigation('/study') },
             { id: 'workplace', icon: Briefcase, title: t.workplaceButtonText, onClick: () => handleNavigation('/workplace') },
+            { id: 'kitchen', icon: ChefHat, title: t.kitchenButtonText, onClick: () => handleNavigation('/kitchen') },
         ];
         
         if (showRichButton) {
