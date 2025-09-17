@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -13,46 +12,31 @@ import placeholderImageData from '@/lib/placeholder-images.json';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '全球香料实用使用指南',
-    pageDescription: '探索跨越地域与菜系的“风味密码”。',
+    pageTitle: '全球香料实用指南',
+    pageDescription: '探索跨越地域与菜系的“风味密码”，兼顾调味艺术与药食同源的智慧。',
     backButton: '返回厨房',
     tabChinese: '中式传统',
-    tabEuropean: '欧美草本',
-    tabSEA: '东南亚辛香',
-    tabMiddleEast: '中东/印度',
-    tabTips: '通用技巧',
+    tabInternational: '国际经典',
+    tabTips: '核心注意',
     tabFusion: '融合案例',
     cardLabels: {
         features: '核心特点',
-        preprocessing: '预处理技巧',
-        pairing: '适配食材',
-        usage: '经典用法示例',
-        suggestions: '搭配建议',
+        preprocessing: '预处理与用法',
+        efficacy: '中药功效 (药食同源)',
+        contraindications: '忌口人群 (症状)',
     },
     tips: {
-        title: '通用使用技巧与避坑指南',
-        principleTitle: '用量原则：“浓味香料”宜少不宜多',
-        principleContent: [
-            '浓烈香料（丁香、肉豆蔻、卡宴辣椒）过量易掩盖食材本味：丁香每次≤3粒，肉豆蔻≤1/4颗，卡宴辣椒从1/4茶匙开始尝试。',
-            '热性香料（桂皮、草果、孜然、姜黄）夏季需减量，避免上火（例：1kg肉配草果不超过1颗）。'
-        ],
-        prepTitle: '预处理黄金法则',
-        prepContent: [
-            '干香料（八角、桂皮、香叶）：温水浸泡10分钟（去浮尘、激发香味），或小火微炒至微黄（勿炒糊，否则发苦）。',
-            '新鲜香料（罗勒、薄荷、紫苏）：烹饪前洗净沥干，出锅前加入（避免久煮导致香味流失、颜色变黑）。',
-            '带籽香料（草果、豆蔻）：去籽使用（籽味苦，影响口感）；坚硬香料（南姜、桂皮）拍裂/切块，方便出味。'
-        ],
-        pairingTitle: '搭配逻辑：“功能互补”更出味',
-        pairingContent: [
-            '重腥膻食材（羊肉、内脏）：祛腥（白芷、南姜）+ 增香（八角、迷迭香）+ 解腻（陈皮、欧芹），三者协同效果最佳。例：炖羊肉 = 白芷（祛膻）+ 八角（增香）+ 陈皮（解腻）。',
-            '清淡食材（鱼肉、蔬菜）：选清新香料（紫苏、柠檬叶、百里香），避免用浓郁香料（桂皮、丁香）压味。例：清蒸鱼 = 紫苏叶（祛腥）+ 柠檬片（提鲜）。',
-            '卤菜/炖菜“基础公式”：以10斤水为例，八角5颗+桂皮2段+香叶5片+小茴香1小把（祛腥增香基底），可根据食材加草果（牛肉）、黄栀子（调色）。'
-        ],
-        storageTitle: '储存与替换技巧',
-        storageContent: [
-            '储存：干香料密封避光，放干燥阴凉处（保质期6-12个月）；新鲜草本（罗勒、香茅）用湿纸包裹冷藏，或插入清水（每周换水，可存1-2周）。',
-            '新鲜vs干制替换：新鲜香料与干制香料风味差异大，替换比例约为 3:1（3份新鲜=1份干制），干制香料早加入（耐煮），新鲜香料出锅前加（保清新）。'
-        ],
+        title: '核心注意事项 (药食同源通用原则)',
+        principle1Title: '“热性香料”控量',
+        principle1Content: '桂皮、草果、孜然、南姜等性热/大热香料，秋冬可适量用（适合虚寒体质），夏季或上火时需减量，避免加重口干、咽痛、便秘等症状。',
+        principle2Title: '“活血香料”避风险',
+        principle2Content: '姜黄、白芷等有轻微活血作用，孕妇、经期量多者、有出血倾向（如胃溃疡出血）者需慎用或禁用。',
+        principle3Title: '“药食同源”不替代药物',
+        principle3Content: '香料调理仅针对“轻微不适”（如偶发胃寒腹胀、风寒感冒初期），若症状持续（如长期胃痛、咳嗽），需及时就医，不可依赖香料治疗。',
+        principle4Title: '过敏与体质适配',
+        principle4Content: '首次尝试国际香料（如迷迭香、罗勒）时，先少量试用，观察是否出现皮肤瘙痒、肠胃不适等过敏反应；过敏体质者需格外注意。',
+        principle5Title: '特殊人群咨询专业人士',
+        principle5Content: '慢性病患者（高血压、糖尿病、肾病）、孕妇、哺乳期女性、儿童使用任何带药性的香料前，建议咨询医生或中医师。'
     },
     fusion: {
       title: '跨菜系融合案例 (实操参考)',
@@ -65,46 +49,31 @@ const translations = {
     }
   },
   'en': {
-    pageTitle: 'Practical Global Spice Guide',
-    pageDescription: 'Explore the "flavor codes" that transcend regions and cuisines.',
+    pageTitle: 'Global Spice Guide',
+    pageDescription: 'Explore the "flavor codes" of global cuisines, blending culinary art with the wisdom of food as medicine.',
     backButton: 'Back to Kitchen',
-    tabChinese: 'Chinese',
-    tabEuropean: 'European',
-    tabSEA: 'Southeast Asian',
-    tabMiddleEast: 'Mid-East/Indian',
-    tabTips: 'General Tips',
+    tabChinese: 'Chinese Classics',
+    tabInternational: 'International Staples',
+    tabTips: 'Core Precautions',
     tabFusion: 'Fusion Cases',
     cardLabels: {
         features: 'Core Features',
-        preprocessing: 'Preprocessing',
-        pairing: 'Pairs With',
-        usage: 'Usage Examples',
-        suggestions: 'Pairing Suggestions',
+        preprocessing: 'Prep & Usage',
+        efficacy: 'Medicinal Properties (Food as Medicine)',
+        contraindications: 'Contraindications (Symptoms)',
     },
     tips: {
-        title: 'General Tips & Pitfalls',
-        principleTitle: 'Dosage Principle: Less is More for Strong Spices',
-        principleContent: [
-            'Strong spices (cloves, nutmeg, cayenne) can overpower dishes: use ≤3 cloves, ≤1/4 nutmeg, start with 1/4 tsp cayenne.',
-            'Use warming spices (cassia, caoguo, cumin, turmeric) sparingly in summer (e.g., max 1 caoguo per 1kg meat).'
-        ],
-        prepTitle: 'Golden Rules for Preprocessing',
-        prepContent: [
-            "Dry spices (star anise, cassia): Soak in warm water for 10 mins (cleans & awakens flavor) or lightly toast (don't burn).",
-            "Fresh herbs (basil, mint): Wash, pat dry, add at the end of cooking.",
-            "Seeded spices (caoguo, cardamom): Deseed to reduce bitterness. Hard spices (galangal, cassia): Crush or slice to release flavor."
-        ],
-        pairingTitle: 'Pairing Logic: Complementary Functions',
-        pairingContent: [
-            'Strong-flavored meats (lamb, offal): Use a "de-fishing (angelica root/galangal) + aromatizing (star anise/rosemary) + degreasing (chenpi/parsley)" combo. E.g., Lamb stew = Angelica + Star Anise + Chenpi.',
-            'Delicate foods (fish, vegetables): Use fresh herbs (perilla, lime leaf, thyme); avoid overpowering spices (cloves). E.g., Steamed fish = Perilla + Lemon.',
-            'Braising/Stewing "Base Formula": For 5L water, use 5 star anise, 2 cassia sticks, 5 bay leaves, 1 handful fennel seeds as a base.'
-        ],
-        storageTitle: 'Storage & Substitution',
-        storageContent: [
-            'Storage: Store dry spices in a cool, dark, airtight place (6-12 months). Keep fresh herbs in a damp paper towel in the fridge or in water (change weekly, lasts 1-2 weeks).',
-            'Fresh vs. Dry: The ratio is roughly 3:1 (fresh:dry). Add dry spices early; add fresh herbs at the end.'
-        ],
+        title: 'Core Precautions (Food as Medicine Principles)',
+        principle1Title: 'Control "Warming" Spices',
+        principle1Content: 'Spices like Cassia, Caoguo, Cumin, and Galangal are warming. Use moderately in autumn/winter (good for "cold" body types), but reduce in summer or if you have "heat" symptoms (dry mouth, sore throat) to avoid aggravation.',
+        principle2Title: 'Avoid Risks with "Blood-Activating" Spices',
+        principle2Content: 'Turmeric, Angelica root, etc., have mild blood-activating effects. Pregnant women, those with heavy periods, or bleeding tendencies (e.g., ulcers) should use with caution or avoid.',
+        principle3Title: 'Food as Medicine Is Not a Substitute for Drugs',
+        principle3Content: 'Spices are for mild discomforts (e.g., occasional stomach coldness, early-stage cold). For persistent symptoms (chronic stomach pain, cough), see a doctor. Do not rely on spices for treatment.',
+        principle4Title: 'Allergies & Body Constitution',
+        principle4Content: 'When trying new international herbs (like rosemary, basil), test a small amount first. Watch for allergic reactions like skin itching or digestive issues. Those with allergic constitutions should be extra cautious.',
+        principle5Title: 'Consult Professionals for Special Groups',
+        principle5Content: 'Individuals with chronic diseases (hypertension, diabetes, kidney issues), pregnant or breastfeeding women, and children should consult a doctor or TCM practitioner before using medicinal spices.'
     },
     fusion: {
       title: 'Cross-Cuisine Fusion Cases (Practical Reference)',
@@ -121,74 +90,58 @@ const translations = {
 const spiceData = {
   'zh-CN': {
     chinese: [
-        { id: 'starAnise', name: '八角', features: '甘香微甜，香气醇厚', preprocessing: '整颗使用（碎末易发苦）；卤前用温水浸泡10分钟去浮尘', pairing: '猪肉、牛肉、羊肉、禽类', usage: '1. 卤猪蹄：2-3颗八角+2段桂皮+5片香叶，煮出基础卤香；<br>2. 炖排骨：1颗八角+姜片+葱段，除腥增香', suggestions: '桂皮、香叶、小茴香' },
-        { id: 'sichuanPepper', name: '花椒', features: '辛香带麻，层次丰富', preprocessing: '干花椒直接用；突出麻味可热油炝香（六成热下花椒，炸香后捞出留油）', pairing: '川菜、牛肉、羊肉、豆制品', usage: '1. 麻婆豆腐：20粒花椒炝香后，加入豆瓣酱炒红油；<br>2. 烤羊肉串：撒花椒粉+孜然，平衡膻味', suggestions: '辣椒、孜然、生姜' },
-        { id: 'cassia', name: '桂皮', features: '辛香微甜，香味持久', preprocessing: '整段使用（避免切得过碎）；可敲成小块方便出味', pairing: '猪肉、牛肉、卤味、甜品', usage: '1. 卤牛肉：1段桂皮+2颗八角+1粒丁香，中和肉腥；<br>2. 甜汤（桂圆红枣茶）：1小段桂皮，增添暖香', suggestions: '八角、丁香、草果' },
-        { id: 'bayLeaf', name: '香叶', features: '淡辛香，提味不抢镜', preprocessing: '干制香叶直接用（勿清洗，避免香味流失）', pairing: '所有肉类、卤菜、炖菜', usage: '1. 炖牛肉：1片香叶+八角+花椒，提升复合香；<br>2. 卤鸡爪：2片香叶+桂皮+小茴香，祛腥增香', suggestions: '八角、桂皮、花椒' },
-        { id: 'caoguo', name: '草果', features: '浓烈辛辣，祛腥力强', preprocessing: '去籽使用（籽味苦）；可拍裂方便出味', pairing: '牛肉、羊肉、内脏', usage: '炖羊肉：1-2颗去籽草果+白芷+生姜，彻底去除羊膻味', suggestions: '白芷、生姜、陈皮' },
-        { id: 'chenpi', name: '陈皮', features: '辛苦带果香，解腻增香', preprocessing: '温水泡软（5分钟），刮去内层白瓤（减苦涩），切丝/块', pairing: '鸭肉、牛肉、排骨', usage: '1. 炖羊肉：2-3片陈皮+红枣，解腻祛膻；<br>2. 陈皮红豆沙：陈皮丝与红豆同煮，增香添甜', suggestions: '生姜、红枣、红豆' },
-        { id: 'cuminChinese', name: '孜然（中式）', features: '香辣浓郁，异域感强', preprocessing: '整粒干炒1-2分钟（无油），磨成粉（风味更浓）', pairing: '羊肉、牛肉、烧烤、油炸食品', usage: '1. 烤羊肉：刷油后撒孜然粒（或粉）+辣椒面；<br>2. 孜然牛肉：先炒香孜然粒，再放牛肉翻炒', suggestions: '辣椒、羊肉、洋葱' },
-        { id: 'perilla', name: '紫苏', features: '辛香清新，祛腥解腻', preprocessing: '新鲜紫苏洗净沥干；干紫苏需温水泡软', pairing: '鱼类、螃蟹、田螺、牛肉', usage: '1. 煮鱼：鱼身放几片紫苏+姜片，祛鱼腥；<br>2. 炒田螺：切碎紫苏+辣椒+大蒜，提升风味', suggestions: '辣椒、大蒜、生姜、鱼类' },
-        { id: 'gardenia', name: '黄栀子', features: '微苦，天然黄色色素', preprocessing: '整颗敲裂（方便色素析出）；温水浸泡10分钟取液调色', pairing: '卤菜（猪蹄、鸡）、炖菜', usage: '卤猪蹄：2-3颗敲裂黄栀子+八角+桂皮，使卤菜呈金黄色', suggestions: '八角、桂皮、酱油' },
-        { id: 'monkFruit', name: '罗汉果', features: '味甜，天然甜味剂', preprocessing: '敲开取果肉+果核（果核也带甜），热水冲泡或直接入卤', pairing: '卤菜、甜汤、饮品', usage: '1. 卤菜：1/4个罗汉果替代部分糖，增加自然甜；<br>2. 罗汉果雪梨汤：与雪梨、百合同煮，清热解腻', suggestions: '雪梨、百合、卤料包' },
+        { id: 'starAnise', name: '八角', features: '甘香微甜，香气醇厚', preprocessing: '整颗用，卤前温水泡10分钟；适配猪肉、牛肉', efficacy: '性温，归肝、肾、脾经；温中散寒、理气止痛、和胃止呕；可辅助缓解胃寒呕吐、脘腹冷痛', contraindications: '阴虚火旺者（口干舌燥、手足心热）忌用；风热感冒、发烧者慎用' },
+        { id: 'sichuanPepper', name: '花椒', features: '辛香带麻，层次丰富', preprocessing: '干用或炝油；适配川菜、牛羊肉', efficacy: '性温，归脾、胃、肾经；温中止痛、杀虫止痒、除湿；可辅助缓解寒湿泄泻、胃寒腹痛', contraindications: '阴虚火旺者（牙龈肿痛、便秘）忌用；孕妇慎用（过量可能刺激子宫）；热性皮肤病（湿疹、痤疮）患者慎用' },
+        { id: 'cassia', name: '桂皮', features: '辛香微甜，香味持久', preprocessing: '整段用，敲碎易出味；适配卤味、甜品', efficacy: '性大热，归肾、脾、心、肝经；补火助阳、散寒止痛、温经通脉；可辅助缓解肾阳不足、腰膝冷痛', contraindications: '阴虚火旺者（潮热盗汗、口干咽燥）忌用；孕妇忌用（易致胎动不安）；高血压、上火者（口舌生疮）慎用' },
+        { id: 'bayLeaf', name: '香叶', features: '淡辛香，提味不抢镜', preprocessing: '直接用，1-2片即可；适配各类炖菜', efficacy: '性温，归肺、脾、肝经；祛风除湿、行气止痛、散寒；可辅助缓解风湿痹痛、脘腹胀痛', contraindications: '阴虚火旺者慎用；气虚体弱、易疲劳者不宜过量' },
+        { id: 'caoguo', name: '草果', features: '浓烈辛辣，祛腥力强', preprocessing: '去籽用，拍裂出味；适配牛羊肉', efficacy: '性热，归脾、胃经；燥湿温中、截疟除痰；可辅助缓解寒湿内阻、脘腹胀痛、疟疾', contraindications: '阴虚火旺者（口干、便秘）忌用；孕妇慎用；热性咳嗽（黄痰、咽痛）患者忌用' },
+        { id: 'chenpi', name: '陈皮', features: '辛苦带果香，解腻增香', preprocessing: '泡软刮白瓤；适配炖肉、甜品', efficacy: '性温，归肺、脾经；理气健脾、燥湿化痰；可辅助缓解脾胃气滞（腹胀、食欲不振）、湿痰咳嗽', contraindications: '阴虚燥咳者（干咳无痰、咽干口燥）慎用；舌红少津、内有实热（发烧、便秘）者不宜过量' },
+        { id: 'cuminChinese', name: '孜然（中式）', features: '香辣浓郁，异域感强', preprocessing: '炒香磨粉；适配烧烤、羊肉', efficacy: '性热，归肝、胃经；散寒止痛、理气和胃；可辅助缓解胃寒腹痛、消化不良、风湿痹痛', contraindications: '阴虚火旺者（口干、长痘）忌用；夏季炎热时慎用；便秘、痔疮患者慎用' },
+        { id: 'perilla', name: '紫苏', features: '辛香清新，祛腥解腻', preprocessing: '鲜用或干泡；适配鱼类、螃蟹', efficacy: '性温，归肺、脾经；解表散寒、行气和胃、安胎；可辅助缓解风寒感冒、妊娠呕吐、鱼蟹中毒', contraindications: '风热感冒者（发热、黄痰）忌用；气虚表虚者（易出汗、乏力）慎用' },
+        { id: 'mint', name: '薄荷', features: '辛香清凉，提神解腻', preprocessing: '鲜用或泡水；适配饮品、甜肴', efficacy: '性凉，归肺、肝经；疏散风热、清利头目、利咽；可辅助缓解风寒感冒、头痛、咽喉肿痛', contraindications: '脾胃虚寒者（腹泻、怕冷）忌用；孕妇慎用；气虚自汗者（一动就出汗）慎用' },
+        { id: 'gardenia', name: '黄栀子', features: '微苦，天然黄色色素', preprocessing: '敲裂泡水调色；适配卤菜、炖菜', efficacy: '性寒，归心、肝、肺、胃、三焦经；泻火除烦、清热利湿、凉血解毒；可辅助缓解热病心烦、湿热黄疸', contraindications: '脾胃虚寒者（腹痛、腹泻）忌用；阳虚体质者（怕冷、手脚冰凉）慎用' },
+        { id: 'monkFruit', name: '罗汉果', features: '味甜，天然甜味剂', preprocessing: '敲开煮水；适配卤菜、甜汤', efficacy: '性凉，归肺、大肠经；清热润肺、利咽开音、滑肠通便；可辅助缓解肺热燥咳、咽痛失声、便秘', contraindications: '脾胃虚寒者（腹泻、便溏）忌用；风寒感冒咳嗽者（白痰、怕冷）慎用' },
+        { id: 'licorice', name: '甘草', features: '味甜，调和卤味口感', preprocessing: '切片用；适配卤水、腌制品', efficacy: '性平，归心、肺、脾、胃经；补脾益气、清热解毒、调和诸药；可辅助缓解脾胃虚弱、心悸气短', contraindications: '湿盛胀满者（腹胀、舌苔厚腻）忌用；长期过量食用可能导致水钠潴留（水肿、血压升高）；糖尿病患者慎用' },
+        { id: 'angelica', name: '白芷', features: '苦香辛凉，祛腥力强', preprocessing: '切片用；适配羊肉、鱼类', efficacy: '性温，归胃、大肠、肺经；解表散寒、祛风止痛、宣通鼻窍；可辅助缓解风寒感冒、头痛、鼻塞', contraindications: '阴虚血热者（口干、牙龈出血）忌用；阴虚火旺者慎用；有光敏反应者（易晒黑、长斑）慎用' },
+        { id: 'cardamomBlack', name: '砂仁', features: '浓烈芳香，增香解腻', preprocessing: '整粒用；适配荤菜、豆制品', efficacy: '性温，归脾、胃、肾经；化湿开胃、温脾止泻、理气安胎；可辅助缓解湿浊中阻、脘腹胀满、妊娠呕吐', contraindications: '阴虚火旺者（口干、便秘）忌用；实热积滞者（腹痛、口臭）慎用' }
     ],
-    european: [
-      { id: 'rosemary', name: '迷迭香', features: '木质香+松针感，微苦', preprocessing: '取嫩枝使用（老枝木质化）；干品用量为新鲜的1/3', pairing: '鸡胸肉、羊排、土豆', usage: '1. 烤羊排：迷迭香嫩枝+橄榄油+大蒜，涂抹后烤制，祛膻增香；<br>2. 烤土豆：迷迭香+盐+黑胡椒，提升薯香', suggestions: '橄榄油、大蒜、黑胡椒、土豆' },
-      { id: 'thyme', name: '百里香', features: '柔和花香+柠檬味', preprocessing: '取叶片（去硬枝）；干品直接使用，耐久煮', pairing: '鳕鱼、牛肉、蘑菇', usage: '1. 鸡汤：新鲜3-4枝（干1茶匙）+洋葱+胡萝卜，提鲜；<br>2. 奶油蘑菇汤：加百里香，平衡奶油厚重感', suggestions: '洋葱、胡萝卜、奶油、蘑菇' },
-      { id: 'basil', name: '罗勒', features: '甜香带薄荷感（分甜/紫罗勒）', preprocessing: '新鲜罗勒烹饪前切碎（避免氧化变黑）；干品适合炖煮', pairing: '意面青酱、披萨、沙拉', usage: '1. 番茄意面：出锅前加切碎罗勒+帕玛森芝士；<br>2. 煎鸡胸：罗勒+大蒜+橄榄油腌制，增香草香', suggestions: '番茄、大蒜、橄榄油、芝士' },
-      { id: 'parsley', name: '欧芹', features: '清新芹菜香，脆嫩爽口', preprocessing: '不可久煮，避免香味流失', pairing: '三文鱼、牛排、蔬菜', usage: '沙拉点缀、酱汁基底、汤品收尾', suggestions: '三文鱼、牛排、蔬菜' },
-      { id: 'oregano', name: '牛至', features: '辛辣微苦，带茴香感', preprocessing: '干燥品香味比新鲜品浓，100g肉配1小勺，适合重口味料理', pairing: '牛肉、猪肉、豆类', usage: '披萨、意式肉酱、墨西哥塔可', suggestions: '牛肉、猪肉、豆类' },
-      { id: 'dill', name: '莳萝', features: '甜香带茴香，清爽解腻', preprocessing: '新鲜品易蔫，用湿纸包裹冷藏；干燥品适合腌料', pairing: '三文鱼、虾、黄瓜', usage: '北欧腌三文鱼、俄式冷汤', suggestions: '三文鱼、虾、黄瓜' },
-    ],
-    southeastAsian: [
-      { id: 'lemongrass', name: '香茅', features: '浓烈柠檬香+草本涩感', preprocessing: '去除外层老皮，取白色茎部切段拍裂（方便出味）', pairing: '海鲜、鸡肉、椰浆料理', usage: '1. 冬阴功汤：1段香茅+南姜+柠檬叶，奠定酸辣基底；<br>2. 越南河粉：香茅煮汤底，增添清新感', suggestions: '南姜、柠檬叶、椰浆' },
-      { id: 'galangal', name: '南姜', features: '辛辣带柑橘香，比生姜冲', preprocessing: '去皮后切片/拍碎（质地坚硬）；不宜生食', pairing: '泰式咖喱、海鲜（贻贝、鱿鱼）', usage: '1. 红咖喱酱：南姜+香茅+柠檬叶打成基底；<br>2. 烤鱿鱼：南姜碎+鱼露腌制，祛腥增香', suggestions: '香茅、柠檬叶、鱼露' },
-      { id: 'kaffirLime', name: '柠檬叶', features: '强烈柠檬香，微苦', preprocessing: '新鲜叶片需撕碎（叶脉香味最浓）；干品适合做汤', pairing: '椰香鸡汤、叻沙、虾仁', usage: '1. 椰香鸡汤：2片柠檬叶+香茅+南姜，提升清爽感；<br>2. 炒虾仁：柠檬叶碎+蒜末，增香解腻', suggestions: '香茅、南姜、椰浆' },
-      { id: 'galangalAlt', name: '高良姜', features: '辛辣微甜，带樟木香气', preprocessing: '可替代部分生姜，搭配椰浆、鱼露风味更佳', pairing: '羊肉串、螃蟹、牛肉', usage: '印尼沙爹、新加坡辣椒蟹', suggestions: '椰浆、鱼露' },
-      { id: 'pandan', name: '香兰叶', features: '清甜椰香，自带绿色', preprocessing: '多用作包裹食材蒸煮（如香兰叶包鸡），或榨汁调色', pairing: '米饭、蛋糕、椰浆汤', usage: '香兰叶包鸡、斑斓蛋糕', suggestions: '鸡肉、椰浆' }
-    ],
-    middleEastern: [
-        { id: 'cuminMiddleEast', name: '孜然籽（中东）', features: '辛辣带坚果香，比孜然粉清新', preprocessing: '干炒1-2分钟（无油），研磨成粉（香味更浓）', pairing: '中东烤肉、鹰嘴豆、咖喱', usage: '1. 烤羊肉串：孜然籽粉+小豆蔻+柠檬汁，异域风味；<br>2. 鹰嘴豆泥：撒孜然籽粉+橄榄油，提香', suggestions: '芫荽籽、小豆蔻、柠檬汁' },
-        { id: 'corianderSeed', name: '芫荽籽', features: '温和柑橘香+木质香，微甜', preprocessing: '与孜然籽1:1混合，是咖喱粉核心成分，炒后风味更突出', pairing: '豆类、鸡肉、牛肉', usage: '印度马萨拉、中东蘸料', suggestions: '孜然籽、小豆蔻、柠檬汁' },
-        { id: 'turmeric', name: '姜黄', features: '微苦姜香，天然黄色色素', preprocessing: '干姜黄粉直接用；新鲜姜黄去皮切碎/磨泥', pairing: '咖喱、鸡肉、米饭、汤羹', usage: '1. 黄咖喱：1-2茶匙姜黄粉+咖喱块，调色增香；<br>2. 姜黄饭：米饭+姜黄粉+盐，蒸制呈金黄色', suggestions: '咖喱、洋葱、大蒜、椰浆' },
-        { id: 'cardamom', name: '小豆蔻', features: '清新花香+柑橘香，微辣', preprocessing: '带壳使用（壳可增香），1杯奶茶配2-3颗，价格较高需省用', pairing: '牛奶、羊肉、蛋糕', usage: '印度奶茶、咖喱、甜点', suggestions: '牛奶、羊肉、蛋糕' },
-        { id: 'fenugreek', name: '葫芦巴籽', features: '微苦带烟熏香，类似枫糖味', preprocessing: '需提前浸泡去苦味，与姜黄、芫荽籽搭配是经典组合', pairing: '牛肉、豆类、蔬菜', usage: '印度咖喱、中东烤肉腌料', suggestions: '姜黄、芫荽籽' },
+    international: [
+      { id: 'rosemary', name: '迷迭香（欧美）', features: '木质香+松针感，微苦', preprocessing: '取嫩枝烤用；适配羊肉、土豆', efficacy: '性温，归肺、脾经；辅助提神醒脑、缓解疲劳；外用可辅助改善皮肤循环（需稀释）', contraindications: '高血压患者慎用（可能轻微升高血压）；孕妇慎用（传统认为可能刺激子宫）；过敏体质者（接触后皮肤发红）忌用' },
+      { id: 'basil', name: '罗勒（欧美）', features: '甜香带薄荷感，清新浓郁', preprocessing: '鲜用出锅前加；适配番茄、披萨', efficacy: '性温，归肺、胃经；辅助理气和胃、缓解消化不良；可缓解轻微腹胀、食欲不振', contraindications: '脾胃虚寒者（腹泻、怕冷）慎用；过量可能导致失眠（含少量兴奋成分）' },
+      { id: 'thyme', name: '百里香（欧美）', features: '柔和花香+柠檬味', preprocessing: '取叶炖用；适配鸡汤、鱼肉', efficacy: '性温，归肺、脾经；辅助解表散寒、止咳化痰；可缓解轻微风寒感冒、咳嗽痰多', contraindications: '阴虚火旺者（口干、咽痛）慎用；过敏体质者（接触后皮肤瘙痒）忌用' },
+      { id: 'lemongrass', name: '香茅（东南亚）', features: '浓烈柠檬香+草本涩感', preprocessing: '切段拍裂；适配冬阴功、河粉', efficacy: '性温，归肺、胃经；辅助祛风除湿、散寒止痛、开胃消食；可缓解轻微风湿痛、胃寒腹胀', contraindications: '阴虚火旺者（口干、便秘）慎用；皮肤敏感者（接触后可能刺激）忌用' },
+      { id: 'galangal', name: '南姜（东南亚）', features: '辛辣带柑橘香，比生姜冲', preprocessing: '切片用；适配泰式咖喱、海鲜', efficacy: '性温，归脾、胃经；辅助温中散寒、祛风止痛；可缓解轻微胃寒腹痛、风寒感冒', contraindications: '阴虚火旺者（口干、长痘）忌用；热性胃病患者（胃痛、反酸）慎用' },
+      { id: 'kaffirLime', name: '柠檬叶（东南亚）', features: '强烈柠檬香，微苦', preprocessing: '撕碎用；适配椰香鸡汤、叻沙', efficacy: '性凉，归肺、胃经；辅助清热解暑、理气和胃；可缓解轻微暑热口渴、腹胀', contraindications: '脾胃虚寒者（腹泻、怕冷）慎用；过量可能导致肠胃不适' },
+      { id: 'turmeric', name: '姜黄（中东/印度）', features: '微苦姜香，天然黄色色素', preprocessing: '粉用或鲜磨；适配咖喱、米饭', efficacy: '性温，归肝、脾经；辅助行气活血、通经止痛；现代研究提示可辅助改善循环（需遵医嘱）', contraindications: '孕妇忌用（有活血作用，可能致胎动不安）；有出血倾向者（如凝血功能障碍）慎用；胆结石患者慎用' },
+      { id: 'cuminMiddleEast', name: '孜然籽（中东）', features: '辛辣带坚果香，清新', preprocessing: '炒香研磨；适配烤肉、鹰嘴豆', efficacy: '性热，归肝、胃经；辅助散寒止痛、理气和胃；可缓解轻微胃寒腹痛、消化不良', contraindications: '阴虚火旺者（口干、便秘）忌用；夏季慎用；痔疮患者慎用' }
     ]
   },
   'en': {
     chinese: [
-      { id: 'starAnise', name: 'Star Anise', features: 'Sweet & fragrant, full-bodied', preprocessing: 'Use whole (powder can be bitter); soak in warm water for 10 mins to clean', pairing: 'Pork, beef, lamb, poultry', usage: '1. Braised Pork Knuckle: 2-3 pods for a base aroma.<br>2. Stewed Ribs: 1 pod with ginger & scallion to remove gaminess.', suggestions: 'Cassia, bay leaf, fennel' },
-      { id: 'sichuanPepper', name: 'Sichuan Pepper', features: 'Numbing & fragrant, complex', preprocessing: 'Use dry; for more numbing flavor, sizzle in hot oil then remove', pairing: 'Sichuan cuisine, beef, lamb', usage: '1. Mapo Tofu: Sizzle 20 peppercorns before adding sauces.<br>2. Grilled Lamb Skewers: Sprinkle powder with cumin.', suggestions: 'Chili, cumin, ginger' },
-      { id: 'cassia', name: 'Cassia/Cinnamon', features: 'Pungent & sweet, long-lasting', preprocessing: 'Use whole sections; can be broken for more flavor', pairing: 'Pork, beef, braised dishes', usage: '1. Braised Beef: 1 stick with star anise to neutralize gaminess.<br>2. Sweet Tea: A small piece for aroma.', suggestions: 'Star anise, clove, caoguo' },
-      { id: 'bayLeaf', name: 'Bay Leaf', features: 'Mildly pungent, enhances flavor', preprocessing: 'Use dried leaves directly (do not wash to preserve flavor)', pairing: 'All meats, stews', usage: '1. Beef Stew: 1 leaf with star anise & Sichuan pepper.<br>2. Braised Chicken Feet: 2 leaves with cassia & fennel.', suggestions: 'Star anise, cassia, Sichuan pepper' },
-      { id: 'caoguo', name: 'Caoguo', features: 'Strongly pungent, de-fishing', preprocessing: 'Remove seeds (bitter); crush to release flavor', pairing: 'Beef, lamb, offal', usage: 'Lamb Stew: 1-2 deseeded caoguo with angelica root and ginger.', suggestions: 'Angelica root, ginger, dried tangerine peel' },
-      { id: 'chenpi', name: 'Dried Tangerine Peel', features: 'Bitter & fruity, cuts grease', preprocessing: 'Soften in warm water (5 mins), scrape off white pith (reduces bitterness)', pairing: 'Beef, lamb, poultry, desserts', usage: '1. Lamb Stew: 2-3 pieces with red dates to cut grease.<br>2. Red Bean Soup: Cook with red beans for fragrance.', suggestions: 'Ginger, red dates, red beans' },
-      { id: 'cuminChinese', name: 'Cumin (Chinese)', features: 'Spicy & rich, exotic', preprocessing: 'Dry-toast whole seeds for 1-2 mins, then grind for stronger flavor', pairing: 'Lamb, beef, BBQ, fried foods', usage: '1. Grilled Lamb: Sprinkle seeds/powder with chili flakes.<br>2. Cumin Beef: Stir-fry cumin seeds first, then add beef.', suggestions: 'Chili, lamb, onion' },
-      { id: 'perilla', name: 'Perilla', features: 'Pungent & fresh, anti-fishy', preprocessing: 'Wash and drain fresh leaves; soak dried leaves', pairing: 'Fish, crab, snails, beef', usage: '1. Steamed Fish: Place leaves on fish with ginger to remove fishiness.<br>2. Stir-fried Snails: Minced perilla + chili + garlic.', suggestions: 'Chili, garlic, ginger, fish' },
-      { id: 'gardenia', name: 'Gardenia Fruit', features: 'Slightly bitter, natural yellow dye', preprocessing: 'Crack open; soak in warm water for 10 mins to extract color', pairing: 'Braised dishes (pork, chicken)', usage: 'Braised Pork Knuckle: 2-3 fruits for a golden-yellow color.', suggestions: 'Star anise, cassia, soy sauce' },
-      { id: 'monkFruit', name: 'Monk Fruit', features: 'Sweet, natural sweetener', preprocessing: 'Break open, use pulp and seeds (seeds are also sweet)', pairing: 'Braised dishes, sweet soups, drinks', usage: '1. Braise: 1/4 fruit to replace sugar for a natural sweetness.<br>2. Pear Soup: Cook with pear and lily bulb.', suggestions: 'Pear, lily bulb, master stock' },
+        { id: 'starAnise', name: 'Star Anise', features: 'Sweet & fragrant, full-bodied', preprocessing: 'Use whole, soak in warm water before braising; pairs with pork, beef', efficacy: 'Warm in nature; benefits liver, kidney, spleen; warms middle-jiao, dispels cold, regulates qi, stops pain.', contraindications: 'Avoid if you have yin deficiency with fire (dry mouth, hot palms/soles); use with caution during febrile colds.' },
+        { id: 'sichuanPepper', name: 'Sichuan Pepper', features: 'Numbing & fragrant, complex', preprocessing: 'Use dry or infuse in hot oil; for Sichuan cuisine, beef, lamb', efficacy: 'Warm in nature; benefits spleen, stomach, kidney; warms middle-jiao to stop pain, kills parasites, dispels dampness.', contraindications: 'Avoid if you have yin deficiency with fire (sore gums, constipation); caution for pregnant women; caution for those with "hot" skin conditions (e.g., eczema, acne).' },
+        { id: 'cassia', name: 'Cassia / Cinnamon', features: 'Pungent & sweet, long-lasting', preprocessing: 'Use whole sticks, crush for more flavor; for braises, desserts', efficacy: 'Very hot in nature; benefits kidney, spleen, heart, liver; tonifies fire, assists yang, dispels cold, stops pain.', contraindications: 'Avoid if yin-deficient with fire (hot flashes, night sweats); forbidden for pregnant women; caution for hypertension or "heat" symptoms (canker sores).' },
+        { id: 'bayLeaf', name: 'Bay Leaf', features: 'Mildly pungent, enhances flavor', preprocessing: 'Use dry, 1-2 leaves suffice; for all stews', efficacy: 'Warm in nature; benefits lung, spleen, liver; dispels wind-damp, moves qi, stops pain.', contraindications: 'Use with caution if yin-deficient with fire; not for excessive use by those with qi deficiency (fatigue).' },
+        { id: 'caoguo', name: 'Caoguo (Black Cardamom)', features: 'Strongly pungent, de-fishing', preprocessing: 'Deseed (seeds are bitter), crush for flavor; for beef, lamb', efficacy: 'Hot in nature; benefits spleen, stomach; dries dampness, warms middle-jiao, checks malaria.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, constipation); caution for pregnant women; avoid with "hot" cough (yellow phlegm).' },
+        { id: 'chenpi', name: 'Dried Tangerine Peel', features: 'Bitter, fruity, cuts grease', preprocessing: 'Soak to soften, scrape pith; for stews, desserts', efficacy: 'Warm in nature; benefits lung, spleen; regulates qi, strengthens spleen, dries dampness, resolves phlegm.', contraindications: 'Caution for yin-deficient dry cough (no phlegm, dry throat); not for excess use if you have internal heat (fever, constipation).' },
+        { id: 'cuminChinese', name: 'Cumin (Chinese style)', features: 'Spicy & rich, exotic', preprocessing: 'Toast and grind; for BBQ, lamb', efficacy: 'Hot in nature; benefits liver, stomach; dispels cold, stops pain, regulates qi.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, acne); use with caution in summer; caution for constipation, hemorrhoids.' },
+        { id: 'perilla', name: 'Perilla', features: 'Pungent & fresh, anti-fishy', preprocessing: 'Use fresh or soaked dry leaves; for fish, crab', efficacy: 'Warm in nature; benefits lung, spleen; releases exterior, dispels cold, moves qi, harmonizes stomach, calms fetus.', contraindications: 'Avoid with wind-heat cold (fever, yellow phlegm); caution for qi-deficient exterior (easy sweating, fatigue).' },
+        { id: 'mint', name: 'Mint', features: 'Pungent & cooling, refreshing', preprocessing: 'Use fresh or in tea; for drinks, desserts', efficacy: 'Cool in nature; benefits lung, liver; disperses wind-heat, clears head and eyes, benefits throat.', contraindications: 'Avoid if spleen/stomach are cold-deficient (diarrhea, chills); caution for pregnant women; caution for qi-deficient spontaneous sweating.' },
+        { id: 'gardenia', name: 'Gardenia Fruit', features: 'Slightly bitter, natural yellow dye', preprocessing: 'Crush and soak for color; for braises', efficacy: 'Cold in nature; benefits heart, liver, lung, stomach, triple-jiao; purges fire, clears heat, resolves dampness, cools blood.', contraindications: 'Avoid if spleen/stomach are cold-deficient (abdominal pain, diarrhea); caution for yang-deficient constitution (chills, cold limbs).' },
+        { id: 'monkFruit', name: 'Monk Fruit (Luo Han Guo)', features: 'Sweet, natural sweetener', preprocessing: 'Break open and boil; for braises, soups', efficacy: 'Cool in nature; benefits lung, large intestine; clears heat, moistens lung, soothes throat, moves bowels.', contraindications: 'Avoid if spleen/stomach are cold-deficient (diarrhea); caution with wind-cold cough (white phlegm, chills).' },
+        { id: 'licorice', name: 'Licorice (Gan Cao)', features: 'Sweet, harmonizes flavors', preprocessing: 'Use slices; for master stocks, pickles', efficacy: 'Neutral in nature; benefits heart, lung, spleen, stomach; tonifies spleen qi, clears heat, detoxifies, harmonizes other herbs.', contraindications: 'Avoid with severe dampness (bloating, thick tongue coat); long-term excess use may cause sodium/water retention; caution for diabetics.' },
+        { id: 'angelica', name: 'Angelica Root (Bai Zhi)', features: 'Bitter, pungent, cooling, anti-fishy', preprocessing: 'Use slices; for lamb, fish', efficacy: 'Warm in nature; benefits stomach, large intestine, lung; releases exterior, dispels cold, relieves pain, opens nasal passages.', contraindications: 'Avoid if yin-deficient with blood-heat (dry mouth, bleeding gums); caution if yin-deficient with fire; caution for photosensitivity.' },
+        { id: 'cardamomBlack', name: 'Black Cardamom (Sha Ren)', features: 'Strongly aromatic, cuts grease', preprocessing: 'Use whole; for rich meats, beans', efficacy: 'Warm in nature; benefits spleen, stomach, kidney; transforms dampness, opens appetite, warms spleen, stops diarrhea, regulates qi, calms fetus.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, constipation); caution with heat accumulation (abdominal pain, bad breath).' },
     ],
-    european: [
-      { id: 'rosemary', name: 'Rosemary', features: 'Woody & pine-like, slightly bitter', preprocessing: 'Use tender sprigs (old ones are woody); use 1/3 amount if dried', pairing: 'Lamb, beef, chicken, potatoes', usage: '1. Roast Lamb: Rub with rosemary, olive oil, and garlic.<br>2. Roast Potatoes: Toss with rosemary, salt, and pepper.', suggestions: 'Olive oil, garlic, black pepper, potatoes' },
-      { id: 'thyme', name: 'Thyme', features: 'Mild, floral & lemony', preprocessing: 'Use leaves, discard stems; dried version is good for long cooking', pairing: 'Chicken, fish, stews, cream sauces', usage: '1. Chicken Soup: 3-4 fresh sprigs (or 1 tsp dried) with onion and carrot.<br>2. Mushroom Soup: Balances the richness of cream.', suggestions: 'Onion, carrot, cream, mushrooms' },
-      { id: 'basil', name: 'Basil', features: 'Sweet & peppery, rich & fresh', preprocessing: 'Chop fresh basil right before use to prevent browning; dried is for stews', pairing: 'Italian dishes, tomatoes, chicken, pizza', usage: '1. Tomato Pasta: Add chopped basil and parmesan at the end.<br>2. Grilled Chicken: Marinate with basil, garlic, and olive oil.', suggestions: 'Tomato, garlic, olive oil, cheese' },
-      { id: 'parsley', name: 'Parsley', features: 'Fresh celery-like flavor, crisp', preprocessing: 'Do not overcook to preserve flavor', pairing: 'Salmon, steak, vegetables', usage: 'Garnish for salads, base for sauces, finish for soups.', suggestions: 'Salmon, steak, vegetables' },
-      { id: 'oregano', name: 'Oregano', features: 'Pungent & slightly bitter, anise-like', preprocessing: 'Dried is more potent than fresh; 1 tsp per 100g meat for bold dishes', pairing: 'Beef, pork, beans', usage: 'Pizza, Italian meat sauces, Mexican tacos.', suggestions: 'Beef, pork, beans' },
-      { id: 'dill', name: 'Dill', features: 'Sweet & anise-like, refreshing', preprocessing: 'Fresh dill wilts fast, wrap in damp paper towel to store; dried is good for marinades', pairing: 'Salmon, shrimp, cucumber', usage: 'Nordic cured salmon (Gravlax), Russian cold soups.', suggestions: 'Salmon, shrimp, cucumber' },
-    ],
-    southeastAsian: [
-      { id: 'lemongrass', name: 'Lemongrass', features: 'Strong lemon aroma, herbal', preprocessing: 'Remove tough outer layers, use the white stalk, and crush it to release flavor', pairing: 'Seafood, chicken, coconut milk dishes', usage: '1. Tom Yum Soup: 1 stalk with galangal and lime leaves for the base.<br>2. Pho Broth: Infuse for a fresh aroma.', suggestions: 'Galangal, kaffir lime leaf, coconut milk' },
-      { id: 'galangal', name: 'Galangal', features: 'Pungent & citrusy, stronger than ginger', preprocessing: 'Peel and slice/crush (it\'s tough); not suitable for raw consumption', pairing: 'Thai curries, seafood (mussels, squid)', usage: '1. Red Curry Paste: Base ingredient with lemongrass and lime leaves.<br>2. Grilled Squid: Marinate with minced galangal and fish sauce.', suggestions: 'Lemongrass, kaffir lime leaf, fish sauce' },
-      { id: 'kaffirLime', name: 'Kaffir Lime Leaf', features: 'Intense lemon scent, slightly bitter', preprocessing: 'Tear fresh leaves to release aroma (vein is most fragrant); dried is suitable for soups', pairing: 'Coconut chicken soup, Laksa, shrimp', usage: '1. Coconut Chicken Soup: 2 leaves with lemongrass and galangal.<br>2. Stir-fried Shrimp: Add minced leaves with garlic.', suggestions: 'Lemongrass, galangal, coconut milk' },
-      { id: 'galangalAlt', name: 'Greater Galangal', features: 'Pungent & sweet, with a camphor-like aroma', preprocessing: 'Can substitute for some ginger, pairs well with coconut milk and fish sauce', pairing: 'Lamb skewers, crab, beef', usage: 'Indonesian Satay, Singaporean Chili Crab', suggestions: 'Coconut milk, fish sauce' },
-      { id: 'pandan', name: 'Pandan Leaf', features: 'Sweet coconut aroma, provides green color', preprocessing: 'Often used to wrap food for steaming/grilling, or juiced for color', pairing: 'Rice, cakes, coconut soup', usage: 'Pandan chicken, Pandan cake', suggestions: 'Chicken, coconut milk' }
-    ],
-    middleEastern: [
-        { id: 'cuminMiddleEast', name: 'Cumin Seed', features: 'Pungent & nutty, fresher than powder', preprocessing: 'Dry-toast for 1-2 mins (no oil), then grind for intense flavor', pairing: 'Middle Eastern BBQ, hummus, curries', usage: '1. Lamb Skewers: Ground cumin with cardamom and lemon juice.<br>2. Hummus: Sprinkle on top with olive oil.', suggestions: 'Coriander seed, cardamom, lemon juice' },
-        { id: 'corianderSeed', name: 'Coriander Seed', features: 'Mild citrus & woody aroma, slightly sweet', preprocessing: 'Mix 1:1 with cumin for curry powder base; toasting enhances flavor', pairing: 'Legumes, chicken, beef', usage: 'Indian masalas, Middle Eastern dips.', suggestions: 'Cumin seed, cardamom, lemon juice' },
-        { id: 'turmeric', name: 'Turmeric', features: 'Earthy, slightly bitter, natural yellow dye', preprocessing: 'Use dried powder directly; grate fresh turmeric', pairing: 'Curries, chicken, rice, soups', usage: '1. Yellow Curry: 1-2 tsp powder for color and flavor.<br>2. Turmeric Rice: Steam rice with powder and salt for a golden hue.', suggestions: 'Curry, onion, garlic, coconut milk' },
-        { id: 'cardamom', name: 'Cardamom', features: 'Fresh floral & citrus aroma, slightly spicy', preprocessing: 'Use whole pods (husk adds aroma); 2-3 pods per cup of chai; expensive, use sparingly', pairing: 'Milk, lamb, cakes', usage: 'Indian chai, curries, desserts.', suggestions: 'Milk, lamb, cakes' },
-        { id: 'fenugreek', name: 'Fenugreek Seed', features: 'Slightly bitter with a smoky, maple-like flavor', preprocessing: 'Soak to reduce bitterness; classic combo with turmeric and coriander', pairing: 'Beef, legumes, vegetables', usage: 'Indian curries, Middle Eastern BBQ marinades.', suggestions: 'Turmeric, coriander seed' },
+    international: [
+      { id: 'rosemary', name: 'Rosemary (European)', features: 'Woody, pine-like, slightly bitter', preprocessing: 'Use tender sprigs for roasting; for lamb, potatoes', efficacy: '(Reference) Warm; benefits lung, spleen; may help improve focus, relieve fatigue; topical use may improve skin circulation (diluted).', contraindications: 'Caution for hypertension (may slightly raise blood pressure); caution for pregnant women; avoid if allergic (skin redness).' },
+      { id: 'basil', name: 'Basil (European)', features: 'Sweet, peppery, fresh, rich', preprocessing: 'Add fresh leaves at the end; for tomatoes, pizza', efficacy: '(Reference) Warm; benefits lung, stomach; may aid digestion, relieve bloating.', contraindications: 'Caution for those with cold-deficient spleen/stomach (diarrhea); excess may cause sleeplessness (contains mild stimulants).' },
+      { id: 'thyme', name: 'Thyme (European)', features: 'Mild, floral & lemony', preprocessing: 'Use leaves in stews; for chicken soup, fish', efficacy: '(Reference) Warm; benefits lung, spleen; may help release exterior, stop cough, resolve phlegm for mild wind-cold conditions.', contraindications: 'Caution for yin-deficient fire (dry mouth, sore throat); avoid if allergic (skin itching).' },
+      { id: 'lemongrass', name: 'Lemongrass (SEA)', features: 'Strong lemon aroma, herbal', preprocessing: 'Crush white stalk; for Tom Yum, Pho', efficacy: '(Reference) Warm; benefits lung, stomach; may help dispel wind-damp, relieve pain, promote digestion.', contraindications: 'Caution for yin-deficient fire (dry mouth, constipation); avoid if skin is sensitive.' },
+      { id: 'galangal', name: 'Galangal (SEA)', features: 'Pungent & citrusy, stronger than ginger', preprocessing: 'Slice; for Thai curries, seafood', efficacy: '(Reference) Warm; benefits spleen, stomach; may help warm middle-jiao, dispel cold for mild stomach cold-pain.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, acne); caution for "hot" stomach conditions (acid reflux).' },
+      { id: 'kaffirLime', name: 'Kaffir Lime Leaf (SEA)', features: 'Intense lemon scent, slightly bitter', preprocessing: 'Tear fresh leaves; for coconut chicken soup, Laksa', efficacy: '(Reference) Cool; benefits lung, stomach; may help clear summer-heat, regulate qi.', contraindications: 'Caution for cold-deficient spleen/stomach (diarrhea); excess may cause stomach discomfort.' },
+      { id: 'turmeric', name: 'Turmeric (Mid-East/Indian)', features: 'Earthy, slightly bitter, yellow dye', preprocessing: 'Use powder or grate fresh; for curries, rice', efficacy: '(Reference) Warm; benefits liver, spleen; may help move qi and blood, relieve pain. Modern studies suggest circulatory benefits (consult doctor).', contraindications: 'Forbidden for pregnant women (activates blood); caution for bleeding tendencies; caution for gallstones.' },
+      { id: 'cuminMiddleEast', name: 'Cumin Seed (Mid-East)', features: 'Pungent & nutty, fresher than powder', preprocessing: 'Toast and grind; for BBQ, hummus', efficacy: '(Reference) Hot; benefits liver, stomach; may help dispel cold, stop pain, aid digestion.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, constipation); use with caution in summer; caution for hemorrhoids.' },
     ]
   },
 };
@@ -199,26 +152,25 @@ type Spice = (typeof spiceData)['en']['chinese'][0];
 
 const categoryIcons: Record<string, React.ElementType> = {
   chinese: CookingPot,
-  european: Leaf,
-  southeastAsian: Wind,
-  middleEastern: Sun,
+  international: Globe,
   tips: Lightbulb,
   fusion: Utensils,
 };
 
-const InfoRow: React.FC<{ icon: React.ElementType, label: string, content: string | React.ReactNode, isUsage?: boolean }> = ({ icon: Icon, label, content, isUsage }) => (
-    <div>
-        <h4 className="flex items-center text-sm font-semibold text-primary/80 mb-1.5">
-            <Icon className="w-4 h-4 mr-2" />
-            {label}
-        </h4>
-        {isUsage ? (
-          <div className="text-xs text-muted-foreground pl-6 space-y-1" dangerouslySetInnerHTML={{ __html: content as string }} />
-        ) : (
-          <p className="text-xs text-muted-foreground pl-6">{content}</p>
-        )}
-    </div>
-);
+const InfoRow: React.FC<{ icon: React.ElementType, label: string, content?: string | React.ReactNode, isUsage?: boolean }> = ({ icon: Icon, label, content, isUsage }) => {
+    if (!content) return null;
+    return (
+        <div>
+            <h4 className="flex items-center text-sm font-semibold text-primary/80 mb-1.5">
+                <Icon className="w-4 h-4 mr-2" />
+                {label}
+            </h4>
+            <div className="text-xs text-muted-foreground pl-6 space-y-1">
+              {typeof content === 'string' ? <p dangerouslySetInnerHTML={{ __html: content }} /> : content}
+            </div>
+        </div>
+    );
+};
 
 const SpiceCard: React.FC<{ spice: Spice, labels: any }> = ({ spice, labels }) => {
     const {spices} = placeholderImageData;
@@ -242,27 +194,20 @@ const SpiceCard: React.FC<{ spice: Spice, labels: any }> = ({ spice, labels }) =
             </CardHeader>
             <CardContent className="flex-grow space-y-4 text-sm">
                 <InfoRow icon={ChefHat} label={labels.preprocessing} content={spice.preprocessing} />
-                <InfoRow icon={BookOpen} label={labels.usage} content={spice.usage} isUsage />
-                <InfoRow icon={Star} label={labels.suggestions} content={spice.suggestions} />
+                {spice.efficacy && <InfoRow icon={BookOpen} label={labels.efficacy} content={spice.efficacy} />}
+                {spice.contraindications && <InfoRow icon={ShieldAlert} label={labels.contraindications} content={spice.contraindications} />}
             </CardContent>
         </Card>
     );
 }
 
-const TipCard: React.FC<{ icon: React.ElementType; title: string; content: string[]; }> = ({ icon: Icon, title, content }) => (
+const TipCard: React.FC<{ icon: React.ElementType; title: string; content: string; }> = ({ icon: Icon, title, content }) => (
     <Card className="bg-card/50 backdrop-blur-sm">
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base"><Icon className="w-5 h-5 text-primary"/>{title}</CardTitle>
         </CardHeader>
         <CardContent>
-            <ul className="space-y-3">
-              {content.map((item, index) => (
-                <li key={index} className="flex items-start text-sm text-muted-foreground">
-                  <span className="mr-2 mt-1">•</span>
-                  <span dangerouslySetInnerHTML={{ __html: item.replace(/(\S+?：)/g, '<strong>$1</strong>') }} />
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-muted-foreground">{content}</p>
         </CardContent>
     </Card>
 );
@@ -309,11 +254,9 @@ export default function SpiceBasicsPage() {
         </div>
 
         <Tabs defaultValue="chinese" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6 mb-8 bg-card/60 backdrop-blur-md">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-8 bg-card/60 backdrop-blur-md">
                 <TabsTrigger value="chinese" className="flex items-center gap-2"><CookingPot className="w-4 h-4"/>{t.tabChinese}</TabsTrigger>
-                <TabsTrigger value="european" className="flex items-center gap-2"><Leaf className="w-4 h-4"/>{t.tabEuropean}</TabsTrigger>
-                <TabsTrigger value="southeastAsian" className="flex items-center gap-2"><Wind className="w-4 h-4"/>{t.tabSEA}</TabsTrigger>
-                <TabsTrigger value="middleEastern" className="flex items-center gap-2"><Sun className="w-4 h-4"/>{t.tabMiddleEast}</TabsTrigger>
+                <TabsTrigger value="international" className="flex items-center gap-2"><Globe className="w-4 h-4"/>{t.tabInternational}</TabsTrigger>
                 <TabsTrigger value="tips" className="flex items-center gap-2"><Lightbulb className="w-4 h-4"/>{t.tabTips}</TabsTrigger>
                 <TabsTrigger value="fusion" className="flex items-center gap-2"><Utensils className="w-4 h-4"/>{t.tabFusion}</TabsTrigger>
             </TabsList>
@@ -326,37 +269,27 @@ export default function SpiceBasicsPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="european">
+            <TabsContent value="international">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spiceData[currentLanguage].european.map((spice) => (
+                  {spiceData[currentLanguage].international.map((spice) => (
                      <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
                   ))}
               </div>
             </TabsContent>
-
-            <TabsContent value="southeastAsian">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spiceData[currentLanguage].southeastAsian.map((spice) => (
-                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
-                  ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="middleEastern">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {spiceData[currentLanguage].middleEastern.map((spice) => (
-                     <SpiceCard key={spice.id} spice={spice as Spice} labels={t.cardLabels}/>
-                  ))}
-              </div>
-            </TabsContent>
-
+            
             <TabsContent value="tips">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <TipCard icon={ShieldAlert} title={t.tips.principleTitle} content={t.tips.principleContent} />
-                    <TipCard icon={ChefHat} title={t.tips.prepTitle} content={t.tips.prepContent} />
-                    <TipCard icon={Scale} title={t.tips.pairingTitle} content={t.tips.pairingContent} />
-                    <TipCard icon={BookOpen} title={t.tips.storageTitle} content={t.tips.storageContent} />
-                </div>
+                <Card className="bg-card/50 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-xl"><Lightbulb className="w-5 h-5 text-primary"/>{t.tips.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <TipCard icon={Scale} title={t.tips.principle1Title} content={t.tips.principle1Content} />
+                        <TipCard icon={ShieldAlert} title={t.tips.principle2Title} content={t.tips.principle2Content} />
+                        <TipCard icon={BookOpen} title={t.tips.principle3Title} content={t.tips.principle3Content} />
+                        <TipCard icon={ChefHat} title={t.tips.principle4Title} content={t.tips.principle4Content} />
+                        <TipCard icon={Star} title={t.tips.principle5Title} content={t.tips.principle5Content} />
+                    </CardContent>
+                </Card>
             </TabsContent>
             
             <TabsContent value="fusion">
@@ -376,4 +309,3 @@ export default function SpiceBasicsPage() {
     </div>
   );
 }
-
