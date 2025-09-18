@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChefHat, Search, Calendar, ScrollText, Timer, MoreVertical, Pin, PinOff, GripVertical, Leaf, Utensils, Flame } from 'lucide-react';
+import { ArrowLeft, ChefHat, Search, Calendar, ScrollText, Timer, MoreVertical, Pin, PinOff, GripVertical, Leaf, Utensils, Flame, Sparkles } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,7 @@ const translations = {
       eightCuisines: { title: '八大菜系', description: '领略中华美食的博大精深。', icon: Utensils, path: '/kitchen/eight-cuisines' },
       cookingTechniques: { title: '烹饪手法', description: '学习炒、烧、炖、蒸等核心烹饪技巧。', icon: Flame, path: '/kitchen/techniques' },
       healthyFood: { title: '健康食物', description: '探索营养丰富的食材，为健康加分。', icon: Leaf, path: '/kitchen/healthy-food' },
+      seasonalFood: { title: '应季健康', description: '遵循时令，选择农药残留更少的当季食材。', icon: Sparkles, path: '/kitchen/seasonal-food' },
     }
   },
   'en': {
@@ -48,6 +49,7 @@ const translations = {
       eightCuisines: { title: 'Eight Cuisines', description: 'Explore the vast and profound world of Chinese cuisine.', icon: Utensils, path: '/kitchen/eight-cuisines' },
       cookingTechniques: { title: 'Cooking Techniques', description: 'Learn core skills like stir-frying, braising, and steaming.', icon: Flame, path: '/kitchen/techniques' },
       healthyFood: { title: 'Healthy Foods', description: 'Discover nutritious ingredients to boost your health.', icon: Leaf, path: '/kitchen/healthy-food' },
+      seasonalFood: { title: 'Seasonal Healthy Foods', description: 'Follow the seasons and choose ingredients with less pesticide residue.', icon: Sparkles, path: '/kitchen/seasonal-food' },
     }
   }
 };
