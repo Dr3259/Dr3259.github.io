@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
@@ -23,7 +24,6 @@ const translations = {
       recipeSearch: { title: '菜谱搜索', description: '寻找灵感，发现美味新菜谱。', icon: Search, path: '/kitchen/recipes' },
       mealPlan: { title: '膳食计划', description: '规划您一周的健康饮食。', icon: Calendar, path: '/kitchen/meal-plan' },
       shoppingList: { title: '购物清单', description: '智能管理您的购物需求。', icon: ScrollText, path: '/kitchen/shopping-list' },
-      cookingTimer: { title: '烹饪计时器', description: '精准掌控您的烹饪时间。', icon: Timer, path: '/kitchen/timer' },
       spiceBasics: { title: '香料基础', description: '了解各种香料，提升厨艺。', icon: Leaf, path: '/kitchen/spice-basics' },
       eightCuisines: { title: '八大菜系', description: '领略中华美食的博大精深。', icon: Utensils, path: '/kitchen/eight-cuisines' },
     }
@@ -42,7 +42,6 @@ const translations = {
       recipeSearch: { title: 'Recipe Search', description: 'Find inspiration and discover new delicious recipes.', icon: Search, path: '/kitchen/recipes' },
       mealPlan: { title: 'Meal Plan', description: 'Plan your healthy meals for the week.', icon: Calendar, path: '/kitchen/meal-plan' },
       shoppingList: { title: 'Shopping List', description: 'Intelligently manage your shopping needs.', icon: ScrollText, path: '/kitchen/shopping-list' },
-      cookingTimer: { title: 'Cooking Timer', description: 'Precisely control your cooking time.', icon: Timer, path: '/kitchen/timer' },
       spiceBasics: { title: 'Spice Basics', description: 'Learn about various spices to elevate your cooking.', icon: Leaf, path: '/kitchen/spice-basics' },
       eightCuisines: { title: 'Eight Cuisines', description: 'Explore the vast and profound world of Chinese cuisine.', icon: Utensils, path: '/kitchen/eight-cuisines' },
     }
@@ -208,7 +207,7 @@ export default function KitchenPage() {
 
   const handleNavigation = (path: string) => {
       const isExternal = path.startsWith('http');
-      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list', '/kitchen/timer'].includes(path);
+      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list'].includes(path);
       
       if(isExternal) {
           window.open(path, '_blank');
