@@ -211,7 +211,7 @@ export default function KitchenPage() {
 
   const handleNavigation = (path: string) => {
       const isExternal = path.startsWith('http');
-      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list', '/kitchen/healthy-food'].includes(path);
+      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list'].includes(path);
       
       if(isExternal) {
           window.open(path, '_blank');
