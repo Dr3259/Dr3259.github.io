@@ -53,5 +53,21 @@
     "dongan chicken": { "seed": 521, "hint": "dong an chicken" },
     "stinkymandarinfish": { "seed": 522, "hint": "mandarin fish" },
     "hairytodu": { "seed": 523, "hint": "hairy tofu" },
-    "fulijiroastchicken": { "seed": 524, "hint": "roast chicken" }
+    "fulijiroastchicken": { "seed": 524, "hint": "roast chicken" },
+    "blueberries": { "seed": 601, "hint": "blueberries" },
+    "kale": { "seed": 602, "hint": "kale" },
+    "salmonfillet": { "seed": 603, "hint": "salmon fillet" },
+    "chiaseeds": { "seed": 604, "hint": "chia seeds" },
+    "chickenbreast": { "seed": 605, "hint": "chicken breast" },
+    "eggs": { "seed": 606, "hint": "eggs" },
+    "tofu": { "seed": 607, "hint": "tofu" },
+    "chickpeas": { "seed": 608, "hint": "chickpeas" },
+    "avocado": { "seed": 609, "hint": "avocado" },
+    "mixednuts": { "seed": 610, "hint": "mixed nuts" },
+    "oliveoil": { "seed": 611, "hint": "olive oil" },
+    "flaxseeds": { "seed": 612, "hint": "flax seeds" },
+    "oats": { "seed": 613, "hint": "oats" },
+    "quinoa": { "seed": 614, "hint": "quinoa" },
+    "brownrice": { "seed": 615, "hint": "brown rice" },
+    "wholewheatbread": { "seed": 616, "hint": "wheat bread" }
 }
