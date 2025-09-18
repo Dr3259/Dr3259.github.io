@@ -27,6 +27,7 @@ const translations = {
       spiceBasics: { title: '香料基础', description: '了解各种香料，提升厨艺。', icon: Leaf, path: '/kitchen/spice-basics' },
       eightCuisines: { title: '八大菜系', description: '领略中华美食的博大精深。', icon: Utensils, path: '/kitchen/eight-cuisines' },
       cookingTechniques: { title: '烹饪手法', description: '学习炒、烧、炖、蒸等核心烹饪技巧。', icon: Flame, path: '/kitchen/techniques' },
+      healthyFood: { title: '健康食物', description: '探索营养丰富的食材，为健康加分。', icon: Leaf, path: '/kitchen/healthy-food' },
     }
   },
   'en': {
@@ -46,6 +47,7 @@ const translations = {
       spiceBasics: { title: 'Spice Basics', description: 'Learn about various spices to elevate your cooking.', icon: Leaf, path: '/kitchen/spice-basics' },
       eightCuisines: { title: 'Eight Cuisines', description: 'Explore the vast and profound world of Chinese cuisine.', icon: Utensils, path: '/kitchen/eight-cuisines' },
       cookingTechniques: { title: 'Cooking Techniques', description: 'Learn core skills like stir-frying, braising, and steaming.', icon: Flame, path: '/kitchen/techniques' },
+      healthyFood: { title: 'Healthy Foods', description: 'Discover nutritious ingredients to boost your health.', icon: Leaf, path: '/kitchen/healthy-food' },
     }
   }
 };
@@ -209,7 +211,7 @@ export default function KitchenPage() {
 
   const handleNavigation = (path: string) => {
       const isExternal = path.startsWith('http');
-      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list'].includes(path);
+      const isPlaceholder = ['/kitchen/recipes', '/kitchen/meal-plan', '/kitchen/shopping-list', '/kitchen/healthy-food'].includes(path);
       
       if(isExternal) {
           window.open(path, '_blank');
@@ -359,5 +361,3 @@ export default function KitchenPage() {
     </div>
   );
 }
-
-    
