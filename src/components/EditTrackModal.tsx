@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import type { TrackMetadata } from '@/lib/db';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { PenSquare, Tags } from 'lucide-react';
+import { PenSquare, Tags, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
 
@@ -48,6 +48,7 @@ const CATEGORY_TYPES_EN = {
     'Electronic': '电子',
     'Classical': '古典',
     'Niche': '小众',
+    'Ancient': '古风',
 };
 
 const CATEGORY_PURPOSES_EN = {
@@ -160,112 +161,156 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl bg-card">
-        <DialogHeader>
-          <DialogTitle>{translations.title}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background/95 to-background/90 backdrop-blur-xl border border-blue-200/20 shadow-2xl">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-600 rounded-t-lg"></div>
+        
+        <DialogHeader className="mb-6 space-y-3">
+          <DialogTitle className="text-xl font-medium text-foreground flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-200/30 flex items-center justify-center backdrop-blur-sm">
+              <PenSquare className="w-6 h-6 text-blue-600" />
+            </div>
+            {translations.title}
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground/80 leading-relaxed">
             {translations.description}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-2 space-y-6">
+        <div className="space-y-6">
             {/* Metadata Section */}
             <div className='space-y-4'>
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80">
                     <PenSquare className="h-4 w-4" />
-                    <span>Metadata</span>
+                    <span>音乐信息</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <Label htmlFor="track-title">{translations.titleLabel}</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="track-title" className="text-xs font-medium text-muted-foreground/80">{translations.titleLabel}</Label>
                         <Input
                             ref={titleInputRef}
                             id="track-title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder={translations.titlePlaceholder}
+                            className="h-11 text-base border-2 border-border/50 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 focus:outline-none focus:shadow-lg focus:shadow-blue-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 focus-visible:ring-offset-0 transition-all duration-300 bg-background/50 backdrop-blur-sm rounded-xl hover:shadow-md hover:border-blue-400/60 hover:bg-background/70"
                             autoComplete="off"
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="track-artist">{translations.artistLabel}</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="track-artist" className="text-xs font-medium text-muted-foreground/80">{translations.artistLabel}</Label>
                         <Input
                             id="track-artist"
                             value={artist}
                             onChange={(e) => setArtist(e.target.value)}
                             placeholder={translations.artistPlaceholder}
+                            className="h-11 text-base border-2 border-border/50 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 focus:outline-none focus:shadow-lg focus:shadow-blue-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 focus-visible:ring-offset-0 transition-all duration-300 bg-background/50 backdrop-blur-sm rounded-xl hover:shadow-md hover:border-blue-400/60 hover:bg-background/70"
                             autoComplete="off"
                         />
                     </div>
                 </div>
             </div>
 
-            <Separator />
+            <div className="h-px bg-gradient-to-r from-transparent via-border/50 to-transparent"></div>
             
             {/* Categories Section */}
             <div className="space-y-4">
-                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80">
                     <Tags className="h-4 w-4" />
-                    <span>Categories</span>
+                    <span>音乐分类</span>
                 </div>
-                <div className="space-y-3">
-                    <Label className="text-xs text-muted-foreground">{typeLabel} (Select one)</Label>
-                    <div className="flex flex-wrap gap-2">
-                        {Object.keys(typesToRender).map(key => {
-                            const isSelected = selectedType === key;
-                            const bgColor = isSelected ? getTagColor(key) : undefined;
-                            const textColor = isSelected ? getHighContrastTextColor(bgColor!) : undefined;
-                            return (
-                                <Badge
-                                    key={key}
-                                    variant={isSelected ? "default" : "secondary"}
-                                    onClick={() => handleTypeClick(key)}
-                                    className="cursor-pointer text-sm py-1 px-3 border-transparent"
-                                    style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
-                                >
-                                    {key}
-                                </Badge>
-                            )
-                        })}
+                <div className="space-y-4">
+                    <div>
+                        <Label className="text-xs font-medium text-muted-foreground/80 mb-3 block">{typeLabel} (选择一个)</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {Object.keys(typesToRender).map(key => {
+                                const isSelected = selectedType === key;
+                                const bgColor = isSelected ? getTagColor(key) : undefined;
+                                const textColor = isSelected ? getHighContrastTextColor(bgColor!) : undefined;
+                                return (
+                                    <Badge
+                                        key={key}
+                                        variant={isSelected ? "default" : "secondary"}
+                                        onClick={() => handleTypeClick(key)}
+                                        className={cn(
+                                            "cursor-pointer text-sm py-2 px-4 border-transparent transition-all duration-200 hover:scale-105",
+                                            isSelected ? "shadow-lg" : "hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
+                                        )}
+                                        style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
+                                    >
+                                        {key}
+                                    </Badge>
+                                )
+                            })}
+                        </div>
                     </div>
-                </div>
-                <div className="space-y-3">
-                    <Label className="text-xs text-muted-foreground">{purposeLabel} (Select multiple)</Label>
-                    <div className="flex flex-wrap gap-2">
-                        {Object.keys(purposesToRender).map(key => {
-                             const isSelected = selectedPurposes.has(key);
-                             const bgColor = isSelected ? getTagColor(key) : undefined;
-                             const textColor = isSelected ? getHighContrastTextColor(bgColor!) : undefined;
-                             return (
-                                <Badge
-                                    key={key}
-                                    variant={isSelected ? "default" : "secondary"}
-                                    onClick={() => handlePurposeClick(key)}
-                                    className="cursor-pointer text-sm py-1 px-3 border-transparent"
-                                    style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
-                                >
-                                    {key}
-                                </Badge>
-                            )
-                        })}
+                    <div>
+                        <Label className="text-xs font-medium text-muted-foreground/80 mb-3 block">{purposeLabel} (可选择多个)</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {Object.keys(purposesToRender).map(key => {
+                                 const isSelected = selectedPurposes.has(key);
+                                 const bgColor = isSelected ? getTagColor(key) : undefined;
+                                 const textColor = isSelected ? getHighContrastTextColor(bgColor!) : undefined;
+                                 return (
+                                    <Badge
+                                        key={key}
+                                        variant={isSelected ? "default" : "secondary"}
+                                        onClick={() => handlePurposeClick(key)}
+                                        className={cn(
+                                            "cursor-pointer text-sm py-2 px-4 border-transparent transition-all duration-200 hover:scale-105",
+                                            isSelected ? "shadow-lg" : "hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
+                                        )}
+                                        style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
+                                    >
+                                        {key}
+                                    </Badge>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
-            {onDelete && (
-                <Button type="button" variant="destructive" onClick={handleDeleteClick} className="mt-2 sm:mt-0 sm:mr-auto">
-                    Delete
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-gradient-to-r from-transparent via-border/50 to-transparent">
+            {/* 左侧：删除按钮 */}
+            <div className="flex-shrink-0">
+                {onDelete ? (
+                    <Button 
+                        type="button" 
+                        variant="ghost"
+                        size="lg"
+                        onClick={handleDeleteClick} 
+                        className="h-11 px-6 text-red-600 hover:text-red-700 hover:bg-red-50/80 dark:hover:bg-red-900/20 border border-red-200/50 hover:border-red-300/70 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        删除歌曲
+                    </Button>
+                ) : (
+                    <div></div>
+                )}
+            </div>
+            
+            {/* 右侧：取消和保存按钮 */}
+            <div className="flex items-center space-x-3">
+                <Button 
+                    type="button" 
+                    variant="ghost"
+                    size="lg"
+                    onClick={onClose} 
+                    className="h-11 px-6 text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/50 hover:border-border/70 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md"
+                >
+                    {translations.cancelButton}
                 </Button>
-            )}
-            <Button type="button" variant="outline" onClick={onClose} className="mt-2 sm:mt-0">
-              {translations.cancelButton}
-            </Button>
-            <Button type="button" onClick={handleSaveClick} className="mt-2 sm:mt-0">
-              {translations.saveButton}
-            </Button>
-        </DialogFooter>
+                <Button 
+                    type="button" 
+                    size="lg"
+                    onClick={handleSaveClick} 
+                    className="h-11 px-8 bg-gradient-to-r from-blue-500 via-blue-600 to-cyan-500 hover:from-blue-600 hover:via-blue-700 hover:to-cyan-600 text-white font-medium shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 rounded-xl border-0 focus:ring-4 focus:ring-blue-500/20"
+                >
+                    {translations.saveButton}
+                </Button>
+            </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,0 +1,550 @@
+// 集成歌单功能的音乐播放器 - 在原有基础上添加歌单区域
+"use client";
+
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, Volume1, Volume, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { EditTrackModal } from '@/components/EditTrackModal';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useMusic } from '@/context/MusicContext';
+import type { TrackMetadata } from '@/lib/db';
+import { MusicVisualizer } from '@/components/MusicVisualizer';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
+
+// 导入歌单功能
+import { usePlaylist } from '@/lib/enhanced-music-context';
+import { PlaylistGrid } from './playlist-grid';
+import { CreatePlaylistModal } from './create-playlist-modal';
+import { EditPlaylistModal } from './EditPlaylistModal';
+import { DraggableTrackItem } from './draggable-track-item';
+import { exportPlaylistToText, downloadTextFile, generateSafeFilename } from '@/lib/playlist-export';
+import type { VirtualPlaylist } from '@/lib/playlist-types';
+
+const translations = {
+  'zh-CN': {
+    pageTitle: '私人音乐播放器',
+    backButton: '返回休闲驿站',
+    importMusic: '导入音乐',
+    importFile: '导入文件',
+    importFolder: '导入文件夹',
+    clearPlaylist: '清空播放列表',
+    deleteAllTracks: '删除所有音乐',
+    clearPlaylistConfirmationTitle: '确认清空播放列表',
+    clearPlaylistConfirmationDescription: '此操作将清空当前播放列表，但不会删除音乐文件。歌单中的音乐不会受影响。',
+    deleteAllTracksConfirmationTitle: '确认删除所有音乐和歌单',
+    deleteAllTracksConfirmationDescription: '⚠️ 危险操作：此操作将永久删除您的所有本地音乐文件，同时清空所有自定义歌单（包括歌单名称、描述等信息），且无法恢复。只会保留默认的"所有音乐"歌单。您确定要继续吗？',
+    confirmClear: '确认',
+    cancelClear: '取消',
+    playlistCleared: '播放列表已清空',
+    playlistTitle: '播放列表',
+    totalTracks: (count: number) => `(${count} 首)`,
+    nowPlaying: '正在播放',
+    nothingPlaying: '暂无播放',
+    noTracks: '您的音乐库是空的。',
+    importError: '导入失败，请确保文件是 .flac, .mp3, .wav, .ogg 格式。',
+    importSuccess: (count: number) => `成功导入 ${count} 首新歌曲。`,
+    deleteTrack: '删除歌曲',
+    editTrack: '编辑信息',
+    deleteConfirmation: (title: string) => `您确定要删除《${title}》吗？`,
+    trackDeleted: '歌曲已删除',
+    trackExists: (title: string) => `歌曲 "${title}" 已存在，已跳过。`,
+    importing: '导入中...',
+    loadingLibrary: '正在加载您的音乐库...',
+    editTrackModal: {
+        title: '编辑歌曲信息',
+        description: '在这里修改歌曲的元数据。',
+        categoryLabel: '分类',
+        categoryPlaceholder: '例如：古典, 摇滚, 学习用',
+        saveButton: '保存',
+        cancelButton: '取消',
+        artistLabel: '艺术家',
+        artistPlaceholder: '例如：周杰伦',
+        titleLabel: '标题',
+        titlePlaceholder: '例如：青花瓷',
+    },
+    playModes: {
+      repeat: "列表循环",
+      'repeat-one': "单曲循环",
+      shuffle: "随机播放",
+    },
+    volumeUp: '增大音量',
+    volumeDown: '减小音量',
+    volumeTooltip: "音量 (可用方向键调节)",
+  },
+};
+
+type LanguageKey = keyof typeof translations;
+
+const formatDuration = (seconds: number | undefined) => {
+    if (seconds === undefined || isNaN(seconds)) return '0:00';
+    const floorSeconds = Math.floor(seconds);
+    const min = Math.floor(floorSeconds / 60);
+    const sec = floorSeconds % 60;
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+};
+
+// A new component to dynamically render the volume icon
+const VolumeIcon = ({ volume, isMuted }: { volume: number; isMuted: boolean }) => {
+    if (isMuted || volume === 0) {
+        return <VolumeX className="h-6 w-6" />;
+    }
+    if (volume < 0.33) {
+        return <Volume className="h-6 w-6" />;
+    }
+    if (volume < 0.66) {
+        return <Volume1 className="h-6 w-6" />;
+    }
+    return <Volume2 className="h-6 w-6" />;
+};
+
+export default function IntegratedMusicPlayerPage() {
+  const { toast } = useToast();
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
+  const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
+  const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState<VirtualPlaylist | null>(null);
+
+  // 原有音乐功能
+  const {
+    tracks,
+    currentTrack,
+    isPlaying,
+    progress,
+    volume,
+    isMuted,
+    isLoading,
+    importingTracks,
+    playMode,
+    audioRef,
+    playTrack,
+    handlePlayPause,
+    handleNextTrack,
+    handlePrevTrack,
+    handleProgressChange,
+    handleVolumeAdjust,
+    toggleMute,
+    handleFileImport,
+    handleFolderImport,
+    handleDeleteTrack,
+    handleClearPlaylist,
+    handleDeleteAllTracks,
+    handleSaveTrackMeta,
+    cyclePlayMode,
+    setPlaybackScope,
+  } = useMusic();
+
+  // 歌单功能
+  const {
+    playlists,
+    currentPlaylist,
+    isLoadingPlaylists,
+    createVirtualPlaylist,
+    importFolderAsPlaylist,
+    playPlaylist,
+    selectPlaylist,
+    refreshFolderPlaylist,
+    deleteFolderPlaylist: deletePlaylist,
+    editVirtualPlaylist,
+    clearAllPlaylists,
+    handleTrackDrop,
+  } = usePlaylist();
+
+  // 根据当前选中的歌单获取要显示的歌曲列表
+  const displayTracks = useMemo(() => {
+    if (!currentPlaylist) {
+      // 没有选中歌单时，显示所有音乐
+      return tracks;
+    }
+
+    if (currentPlaylist.type === 'all') {
+      // "所有音乐"歌单显示所有歌曲
+      return tracks;
+    }
+
+    if (currentPlaylist.type === 'virtual') {
+      // 虚拟歌单显示歌单中的歌曲
+      const virtualPlaylist = currentPlaylist as VirtualPlaylist;
+      return virtualPlaylist.tracks
+        .map(ref => tracks.find(t => t.id === ref.trackId))
+        .filter((track): track is TrackMetadata => track !== undefined);
+    }
+
+    // 文件夹歌单暂时返回空数组，后续可以实现
+    return [];
+  }, [currentPlaylist, tracks]);
+
+  // 当歌单或显示的歌曲列表变化时，更新播放范围
+  useEffect(() => {
+    setPlaybackScope(displayTracks);
+  }, [displayTracks, setPlaybackScope]);
+
+  // 播放歌曲时需要找到在原始tracks数组中的索引
+  const handlePlayTrack = useCallback((displayIndex: number) => {
+    const trackToPlay = displayTracks[displayIndex];
+    if (trackToPlay) {
+      const originalIndex = tracks.findIndex(t => t.id === trackToPlay.id);
+      if (originalIndex >= 0) {
+        playTrack(originalIndex);
+      }
+    }
+  }, [displayTracks, tracks, playTrack]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'zh-CN';
+      setCurrentLanguage(browserLang);
+    }
+  }, []);
+
+  const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
+
+  useEffect(() => {
+    if (currentTrack && scrollAreaRef.current) {
+        const trackElement = document.getElementById(`track-item-${currentTrack.id}`);
+        const scrollContainer = scrollAreaRef.current;
+        
+        if(trackElement && scrollContainer) {
+            const trackRect = trackElement.getBoundingClientRect();
+            const containerRect = scrollContainer.getBoundingClientRect();
+            
+            const isVisible = trackRect.top >= containerRect.top && trackRect.bottom <= containerRect.bottom;
+
+            if (!isVisible) {
+                trackElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+    }
+  }, [currentTrack]);
+
+  const handleCreatePlaylist = async (name: string, description?: string) => {
+    await createVirtualPlaylist(name, description);
+    setShowCreateModal(false);
+  };
+
+  const handleEditPlaylist = (playlistId: string) => {
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (playlist && playlist.type === 'virtual') {
+      setEditingPlaylist(playlist as VirtualPlaylist);
+    }
+  };
+
+  const handleUpdatePlaylist = async (name: string, description?: string) => {
+    if (editingPlaylist) {
+      await editVirtualPlaylist(editingPlaylist.id, { name, description });
+      setEditingPlaylist(null);
+    }
+  };
+
+  const handleDeleteAllTracksAndPlaylists = async () => {
+    try {
+      // 先删除所有音乐文件
+      await handleDeleteAllTracks();
+      // 然后清空所有歌单
+      await clearAllPlaylists();
+    } catch (error) {
+      console.error('Failed to delete all tracks and playlists:', error);
+    }
+  };
+
+  const handleDownloadPlaylist = (playlistId: string) => {
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist) {
+      toast({ title: '歌单不存在', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // 导出歌单信息为文本
+      const textContent = exportPlaylistToText(playlist, tracks);
+      
+      // 生成文件名
+      const filename = generateSafeFilename(playlist.name);
+      
+      // 下载文件
+      downloadTextFile(textContent, filename);
+      
+      toast({ title: `歌单信息已导出: ${filename}` });
+    } catch (error) {
+      console.error('Failed to download playlist:', error);
+      toast({ title: '导出失败', variant: 'destructive' });
+    }
+  };
+
+  const handlePlaylistPlayPause = async (playlistId: string) => {
+    // 如果点击的是当前选中的歌单且正在播放，则暂停/播放
+    if (currentPlaylist?.id === playlistId && currentTrack) {
+      handlePlayPause();
+    } else {
+      // 否则播放这个歌单
+      await playPlaylist(playlistId);
+    }
+  };
+
+  return (
+    <>
+    <TooltipProvider>
+      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+        <header className="w-full p-4 border-b flex justify-between items-center shrink-0 z-20 bg-background/80 backdrop-blur-sm">
+          <Link href="/rest" passHref>
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t.backButton}
+            </Button>
+          </Link>
+          <h1 className="text-xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
+          <div>
+            <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
+            <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...{webkitdirectory: "", directory: ""}} />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button><Plus className="mr-2 h-4 w-4" />{t.importMusic}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                      <Music className="mr-2 h-4 w-4" />
+                      <span>{t.importFile}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => folderInputRef.current?.click()}>
+                      <FolderPlus className="mr-2 h-4 w-4" />
+                      <span>{t.importFolder}</span>
+                  </DropdownMenuItem>
+                  {tracks.length > 0 && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setIsClearAlertOpen(true)}>
+                           <Trash className="mr-2 h-4 w-4" />
+                           <span>{t.clearPlaylist}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsDeleteAllAlertOpen(true)} className="text-destructive focus:text-destructive">
+                           <Trash2 className="mr-2 h-4 w-4" />
+                           <span>{t.deleteAllTracks}</span>
+                        </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+          </div>
+        </header>
+
+        <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+          <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
+          
+          {/* 左侧：播放列表 */}
+          <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
+            <h2 className="flex items-center mb-4 text-lg font-semibold leading-none">
+              <ListMusic className="h-5 w-5 mr-2 shrink-0" />
+              <span>
+                {currentPlaylist ? currentPlaylist.name : t.playlistTitle}
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({displayTracks.length} 首)
+                </span>
+              </span>
+            </h2>
+            <ScrollArea className="flex-1 -mx-4" ref={scrollAreaRef}>
+                <ul className="space-y-2 p-px px-4">
+                  {isLoading ? (
+                    <div className="text-center text-muted-foreground py-20 flex flex-col items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                      <p>{t.loadingLibrary}</p>
+                    </div>
+                  ) : displayTracks.length === 0 && importingTracks.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-20">
+                      <Music className="h-12 w-12 mx-auto mb-4" />
+                      <p>{currentPlaylist ? `歌单"${currentPlaylist.name}"是空的` : t.noTracks}</p>
+                    </div>
+                  ) : (
+                    <>
+                      {displayTracks.map((track, index) => (
+                        <DraggableTrackItem
+                          key={track.id}
+                          track={track}
+                          isCurrentTrack={currentTrack?.id === track.id}
+                          onPlay={() => handlePlayTrack(index)}
+                          onEdit={() => setEditingTrack(track)}
+                          onDelete={() => handleDeleteTrack(track.id, track.title)}
+                        />
+                      ))}
+                      {importingTracks.length > 0 && (
+                         <li className="p-3 rounded-md flex justify-between items-center opacity-60">
+                           <div>
+                              <p className="font-medium text-sm truncate">{t.importing}</p>
+                           </div>
+                           <Loader2 className="h-4 w-4 animate-spin" />
+                         </li>
+                      )}
+                    </>
+                  )}
+                </ul>
+            </ScrollArea>
+          </div>
+          
+          {/* 右侧：歌单和播放控制 */}
+          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-transparent z-[2]">
+              {/* 歌单网格区域 */}
+              <div className="flex-1 mb-6">
+                <PlaylistGrid
+                  playlists={playlists}
+                  currentPlaylist={currentPlaylist}
+                  isLoadingPlaylists={isLoadingPlaylists}
+                  isPlaying={isPlaying}
+                  onCreateVirtualPlaylist={() => setShowCreateModal(true)}
+                  onImportFolderPlaylist={importFolderAsPlaylist}
+                  onPlayPlaylist={handlePlaylistPlayPause}
+                  onSelectPlaylist={selectPlaylist}
+                  onEditPlaylist={handleEditPlaylist}
+                  onDownloadPlaylist={handleDownloadPlaylist}
+                  onRefreshFolderPlaylist={refreshFolderPlaylist}
+                  onDeletePlaylist={deletePlaylist}
+                  onTrackDrop={handleTrackDrop}
+                />
+              </div>
+              
+              {/* 播放控制区域 */}
+              <div className="shrink-0 space-y-3 p-4 rounded-lg bg-background/60 backdrop-blur-md border border-border/50 shadow-lg">
+                <div className="space-y-2">
+                    <Slider value={[progress || 0]} onValueChange={handleProgressChange} max={100} step={0.1} disabled={!currentTrack}/>
+                    <div className="flex justify-between text-xs text-muted-foreground font-mono">
+                        <span>{formatDuration(audioRef.current?.currentTime)}</span>
+                        <span>{formatDuration(currentTrack?.duration)}</span>
+                    </div>
+                </div>
+                  
+                <div className="flex justify-between items-center gap-4">
+                    <div className="flex items-center gap-1 w-1/3">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={toggleMute} className="h-10 w-10">
+                                    <VolumeIcon volume={volume} isMuted={isMuted} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
+                        </Tooltip>
+                        <div className="flex flex-col items-center">
+                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}>
+                                <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}>
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent" onClick={handlePrevTrack} disabled={tracks.length < 2}><SkipBack className="h-6 w-6" /></Button>
+                        <Button size="icon" className="h-16 w-16 rounded-full" onClick={handlePlayPause}>
+                          {isPlaying ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent" onClick={handleNextTrack} disabled={tracks.length < 2}><SkipForward className="h-6 w-6"/></Button>
+                    </div>
+                    <div className="w-1/3 flex justify-end">
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full hover:bg-accent" onClick={cyclePlayMode}>
+                                  {playMode === 'repeat-one' && <Repeat1 className="h-6 w-6" />}
+                                  {playMode === 'shuffle' && <Shuffle className="h-6 w-6" />}
+                                  {playMode === 'repeat' && <Repeat className="h-6 w-6" />}
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{t.playModes[playMode]}</p></TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        </main>
+      </div>
+      </TooltipProvider>
+      
+      <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>{t.clearPlaylistConfirmationTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+                {t.clearPlaylistConfirmationDescription}
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>{t.cancelClear}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+                handleClearPlaylist();
+                setIsClearAlertOpen(false);
+            }}>
+                {t.confirmClear}
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteAllTracksConfirmationTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+                {t.deleteAllTracksConfirmationDescription}
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>{t.cancelClear}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                handleDeleteAllTracksAndPlaylists();
+                setIsDeleteAllAlertOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+                删除所有音乐和歌单
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <EditTrackModal
+        isOpen={!!editingTrack}
+        onClose={() => setEditingTrack(null)}
+        onSave={handleSaveTrackMeta}
+        onDelete={handleDeleteTrack}
+        track={editingTrack}
+        translations={t.editTrackModal}
+       />
+
+      <CreatePlaylistModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onConfirm={handleCreatePlaylist}
+      />
+
+      <EditPlaylistModal
+        isOpen={!!editingPlaylist}
+        onClose={() => setEditingPlaylist(null)}
+        onConfirm={handleUpdatePlaylist}
+        onDelete={editingPlaylist ? () => deletePlaylist(editingPlaylist.id) : undefined}
+        playlist={editingPlaylist}
+      />
+    </>
+  );
+}

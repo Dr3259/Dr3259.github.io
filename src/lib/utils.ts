@@ -31,6 +31,8 @@ const PREDEFINED_TAG_COLORS: Record<string, string> = {
     '古典': '#4B0082',
     'Niche': '#708090',
     '小众': '#708090',
+    'Ancient': '#556B2F',
+    '古风': '#556B2F',
     // 情感/场景类
     'Study': '#3CB371',
     '学习': '#3CB371',

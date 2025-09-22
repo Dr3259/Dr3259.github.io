@@ -31,9 +31,14 @@ interface MusicContextType {
     handleFolderImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleDeleteTrack: (trackId: string, trackTitle: string) => Promise<void>;
     handleClearPlaylist: () => Promise<void>;
+    handleDeleteAllTracks: () => Promise<void>;
     handleSaveTrackMeta: (trackId: string, meta: { title: string, artist: string | undefined, category: string | null }) => void;
     cyclePlayMode: () => void;
     closePlayer: () => void;
+    
+    // 播放范围控制
+    setPlaybackScope: (scopeTracks: TrackMetadata[]) => void;
+    playbackScope: TrackMetadata[] | null;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -61,6 +66,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     const [importingTracks, setImportingTracks] = useState<string[]>([]);
     const [playMode, setPlayMode] = useState<PlayMode>('repeat');
     const [playHistory, setPlayHistory] = useState<number[]>([]);
+    const [playbackScope, setPlaybackScope] = useState<TrackMetadata[] | null>(null);
 
     const { toast } = useToast();
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -146,60 +152,72 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     }, [currentTrack, isPlaying, playTrack, tracks]);
 
     const handleNextTrack = useCallback(() => {
-        if (tracks.length === 0) return;
+        // 使用播放范围或全局tracks
+        const effectiveTracks = playbackScope || tracks;
+        if (effectiveTracks.length === 0) return;
 
-        if (playMode === 'shuffle') {
-            if (tracks.length <= 1) {
-                playTrack(0);
-                return;
+        if (playMode === 'repeat-one') {
+            // Repeat the current track
+            if (currentTrack) {
+                playTrack(currentTrackIndex);
             }
-
-            const currentArtist = currentTrack?.artist;
-            
-            // Create a list of potential next tracks (different artist, not the current song)
-            const potentialNextTracks = tracks.map((track, index) => ({ track, index }))
-                .filter(({ track, index }) => {
-                    // Always exclude the current track
-                    if (index === currentTrackIndex) return false;
-                    // If the current track has no artist, any other track is valid
-                    if (!currentArtist) return true;
-                    // Otherwise, the artists must be different
-                    return track.artist !== currentArtist;
-                });
-
-            let trackToPlayIndex: number;
-
-            if (potentialNextTracks.length > 0) {
-                // If we found tracks from other artists, pick one randomly
-                const randomIndex = Math.floor(Math.random() * potentialNextTracks.length);
-                trackToPlayIndex = potentialNextTracks[randomIndex].index;
-            } else {
-                // Fallback: If all other songs are from the same artist, or there's only one artist.
-                // Just pick a random song that is not the current one.
-                const fallbackTracks = tracks
-                    .map((track, index) => index)
-                    .filter(index => index !== currentTrackIndex);
-
-                if (fallbackTracks.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * fallbackTracks.length);
-                    trackToPlayIndex = fallbackTracks[randomIndex];
-                } else {
-                    // This should only happen if there's only one song total, handled at the start.
-                    trackToPlayIndex = currentTrackIndex; 
-                }
-            }
-
-            playTrack(trackToPlayIndex);
             return;
         }
 
-        // Default 'repeat' logic
-        const nextIndex = (currentTrackIndex + 1) % tracks.length;
-        playTrack(nextIndex);
-    }, [currentTrackIndex, tracks, playTrack, playMode, currentTrack]);
+        if (playMode === 'shuffle') {
+            if (effectiveTracks.length <= 1) {
+                // 如果播放范围内只有一首歌，重复播放
+                if (currentTrack) {
+                    playTrack(currentTrackIndex);
+                }
+                return;
+            }
+
+            // 在播放范围内随机选择下一首歌
+            const scopeTrackIds = effectiveTracks.map(t => t.id);
+            const availableIndices = tracks
+                .map((track, index) => ({ track, index }))
+                .filter(({ track, index }) => 
+                    scopeTrackIds.includes(track.id) && 
+                    index !== currentTrackIndex
+                )
+                .map(({ index }) => index);
+
+            if (availableIndices.length > 0) {
+                const randomIndex = Math.floor(Math.random() * availableIndices.length);
+                playTrack(availableIndices[randomIndex]);
+            } else {
+                // 如果没有其他可播放的歌曲，重复当前歌曲
+                playTrack(currentTrackIndex);
+            }
+            return;
+        }
+
+        // Default 'repeat' logic - 在播放范围内循环
+        const scopeTrackIds = effectiveTracks.map(t => t.id);
+        const scopeIndices = tracks
+            .map((track, index) => ({ track, index }))
+            .filter(({ track }) => scopeTrackIds.includes(track.id))
+            .map(({ index }) => index)
+            .sort((a, b) => a - b); // 保持原始顺序
+        
+        if (scopeIndices.length === 0) return;
+        
+        const currentScopeIndex = scopeIndices.indexOf(currentTrackIndex);
+        if (currentScopeIndex === -1) {
+            // 当前歌曲不在播放范围内，播放范围内的第一首
+            playTrack(scopeIndices[0]);
+        } else {
+            // 播放范围内的下一首
+            const nextScopeIndex = (currentScopeIndex + 1) % scopeIndices.length;
+            playTrack(scopeIndices[nextScopeIndex]);
+        }
+    }, [currentTrackIndex, tracks, playTrack, playMode, currentTrack, playbackScope]);
   
     const handlePrevTrack = useCallback(() => {
-        if (tracks.length === 0) return;
+        // 使用播放范围或全局tracks
+        const effectiveTracks = playbackScope || tracks;
+        if (effectiveTracks.length === 0) return;
 
         if (playMode === 'shuffle') {
             if (playHistory.length > 1) {
@@ -212,9 +230,26 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
-        const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
-        playTrack(prevIndex);
-    }, [currentTrackIndex, tracks, playTrack, playMode, playHistory]);
+        // 在播放范围内循环到上一首
+        const scopeTrackIds = effectiveTracks.map(t => t.id);
+        const scopeIndices = tracks
+            .map((track, index) => ({ track, index }))
+            .filter(({ track }) => scopeTrackIds.includes(track.id))
+            .map(({ index }) => index)
+            .sort((a, b) => a - b); // 保持原始顺序
+        
+        if (scopeIndices.length === 0) return;
+        
+        const currentScopeIndex = scopeIndices.indexOf(currentTrackIndex);
+        if (currentScopeIndex === -1) {
+            // 当前歌曲不在播放范围内，播放范围内的最后一首
+            playTrack(scopeIndices[scopeIndices.length - 1]);
+        } else {
+            // 播放范围内的上一首
+            const prevScopeIndex = (currentScopeIndex - 1 + scopeIndices.length) % scopeIndices.length;
+            playTrack(scopeIndices[prevScopeIndex]);
+        }
+    }, [currentTrackIndex, tracks, playTrack, playMode, playHistory, playbackScope]);
 
     const processFiles = async (files: FileList) => {
         setImportingTracks(['loading']); // Show a generic loading indicator
@@ -335,12 +370,29 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         setCurrentTrack(null);
         setCurrentTrackIndex(-1);
 
+        // 只清空播放列表状态，不删除实际的音乐文件
+        // 这样歌单中的音乐不会受影响
+        setTracks([]);
+        toast({ title: "播放列表已清空", duration: 2000 });
+    };
+
+    const handleDeleteAllTracks = async () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.src = "";
+        }
+        if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
+        setIsPlaying(false);
+        setCurrentTrack(null);
+        setCurrentTrackIndex(-1);
+
         try {
+            // 真正删除所有音乐文件
             await Promise.all(tracks.map(track => deleteTrack(track.id)));
             setTracks([]);
-            toast({ title: "Playlist cleared", duration: 2000 });
+            toast({ title: "所有音乐已删除", duration: 2000 });
         } catch (error) {
-            toast({ title: "Error clearing playlist", variant: "destructive" });
+            toast({ title: "删除音乐时出错", variant: "destructive" });
         }
     };
   
@@ -488,8 +540,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         tracks, currentTrack, currentTrackIndex, isPlaying, progress, volume, isMuted, playMode,
         isLoading, importingTracks, audioRef, playTrack, handlePlayPause, handleNextTrack,
         handlePrevTrack, handleProgressChange, handleVolumeAdjust, toggleMute, handleFileImport,
-        handleFolderImport, handleDeleteTrack, handleClearPlaylist, handleSaveTrackMeta,
-        cyclePlayMode, closePlayer,
+        handleFolderImport, handleDeleteTrack, handleClearPlaylist, handleDeleteAllTracks, handleSaveTrackMeta,
+        cyclePlayMode, closePlayer, setPlaybackScope, playbackScope,
     };
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
