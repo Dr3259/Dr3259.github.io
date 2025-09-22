@@ -1,3 +1,4 @@
+
 import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 
@@ -58,6 +59,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'www.google.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
         port: '',
         pathname: '/**',
       },
