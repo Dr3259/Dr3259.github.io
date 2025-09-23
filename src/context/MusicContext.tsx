@@ -31,7 +31,6 @@ interface MusicContextType {
     handleFileImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleFolderImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleDeleteTrack: (trackId: string, trackTitle: string) => Promise<void>;
-    handleClearPlaylist: () => Promise<void>;
     handleDeleteAllTracks: () => Promise<void>;
     handleSaveTrackMeta: (trackId: string, meta: { title: string, artist: string | undefined, category: string | null }) => void;
     cyclePlayMode: () => void;
@@ -258,7 +257,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         const processFile = (file: File, order: number): Promise<TrackWithContent | null> => {
             return new Promise(async (resolve) => {
                 const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
-                if (!supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
+                if (!file || !supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
                     resolve(null);
                     return;
                 }
@@ -361,21 +360,10 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             }
         }
     };
-
+    
     const handleClearPlaylist = async () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.src = "";
-        }
-        if (currentObjectUrl.current) URL.revokeObjectURL(currentObjectUrl.current);
-        setIsPlaying(false);
-        setCurrentTrack(null);
-        setCurrentTrackIndex(-1);
-
-        // 只清空播放列表状态，不删除实际的音乐文件
-        // 这样歌单中的音乐不会受影响
-        setTracks([]);
-        toast({ title: "播放列表已清空", duration: 2000 });
+        // This function is being removed per user request.
+        // It's functionality is confusing next to handleDeleteAllTracks.
     };
 
     const handleDeleteAllTracks = async () => {

@@ -48,15 +48,11 @@ const translations = {
     importLimitTitle: '导入提示',
     importLimitDescription: '为确保浏览器稳定运行，建议单次导入的歌曲数量不要超过 50 首。',
     importLimitConfirm: '我明白了',
-    clearPlaylist: '清空播放列表',
     deleteAllTracks: '删除所有音乐和歌单',
-    clearPlaylistConfirmationTitle: '确认清空播放列表',
-    clearPlaylistConfirmationDescription: '此操作将清空当前播放列表，但不会删除音乐文件。歌单中的音乐不会受影响。',
     deleteAllTracksConfirmationTitle: '确认删除所有音乐和歌单',
     deleteAllTracksConfirmationDescription: '⚠️ 危险操作：此操作将永久删除您的所有本地音乐文件，同时清空所有自定义歌单（包括歌单名称、描述等信息），且无法恢复。只会保留默认的"所有音乐"歌单。您确定要继续吗？',
     confirmClear: '确认',
     cancelClear: '取消',
-    playlistCleared: '播放列表已清空',
     playlistTitle: '播放列表',
     totalTracks: (count: number) => `(${count} 首)`,
     nowPlaying: '正在播放',
@@ -123,7 +119,6 @@ const VolumeIcon = ({ volume, isMuted }: { volume: number; isMuted: boolean }) =
 export default function IntegratedMusicPlayerPage() {
   const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
-  const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -151,7 +146,6 @@ export default function IntegratedMusicPlayerPage() {
     handleFileImport,
     handleFolderImport,
     handleDeleteTrack,
-    handleClearPlaylist,
     handleDeleteAllTracks,
     handleSaveTrackMeta,
     cyclePlayMode,
@@ -351,10 +345,6 @@ export default function IntegratedMusicPlayerPage() {
                   {tracks.length > 0 && (
                     <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setIsClearAlertOpen(true)}>
-                           <Trash className="mr-2 h-4 w-4" />
-                           <span>{t.clearPlaylist}</span>
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setIsDeleteAllAlertOpen(true)} className="text-destructive focus:text-destructive">
                            <Trash2 className="mr-2 h-4 w-4" />
                            <span>{t.deleteAllTracks}</span>
@@ -500,26 +490,6 @@ export default function IntegratedMusicPlayerPage() {
         </main>
       </div>
       </TooltipProvider>
-      
-      <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>{t.clearPlaylistConfirmationTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-                {t.clearPlaylistConfirmationDescription}
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel>{t.cancelClear}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-                handleClearPlaylist();
-                setIsClearAlertOpen(false);
-            }}>
-                {t.confirmClear}
-            </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
         <AlertDialogContent>
