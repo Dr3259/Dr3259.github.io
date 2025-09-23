@@ -1,4 +1,3 @@
-
 // 歌单功能扩展 - 作为现有MusicContext的补充
 "use client";
 
@@ -70,7 +69,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { toast } = useToast();
   
   // 获取原有的音乐功能，但不修改它们
-  const { tracks, playTrack, setPlaybackScope, currentTrack, isPlaying } = useMusic();
+  const { tracks, playTrack, setPlaybackScope, currentTrack, isPlaying, audioRef, closePlayer } = useMusic();
   
   // 数据库实例 - 使用useMemo确保只创建一次
   const playlistDB = useMemo(() => new PlaylistDB(), []);
@@ -323,11 +322,9 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const playlist = playlists.find(p => p.id === playlistId);
     if (!playlist) return;
 
-    // 智能切换逻辑：如果是切换到"所有音乐"，并且当前有歌曲在播放，则保持当前歌曲继续播放
     if (playlist.id === 'all-music' && currentTrack && isPlaying) {
       setCurrentPlaylist(playlist);
-      setPlaybackScope(tracks); // 将播放范围扩大到所有音乐
-      // 不改变当前播放的歌曲
+      setPlaybackScope(tracks); 
       return;
     }
 
@@ -362,8 +359,12 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } else {
         toast({ title: '歌单为空', variant: 'destructive' });
         setPlaybackScope([]);
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
+        closePlayer(); // Call closePlayer from useMusic to reset state
     }
-  }, [playlists, tracks, playTrack, toast, setPlaybackScope, currentTrack, isPlaying]);
+  }, [playlists, tracks, playTrack, toast, setPlaybackScope, currentTrack, isPlaying, audioRef, closePlayer]);
   
   // 切换歌单侧边栏显示
   const togglePlaylistSidebar = useCallback(() => {
