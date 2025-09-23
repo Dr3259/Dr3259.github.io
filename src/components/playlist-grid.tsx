@@ -51,33 +51,36 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
       <ScrollArea className="flex-1 w-full">
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pt-1 pb-4 pl-2">
           {/* 现有歌单卡片 */}
-          {playlists.map((playlist) => (
-            <PlaylistCard
-              key={playlist.id}
-              playlist={playlist}
-              isActive={currentPlaylist?.id === playlist.id}
-              isPlaying={currentPlaylist?.id === playlist.id && isPlaying}
-              onPlay={() => onPlayPlaylist(playlist.id)}
-              onSelect={() => onSelectPlaylist(playlist.id)}
-              onEdit={
-                playlist.type === 'virtual' && playlist.id !== 'all-music'
-                  ? () => onEditPlaylist(playlist.id)
-                  : undefined
-              }
-              onDownload={
-                playlist.type === 'virtual' || playlist.type === 'all'
-                  ? () => onDownloadPlaylist(playlist.id)
-                  : undefined
-              }
-              onRefresh={
-                playlist.type === 'folder' 
-                  ? () => onRefreshFolderPlaylist(playlist.id)
-                  : undefined
-              }
-              onDelete={playlist.id !== 'all-music' ? () => onDeletePlaylist(playlist.id) : undefined}
-              onTrackDrop={(trackId) => onTrackDrop(trackId, playlist.id)}
-            />
-          ))}
+          {playlists.map((playlist) => {
+            const isActive = currentPlaylist?.id === playlist.id;
+            return (
+                <PlaylistCard
+                  key={playlist.id}
+                  playlist={playlist}
+                  isActive={isActive}
+                  isPlaying={isActive && isPlaying}
+                  onPlay={() => onPlayPlaylist(playlist.id)}
+                  onSelect={() => onSelectPlaylist(playlist.id)}
+                  onEdit={
+                    playlist.type === 'virtual' && playlist.id !== 'all-music'
+                      ? () => onEditPlaylist(playlist.id)
+                      : undefined
+                  }
+                  onDownload={
+                    playlist.type === 'virtual' || playlist.type === 'all'
+                      ? () => onDownloadPlaylist(playlist.id)
+                      : undefined
+                  }
+                  onRefresh={
+                    playlist.type === 'folder' 
+                      ? () => onRefreshFolderPlaylist(playlist.id)
+                      : undefined
+                  }
+                  onDelete={playlist.id !== 'all-music' ? () => onDeletePlaylist(playlist.id) : undefined}
+                  onTrackDrop={(trackId) => onTrackDrop(trackId, playlist.id)}
+                />
+            )
+          })}
           
           {/* 加载状态 */}
           {isLoadingPlaylists && (
