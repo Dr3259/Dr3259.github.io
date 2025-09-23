@@ -1,4 +1,3 @@
-
 // 歌单卡片组件 - 现代化设计
 "use client";
 
@@ -133,11 +132,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   const imageData = getImageData();
   
   const handleCardClick = () => {
-    if (isActive) {
-        onPlay?.();
-    } else {
-        onSelect?.();
-    }
+      onPlay?.();
   };
 
   return (
@@ -158,7 +153,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         alt={playlist.name}
         fill
         className={cn(
-            "object-cover transition-all duration-500 ease-in-out",
+            "object-cover transition-all duration-500 ease-in-out opacity-75", // Added opacity
             "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50",
             isActive && "scale-110 blur-sm brightness-50"
         )}
@@ -206,20 +201,12 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
           </div>
         </div>
 
-        {/* Bottom section with play button and track count */}
+        {/* Bottom section with track count */}
         <div className="flex items-end justify-between">
            <div className="flex items-center space-x-1">
               <Music className="h-3 w-3 opacity-80" />
               <span className="text-xs font-medium opacity-80">{playlist.trackCount}</span>
             </div>
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="h-10 w-10 rounded-full bg-white/90 text-black hover:bg-white" 
-            onClick={(e) => { e.stopPropagation(); onPlay?.(); }}
-          >
-            {isActive && isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-          </Button>
         </div>
       </div>
       
