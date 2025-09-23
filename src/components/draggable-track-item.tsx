@@ -100,6 +100,8 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
     }, 0);
   };
   
+  const displayTitle = track.title.length > 30 ? `${track.title.substring(0, 30)}...` : track.title;
+
   return (
     <TooltipProvider>
       <div
@@ -111,7 +113,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         draggable={true}
         onDragStart={handleDragStart}
       >
-        <div className="flex items-center self-stretch mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+        <div className="flex items-center self-stretch mr-2 cursor-grab active:cursor-grabbing">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
 
@@ -127,7 +129,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
               <div className="flex-1 min-w-0 flex items-center gap-1.5">
                 <SmartTooltip content={track.title}>
                   <p className="font-medium text-sm truncate">
-                    {track.title}
+                    {displayTitle}
                   </p>
                 </SmartTooltip>
                  {/* 操作按钮 - 移动到这里 */}
