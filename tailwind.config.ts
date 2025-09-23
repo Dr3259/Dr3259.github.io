@@ -114,6 +114,12 @@ export default {
             transform: 'rotate(360deg)',
           },
         },
+        'bar-wave': {
+          '0%, 100%': { transform: 'scaleY(0.3)' },
+          '25%': { transform: 'scaleY(1.0)' },
+          '50%': { transform: 'scaleY(0.5)' },
+          '75%': { transform: 'scaleY(0.8)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -121,6 +127,9 @@ export default {
         'gentle-float': 'gentle-float 8s ease-in-out infinite',
         'energetic-pulse': 'energetic-pulse 3s ease-in-out infinite',
         'slow-spin': 'slow-spin 20s linear infinite',
+        'bar1': 'bar-wave 1.2s infinite ease-in-out',
+        'bar2': 'bar-wave 1.2s 0.2s infinite ease-in-out',
+        'bar3': 'bar-wave 1.2s 0.4s infinite ease-in-out',
       },
     },
   },

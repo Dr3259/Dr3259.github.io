@@ -13,9 +13,7 @@ import {
   Trash2,
   ListMusic,
   FileEdit,
-  Download,
-  Play,
-  Pause
+  Download
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -74,6 +72,8 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   onTrackDrop,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
   
   const handleDragOver = (e: React.DragEvent) => {
     if (!playlist || isCreateCard || playlist.type === 'all') return;
@@ -147,6 +147,8 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Image
         src={`https://picsum.photos/seed/${imageData.seed}/300/300`}
@@ -154,15 +156,29 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         fill
         className={cn(
             "object-cover transition-all duration-500 ease-in-out",
-            (isActive || isDragOver) ? "scale-110 blur-sm brightness-50" : "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50"
+            (isActive || isHovered || isDragOver) ? "scale-110 blur-sm brightness-50" : ""
         )}
         data-ai-hint={imageData.hint}
       />
+      
+      {/* 律动效果 */}
+       {isActive && isPlaying && !isHovered && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex items-end justify-center h-8 w-8 gap-1">
+            <div className="w-1 h-4 bg-primary/80 rounded-full animate-bar1"></div>
+            <div className="w-1 h-8 bg-primary/80 rounded-full animate-bar2"></div>
+            <div className="w-1 h-6 bg-primary/80 rounded-full animate-bar3"></div>
+            <div className="w-1 h-5 bg-primary/80 rounded-full animate-bar2"></div>
+          </div>
+        </div>
+      )}
+
 
       <div 
         className={cn(
             "absolute inset-0 flex flex-col justify-between p-3 bg-black/20 text-white",
-            "opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            isHovered ? "opacity-100" : "opacity-0",
+            "transition-opacity duration-300"
         )}
       >
         {/* Top section with title and menu */}
