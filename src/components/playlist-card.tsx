@@ -1,3 +1,4 @@
+
 // 歌单卡片组件 - 现代化设计
 "use client";
 
@@ -100,7 +101,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   if (isCreateCard) {
     return (
       <div 
-        className="relative group cursor-pointer aspect-square rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg"
+        className="relative group cursor-pointer aspect-square overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg"
         onClick={onCreate}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-muted/10 border border-dashed border-muted-foreground/30 flex flex-col items-center justify-center p-3 transition-all duration-300 group-hover:bg-muted/30 group-hover:border-primary/50">
@@ -121,7 +122,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   const isAllMusic = playlist.type === 'all';
   
   const getImageData = () => {
-    if (isVirtual) {
+    if (isVirtual && playlist.id) {
         const hash = simpleHash(playlist.id);
         return { seed: hash % 1000, hint: 'abstract texture' }; // Use hash for seed
     }
@@ -142,7 +143,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   return (
     <div
       className={cn(
-        "relative aspect-square rounded-xl overflow-hidden cursor-pointer group shadow-md",
+        "relative aspect-square overflow-hidden cursor-pointer group shadow-md",
         "transition-all duration-300 ease-in-out",
         isActive && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         isDragOver && "ring-4 ring-primary/70",
@@ -223,7 +224,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
       </div>
       
        {isDragOver && (
-        <div className="absolute inset-0 bg-primary/30 border-2 border-primary border-dashed rounded-xl flex items-center justify-center backdrop-blur-sm pointer-events-none">
+        <div className="absolute inset-0 bg-primary/30 border-2 border-primary border-dashed flex items-center justify-center backdrop-blur-sm pointer-events-none">
           <div className="text-white font-medium text-sm flex items-center space-x-1">
             <Plus className="h-4 w-4" />
             <span>添加</span>
