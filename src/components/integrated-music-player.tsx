@@ -19,7 +19,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -470,8 +469,8 @@ export default function IntegratedMusicPlayerPage() {
             </ScrollArea>
           </div>
           
-          <div className="w-full md:w-3/4 flex flex-col justify-between p-6 bg-transparent z-[2]">
-              <div className="flex-1 mb-6">
+          <div className="w-full md:w-3/4 flex flex-col p-6 bg-transparent z-[2] min-h-0">
+              <div className="flex-1 mb-6 overflow-y-auto">
                 <PlaylistGrid
                   playlists={playlists}
                   currentPlaylist={currentPlaylist}
@@ -552,7 +551,7 @@ export default function IntegratedMusicPlayerPage() {
       </TooltipProvider>
 
       <input type="file" accept="audio/flac,audio/mp3,audio/wav,audio/ogg" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
-      <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...{webkitdirectory: "", directory: ""}} />
+      <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...({webkitdirectory: "", directory: ""} as any)} />
 
       <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
         <AlertDialogContent>
