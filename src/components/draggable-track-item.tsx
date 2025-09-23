@@ -136,35 +136,37 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                   </p>
                 </SmartTooltip>
                  {/* 操作按钮 - 移动到这里 */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <MoreVertical className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={onEdit}>
-                            <FileEdit className="mr-2 h-4 w-4" />
-                            <span>编辑信息</span>
-                        </DropdownMenuItem>
-                        {isInVirtualPlaylist && onRemoveFromPlaylist ? (
-                            <DropdownMenuItem onClick={onRemoveFromPlaylist} className="text-orange-600 focus:text-orange-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>从歌单中移除</span>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={onEdit}>
+                                <FileEdit className="mr-2 h-4 w-4" />
+                                <span>编辑信息</span>
                             </DropdownMenuItem>
-                        ) : onDelete && (
-                            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>删除歌曲</span>
-                            </DropdownMenuItem>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            {isInVirtualPlaylist && onRemoveFromPlaylist ? (
+                                <DropdownMenuItem onClick={onRemoveFromPlaylist} className="text-orange-600 focus:text-orange-600">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>从歌单中移除</span>
+                                </DropdownMenuItem>
+                            ) : onDelete && (
+                                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>删除歌曲</span>
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
               </div>
             </div>
             <SmartTooltip content={track.artist || '未知艺术家'}>
