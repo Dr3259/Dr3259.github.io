@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
@@ -254,7 +255,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     const processFiles = async (files: FileList) => {
         setImportingTracks(['loading']); // Show a generic loading indicator
         
-        const processFile = (file: File): Promise<TrackWithContent | null> => {
+        const processFile = (file: File, order: number): Promise<TrackWithContent | null> => {
             return new Promise(async (resolve) => {
                 const supportedTypes = ['audio/flac', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
                 if (!supportedTypes.some(type => file.type.startsWith(type.split('/')[0]))) {
@@ -291,7 +292,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                     const trackId = `track-${Date.now()}-${Math.random()}`;
                     
                     resolve({
-                        id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null, createdAt: new Date()
+                        id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null, createdAt: new Date(), order
                     });
 
                 } catch (error) {
@@ -301,14 +302,15 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             });
         };
 
-        const newTracksPromises = Array.from(files).map(processFile);
+        const currentTrackCount = tracks.length;
+        const newTracksPromises = Array.from(files).map((file, index) => processFile(file, currentTrackCount + index));
         const newTracks = (await Promise.all(newTracksPromises)).filter((track): track is TrackWithContent => track !== null);
 
         if (newTracks.length > 0) {
             for (const track of newTracks) {
                 await saveTrack(track);
             }
-            const newMetadata = newTracks.map(({ id, title, artist, type, duration, category, createdAt }) => ({ id, title, artist, type, duration, category, createdAt }));
+            const newMetadata = newTracks.map(({ id, title, artist, type, duration, category, createdAt, order }) => ({ id, title, artist, type, duration, category, createdAt, order }));
             setTracks(prev => [...prev, ...newMetadata]);
             toast({ title: `Successfully imported ${newTracks.length} new track(s).`, duration: 3000 });
         }
@@ -426,7 +428,16 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         const updatedTrack: TrackWithContent = { ...trackToUpdate, ...meta };
         await saveTrack(updatedTrack);
         
-        const updatedMetadata: TrackMetadata = { id: updatedTrack.id, title: updatedTrack.title, artist: updatedTrack.artist, type: updatedTrack.type, duration: updatedTrack.duration, category: updatedTrack.category, createdAt: updatedTrack.createdAt };
+        const updatedMetadata: TrackMetadata = { 
+            id: updatedTrack.id, 
+            title: updatedTrack.title, 
+            artist: updatedTrack.artist, 
+            type: updatedTrack.type, 
+            duration: updatedTrack.duration, 
+            category: updatedTrack.category, 
+            createdAt: updatedTrack.createdAt,
+            order: updatedTrack.order 
+        };
         setTracks(prev => prev.map(t => (t.id === trackId ? updatedMetadata : t)));
         
         if (currentTrack?.id === trackId) setCurrentTrack(updatedMetadata);
@@ -546,5 +557,3 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;
 };
-
-    

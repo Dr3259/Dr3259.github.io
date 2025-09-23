@@ -31,6 +31,7 @@ export interface TrackMetadata {
     type: string; // e.g., 'audio/flac'
     category?: string | null;
     createdAt?: Date;
+    order?: number; // Explicit order for tracks
 }
 
 export interface TrackWithContent extends TrackMetadata {
@@ -197,10 +198,16 @@ export async function getTracksMetadata(): Promise<TrackMetadata[]> {
 
         request.onsuccess = () => {
             const allTracks: TrackWithContent[] = request.result;
-            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category, createdAt }) => ({ id, title, type, artist, album, duration, category, createdAt }));
+            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category, createdAt, order }) => ({ id, title, type, artist, album, duration, category, createdAt, order }));
             
-            // Sort by creation date to ensure consistent order
+            // Sort by the new 'order' field, with a fallback to createdAt for older data
             metadata.sort((a, b) => {
+              if (a.order !== undefined && b.order !== undefined) {
+                  return a.order - b.order;
+              }
+              if (a.order !== undefined) return -1;
+              if (b.order !== undefined) return 1;
+
               const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
               const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
               return dateA - dateB;
