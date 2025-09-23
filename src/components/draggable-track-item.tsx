@@ -12,6 +12,7 @@ import type { TrackMetadata } from '@/lib/db';
 
 interface DraggableTrackItemProps {
   track: TrackMetadata;
+  index: number; // 新增：歌曲的序号
   isCurrentTrack: boolean;
   isInVirtualPlaylist?: boolean; // 是否在虚拟歌单中
   onPlay: () => void;
@@ -60,6 +61,7 @@ const SmartTooltip: React.FC<{
 
 export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
   track,
+  index, // 新增：歌曲的序号
   isCurrentTrack,
   isInVirtualPlaylist = false,
   onPlay,
@@ -113,6 +115,11 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
       <div className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
+
+      {/* 歌曲序号 */}
+      <div className="mr-3 text-sm font-mono text-muted-foreground w-6 text-center shrink-0">
+        {index + 1}
+      </div>
       
       {/* 歌曲信息 */}
       <div className="flex-1 min-w-0">
@@ -132,8 +139,6 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
           <p className="text-xs text-muted-foreground">
             {formatDuration(track.duration)}
           </p>
-          
-          {/* 来源标识已移除 - 播放列表中的歌曲都已经是导入的 */}
           
           {/* 分类标签 */}
           {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
