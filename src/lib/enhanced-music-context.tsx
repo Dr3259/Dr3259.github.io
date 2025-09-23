@@ -126,6 +126,12 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // 创建虚拟歌单
   const createVirtualPlaylist = useCallback(async (name: string, description?: string) => {
+    // 检查是否存在同名歌单
+    if (playlists.some(p => p.name === name.trim())) {
+      toast({ title: `歌单 "${name.trim()}" 已存在`, variant: 'destructive' });
+      return;
+    }
+    
     try {
       const newPlaylist = await playlistDB.createVirtualPlaylist(name, description);
       setPlaylists(prev => [...prev, newPlaylist]);
@@ -134,7 +140,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Failed to create playlist:', error);
       toast({ title: '创建歌单失败', variant: 'destructive' });
     }
-  }, [toast, playlistDB]);
+  }, [toast, playlistDB, playlists]);
 
   // 编辑虚拟歌单
   const editVirtualPlaylist = useCallback(async (id: string, updates: { name: string; description?: string }) => {
