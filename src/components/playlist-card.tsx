@@ -43,7 +43,7 @@ interface PlaylistCardProps {
   onDelete?: () => void;
   onCreate?: () => void;
   onImportFolder?: () => void;
-  onDrop?: (trackId: string) => void;
+  onTrackDrop?: (trackId: string) => void;
 }
 
 // Simple hash function to generate a number from a string
@@ -71,7 +71,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   onDelete,
   onCreate,
   onImportFolder,
-  onDrop,
+  onTrackDrop,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   
@@ -92,8 +92,8 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
     if (!playlist || isCreateCard || playlist.type === 'all') return;
     
     const trackId = e.dataTransfer.getData('text/track-id');
-    if (trackId && onDrop) {
-      onDrop(trackId);
+    if (trackId && onTrackDrop) {
+      onTrackDrop(trackId);
     }
   };
 
@@ -153,7 +153,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         alt={playlist.name}
         fill
         className={cn(
-            "object-cover transition-all duration-500 ease-in-out opacity-75", // Added opacity
+            "object-cover transition-all duration-500 ease-in-out",
             "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50",
             isActive && "scale-110 blur-sm brightness-50"
         )}
