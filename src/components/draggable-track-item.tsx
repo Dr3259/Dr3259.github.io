@@ -1,3 +1,4 @@
+
 // 支持拖拽的歌曲项组件
 "use client";
 
@@ -39,8 +40,12 @@ const SmartTooltip: React.FC<{
     };
 
     checkOverflow();
-    window.addEventListener('resize', checkOverflow);
-    return () => window.removeEventListener('resize', checkOverflow);
+    const currentRef = textRef.current;
+    if (currentRef) {
+        const resizeObserver = new ResizeObserver(checkOverflow);
+        resizeObserver.observe(currentRef);
+        return () => resizeObserver.unobserve(currentRef);
+    }
   }, [content]);
 
   if (!isOverflowing) {
@@ -106,12 +111,16 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         draggable={true}
         onDragStart={handleDragStart}
       >
-        <div className="flex items-center flex-1 min-w-0">
-            {/* 拖拽手柄 */}
-            <div className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center mr-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
+          </TooltipTrigger>
+          <TooltipContent><p>拖动排序</p></TooltipContent>
+        </Tooltip>
 
+        <div className="flex items-center flex-1 min-w-0">
             {/* 歌曲序号 */}
             <div className="text-sm font-mono text-muted-foreground w-6 text-center shrink-0">
                 {index + 1}
