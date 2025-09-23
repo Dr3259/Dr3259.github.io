@@ -154,7 +154,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         fill
         className={cn(
             "object-cover transition-all duration-500 ease-in-out",
-            isActive ? "scale-110 blur-sm brightness-50" : "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50"
+            (isActive || isDragOver) ? "scale-110 blur-sm brightness-50" : "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50"
         )}
         data-ai-hint={imageData.hint}
       />
@@ -162,8 +162,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
       <div 
         className={cn(
             "absolute inset-0 flex flex-col justify-between p-3 bg-black/20 text-white",
-            "opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-            isActive && "opacity-100"
+            "opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         )}
       >
         {/* Top section with title and menu */}
