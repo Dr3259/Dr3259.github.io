@@ -70,7 +70,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { toast } = useToast();
   
   // 获取原有的音乐功能，但不修改它们
-  const { tracks, playTrack, setPlaybackScope, currentTrack } = useMusic();
+  const { tracks, playTrack, setPlaybackScope, currentTrack, isPlaying } = useMusic();
   
   // 数据库实例 - 使用useMemo确保只创建一次
   const playlistDB = useMemo(() => new PlaylistDB(), []);
@@ -322,7 +322,15 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const playPlaylist = useCallback(async (playlistId: string) => {
     const playlist = playlists.find(p => p.id === playlistId);
     if (!playlist) return;
-    
+
+    // 智能切换逻辑：如果是切换到"所有音乐"，并且当前有歌曲在播放，则保持当前歌曲继续播放
+    if (playlist.id === 'all-music' && currentTrack && isPlaying) {
+      setCurrentPlaylist(playlist);
+      setPlaybackScope(tracks); // 将播放范围扩大到所有音乐
+      // 不改变当前播放的歌曲
+      return;
+    }
+
     setCurrentPlaylist(playlist);
     
     let tracksToPlay: TrackMetadata[] = [];
@@ -333,8 +341,6 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .map(ref => tracks.find(t => t.id === ref.trackId))
             .filter((t): t is TrackMetadata => !!t);
     } else if (playlist.type === 'folder') {
-        // Folder logic will need to actually get the tracks for the folder
-        // For now, we assume this is handled elsewhere or is not fully implemented for playback
         toast({ title: '文件夹歌单播放尚未实现', variant: 'destructive' });
         return;
     }
@@ -345,7 +351,6 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         let trackToPlayIndex = tracks.findIndex(t => t.id === lastPlayedId);
 
         if (trackToPlayIndex === -1 || !tracksToPlay.some(t => t.id === lastPlayedId)) {
-            // If no history or history is invalid, play the first song in scope
             const firstTrackId = tracksToPlay[0].id;
             trackToPlayIndex = tracks.findIndex(t => t.id === firstTrackId);
         }
@@ -358,7 +363,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         toast({ title: '歌单为空', variant: 'destructive' });
         setPlaybackScope([]);
     }
-  }, [playlists, tracks, playTrack, toast, setPlaybackScope]);
+  }, [playlists, tracks, playTrack, toast, setPlaybackScope, currentTrack, isPlaying]);
   
   // 切换歌单侧边栏显示
   const togglePlaylistSidebar = useCallback(() => {
@@ -370,7 +375,6 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const playlist = playlists.find(p => p.id === playlistId);
     if (playlist) {
       setCurrentPlaylist(playlist);
-      // 当只是选择歌单时，更新播放范围，但不自动播放
       let tracksToShow: TrackMetadata[] = [];
       if (playlist.type === 'all') {
           tracksToShow = tracks;
