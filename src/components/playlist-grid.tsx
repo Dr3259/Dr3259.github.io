@@ -35,8 +35,8 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
   onTrackDrop,
 }) => {
   return (
-    <div className="w-full">
-      <div className="flex items-center mb-4">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex items-center mb-4 shrink-0">
         <h2 className="flex items-center text-lg font-semibold leading-none">
           <ListMusic className="h-5 w-5 mr-2 shrink-0" />
           <span>
@@ -48,8 +48,8 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
         </h2>
       </div>
       
-      <ScrollArea className="w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-1 pb-4">
+      <ScrollArea className="flex-1 w-full -mx-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-1 pb-4">
           {/* 现有歌单卡片 */}
           {playlists.map((playlist) => (
             <PlaylistCard
