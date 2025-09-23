@@ -272,7 +272,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 if (tracks.some(track => track.title === title && track.artist === artist)) {
-                    toast({ title: `Track "${fileName}" already exists. Skipped.`, variant: 'default', duration: 3000 });
+                    toast({ title: `歌曲 "${fileName}" 已存在，已跳过。`, variant: 'default', duration: 3000 });
                     resolve(null);
                     return;
                 }
@@ -284,7 +284,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
                     const duration = await new Promise<number>((res, rej) => {
                         tempAudioForDuration.onloadedmetadata = () => res(tempAudioForDuration.duration);
-                        tempAudioForDuration.onerror = () => rej(new Error("Failed to load audio metadata."));
+                        tempAudioForDuration.onerror = () => rej(new Error("无法加载音频元数据。"));
                     }).finally(() => URL.revokeObjectURL(tempUrl));
 
                     const arrayBuffer = await file.arrayBuffer();
@@ -296,7 +296,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                     });
 
                 } catch (error) {
-                    toast({ title: `Error importing ${fileName}`, variant: 'destructive' });
+                    toast({ title: `导入 ${fileName} 时出错`, variant: 'destructive' });
                     resolve(null);
                 }
             });
@@ -311,8 +311,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                 await saveTrack(track);
             }
             const newMetadata = newTracks.map(({ id, title, artist, type, duration, category, createdAt, order }) => ({ id, title, artist, type, duration, category, createdAt, order }));
-            setTracks(prev => [...prev, ...newMetadata]);
-            toast({ title: `Successfully imported ${newTracks.length} new track(s).`, duration: 3000 });
+            setTracks(prev => [...prev, ...newMetadata].sort((a,b) => (a.order ?? 0) - (b.order ?? 0)));
+            toast({ title: `成功导入 ${newTracks.length} 首新歌曲。`, duration: 3000 });
         }
         
         setImportingTracks([]); // Clear loading indicator
@@ -333,7 +333,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const handleDeleteTrack = async (trackId: string, trackTitle: string) => {
-        if (window.confirm(`Are you sure you want to delete "${trackTitle}"?`)) {
+        if (window.confirm(`您确定要删除《${trackTitle}》吗？`)) {
             try {
                 await deleteTrack(trackId);
                 const newTracks = tracks.filter(t => t.id !== trackId);
@@ -355,7 +355,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                     const newCurrentIndex = newTracks.findIndex(t => t.id === currentTrack?.id);
                     setCurrentTrackIndex(newCurrentIndex);
                 }
-                toast({ title: "Track deleted" });
+                toast({ title: "歌曲已删除" });
             } catch (error) {
                 // Silently fail in production
             }
