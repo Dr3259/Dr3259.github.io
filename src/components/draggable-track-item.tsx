@@ -111,14 +111,9 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         draggable={true}
         onDragStart={handleDragStart}
       >
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <div className="flex items-center self-stretch mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                </div>
-            </TooltipTrigger>
-            <TooltipContent><p>拖动排序</p></TooltipContent>
-        </Tooltip>
+        <div className="flex items-center self-stretch mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
 
         <div className="flex items-start flex-1 min-w-0">
           {/* 歌曲序号 */}
