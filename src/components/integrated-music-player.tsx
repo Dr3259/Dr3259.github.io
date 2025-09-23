@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, Volume1, Volume, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -40,7 +40,7 @@ import type { VirtualPlaylist } from '@/lib/playlist-types';
 
 const translations = {
   'zh-CN': {
-    pageTitle: '私人音乐播放器',
+    pageTitle: 'Self音乐播放',
     backButton: '返回',
     createPlaylist: '创建歌单',
     importMusic: '导入音乐',
@@ -92,7 +92,7 @@ const translations = {
     mute: '静音'
   },
    'en': {
-    pageTitle: 'Private Music Player',
+    pageTitle: 'Self Music Player',
     backButton: 'Back',
     createPlaylist: 'Create Playlist',
     importMusic: 'Import Music',
@@ -202,6 +202,7 @@ export default function IntegratedMusicPlayerPage() {
     handleDeleteAllTracks,
     handleSaveTrackMeta,
     cyclePlayMode,
+    closePlayer,
     setPlaybackScope,
   } = useMusic();
 
@@ -215,7 +216,7 @@ export default function IntegratedMusicPlayerPage() {
     playPlaylist,
     selectPlaylist,
     refreshFolderPlaylist,
-    deleteFolderPlaylist: deletePlaylist,
+    deletePlaylist,
     clearAllPlaylists,
     handleTrackDrop,
   } = usePlaylist();
