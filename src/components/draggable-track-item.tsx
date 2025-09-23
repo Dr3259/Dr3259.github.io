@@ -5,7 +5,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileEdit, Trash2, GripVertical } from 'lucide-react';
+import { FileEdit, Trash2, GripVertical, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
 import type { TrackMetadata } from '@/lib/db';
@@ -164,46 +165,36 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         </div>
       
       {/* 操作按钮 */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-        >
-          <FileEdit className="h-4 w-4" />
-        </Button>
-        
-        {isInVirtualPlaylist && onRemoveFromPlaylist ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-orange-500"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemoveFromPlaylist();
-            }}
-            title="从歌单中移除"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        ) : onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            title="删除歌曲"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
+      <div className="flex items-center ml-2">
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={onEdit}>
+                    <FileEdit className="mr-2 h-4 w-4" />
+                    <span>编辑信息</span>
+                </DropdownMenuItem>
+                {isInVirtualPlaylist && onRemoveFromPlaylist ? (
+                    <DropdownMenuItem onClick={onRemoveFromPlaylist} className="text-orange-600 focus:text-orange-600">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>从歌单中移除</span>
+                    </DropdownMenuItem>
+                ) : onDelete && (
+                    <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>删除歌曲</span>
+                    </DropdownMenuItem>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
     </TooltipProvider>
