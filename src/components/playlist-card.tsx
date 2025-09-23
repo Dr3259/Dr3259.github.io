@@ -46,6 +46,18 @@ interface PlaylistCardProps {
   onDrop?: (trackId: string) => void;
 }
 
+// Simple hash function to generate a number from a string
+const simpleHash = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+};
+
+
 export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   playlist,
   isCreateCard = false,
@@ -107,8 +119,17 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
 
   const isVirtual = playlist.type === 'virtual';
   const isAllMusic = playlist.type === 'all';
-  const imageDataKey = isVirtual ? 'virtualPlaylist' : isAllMusic ? 'allMusicPlaylist' : 'folderPlaylist';
-  const imageData = (placeholderImageData as any)[imageDataKey] || { seed: 100, hint: 'music abstract' };
+  
+  const getImageData = () => {
+    if (isVirtual) {
+        const hash = simpleHash(playlist.id);
+        return { seed: hash % 1000, hint: 'abstract texture' }; // Use hash for seed
+    }
+    const imageDataKey = isAllMusic ? 'allMusicPlaylist' : 'folderPlaylist';
+    return (placeholderImageData as any)[imageDataKey] || { seed: 100, hint: 'music abstract' };
+  };
+
+  const imageData = getImageData();
   
   const handleCardClick = () => {
     if (isActive) {
