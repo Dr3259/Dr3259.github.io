@@ -301,8 +301,8 @@ export default function IntegratedMusicPlayerPage() {
           <h1 className="text-xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
           <div className="flex items-center gap-3">
               <Button 
-                variant="default" 
-                className="bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                variant="outline"
+                className="border-border/50 hover:border-border/80"
                 onClick={() => setShowCreateModal(true)}
               >
                   <Plus className="mr-2 h-4 w-4" />{t.createPlaylist}
@@ -497,6 +497,9 @@ export default function IntegratedMusicPlayerPage() {
         </main>
       </div>
       </TooltipProvider>
+
+      <input type="file" accept="audio/flac,audio/mp3,audio/wav,audio/ogg" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
+      <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...{webkitdirectory: "", directory: ""}} />
 
       <AlertDialog open={isDeleteAllAlertOpen} onOpenChange={setIsDeleteAllAlertOpen}>
         <AlertDialogContent>
