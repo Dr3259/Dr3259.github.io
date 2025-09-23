@@ -83,7 +83,7 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
             />
           ))}
           
-          {/* 创建歌单卡片 - 放在最后 */}
+          {/* 创建歌单卡片 */}
           <PlaylistCard
             isCreateCard
             onCreate={onCreateVirtualPlaylist}
