@@ -1,3 +1,4 @@
+
 // 集成歌单功能的音乐播放器 - 在原有基础上添加歌单区域
 "use client";
 
@@ -420,7 +421,7 @@ export default function IntegratedMusicPlayerPage() {
         <main className="flex-1 flex flex-col md:flex-row min-h-0 relative">
           <MusicVisualizer isPlaying={isPlaying} category={currentTrack?.category || null} />
           
-          <div className="w-full md:w-1/3 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
+          <div className="w-full md:w-1/4 border-r p-4 flex flex-col z-[2] bg-background/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
             <h2 className="flex items-center mb-4 text-lg font-semibold leading-none">
               <ListMusic className="h-5 w-5 mr-2 shrink-0" />
               <span>
@@ -469,7 +470,7 @@ export default function IntegratedMusicPlayerPage() {
             </ScrollArea>
           </div>
           
-          <div className="w-full md:w-2/3 flex flex-col justify-between p-6 bg-transparent z-[2]">
+          <div className="w-full md:w-3/4 flex flex-col justify-between p-6 bg-transparent z-[2]">
               <div className="flex-1 mb-6">
                 <PlaylistGrid
                   playlists={playlists}
