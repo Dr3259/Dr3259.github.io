@@ -154,8 +154,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         fill
         className={cn(
             "object-cover transition-all duration-500 ease-in-out",
-            "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50",
-            isActive && "scale-110 blur-sm brightness-50"
+            isActive ? "scale-110 blur-sm brightness-50" : "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50"
         )}
         data-ai-hint={imageData.hint}
       />
