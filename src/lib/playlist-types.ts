@@ -1,3 +1,4 @@
+
 // 歌单类型定义
 export type PlaylistType = 'virtual' | 'folder' | 'all';
 
@@ -16,6 +17,7 @@ export interface VirtualPlaylist extends BasePlaylist {
     description?: string;
     tracks: PlaylistTrackRef[]; // 使用引用而不是直接存储ID数组
     coverImage?: string; // 可选的封面图片
+    lastPlayedTrackId?: string; // 记录最后播放的歌曲ID
 }
 
 // 文件夹歌单 - 映射本地文件夹
@@ -25,12 +27,14 @@ export interface FolderPlaylist extends BasePlaylist {
     folderHandle?: FileSystemDirectoryHandle; // File System Access API句柄
     lastScanTime: Date; // 上次扫描时间
     autoRefresh: boolean; // 是否自动刷新
+    lastPlayedTrackId?: string; // 记录最后播放的歌曲ID
 }
 
 // 所有音乐歌单 - 系统默认歌单，包含所有已上传的音乐
 export interface AllMusicPlaylist extends BasePlaylist {
     type: 'all';
     isDefault: true; // 标记为默认歌单
+    lastPlayedTrackId?: string; // 记录最后播放的歌曲ID
 }
 
 export type Playlist = VirtualPlaylist | FolderPlaylist | AllMusicPlaylist;

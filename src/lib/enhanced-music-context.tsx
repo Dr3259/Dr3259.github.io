@@ -70,7 +70,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { toast } = useToast();
   
   // 获取原有的音乐功能，但不修改它们
-  const { tracks, playTrack, setPlaybackScope } = useMusic();
+  const { tracks, playTrack, setPlaybackScope, currentTrack } = useMusic();
   
   // 数据库实例 - 使用useMemo确保只创建一次
   const playlistDB = useMemo(() => new PlaylistDB(), []);
@@ -131,6 +131,15 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return updatedPlaylists;
     });
   }, [tracks.length, createAllMusicPlaylist]);
+
+  // 更新当前播放歌曲到歌单的 lastPlayedTrackId
+  useEffect(() => {
+    if (currentTrack && currentPlaylist) {
+        setPlaylists(prev => prev.map(p => 
+            p.id === currentPlaylist.id ? { ...p, lastPlayedTrackId: currentTrack.id } : p
+        ));
+    }
+  }, [currentTrack, currentPlaylist]);
   
   // 创建虚拟歌单
   const createVirtualPlaylist = useCallback(async (name: string, description?: string) => {
@@ -314,26 +323,40 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const playlist = playlists.find(p => p.id === playlistId);
     if (!playlist) return;
     
+    setCurrentPlaylist(playlist);
+    
     let tracksToPlay: TrackMetadata[] = [];
     if (playlist.type === 'all') {
-      tracksToPlay = tracks;
+        tracksToPlay = tracks;
     } else if (playlist.type === 'virtual') {
-      tracksToPlay = (playlist as VirtualPlaylist).tracks
-        .map(ref => tracks.find(t => t.id === ref.trackId))
-        .filter((t): t is TrackMetadata => !!t);
+        tracksToPlay = (playlist as VirtualPlaylist).tracks
+            .map(ref => tracks.find(t => t.id === ref.trackId))
+            .filter((t): t is TrackMetadata => !!t);
+    } else if (playlist.type === 'folder') {
+        // Folder logic will need to actually get the tracks for the folder
+        // For now, we assume this is handled elsewhere or is not fully implemented for playback
+        toast({ title: '文件夹歌单播放尚未实现', variant: 'destructive' });
+        return;
     }
     
     if (tracksToPlay.length > 0) {
-      setPlaybackScope(tracksToPlay);
-      setCurrentPlaylist(playlist); // 只有在播放时才设置
-      const firstTrackId = tracksToPlay[0].id;
-      const trackIndex = tracks.findIndex(t => t.id === firstTrackId);
-      if (trackIndex !== -1) {
-        playTrack(trackIndex);
-      }
+        setPlaybackScope(tracksToPlay);
+        const lastPlayedId = playlist.lastPlayedTrackId;
+        let trackToPlayIndex = tracks.findIndex(t => t.id === lastPlayedId);
+
+        if (trackToPlayIndex === -1 || !tracksToPlay.some(t => t.id === lastPlayedId)) {
+            // If no history or history is invalid, play the first song in scope
+            const firstTrackId = tracksToPlay[0].id;
+            trackToPlayIndex = tracks.findIndex(t => t.id === firstTrackId);
+        }
+
+        if (trackToPlayIndex !== -1) {
+            playTrack(trackToPlayIndex);
+        }
+
     } else {
-      toast({ title: '歌单为空', variant: 'destructive' });
-      setPlaybackScope([]); // 清空播放范围
+        toast({ title: '歌单为空', variant: 'destructive' });
+        setPlaybackScope([]);
     }
   }, [playlists, tracks, playTrack, toast, setPlaybackScope]);
   
