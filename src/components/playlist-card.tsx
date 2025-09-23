@@ -225,9 +225,9 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
       
        {isDragOver && (
         <div className="absolute inset-0 bg-primary/30 border-2 border-primary border-dashed flex items-center justify-center backdrop-blur-sm pointer-events-none">
-          <div className="text-white font-medium text-sm flex items-center space-x-1">
-            <Plus className="h-4 w-4" />
-            <span>添加</span>
+          <div className="text-white font-medium text-sm flex flex-col items-center space-y-1 text-center">
+            <Plus className="h-5 w-5" />
+            <span className="px-2">添加到: <br/><strong>{playlist.name}</strong></span>
           </div>
         </div>
       )}
