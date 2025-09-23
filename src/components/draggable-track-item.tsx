@@ -113,7 +113,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         draggable={true}
         onDragStart={handleDragStart}
       >
-        <div className="flex items-center self-stretch mr-2 cursor-grab active:cursor-grabbing">
+        <div className="flex items-center self-stretch mr-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
 
@@ -132,7 +132,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                     {displayTitle}
                   </p>
                 </SmartTooltip>
-                 {/* 操作按钮 - 移动到这里 */}
+                {/* 操作按钮 - 移动到这里 */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
