@@ -11,8 +11,7 @@ import {
   MoreHorizontal,
   RefreshCw,
   Trash2,
-  Heart,
-  Headphones,
+  ListMusic,
   FileEdit,
   Download
 } from 'lucide-react';
@@ -168,7 +167,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
 
       <div className="flex items-start justify-between mb-2">
         <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm", getIconBg())}>
-          {isAllMusic ? <Music className={cn("h-4 w-4", getIconColor())} /> : isVirtual ? <Heart className={cn("h-4 w-4", getIconColor())} /> : <Folder className={cn("h-4 w-4", getIconColor())} />}
+          {isAllMusic ? <Music className={cn("h-4 w-4", getIconColor())} /> : isVirtual ? <ListMusic className={cn("h-4 w-4", getIconColor())} /> : <Folder className={cn("h-4 w-4", getIconColor())} />}
         </div>
         {!isAllMusic && (
           <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
@@ -201,11 +200,27 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         )}
       </div>
 
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-1">
-          <Headphones className="h-3 w-3 text-muted-foreground" />
+          <Music className="h-3 w-3 text-muted-foreground" />
           <span className="text-xs font-medium text-muted-foreground">{playlist.trackCount}</span>
         </div>
+        
+        {isActive && (
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300", isPlaying ? "bg-primary" : "bg-primary/50")}>
+                    {isPlaying ? (
+                        <div className="flex items-center space-x-0.5">
+                            <span className="w-0.5 h-2 bg-primary-foreground rounded-full animate-[bounce_0.8s_ease-in-out_infinite]"></span>
+                            <span className="w-0.5 h-2.5 bg-primary-foreground rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite]"></span>
+                            <span className="w-0.5 h-2 bg-primary-foreground rounded-full animate-[bounce_0.8s_ease-in-out_0.4s_infinite]"></span>
+                        </div>
+                    ) : (
+                        <Play className="h-3 w-3 text-primary-foreground" />
+                    )}
+                </div>
+            </div>
+        )}
       </div>
 
       {isDragOver && (
