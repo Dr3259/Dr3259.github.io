@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileEdit, Trash2, GripVertical, MoreHorizontal } from 'lucide-react';
+import { FileEdit, Trash2, GripVertical, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
@@ -174,7 +174,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                     className="h-8 w-8 text-muted-foreground hover:text-primary"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <MoreHorizontal className="h-4 w-4" />
+                    <MoreVertical className="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
