@@ -20,14 +20,13 @@ interface PlaylistContextType {
   // 歌单操作方法
   createVirtualPlaylist: (name: string, description?: string) => Promise<void>;
   editVirtualPlaylist: (id: string, updates: { name: string; description?: string }) => Promise<void>;
-  deleteVirtualPlaylist: (id: string) => Promise<void>;
+  deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (trackId: string, playlistId: string) => Promise<void>;
   removeTrackFromPlaylist: (trackId: string, playlistId: string) => Promise<void>;
   
   // 文件夹歌单操作
   importFolderAsPlaylist: () => Promise<void>;
   refreshFolderPlaylist: (playlistId: string) => Promise<void>;
-  deleteFolderPlaylist: (id: string) => Promise<void>;
   
   // 清理操作
   clearAllPlaylists: () => Promise<void>;
@@ -95,28 +94,26 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 初始化加载歌单
   useEffect(() => {
     const loadPlaylists = async () => {
-      try {
-        setIsLoadingPlaylists(true);
-        const userPlaylists = await playlistDB.getAllPlaylists();
-        const allMusicPlaylist = createAllMusicPlaylist();
-        
-        // Ensure "All Music" is always first and not duplicated
-        const otherPlaylists = userPlaylists.filter(p => p.id !== 'all-music');
-        const allPlaylists = [allMusicPlaylist, ...otherPlaylists];
-        
-        setPlaylists(allPlaylists);
-        if (!currentPlaylist) {
-          setCurrentPlaylist(allMusicPlaylist);
+        try {
+            setIsLoadingPlaylists(true);
+            const userPlaylists = await playlistDB.getAllPlaylists();
+            const allMusicPlaylist = createAllMusicPlaylist();
+
+            const allPlaylists = [allMusicPlaylist, ...userPlaylists];
+            setPlaylists(allPlaylists);
+
+            if (!currentPlaylist) {
+                setCurrentPlaylist(allMusicPlaylist);
+            }
+        } catch (error) {
+            console.error('Failed to load playlists:', error);
+        } finally {
+            setIsLoadingPlaylists(false);
         }
-      } catch (error) {
-        console.error('Failed to load playlists:', error);
-      } finally {
-        setIsLoadingPlaylists(false);
-      }
     };
-    
+
     loadPlaylists();
-  }, [createAllMusicPlaylist, playlistDB, currentPlaylist]);
+  }, []); // 依赖项为空，只在首次加载时运行
 
 
   // 当音乐库变化时，更新"所有音乐"歌单的trackCount
@@ -317,8 +314,6 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const playlist = playlists.find(p => p.id === playlistId);
     if (!playlist) return;
     
-    setCurrentPlaylist(playlist);
-    
     let tracksToPlay: TrackMetadata[] = [];
     if (playlist.type === 'all') {
       tracksToPlay = tracks;
@@ -327,11 +322,10 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .map(ref => tracks.find(t => t.id === ref.trackId))
         .filter((t): t is TrackMetadata => !!t);
     }
-    // TODO: Add folder playlist logic here
     
-    setPlaybackScope(tracksToPlay);
-
     if (tracksToPlay.length > 0) {
+      setPlaybackScope(tracksToPlay);
+      setCurrentPlaylist(playlist); // 只有在播放时才设置
       const firstTrackId = tracksToPlay[0].id;
       const trackIndex = tracks.findIndex(t => t.id === firstTrackId);
       if (trackIndex !== -1) {
@@ -339,6 +333,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     } else {
       toast({ title: '歌单为空', variant: 'destructive' });
+      setPlaybackScope([]); // 清空播放范围
     }
   }, [playlists, tracks, playTrack, toast, setPlaybackScope]);
   
@@ -352,8 +347,18 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const playlist = playlists.find(p => p.id === playlistId);
     if (playlist) {
       setCurrentPlaylist(playlist);
+      // 当只是选择歌单时，更新播放范围，但不自动播放
+      let tracksToShow: TrackMetadata[] = [];
+      if (playlist.type === 'all') {
+          tracksToShow = tracks;
+      } else if (playlist.type === 'virtual') {
+          tracksToShow = (playlist as VirtualPlaylist).tracks
+              .map(ref => tracks.find(t => t.id === ref.trackId))
+              .filter((t): t is TrackMetadata => !!t);
+      }
+      setPlaybackScope(tracksToShow);
     }
-  }, [playlists]);
+  }, [playlists, tracks, setPlaybackScope]);
   
   const value: PlaylistContextType = {
     playlists,
@@ -363,7 +368,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     createVirtualPlaylist,
     editVirtualPlaylist,
-    deleteVirtualPlaylist: async (id: string) => {
+    deletePlaylist: async (id: string) => {
       // 不能删除"所有音乐"歌单
       if (id === 'all-music') {
         toast({ title: '不能删除默认歌单', variant: 'destructive' });
@@ -371,7 +376,11 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       
       try {
-        await playlistDB.deleteVirtualPlaylist(id);
+        const playlistToDelete = playlists.find(p => p.id === id);
+        if (playlistToDelete?.type === 'virtual') {
+            await playlistDB.deleteVirtualPlaylist(id);
+        }
+
         setPlaylists(prev => prev.filter(p => p.id !== id));
         if (currentPlaylist?.id === id) {
           setCurrentPlaylist(null);
@@ -409,20 +418,6 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     },
     importFolderAsPlaylist,
     refreshFolderPlaylist,
-    deleteFolderPlaylist: async (id: string) => {
-      // 不能删除"所有音乐"歌单
-      if (id === 'all-music') {
-        toast({ title: '不能删除默认歌单', variant: 'destructive' });
-        return;
-      }
-      
-      // 文件夹歌单删除逻辑
-      setPlaylists(prev => prev.filter(p => p.id !== id));
-      if (currentPlaylist?.id === id) {
-        setCurrentPlaylist(null);
-      }
-      toast({ title: '文件夹歌单已删除' });
-    },
     clearAllPlaylists: async () => {
       try {
         // 删除所有虚拟歌单（除了"所有音乐"歌单）
