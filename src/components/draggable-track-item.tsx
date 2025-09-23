@@ -128,75 +128,79 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
 
           {/* 歌曲信息 */}
           <div className="flex-1 min-w-0">
-              <SmartTooltip content={track.title}>
-                <p className="font-medium text-sm truncate">
-                  {track.title}
-                </p>
-              </SmartTooltip>
-              <SmartTooltip content={track.artist || '未知艺术家'}>
-                <p className="text-xs text-muted-foreground truncate">
-                  {track.artist || '未知艺术家'}
-                </p>
-              </SmartTooltip>
-              
-              {/* 标签和信息 */}
-              <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
-                <p className="text-xs text-muted-foreground">
-                  {formatDuration(track.duration)}
-                </p>
-                
-                {/* 分类标签 */}
-                {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
-                  const bgColor = getTagColor(cat);
-                  const textColor = getHighContrastTextColor(bgColor);
-                  return (
-                    <Badge
-                      key={cat}
-                      variant="secondary"
-                      className="border-transparent text-xs"
-                      style={{ backgroundColor: bgColor, color: textColor }}
-                    >
-                      {cat}
-                    </Badge>
-                  );
-                })}
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <SmartTooltip content={track.title}>
+                  <p className="font-medium text-sm truncate">
+                    {track.title}
+                  </p>
+                </SmartTooltip>
+                <SmartTooltip content={track.artist || '未知艺术家'}>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {track.artist || '未知艺术家'}
+                  </p>
+                </SmartTooltip>
               </div>
+
+              {/* 操作按钮 - 移动到这里 */}
+              <div className="flex items-center ml-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <MoreVertical className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={onEdit}>
+                            <FileEdit className="mr-2 h-4 w-4" />
+                            <span>编辑信息</span>
+                        </DropdownMenuItem>
+                        {isInVirtualPlaylist && onRemoveFromPlaylist ? (
+                            <DropdownMenuItem onClick={onRemoveFromPlaylist} className="text-orange-600 focus:text-orange-600">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>从歌单中移除</span>
+                            </DropdownMenuItem>
+                        ) : onDelete && (
+                            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>删除歌曲</span>
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            
+            {/* 标签和信息 */}
+            <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
+              <p className="text-xs text-muted-foreground">
+                {formatDuration(track.duration)}
+              </p>
+              
+              {/* 分类标签 */}
+              {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
+                const bgColor = getTagColor(cat);
+                const textColor = getHighContrastTextColor(bgColor);
+                return (
+                  <Badge
+                    key={cat}
+                    variant="secondary"
+                    className="border-transparent text-xs"
+                    style={{ backgroundColor: bgColor, color: textColor }}
+                  >
+                    {cat}
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
         </div>
-      
-      {/* 操作按钮 */}
-      <div className="flex items-center ml-2">
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <MoreVertical className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={onEdit}>
-                    <FileEdit className="mr-2 h-4 w-4" />
-                    <span>编辑信息</span>
-                </DropdownMenuItem>
-                {isInVirtualPlaylist && onRemoveFromPlaylist ? (
-                    <DropdownMenuItem onClick={onRemoveFromPlaylist} className="text-orange-600 focus:text-orange-600">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>从歌单中移除</span>
-                    </DropdownMenuItem>
-                ) : onDelete && (
-                    <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>删除歌曲</span>
-                    </DropdownMenuItem>
-                )}
-            </DropdownMenuContent>
-        </DropdownMenu>
       </div>
-    </div>
     </TooltipProvider>
   );
 };
