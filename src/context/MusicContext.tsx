@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
@@ -291,7 +292,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                     const trackId = `track-${Date.now()}-${Math.random()}`;
                     
                     resolve({
-                        id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null,
+                        id: trackId, title, artist, type: file.type, duration, content: blobContent, category: null, createdAt: new Date()
                     });
 
                 } catch (error) {
@@ -308,7 +309,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             for (const track of newTracks) {
                 await saveTrack(track);
             }
-            const newMetadata = newTracks.map(({ id, title, artist, type, duration, category }) => ({ id, title, artist, type, duration, category }));
+            const newMetadata = newTracks.map(({ id, title, artist, type, duration, category, createdAt }) => ({ id, title, artist, type, duration, category, createdAt }));
             setTracks(prev => [...prev, ...newMetadata]);
             toast({ title: `Successfully imported ${newTracks.length} new track(s).`, duration: 3000 });
         }
@@ -426,7 +427,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         const updatedTrack: TrackWithContent = { ...trackToUpdate, ...meta };
         await saveTrack(updatedTrack);
         
-        const updatedMetadata: TrackMetadata = { id: updatedTrack.id, title: updatedTrack.title, artist: updatedTrack.artist, type: updatedTrack.type, duration: updatedTrack.duration, category: updatedTrack.category };
+        const updatedMetadata: TrackMetadata = { id: updatedTrack.id, title: updatedTrack.title, artist: updatedTrack.artist, type: updatedTrack.type, duration: updatedTrack.duration, category: updatedTrack.category, createdAt: updatedTrack.createdAt };
         setTracks(prev => prev.map(t => (t.id === trackId ? updatedMetadata : t)));
         
         if (currentTrack?.id === trackId) setCurrentTrack(updatedMetadata);

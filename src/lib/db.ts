@@ -30,6 +30,7 @@ export interface TrackMetadata {
     duration?: number;
     type: string; // e.g., 'audio/flac'
     category?: string | null;
+    createdAt?: Date;
 }
 
 export interface TrackWithContent extends TrackMetadata {
@@ -196,7 +197,15 @@ export async function getTracksMetadata(): Promise<TrackMetadata[]> {
 
         request.onsuccess = () => {
             const allTracks: TrackWithContent[] = request.result;
-            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category }) => ({ id, title, type, artist, album, duration, category }));
+            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category, createdAt }) => ({ id, title, type, artist, album, duration, category, createdAt }));
+            
+            // Sort by creation date to ensure consistent order
+            metadata.sort((a, b) => {
+              const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return dateA - dateB;
+            });
+            
             resolve(metadata);
         };
         request.onerror = () => reject(request.error);
