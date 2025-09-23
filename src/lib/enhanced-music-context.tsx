@@ -1,3 +1,4 @@
+
 // 歌单功能扩展 - 作为现有MusicContext的补充
 "use client";
 
@@ -64,13 +65,13 @@ export const useMusicWithPlaylist = () => {
 export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
-  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
+  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const [showPlaylistSidebar, setShowPlaylistSidebar] = useState(false);
   
   const { toast } = useToast();
   
   // 获取原有的音乐功能，但不修改它们
-  const { tracks, playTrack } = useMusic();
+  const { tracks, playTrack, setPlaybackScope } = useMusic();
   
   // 数据库实例 - 使用useMemo确保只创建一次
   const playlistDB = useMemo(() => new PlaylistDB(), []);
@@ -97,12 +98,16 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         setIsLoadingPlaylists(true);
         const userPlaylists = await playlistDB.getAllPlaylists();
-        
-        // 创建默认的"所有音乐"歌单并放在第一位
         const allMusicPlaylist = createAllMusicPlaylist();
-        const allPlaylists = [allMusicPlaylist, ...userPlaylists];
+        
+        // Ensure "All Music" is always first and not duplicated
+        const otherPlaylists = userPlaylists.filter(p => p.id !== 'all-music');
+        const allPlaylists = [allMusicPlaylist, ...otherPlaylists];
         
         setPlaylists(allPlaylists);
+        if (!currentPlaylist) {
+          setCurrentPlaylist(allMusicPlaylist);
+        }
       } catch (error) {
         console.error('Failed to load playlists:', error);
       } finally {
@@ -111,18 +116,24 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     
     loadPlaylists();
-  }, [createAllMusicPlaylist, playlistDB]);
+  }, [createAllMusicPlaylist, playlistDB, currentPlaylist]);
+
 
   // 当音乐库变化时，更新"所有音乐"歌单的trackCount
   useEffect(() => {
-    setPlaylists(prevPlaylists => 
-      prevPlaylists.map(playlist => 
-        playlist.type === 'all' 
-          ? { ...playlist, trackCount: tracks.length, updatedAt: new Date() }
-          : playlist
-      )
-    );
-  }, [tracks.length]);
+    setPlaylists(prevPlaylists => {
+        const hasAllMusic = prevPlaylists.some(p => p.id === 'all-music');
+        const updatedPlaylists = prevPlaylists.map(playlist => 
+          playlist.id === 'all-music' 
+            ? { ...playlist, trackCount: tracks.length, updatedAt: new Date() }
+            : playlist
+        );
+        if (!hasAllMusic) {
+            return [createAllMusicPlaylist(), ...updatedPlaylists];
+        }
+        return updatedPlaylists;
+    });
+  }, [tracks.length, createAllMusicPlaylist]);
   
   // 创建虚拟歌单
   const createVirtualPlaylist = useCallback(async (name: string, description?: string) => {
@@ -189,7 +200,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       // 扫描文件夹
       const scanner = new FolderScanner();
-      const { tracks, totalFiles } = await scanner.scanFolder(dirHandle);
+      const { tracks: scannedTracks, totalFiles } = await scanner.scanFolder(dirHandle);
       
       // 创建文件夹歌单
       const folderPlaylist: FolderPlaylist = {
@@ -202,18 +213,18 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         autoRefresh: false,
         createdAt: new Date(),
         updatedAt: new Date(),
-        trackCount: tracks.length,
+        trackCount: scannedTracks.length,
       };
       
       setPlaylists(prev => [...prev, folderPlaylist]);
       
       toast({ 
         title: `文件夹歌单创建成功`,
-        description: `从 "${dirHandle.name}" 中发现 ${tracks.length} 首歌曲（共 ${totalFiles} 个文件）`
+        description: `从 "${dirHandle.name}" 中发现 ${scannedTracks.length} 首歌曲（共 ${totalFiles} 个文件）`
       });
       
     } catch (error) {
-      if (error.name !== 'AbortError') {
+      if (error instanceof DOMException && error.name !== 'AbortError') {
         toast({ title: '导入文件夹失败', variant: 'destructive' });
       }
     } finally {
@@ -237,12 +248,12 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       // 重新扫描文件夹
       const scanner = new FolderScanner();
-      const { tracks } = await scanner.scanFolder(folderPlaylist.folderHandle);
+      const { tracks: scannedTracks } = await scanner.scanFolder(folderPlaylist.folderHandle);
       
       // 更新歌单信息
       const updatedPlaylist: FolderPlaylist = {
         ...folderPlaylist,
-        trackCount: tracks.length,
+        trackCount: scannedTracks.length,
         lastScanTime: new Date(),
         updatedAt: new Date(),
       };
@@ -251,7 +262,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       toast({ 
         title: `歌单已刷新`,
-        description: `发现 ${tracks.length} 首歌曲`
+        description: `发现 ${scannedTracks.length} 首歌曲`
       });
       
     } catch (error) {
@@ -308,29 +319,28 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     setCurrentPlaylist(playlist);
     
-    // 根据歌单类型播放第一首歌
+    let tracksToPlay: TrackMetadata[] = [];
     if (playlist.type === 'all') {
-      // 播放所有音乐的第一首
-      if (tracks.length > 0) {
-        playTrack(0);
-      } else {
-        toast({ title: '音乐库为空', variant: 'destructive' });
-      }
+      tracksToPlay = tracks;
     } else if (playlist.type === 'virtual') {
-      const virtualPlaylist = playlist as VirtualPlaylist;
-      if (virtualPlaylist.tracks.length > 0) {
-        // 找到对应的track索引，使用原有的playTrack方法
-        const firstTrackId = virtualPlaylist.tracks[0].trackId;
-        const trackIndex = tracks.findIndex(t => t.id === firstTrackId);
-        if (trackIndex >= 0) {
-          playTrack(trackIndex);
-        }
-      } else {
-        toast({ title: '歌单为空', variant: 'destructive' });
-      }
+      tracksToPlay = (playlist as VirtualPlaylist).tracks
+        .map(ref => tracks.find(t => t.id === ref.trackId))
+        .filter((t): t is TrackMetadata => !!t);
     }
-    // 文件夹歌单的播放逻辑可以后续实现
-  }, [playlists, tracks, playTrack, toast]);
+    // TODO: Add folder playlist logic here
+    
+    setPlaybackScope(tracksToPlay);
+
+    if (tracksToPlay.length > 0) {
+      const firstTrackId = tracksToPlay[0].id;
+      const trackIndex = tracks.findIndex(t => t.id === firstTrackId);
+      if (trackIndex !== -1) {
+        playTrack(trackIndex);
+      }
+    } else {
+      toast({ title: '歌单为空', variant: 'destructive' });
+    }
+  }, [playlists, tracks, playTrack, toast, setPlaybackScope]);
   
   // 切换歌单侧边栏显示
   const togglePlaylistSidebar = useCallback(() => {
