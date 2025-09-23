@@ -18,6 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -44,6 +45,9 @@ const translations = {
     importMusic: '导入音乐',
     importFile: '导入文件',
     importFolder: '导入文件夹',
+    importLimitTitle: '导入提示',
+    importLimitDescription: '为确保浏览器稳定运行，建议单次导入的歌曲数量不要超过 50 首。',
+    importLimitConfirm: '我明白了',
     clearPlaylist: '清空播放列表',
     deleteAllTracks: '删除所有音乐和歌单',
     clearPlaylistConfirmationTitle: '确认清空播放列表',
@@ -308,14 +312,42 @@ export default function IntegratedMusicPlayerPage() {
                   <Button><Plus className="mr-2 h-4 w-4" />{t.importMusic}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                      <Music className="mr-2 h-4 w-4" />
-                      <span>{t.importFile}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => folderInputRef.current?.click()}>
-                      <FolderPlus className="mr-2 h-4 w-4" />
-                      <span>{t.importFolder}</span>
-                  </DropdownMenuItem>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Music className="mr-2 h-4 w-4" />
+                                <span>{t.importFile}</span>
+                            </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>{t.importLimitTitle}</AlertDialogTitle>
+                                <AlertDialogDescription>{t.importLimitDescription}</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => fileInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <FolderPlus className="mr-2 h-4 w-4" />
+                                <span>{t.importFolder}</span>
+                            </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                         <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>{t.importLimitTitle}</AlertDialogTitle>
+                                <AlertDialogDescription>{t.importLimitDescription}</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => folderInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   {tracks.length > 0 && (
                     <>
                         <DropdownMenuSeparator />
