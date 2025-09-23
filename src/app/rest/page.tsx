@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, type DragEvent } from 'react';
@@ -11,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const translations = {
   'zh-CN': {
-    backButton: '返回主页',
+    backButton: '返回',
     pageTitle: '休息一下',
     pageDescription: '选择一项活动放松身心，或探索实用工具。',
     pinnedTitle: '置顶功能',
@@ -35,7 +34,7 @@ const translations = {
     }
   },
   'en': {
-    backButton: 'Back to Home',
+    backButton: 'Back',
     pageTitle: 'Rest Stop',
     pageDescription: 'Choose an activity to relax, or explore useful tools.',
     pinnedTitle: 'Pinned',

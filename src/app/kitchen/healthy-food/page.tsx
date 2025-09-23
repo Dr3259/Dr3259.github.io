@@ -13,7 +13,7 @@ const translations = {
   'zh-CN': {
     pageTitle: '健康食物指南',
     pageSubtitle: '探索营养丰富的食材，为您的健康赋能。',
-    backButton: '返回厨房',
+    backButton: '返回',
     superfoods: '超级食物',
     proteins: '优质蛋白',
     fats: '健康脂肪',
@@ -31,7 +31,7 @@ const translations = {
   'en': {
     pageTitle: 'Healthy Food Guide',
     pageSubtitle: 'Explore nutritious ingredients to power your health.',
-    backButton: 'Back to Kitchen',
+    backButton: 'Back',
     superfoods: 'Superfoods',
     proteins: 'Quality Proteins',
     fats: 'Healthy Fats',

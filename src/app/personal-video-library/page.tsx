@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -24,7 +23,7 @@ import { Separator } from '@/components/ui/separator';
 const translations = {
   'zh-CN': {
     pageTitle: '个人视频库',
-    backButton: '返回休闲驿站',
+    backButton: '返回',
     tabVideo: '视频',
     tabLocalCinema: '本地影院',
     tabMovieHeaven: '电影天堂',
@@ -66,7 +65,7 @@ const translations = {
   },
   'en': {
     pageTitle: 'Personal Video Library',
-    backButton: 'Back to Rest Stop',
+    backButton: 'Back',
     tabVideo: 'Video',
     tabLocalCinema: 'Local Cinema',
     tabMovieHeaven: 'Movie Heaven DB',

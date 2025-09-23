@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const translations = {
   'zh-CN': {
-    backButton: '返回主页',
+    backButton: '返回',
     pageTitle: '厨房一下',
     pageDescription: '探索烹饪的乐趣，规划您的健康饮食。',
     pinnedTitle: '置顶功能',
@@ -31,7 +31,7 @@ const translations = {
     }
   },
   'en': {
-    backButton: 'Back to Home',
+    backButton: 'Back',
     pageTitle: 'Kitchen Time',
     pageDescription: 'Explore the joy of cooking and plan your healthy meals.',
     pinnedTitle: 'Pinned',

@@ -15,7 +15,7 @@ const translations = {
   'zh-CN': {
     pageTitle: '全球香料实用使用指南',
     pageDescription: '探索香料的“风味密码”，兼顾调味艺术与“药食同源”的智慧。',
-    backButton: '返回厨房',
+    backButton: '返回',
     tabChinese: '中式传统',
     tabEuropean: '欧美草本',
     tabSoutheastAsian: '东南亚辛香',
@@ -56,7 +56,7 @@ const translations = {
   'en': {
     pageTitle: 'Global Spice Guide',
     pageDescription: 'Explore flavor codes, blending culinary art with the wisdom of food as medicine.',
-    backButton: 'Back to Kitchen',
+    backButton: 'Back',
     tabChinese: 'Chinese Classics',
     tabEuropean: 'European Herbs',
     tabSoutheastAsian: 'Southeast Asian',
@@ -172,7 +172,7 @@ const spiceData = {
       { id: 'pandan', name: 'Pandan Leaf', features: 'Sweet, coconut-like aroma', preprocessing: 'Wrap food or juice it', compatibleFood: 'Desserts, Rice', pairingSuggestion: 'Coconut Milk, Sticky Rice, Chicken', efficacy: null, contraindications: null },
     ],
     middleEastern: [
-      { id: 'cuminMiddleEast', name: 'Cumin Seed', features: 'Pungent & nutty, fresher than powder', preprocessing: 'Toast and grind', compatibleFood: 'Middle Eastern BBQ, Hummus, Curries', pairingSuggestion: 'Coriander Seed, Cardamom, Lemon Juice', efficacy: '(Reference) Hot; benefits liver, stomach; may help dispel cold, stop pain, aid digestion.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, constipation); use with caution in summer; caution for hemorrhoids.' },
+      { id: 'cuminMiddleEast', name: 'Cumin Seed', features: 'Pungent & nutty, fresher than powder', preprocessing: 'Toast and grind', compatibleFood: 'Middle Eastern BBQ, Hummus, Curries', pairingSuggestion: 'Coriander Seed, Cardamom, Lemon Juice', efficacy: '(Reference) Hot; benefits liver, stomach; may help dispel cold, stops pain, aid digestion.', contraindications: 'Avoid if yin-deficient with fire (dry mouth, constipation); use with caution in summer; caution for hemorrhoids.' },
       { id: 'corianderSeed', name: 'Coriander Seed', features: 'Mild citrus & woody flavor', preprocessing: 'Core of curry with cumin', compatibleFood: 'Beans, Chicken, Curries', pairingSuggestion: 'Coriander Seed, Turmeric, Chili', efficacy: null, contraindications: null },
       { id: 'turmeric', name: 'Turmeric', features: 'Earthy, slightly bitter, yellow dye', preprocessing: 'Use powder or grate fresh', compatibleFood: 'Curries, Rice, Soups', pairingSuggestion: 'Black Pepper, Ginger, Coconut Milk', efficacy: '(Reference) Warm; benefits liver, spleen; may help move qi and blood, relieve pain. Modern studies suggest circulatory benefits (consult doctor).', contraindications: 'Forbidden for pregnant women (activates blood); caution for bleeding tendencies; caution for gallstones.' },
       { id: 'cardamom', name: 'Cardamom', features: 'Fresh, floral & citrusy', preprocessing: 'Use whole pods', compatibleFood: 'Chai, Desserts, Rice', pairingSuggestion: 'Cinnamon, Cloves, Saffron', efficacy: null, contraindications: null },
