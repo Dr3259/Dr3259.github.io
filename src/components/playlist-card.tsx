@@ -14,7 +14,8 @@ import {
   ListMusic,
   FileEdit,
   Download,
-  Play
+  Play,
+  Pause
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -131,7 +132,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
       onDrop={handleDrop}
     >
       <Image
-        src={`https://picsum.photos/seed/${playlist.id}/${imageData.seed}/300/300`}
+        src={`https://picsum.photos/seed/${imageData.seed}/300/300`}
         alt={playlist.name}
         fill
         className={cn(
