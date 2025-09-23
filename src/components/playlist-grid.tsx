@@ -1,4 +1,3 @@
-
 // 歌单网格布局组件
 "use client";
 
@@ -50,7 +49,7 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
       </div>
       
       <ScrollArea className="flex-1 w-full -mx-1">
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 px-1 pt-1 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 px-1 pt-1 pb-4 pl-1">
           {/* 现有歌单卡片 */}
           {playlists.map((playlist) => (
             <PlaylistCard
