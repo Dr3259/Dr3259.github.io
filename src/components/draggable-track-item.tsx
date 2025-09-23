@@ -111,57 +111,57 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         draggable={true}
         onDragStart={handleDragStart}
       >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center mr-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent><p>拖动排序</p></TooltipContent>
-        </Tooltip>
-
-        <div className="flex items-center flex-1 min-w-0">
-            {/* 歌曲序号 */}
-            <div className="text-sm font-mono text-muted-foreground w-6 text-center shrink-0">
-                {index + 1}
-            </div>
-
-            {/* 歌曲信息 */}
-            <div className="flex-1 min-w-0 ml-3">
-                <SmartTooltip content={track.title}>
-                  <p className="font-medium text-sm truncate">
-                    {track.title}
-                  </p>
-                </SmartTooltip>
-                <SmartTooltip content={track.artist || '未知艺术家'}>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {track.artist || '未知艺术家'}
-                  </p>
-                </SmartTooltip>
-                
-                {/* 标签和信息 */}
-                <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    {formatDuration(track.duration)}
-                  </p>
-                  
-                  {/* 分类标签 */}
-                  {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
-                    const bgColor = getTagColor(cat);
-                    const textColor = getHighContrastTextColor(bgColor);
-                    return (
-                      <Badge
-                        key={cat}
-                        variant="secondary"
-                        className="border-transparent text-xs"
-                        style={{ backgroundColor: bgColor, color: textColor }}
-                      >
-                        {cat}
-                      </Badge>
-                    );
-                  })}
+        <div className="flex items-start flex-1 min-w-0">
+          <Tooltip>
+            <TooltipTrigger asChild>
+                <div className="flex items-center self-stretch mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                    <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>
-            </div>
+            </TooltipTrigger>
+            <TooltipContent><p>拖动排序</p></TooltipContent>
+          </Tooltip>
+          
+          {/* 歌曲序号 */}
+          <div className="text-sm font-medium text-muted-foreground/80 w-6 text-left shrink-0 pt-px">
+              {index + 1}
+          </div>
+
+          {/* 歌曲信息 */}
+          <div className="flex-1 min-w-0 ml-2">
+              <SmartTooltip content={track.title}>
+                <p className="font-medium text-sm truncate">
+                  {track.title}
+                </p>
+              </SmartTooltip>
+              <SmartTooltip content={track.artist || '未知艺术家'}>
+                <p className="text-xs text-muted-foreground truncate">
+                  {track.artist || '未知艺术家'}
+                </p>
+              </SmartTooltip>
+              
+              {/* 标签和信息 */}
+              <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
+                <p className="text-xs text-muted-foreground">
+                  {formatDuration(track.duration)}
+                </p>
+                
+                {/* 分类标签 */}
+                {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
+                  const bgColor = getTagColor(cat);
+                  const textColor = getHighContrastTextColor(bgColor);
+                  return (
+                    <Badge
+                      key={cat}
+                      variant="secondary"
+                      className="border-transparent text-xs"
+                      style={{ backgroundColor: bgColor, color: textColor }}
+                    >
+                      {cat}
+                    </Badge>
+                  );
+                })}
+              </div>
+          </div>
         </div>
       
       {/* 操作按钮 */}
