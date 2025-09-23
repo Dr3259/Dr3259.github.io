@@ -1,73 +1,298 @@
 {
-    "starAnise": { "seed": 101, "hint": "star anise" },
-    "sichuanPepper": { "seed": 102, "hint": "sichuan pepper" },
-    "cassia": { "seed": 103, "hint": "cassia cinnamon" },
-    "bayLeaf": { "seed": 104, "hint": "bay leaf" },
-    "fennelSeed": { "seed": 105, "hint": "fennel seed" },
-    "caoguo": { "seed": 106, "hint": "black cardamom" },
-    "chenpi": { "seed": 107, "hint": "dried tangerine peel" },
-    "cuminChinese": { "seed": 108, "hint": "cumin" },
-    "perilla": { "seed": 109, "hint": "perilla leaf" },
-    "mint": { "seed": 110, "hint": "mint leaves" },
-    "gardenia": { "seed": 111, "hint": "gardenia fruit" },
-    "monkFruit": { "seed": 112, "hint": "monk fruit" },
-    "licorice": { "seed": 113, "hint": "licorice root" },
-    "angelica": { "seed": 114, "hint": "angelica root" },
-    "cardamomBlack": { "seed": 115, "hint": "black cardamom" },
-    "rosemary": { "seed": 201, "hint": "rosemary" },
-    "thyme": { "seed": 202, "hint": "thyme" },
-    "basil": { "seed": 203, "hint": "basil leaves" },
-    "parsley": { "seed": 204, "hint": "parsley" },
-    "oregano": { "seed": 205, "hint": "oregano" },
-    "dill": { "seed": 206, "hint": "dill" },
-    "lemongrass": { "seed": 301, "hint": "lemongrass" },
-    "galangal": { "seed": 302, "hint": "galangal" },
-    "kaffirLime": { "seed": 303, "hint": "kaffir lime leaves" },
-    "galangalAlt": { "seed": 304, "hint": "galangal spice" },
-    "pandan": { "seed": 305, "hint": "pandan leaves" },
-    "cuminMiddleEast": { "seed": 401, "hint": "cumin seeds" },
-    "corianderSeed": { "seed": 402, "hint": "coriander seeds" },
-    "turmeric": { "seed": 403, "hint": "turmeric powder" },
-    "cardamom": { "seed": 404, "hint": "cardamom pods" },
-    "fenugreek": { "seed": 405, "hint": "fenugreek seeds" },
-    "braisedporkintestines": { "seed": 501, "hint": "pork intestines" },
-    "braisedseacucumber": { "seed": 502, "hint": "sea cucumber" },
-    "braisedchicken": { "seed": 503, "hint": "braised chicken" },
-    "mapotofu": { "seed": 504, "hint": "mapo tofu" },
-    "fish-flavoredpork": { "seed": 505, "hint": "shredded pork" },
-    "sichuanhotpot": { "seed": 506, "hint": "sichuan hotpot" },
-    "whitecutchicken": { "seed": 507, "hint": "chopped chicken" },
-    "steamedgrouperfish": { "seed": 508, "hint": "steamed fish" },
-    "porkwithpreservedvegetable": { "seed": 509, "hint": "pork belly" },
-    "porkmeatballsoup": { "seed": 510, "hint": "meatball soup" },
-    "sweetandsourfish": { "seed": 511, "hint": "sweet sour fish" },
-    "saltwaterduck": { "seed": 512, "hint": "salted duck" },
-    "westlakefish": { "seed": 513, "hint": "west lake fish" },
-    "fishwithpickledvegetable": { "seed": 514, "hint": "fish soup" },
-    "beggarschicken": { "seed": 515, "hint": "baked chicken" },
-    "buddhajumpsoverthewall": { "seed": 516, "hint": "abalone soup" },
-    "lycheepork": { "seed": 517, "hint": "lychee pork" },
-    "sataynoodles": { "seed": 518, "hint": "satay noodles" },
-    "steamedfishhead": { "seed": 519, "hint": "fish head" },
-    "braisedporkbelly": { "seed": 520, "hint": "braised pork" },
-    "dongan chicken": { "seed": 521, "hint": "dong an chicken" },
-    "stinkymandarinfish": { "seed": 522, "hint": "mandarin fish" },
-    "hairytodu": { "seed": 523, "hint": "hairy tofu" },
-    "fulijiroastchicken": { "seed": 524, "hint": "roast chicken" },
-    "blueberries": { "seed": 601, "hint": "blueberries" },
-    "kale": { "seed": 602, "hint": "kale" },
-    "salmonfillet": { "seed": 603, "hint": "salmon fillet" },
-    "chiaseeds": { "seed": 604, "hint": "chia seeds" },
-    "chickenbreast": { "seed": 605, "hint": "chicken breast" },
-    "eggs": { "seed": 606, "hint": "eggs" },
-    "tofu": { "seed": 607, "hint": "tofu" },
-    "chickpeas": { "seed": 608, "hint": "chickpeas" },
-    "avocado": { "seed": 609, "hint": "avocado" },
-    "mixednuts": { "seed": 610, "hint": "mixed nuts" },
-    "oliveoil": { "seed": 611, "hint": "olive oil" },
-    "flaxseeds": { "seed": 612, "hint": "flax seeds" },
-    "oats": { "seed": 613, "hint": "oats" },
-    "quinoa": { "seed": 614, "hint": "quinoa" },
-    "brownrice": { "seed": 615, "hint": "brown rice" },
-    "wholewheatbread": { "seed": 616, "hint": "wheat bread" }
+  "starAnise": {
+    "seed": 101,
+    "hint": "star anise"
+  },
+  "sichuanPepper": {
+    "seed": 102,
+    "hint": "sichuan pepper"
+  },
+  "cassia": {
+    "seed": 103,
+    "hint": "cassia cinnamon"
+  },
+  "bayLeaf": {
+    "seed": 104,
+    "hint": "bay leaf"
+  },
+  "fennelSeed": {
+    "seed": 105,
+    "hint": "fennel seed"
+  },
+  "caoguo": {
+    "seed": 106,
+    "hint": "black cardamom"
+  },
+  "chenpi": {
+    "seed": 107,
+    "hint": "dried tangerine peel"
+  },
+  "cuminChinese": {
+    "seed": 108,
+    "hint": "cumin"
+  },
+  "perilla": {
+    "seed": 109,
+    "hint": "perilla leaf"
+  },
+  "mint": {
+    "seed": 110,
+    "hint": "mint leaves"
+  },
+  "gardenia": {
+    "seed": 111,
+    "hint": "gardenia fruit"
+  },
+  "monkFruit": {
+    "seed": 112,
+    "hint": "monk fruit"
+  },
+  "licorice": {
+    "seed": 113,
+    "hint": "licorice root"
+  },
+  "angelica": {
+    "seed": 114,
+    "hint": "angelica root"
+  },
+  "cardamomBlack": {
+    "seed": 115,
+    "hint": "black cardamom"
+  },
+  "rosemary": {
+    "seed": 201,
+    "hint": "rosemary"
+  },
+  "thyme": {
+    "seed": 202,
+    "hint": "thyme"
+  },
+  "basil": {
+    "seed": 203,
+    "hint": "basil leaves"
+  },
+  "parsley": {
+    "seed": 204,
+    "hint": "parsley"
+  },
+  "oregano": {
+    "seed": 205,
+    "hint": "oregano"
+  },
+  "dill": {
+    "seed": 206,
+    "hint": "dill"
+  },
+  "lemongrass": {
+    "seed": 301,
+    "hint": "lemongrass"
+  },
+  "galangal": {
+    "seed": 302,
+    "hint": "galangal"
+  },
+  "kaffirLime": {
+    "seed": 303,
+    "hint": "kaffir lime leaves"
+  },
+  "galangalAlt": {
+    "seed": 304,
+    "hint": "galangal spice"
+  },
+  "pandan": {
+    "seed": 305,
+    "hint": "pandan leaves"
+  },
+  "cuminMiddleEast": {
+    "seed": 401,
+    "hint": "cumin seeds"
+  },
+  "corianderSeed": {
+    "seed": 402,
+    "hint": "coriander seeds"
+  },
+  "turmeric": {
+    "seed": 403,
+    "hint": "turmeric powder"
+  },
+  "cardamom": {
+    "seed": 404,
+    "hint": "cardamom pods"
+  },
+  "fenugreek": {
+    "seed": 405,
+    "hint": "fenugreek seeds"
+  },
+  "braisedporkintestines": {
+    "seed": 501,
+    "hint": "pork intestines"
+  },
+  "braisedseacucumber": {
+    "seed": 502,
+    "hint": "sea cucumber"
+  },
+  "braisedchicken": {
+    "seed": 503,
+    "hint": "braised chicken"
+  },
+  "mapotofu": {
+    "seed": 504,
+    "hint": "mapo tofu"
+  },
+  "fish-flavoredpork": {
+    "seed": 505,
+    "hint": "shredded pork"
+  },
+  "sichuanhotpot": {
+    "seed": 506,
+    "hint": "sichuan hotpot"
+  },
+  "whitecutchicken": {
+    "seed": 507,
+    "hint": "chopped chicken"
+  },
+  "steamedgrouperfish": {
+    "seed": 508,
+    "hint": "steamed fish"
+  },
+  "porkwithpreservedvegetable": {
+    "seed": 509,
+    "hint": "pork belly"
+  },
+  "porkmeatballsoup": {
+    "seed": 510,
+    "hint": "meatball soup"
+  },
+  "sweetandsourfish": {
+    "seed": 511,
+    "hint": "sweet sour fish"
+  },
+  "saltwaterduck": {
+    "seed": 512,
+    "hint": "salted duck"
+  },
+  "westlakefish": {
+    "seed": 513,
+    "hint": "west lake fish"
+  },
+  "fishwithpickledvegetable": {
+    "seed": 514,
+    "hint": "fish soup"
+  },
+  "beggarschicken": {
+    "seed": 515,
+    "hint": "baked chicken"
+  },
+  "buddhajumpsoverthewall": {
+    "seed": 516,
+    "hint": "abalone soup"
+  },
+  "lycheepork": {
+    "seed": 517,
+    "hint": "lychee pork"
+  },
+  "sataynoodles": {
+    "seed": 518,
+    "hint": "satay noodles"
+  },
+  "steamedfishhead": {
+    "seed": 519,
+    "hint": "fish head"
+  },
+  "braisedporkbelly": {
+    "seed": 520,
+    "hint": "braised pork"
+  },
+  "dongan chicken": {
+    "seed": 521,
+    "hint": "dong an chicken"
+  },
+  "stinkymandarinfish": {
+    "seed": 522,
+    "hint": "mandarin fish"
+  },
+  "hairytodu": {
+    "seed": 523,
+    "hint": "hairy tofu"
+  },
+  "fulijiroastchicken": {
+    "seed": 524,
+    "hint": "roast chicken"
+  },
+  "blueberries": {
+    "seed": 601,
+    "hint": "blueberries"
+  },
+  "kale": {
+    "seed": 602,
+    "hint": "kale"
+  },
+  "salmonfillet": {
+    "seed": 603,
+    "hint": "salmon fillet"
+  },
+  "chiaseeds": {
+    "seed": 604,
+    "hint": "chia seeds"
+  },
+  "chickenbreast": {
+    "seed": 605,
+    "hint": "chicken breast"
+  },
+  "eggs": {
+    "seed": 606,
+    "hint": "eggs"
+  },
+  "tofu": {
+    "seed": 607,
+    "hint": "tofu"
+  },
+  "chickpeas": {
+    "seed": 608,
+    "hint": "chickpeas"
+  },
+  "avocado": {
+    "seed": 609,
+    "hint": "avocado"
+  },
+  "mixednuts": {
+    "seed": 610,
+    "hint": "mixed nuts"
+  },
+  "oliveoil": {
+    "seed": 611,
+    "hint": "olive oil"
+  },
+  "flaxseeds": {
+    "seed": 612,
+    "hint": "flax seeds"
+  },
+  "oats": {
+    "seed": 613,
+    "hint": "oats"
+  },
+  "quinoa": {
+    "seed": 614,
+    "hint": "quinoa"
+  },
+  "brownrice": {
+    "seed": 615,
+    "hint": "brown rice"
+  },
+  "wholewheatbread": {
+    "seed": 616,
+    "hint": "wheat bread"
+  },
+  "allMusicPlaylist": {
+    "seed": 701,
+    "hint": "music abstract"
+  },
+  "virtualPlaylist": {
+    "seed": 702,
+    "hint": "abstract texture"
+  },
+  "folderPlaylist": {
+    "seed": 703,
+    "hint": "sound waves"
+  }
 }

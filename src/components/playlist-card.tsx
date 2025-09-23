@@ -13,7 +13,8 @@ import {
   Trash2,
   ListMusic,
   FileEdit,
-  Download
+  Download,
+  Play
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -23,7 +24,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
-import type { Playlist, VirtualPlaylist, FolderPlaylist } from './playlist-types';
+import type { Playlist, VirtualPlaylist, FolderPlaylist } from '@/lib/playlist-types';
+import Image from 'next/image';
+import placeholderImageData from '@/lib/placeholder-images.json';
+
 
 interface PlaylistCardProps {
   playlist?: Playlist;
@@ -57,8 +61,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   onDrop,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-
-  // 拖拽处理
+  
   const handleDragOver = (e: React.DragEvent) => {
     if (!playlist || isCreateCard || playlist.type === 'all') return;
     e.preventDefault();
@@ -81,22 +84,19 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
     }
   };
 
-  // 创建歌单卡片
   if (isCreateCard) {
     return (
       <div 
-        className="relative group cursor-pointer"
+        className="relative group cursor-pointer aspect-square rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg"
         onClick={onCreate}
       >
-        <div className="aspect-square bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center p-3 transition-all duration-300 hover:bg-primary/10">
-          <div className="flex flex-col items-center space-y-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center shadow-sm">
-              <Plus className="h-5 w-5 text-primary" />
-            </div>
-            <p className="text-xs font-medium text-foreground">
-              创建歌单
-            </p>
+        <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-muted/10 border border-dashed border-muted-foreground/30 flex flex-col items-center justify-center p-3 transition-all duration-300 group-hover:bg-muted/30 group-hover:border-primary/50">
+          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center shadow-sm mb-2">
+            <Plus className="h-6 w-6 text-primary" />
           </div>
+          <p className="text-sm font-medium text-foreground">
+            创建歌单
+          </p>
         </div>
       </div>
     );
@@ -105,127 +105,104 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   if (!playlist) return null;
 
   const isVirtual = playlist.type === 'virtual';
-  const isFolder = playlist.type === 'folder';
   const isAllMusic = playlist.type === 'all';
-
-  const getGradientColors = () => {
-    if (isActive) {
-      if (isAllMusic) return "from-blue-500/20 via-cyan-500/20 to-teal-500/20";
-      if (isVirtual) return "from-violet-500/20 via-purple-500/20 to-pink-500/20";
-      return "from-orange-500/20 via-amber-500/20 to-yellow-500/20";
-    }
-    if (isAllMusic) return "from-blue-500/10 via-cyan-500/10 to-teal-500/10";
-    if (isVirtual) return "from-violet-500/10 via-purple-500/10 to-pink-500/10";
-    return "from-orange-500/10 via-amber-500/10 to-yellow-500/10";
-  };
-
-  const getIconBg = () => {
-    if (isActive) {
-      if (isAllMusic) return "bg-gradient-to-br from-blue-500/40 to-cyan-500/40 shadow-lg shadow-blue-500/20";
-      if (isVirtual) return "bg-gradient-to-br from-violet-500/40 to-purple-500/40 shadow-lg shadow-violet-500/20";
-      return "bg-gradient-to-br from-orange-500/40 to-amber-500/40 shadow-lg shadow-orange-500/20";
-    }
-    if (isAllMusic) return "bg-gradient-to-br from-blue-500/20 to-cyan-500/20";
-    if (isVirtual) return "bg-gradient-to-br from-violet-500/20 to-purple-500/20";
-    return "bg-gradient-to-br from-orange-500/20 to-amber-500/20";
-  };
-
-  const getIconColor = () => {
-    if (isActive) {
-      if (isAllMusic) return "text-blue-700 dark:text-blue-300";
-      if (isVirtual) return "text-violet-700 dark:text-violet-300";
-      return "text-orange-700 dark:text-orange-300";
-    }
-    if (isAllMusic) return "text-blue-600 dark:text-blue-400";
-    if (isVirtual) return "text-violet-600 dark:text-violet-400";
-    return "text-orange-600 dark:text-orange-400";
-  };
+  const imageDataKey = isVirtual ? 'virtualPlaylist' : isAllMusic ? 'allMusicPlaylist' : 'folderPlaylist';
+  const imageData = (placeholderImageData as any)[imageDataKey] || { seed: 100, hint: 'music abstract' };
   
+  const handleCardClick = () => {
+    if (isActive) {
+        onPlay?.();
+    } else {
+        onSelect?.();
+    }
+  };
+
   return (
     <div
       className={cn(
-        "relative aspect-square bg-gradient-to-br rounded-xl p-3 flex flex-col cursor-pointer transition-all duration-300 group overflow-hidden",
-        getGradientColors(),
-        isActive && "shadow-xl shadow-primary/30 scale-[1.05] z-20 border-2 border-primary/30",
-        isDragOver && "ring-2 ring-primary border-primary bg-primary/20 scale-[1.02] z-10",
-        !isActive && !isDragOver && "hover:shadow-lg hover:shadow-black/10 hover:scale-[1.02] border border-border/50 hover:z-10"
+        "relative aspect-square rounded-xl overflow-hidden cursor-pointer group shadow-md",
+        "transition-all duration-300 ease-in-out",
+        isActive && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        isDragOver && "ring-4 ring-primary/70",
       )}
-      onClick={onSelect}
+      onClick={handleCardClick}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className={cn("absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none transition-all duration-300", isActive && "from-white/10 to-white/5")} />
-      <div className={cn("absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-6 translate-x-6 pointer-events-none transition-all duration-300", isActive && "from-white/20 to-white/5 w-16 h-16")} />
-      
-      {isActive && (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none rounded-xl" />
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-xl blur-sm -z-10" />
-        </>
-      )}
-
-      <div className="flex items-start justify-between mb-2">
-        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm", getIconBg())}>
-          {isAllMusic ? <Music className={cn("h-4 w-4", getIconColor())} /> : isVirtual ? <ListMusic className={cn("h-4 w-4", getIconColor())} /> : <Folder className={cn("h-4 w-4", getIconColor())} />}
-        </div>
-        {!isAllMusic && (
-          <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 bg-background/80 backdrop-blur-sm border-0 shadow-sm hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {isVirtual && onEdit && (<><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}><FileEdit className="mr-2 h-4 w-4" />编辑信息</DropdownMenuItem></>)}
-                {onDownload && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDownload(); }}><Download className="mr-2 h-4 w-4" />下载歌单信息</DropdownMenuItem></>)}
-                {isFolder && onRefresh && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRefresh(); }}><RefreshCw className="mr-2 h-4 w-4" />刷新歌单</DropdownMenuItem></>)}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete?.(); }} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />删除歌单</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+      <Image
+        src={`https://picsum.photos/seed/${playlist.id}/${imageData.seed}/300/300`}
+        alt={playlist.name}
+        fill
+        className={cn(
+            "object-cover transition-all duration-500 ease-in-out",
+            "group-hover:scale-110 group-hover:blur-sm group-hover:brightness-50",
+            isActive && "scale-110 blur-sm brightness-50"
         )}
-      </div>
+        data-ai-hint={imageData.hint}
+      />
 
-      <div className="flex-1 flex flex-col justify-center">
-        <h3 className={cn("font-medium text-sm leading-tight mb-1 overflow-hidden transition-all duration-300", isActive && "text-primary font-semibold")} title={playlist.name} style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-          {playlist.name}
-        </h3>
-        {playlist.type === 'virtual' && (playlist as VirtualPlaylist).description && (
-          <p className="text-xs text-muted-foreground overflow-hidden mb-1" title={(playlist as VirtualPlaylist).description} style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
-            {(playlist as VirtualPlaylist).description}
-          </p>
+      <div 
+        className={cn(
+            "absolute inset-0 flex flex-col justify-between p-3 bg-black/20 text-white",
+            "opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+            isActive && "opacity-100"
         )}
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-1">
-          <Music className="h-3 w-3 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">{playlist.trackCount}</span>
-        </div>
-        
-        {isActive && (
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300", isPlaying ? "bg-primary" : "bg-primary/50")}>
-                    {isPlaying ? (
-                        <div className="flex items-center space-x-0.5">
-                            <span className="w-0.5 h-2 bg-primary-foreground rounded-full animate-[bounce_0.8s_ease-in-out_infinite]"></span>
-                            <span className="w-0.5 h-2.5 bg-primary-foreground rounded-full animate-[bounce_0.8s_ease-in-out_0.2s_infinite]"></span>
-                            <span className="w-0.5 h-2 bg-primary-foreground rounded-full animate-[bounce_0.8s_ease-in-out_0.4s_infinite]"></span>
-                        </div>
-                    ) : (
-                        <Play className="h-3 w-3 text-primary-foreground" />
-                    )}
+      >
+        {/* Top section with title and menu */}
+        <div>
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-white/20 flex items-center justify-center">
+                    {isAllMusic ? <Music className="h-4 w-4" /> : isVirtual ? <ListMusic className="h-4 w-4" /> : <Folder className="h-4 w-4" />}
                 </div>
+                <h3 
+                    className="font-semibold text-base leading-tight drop-shadow-md" 
+                    title={playlist.name} 
+                    style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                >
+                    {playlist.name}
+                </h3>
             </div>
-        )}
-      </div>
+            {!isAllMusic && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-white/80 hover:text-white hover:bg-white/20" onClick={(e) => e.stopPropagation()}>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                    {isVirtual && onEdit && <DropdownMenuItem onClick={onEdit}><FileEdit className="mr-2 h-4 w-4" />编辑信息</DropdownMenuItem>}
+                    {onDownload && <DropdownMenuItem onClick={onDownload}><Download className="mr-2 h-4 w-4" />下载歌单信息</DropdownMenuItem>}
+                    {playlist.type === 'folder' && onRefresh && <DropdownMenuItem onClick={onRefresh}><RefreshCw className="mr-2 h-4 w-4" />刷新歌单</DropdownMenuItem>}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />删除歌单</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
 
-      {isDragOver && (
-        <div className="absolute inset-0 bg-primary/30 border-2 border-primary border-dashed rounded-xl flex items-center justify-center backdrop-blur-sm">
-          <div className="text-primary font-medium text-sm flex items-center space-x-1">
+        {/* Bottom section with play button and track count */}
+        <div className="flex items-end justify-between">
+           <div className="flex items-center space-x-1">
+              <Music className="h-3 w-3 opacity-80" />
+              <span className="text-xs font-medium opacity-80">{playlist.trackCount}</span>
+            </div>
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            className="h-10 w-10 rounded-full bg-white/90 text-black hover:bg-white" 
+            onClick={(e) => { e.stopPropagation(); onPlay?.(); }}
+          >
+            {isActive && isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+          </Button>
+        </div>
+      </div>
+      
+       {isDragOver && (
+        <div className="absolute inset-0 bg-primary/30 border-2 border-primary border-dashed rounded-xl flex items-center justify-center backdrop-blur-sm pointer-events-none">
+          <div className="text-white font-medium text-sm flex items-center space-x-1">
             <Plus className="h-4 w-4" />
             <span>添加</span>
           </div>

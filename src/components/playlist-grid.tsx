@@ -49,7 +49,7 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
       </div>
       
       <ScrollArea className="w-full">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4 p-1 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-1 pb-4">
           {/* 现有歌单卡片 */}
           {playlists.map((playlist) => (
             <PlaylistCard
@@ -65,7 +65,7 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
                   : undefined
               }
               onDownload={
-                playlist.type === 'virtual'
+                playlist.type === 'virtual' || playlist.type === 'all'
                   ? () => onDownloadPlaylist(playlist.id)
                   : undefined
               }
@@ -74,7 +74,7 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
                   ? () => onRefreshFolderPlaylist(playlist.id)
                   : undefined
               }
-              onDelete={() => onDeletePlaylist(playlist.id)}
+              onDelete={playlist.id !== 'all-music' ? () => onDeletePlaylist(playlist.id) : undefined}
               onDrop={(trackId) => onTrackDrop(trackId, playlist.id)}
             />
           ))}
