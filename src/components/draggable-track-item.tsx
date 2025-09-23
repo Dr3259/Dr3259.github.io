@@ -12,13 +12,13 @@ import type { TrackMetadata } from '@/lib/db';
 
 interface DraggableTrackItemProps {
   track: TrackMetadata;
-  index: number; // 新增：歌曲的序号
+  index: number;
   isCurrentTrack: boolean;
-  isInVirtualPlaylist?: boolean; // 是否在虚拟歌单中
+  isInVirtualPlaylist?: boolean;
   onPlay: () => void;
   onEdit: () => void;
   onDelete?: () => void;
-  onRemoveFromPlaylist?: () => void; // 从虚拟歌单中移除
+  onRemoveFromPlaylist?: () => void;
 }
 
 // 智能Tooltip组件 - 只在文本被截断时显示
@@ -61,7 +61,7 @@ const SmartTooltip: React.FC<{
 
 export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
   track,
-  index, // 新增：歌曲的序号
+  index,
   isCurrentTrack,
   isInVirtualPlaylist = false,
   onPlay,
@@ -77,12 +77,10 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
   };
   
-  // 拖拽开始
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/track-id', track.id);
     e.dataTransfer.effectAllowed = 'move';
     
-    // 设置拖拽时的视觉效果
     const dragImage = document.createElement('div');
     dragImage.className = 'bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm font-medium shadow-lg';
     dragImage.textContent = track.title;
@@ -92,13 +90,10 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
     
     e.dataTransfer.setDragImage(dragImage, 0, 0);
     
-    // 清理临时元素
     setTimeout(() => {
       document.body.removeChild(dragImage);
     }, 0);
   };
-  
-  // 移除来源标识，因为播放列表中的歌曲都已经是导入的
   
   return (
     <TooltipProvider>
@@ -108,58 +103,60 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
           isCurrentTrack ? "bg-primary/20" : "hover:bg-accent/50"
         )}
         onClick={onPlay}
-        draggable={true} // 所有歌曲都可以拖拽到虚拟歌单
+        draggable={true}
         onDragStart={handleDragStart}
       >
-      {/* 拖拽手柄 */}
-      <div className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-      </div>
+        <div className="flex items-center flex-1 min-w-0">
+            {/* 拖拽手柄 */}
+            <div className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+            </div>
 
-      {/* 歌曲序号 */}
-      <div className="mr-3 text-sm font-mono text-muted-foreground w-6 text-center shrink-0">
-        {index + 1}
-      </div>
-      
-      {/* 歌曲信息 */}
-      <div className="flex-1 min-w-0">
-        <SmartTooltip content={track.title}>
-          <p className="font-medium text-sm truncate">
-            {track.title}
-          </p>
-        </SmartTooltip>
-        <SmartTooltip content={track.artist || '未知艺术家'}>
-          <p className="text-xs text-muted-foreground truncate">
-            {track.artist || '未知艺术家'}
-          </p>
-        </SmartTooltip>
-        
-        {/* 标签和信息 */}
-        <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
-          <p className="text-xs text-muted-foreground">
-            {formatDuration(track.duration)}
-          </p>
-          
-          {/* 分类标签 */}
-          {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
-            const bgColor = getTagColor(cat);
-            const textColor = getHighContrastTextColor(bgColor);
-            return (
-              <Badge
-                key={cat}
-                variant="secondary"
-                className="border-transparent text-xs"
-                style={{ backgroundColor: bgColor, color: textColor }}
-              >
-                {cat}
-              </Badge>
-            );
-          })}
+            {/* 歌曲序号 */}
+            <div className="text-sm font-mono text-muted-foreground w-6 text-center shrink-0">
+                {index + 1}
+            </div>
+
+            {/* 歌曲信息 */}
+            <div className="flex-1 min-w-0 ml-3">
+                <SmartTooltip content={track.title}>
+                  <p className="font-medium text-sm truncate">
+                    {track.title}
+                  </p>
+                </SmartTooltip>
+                <SmartTooltip content={track.artist || '未知艺术家'}>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {track.artist || '未知艺术家'}
+                  </p>
+                </SmartTooltip>
+                
+                {/* 标签和信息 */}
+                <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    {formatDuration(track.duration)}
+                  </p>
+                  
+                  {/* 分类标签 */}
+                  {track.category?.split(',').map(cat => cat.trim()).filter(Boolean).map(cat => {
+                    const bgColor = getTagColor(cat);
+                    const textColor = getHighContrastTextColor(bgColor);
+                    return (
+                      <Badge
+                        key={cat}
+                        variant="secondary"
+                        className="border-transparent text-xs"
+                        style={{ backgroundColor: bgColor, color: textColor }}
+                      >
+                        {cat}
+                      </Badge>
+                    );
+                  })}
+                </div>
+            </div>
         </div>
-      </div>
       
       {/* 操作按钮 */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
         <Button
           variant="ghost"
           size="icon"
@@ -172,7 +169,6 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
           <FileEdit className="h-4 w-4" />
         </Button>
         
-        {/* 虚拟歌单中显示移除按钮，否则显示删除按钮 */}
         {isInVirtualPlaylist && onRemoveFromPlaylist ? (
           <Button
             variant="ghost"
