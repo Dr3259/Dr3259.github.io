@@ -134,6 +134,9 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   const handleCardClick = () => {
       onPlay?.();
   };
+  
+  const shouldShowRhythm = isActive && isPlaying;
+  const isImageBlurred = isHovered || isDragOver || (isActive && isPlaying);
 
   return (
     <div
@@ -156,13 +159,13 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         fill
         className={cn(
             "object-cover transition-all duration-500 ease-in-out",
-            (isHovered || isDragOver || (isActive && isPlaying)) ? "scale-110 blur-sm brightness-50" : ""
+            isImageBlurred ? "scale-110 blur-sm brightness-50" : ""
         )}
         data-ai-hint={imageData.hint}
       />
       
       {/* 律动效果 */}
-       {isActive && isPlaying && !isHovered && (
+       {shouldShowRhythm && !isHovered && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex items-end justify-center h-8 w-8 gap-1">
             <div className="w-1 h-4 bg-primary/80 rounded-full animate-bar1"></div>
