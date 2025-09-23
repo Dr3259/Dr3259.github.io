@@ -12,8 +12,6 @@ interface PlaylistGridProps {
   currentPlaylist: Playlist | null;
   isLoadingPlaylists: boolean;
   isPlaying: boolean; // 当前是否正在播放音乐
-  onCreateVirtualPlaylist: () => void;
-  onImportFolderPlaylist: () => void;
   onPlayPlaylist: (playlistId: string) => void;
   onSelectPlaylist: (playlistId: string) => void;
   onEditPlaylist: (playlistId: string) => void;
@@ -28,8 +26,6 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
   currentPlaylist,
   isLoadingPlaylists,
   isPlaying,
-  onCreateVirtualPlaylist,
-  onImportFolderPlaylist,
   onPlayPlaylist,
   onSelectPlaylist,
   onEditPlaylist,
@@ -82,13 +78,6 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
               onDrop={(trackId) => onTrackDrop(trackId, playlist.id)}
             />
           ))}
-          
-          {/* 创建歌单卡片 */}
-          <PlaylistCard
-            isCreateCard
-            onCreate={onCreateVirtualPlaylist}
-            onImportFolder={onImportFolderPlaylist}
-          />
           
           {/* 加载状态 */}
           {isLoadingPlaylists && (

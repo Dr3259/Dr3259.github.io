@@ -18,7 +18,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -42,6 +41,7 @@ const translations = {
   'zh-CN': {
     pageTitle: '私人音乐播放器',
     backButton: '返回休闲驿站',
+    createPlaylist: '创建歌单',
     importMusic: '导入音乐',
     importFile: '导入文件',
     importFolder: '导入文件夹',
@@ -298,7 +298,10 @@ export default function IntegratedMusicPlayerPage() {
             </Button>
           </Link>
           <h1 className="text-xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
-          <div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setShowCreateModal(true)}>
+                <Plus className="mr-2 h-4 w-4" />{t.createPlaylist}
+            </Button>
             <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
             <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...{webkitdirectory: "", directory: ""}} />
             <DropdownMenu>
@@ -415,8 +418,6 @@ export default function IntegratedMusicPlayerPage() {
                   currentPlaylist={currentPlaylist}
                   isLoadingPlaylists={isLoadingPlaylists}
                   isPlaying={isPlaying}
-                  onCreateVirtualPlaylist={() => setShowCreateModal(true)}
-                  onImportFolderPlaylist={() => folderInputRef.current?.click()}
                   onPlayPlaylist={handlePlaylistPlayPause}
                   onSelectPlaylist={selectPlaylist}
                   onEditPlaylist={handleEditPlaylist}
