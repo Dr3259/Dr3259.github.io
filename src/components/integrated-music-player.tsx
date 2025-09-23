@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, Volume1, Volume, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Music, Plus, ListMusic, Play, Pause, SkipForward, SkipBack, Volume2, Volume1, Volume, VolumeX, Trash2, FolderPlus, Trash, Loader2, FileEdit, Repeat, Repeat1, Shuffle, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -299,63 +299,68 @@ export default function IntegratedMusicPlayerPage() {
             </Button>
           </Link>
           <h1 className="text-xl font-headline font-semibold text-primary">{t.pageTitle}</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setShowCreateModal(true)}>
-                <Plus className="mr-2 h-4 w-4" />{t.createPlaylist}
-            </Button>
-            <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileImport} className="hidden" multiple />
-            <input type="file" ref={folderInputRef} onChange={handleFolderImport} className="hidden" {...{webkitdirectory: "", directory: ""}} />
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button><Plus className="mr-2 h-4 w-4" />{t.importMusic}</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Music className="mr-2 h-4 w-4" />
-                                <span>{t.importFile}</span>
-                            </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>{t.importLimitTitle}</AlertDialogTitle>
-                                <AlertDialogDescription>{t.importLimitDescription}</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => fileInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <FolderPlus className="mr-2 h-4 w-4" />
-                                <span>{t.importFolder}</span>
-                            </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                         <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>{t.importLimitTitle}</AlertDialogTitle>
-                                <AlertDialogDescription>{t.importLimitDescription}</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => folderInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                  {tracks.length > 0 && (
-                    <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setIsDeleteAllAlertOpen(true)} className="text-destructive focus:text-destructive">
-                           <Trash2 className="mr-2 h-4 w-4" />
-                           <span>{t.deleteAllTracks}</span>
-                        </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
+          <div className="flex items-center gap-3">
+              <Button 
+                variant="default" 
+                className="bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                onClick={() => setShowCreateModal(true)}
+              >
+                  <Plus className="mr-2 h-4 w-4" />{t.createPlaylist}
+              </Button>
+
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="border-border/50 hover:border-border/80">
+                          <Upload className="mr-2 h-4 w-4" />{t.importMusic}
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Music className="mr-2 h-4 w-4" />
+                                  <span>{t.importFile}</span>
+                              </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>{t.importLimitTitle}</AlertDialogTitle>
+                                  <AlertDialogDescription>{t.importLimitDescription}</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>取消</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => fileInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <FolderPlus className="mr-2 h-4 w-4" />
+                                  <span>{t.importFolder}</span>
+                              </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                           <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>{t.importLimitTitle}</AlertDialogTitle>
+                                  <AlertDialogDescription>{t.importLimitDescription}</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>取消</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => folderInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
+                    {tracks.length > 0 && (
+                      <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setIsDeleteAllAlertOpen(true)} className="text-destructive focus:text-destructive">
+                             <Trash2 className="mr-2 h-4 w-4" />
+                             <span>{t.deleteAllTracks}</span>
+                          </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
               </DropdownMenu>
           </div>
         </header>
