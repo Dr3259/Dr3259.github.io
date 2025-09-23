@@ -129,27 +129,19 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
           {/* 歌曲信息 */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 flex items-center gap-1.5">
                 <SmartTooltip content={track.title}>
                   <p className="font-medium text-sm truncate">
                     {track.title}
                   </p>
                 </SmartTooltip>
-                <SmartTooltip content={track.artist || '未知艺术家'}>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {track.artist || '未知艺术家'}
-                  </p>
-                </SmartTooltip>
-              </div>
-
-              {/* 操作按钮 - 移动到这里 */}
-              <div className="flex items-center ml-2">
+                 {/* 操作按钮 - 移动到这里 */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <MoreVertical className="h-4 w-4" />
@@ -175,6 +167,11 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                 </DropdownMenu>
               </div>
             </div>
+            <SmartTooltip content={track.artist || '未知艺术家'}>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {track.artist || '未知艺术家'}
+              </p>
+            </SmartTooltip>
             
             {/* 标签和信息 */}
             <div className="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
