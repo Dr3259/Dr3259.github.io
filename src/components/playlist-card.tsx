@@ -156,7 +156,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         fill
         className={cn(
             "object-cover transition-all duration-500 ease-in-out",
-            (isHovered || isDragOver || (isActive && isPlaying && !isHovered)) ? "scale-110 blur-sm brightness-50" : ""
+            (isHovered || isDragOver || (isActive && isPlaying)) ? "scale-110 blur-sm brightness-50" : ""
         )}
         data-ai-hint={imageData.hint}
       />
