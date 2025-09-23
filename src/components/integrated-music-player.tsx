@@ -45,7 +45,7 @@ const translations = {
     importFile: '导入文件',
     importFolder: '导入文件夹',
     clearPlaylist: '清空播放列表',
-    deleteAllTracks: '删除所有音乐',
+    deleteAllTracks: '删除所有音乐和歌单',
     clearPlaylistConfirmationTitle: '确认清空播放列表',
     clearPlaylistConfirmationDescription: '此操作将清空当前播放列表，但不会删除音乐文件。歌单中的音乐不会受影响。',
     deleteAllTracksConfirmationTitle: '确认删除所有音乐和歌单',
@@ -87,6 +87,8 @@ const translations = {
     volumeUp: '增大音量',
     volumeDown: '减小音量',
     volumeTooltip: "音量 (可用方向键调节)",
+    unmute: '取消静音',
+    mute: '静音'
   },
 };
 
@@ -202,13 +204,6 @@ export default function IntegratedMusicPlayerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'zh-CN';
-      setCurrentLanguage(browserLang);
-    }
-  }, []);
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
@@ -348,7 +343,7 @@ export default function IntegratedMusicPlayerPage() {
               <span>
                 {currentPlaylist ? currentPlaylist.name : t.playlistTitle}
                 <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  ({displayTracks.length} 首)
+                  {t.totalTracks(displayTracks.length)}
                 </span>
               </span>
             </h2>
@@ -399,7 +394,7 @@ export default function IntegratedMusicPlayerPage() {
                   isLoadingPlaylists={isLoadingPlaylists}
                   isPlaying={isPlaying}
                   onCreateVirtualPlaylist={() => setShowCreateModal(true)}
-                  onImportFolderPlaylist={handleFolderImport}
+                  onImportFolderPlaylist={() => folderInputRef.current?.click()}
                   onPlayPlaylist={handlePlaylistPlayPause}
                   onSelectPlaylist={selectPlaylist}
                   onEditPlaylist={handleEditPlaylist}
@@ -427,15 +422,25 @@ export default function IntegratedMusicPlayerPage() {
                                     <VolumeIcon volume={volume} isMuted={isMuted} />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent><p>{isMuted ? "Unmute" : "Mute"}</p></TooltipContent>
+                            <TooltipContent><p>{isMuted ? t.unmute : t.mute}</p></TooltipContent>
                         </Tooltip>
                         <div className="flex flex-col items-center">
-                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}>
-                                <ChevronUp className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}>
-                                <ChevronDown className="h-4 w-4" />
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(0.1)} aria-label={t.volumeUp}>
+                                        <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{t.volumeUp}</p></TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 rounded-sm hover:bg-accent" onClick={() => handleVolumeAdjust(-0.1)} aria-label={t.volumeDown}>
+                                        <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{t.volumeDown}</p></TooltipContent>
+                            </Tooltip>
                         </div>
                     </div>
                     <div className="flex items-center justify-center gap-2">
@@ -501,7 +506,7 @@ export default function IntegratedMusicPlayerPage() {
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-                删除所有音乐和歌单
+                {t.deleteAllTracks}
             </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
