@@ -1,4 +1,3 @@
-
 // 支持拖拽的歌曲项组件
 "use client";
 
@@ -111,23 +110,23 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
         draggable={true}
         onDragStart={handleDragStart}
       >
-        <div className="flex items-start flex-1 min-w-0">
-          <Tooltip>
+        <Tooltip>
             <TooltipTrigger asChild>
                 <div className="flex items-center self-stretch mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
                     <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </div>
             </TooltipTrigger>
             <TooltipContent><p>拖动排序</p></TooltipContent>
-          </Tooltip>
-          
+        </Tooltip>
+
+        <div className="flex items-start flex-1 min-w-0">
           {/* 歌曲序号 */}
-          <div className="text-sm font-medium text-muted-foreground/80 w-6 text-left shrink-0 pt-px">
-              {index + 1}
+          <div className="text-sm font-medium text-muted-foreground/80 w-8 text-left shrink-0 pt-px">
+              {index + 1}.
           </div>
 
           {/* 歌曲信息 */}
-          <div className="flex-1 min-w-0 ml-2">
+          <div className="flex-1 min-w-0">
               <SmartTooltip content={track.title}>
                 <p className="font-medium text-sm truncate">
                   {track.title}
