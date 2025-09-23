@@ -85,36 +85,18 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   // 创建歌单卡片
   if (isCreateCard) {
     return (
-      <div className="relative group cursor-default">
-        <div className="aspect-square bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center p-3 transition-all duration-300">
-          <div className="flex flex-col items-center space-y-2 mb-3">
+      <div 
+        className="relative group cursor-pointer"
+        onClick={onCreate}
+      >
+        <div className="aspect-square bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center p-3 transition-all duration-300 hover:bg-primary/10">
+          <div className="flex flex-col items-center space-y-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center shadow-sm">
               <Plus className="h-5 w-5 text-primary" />
             </div>
             <p className="text-xs font-medium text-foreground">
               创建歌单
             </p>
-          </div>
-          
-          <div className="w-full flex flex-col space-y-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-8 text-xs bg-background/90 backdrop-blur-sm border-0 shadow-sm hover:bg-background"
-              onClick={onCreate}
-            >
-              <Music className="mr-2 h-3 w-3" />
-              创建虚拟歌单
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-8 text-xs bg-background/90 backdrop-blur-sm border-0 shadow-sm hover:bg-background"
-              onClick={onImportFolder}
-            >
-              <Folder className="mr-2 h-3 w-3" />
-              导入文件夹
-            </Button>
           </div>
         </div>
       </div>
@@ -188,21 +170,24 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm", getIconBg())}>
           {isAllMusic ? <Music className={cn("h-4 w-4", getIconColor())} /> : isVirtual ? <Heart className={cn("h-4 w-4", getIconColor())} /> : <Folder className={cn("h-4 w-4", getIconColor())} />}
         </div>
-        <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 bg-background/80 backdrop-blur-sm border-0 shadow-sm hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {isVirtual && !isAllMusic && onEdit && (<><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}><FileEdit className="mr-2 h-4 w-4" />编辑信息</DropdownMenuItem><DropdownMenuSeparator /></>)}
-              {isVirtual && onDownload && (<><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDownload(); }}><Download className="mr-2 h-4 w-4" />下载歌单信息</DropdownMenuItem><DropdownMenuSeparator /></>)}
-              {isFolder && onRefresh && (<><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRefresh(); }}><RefreshCw className="mr-2 h-4 w-4" />刷新歌单</DropdownMenuItem><DropdownMenuSeparator /></>)}
-              {!isAllMusic && (<DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete?.(); }} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />删除歌单</DropdownMenuItem>)}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {!isAllMusic && (
+          <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 bg-background/80 backdrop-blur-sm border-0 shadow-sm hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
+                  <MoreHorizontal className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isVirtual && onEdit && (<><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}><FileEdit className="mr-2 h-4 w-4" />编辑信息</DropdownMenuItem></>)}
+                {onDownload && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDownload(); }}><Download className="mr-2 h-4 w-4" />下载歌单信息</DropdownMenuItem></>)}
+                {isFolder && onRefresh && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRefresh(); }}><RefreshCw className="mr-2 h-4 w-4" />刷新歌单</DropdownMenuItem></>)}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete?.(); }} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />删除歌单</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col justify-center">
