@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileEdit, Trash2, GripVertical, MoreVertical, Bookmark } from 'lucide-react';
+import { FileEdit, Trash2, GripVertical, MoreHorizontal, Bookmark } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
