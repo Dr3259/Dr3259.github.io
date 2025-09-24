@@ -134,11 +134,19 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 更新当前播放歌曲到歌单的 lastPlayedTrackId
   useEffect(() => {
     if (currentTrack && currentPlaylist) {
-        setPlaylists(prev => prev.map(p => 
-            p.id === currentPlaylist.id ? { ...p, lastPlayedTrackId: currentTrack.id } : p
-        ));
+      const playlistIndex = playlists.findIndex(p => p.id === currentPlaylist.id);
+      if (playlistIndex > -1) {
+        const updatedPlaylist = { ...playlists[playlistIndex], lastPlayedTrackId: currentTrack.id };
+        const newPlaylists = [...playlists];
+        newPlaylists[playlistIndex] = updatedPlaylist;
+        setPlaylists(newPlaylists);
+        // Persist this change
+        if (updatedPlaylist.type === 'virtual') {
+          playlistDB.updateVirtualPlaylist(updatedPlaylist.id, { lastPlayedTrackId: currentTrack.id });
+        }
+      }
     }
-  }, [currentTrack, currentPlaylist]);
+  }, [currentTrack, currentPlaylist, playlistDB]);
   
   // 创建虚拟歌单
   const createVirtualPlaylist = useCallback(async (name: string, description?: string) => {
@@ -323,9 +331,9 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!playlist) return;
 
     if (playlist.id === 'all-music' && currentTrack && isPlaying) {
-      setCurrentPlaylist(playlist);
-      setPlaybackScope(tracks); 
-      return;
+        setCurrentPlaylist(playlist);
+        setPlaybackScope(tracks); 
+        return;
     }
 
     setCurrentPlaylist(playlist);
@@ -359,10 +367,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } else {
         toast({ title: '歌单为空', variant: 'destructive' });
         setPlaybackScope([]);
-        if (audioRef.current) {
-            audioRef.current.pause();
-        }
-        closePlayer(); // Call closePlayer from useMusic to reset state
+        closePlayer();
     }
   }, [playlists, tracks, playTrack, toast, setPlaybackScope, currentTrack, isPlaying, audioRef, closePlayer]);
   

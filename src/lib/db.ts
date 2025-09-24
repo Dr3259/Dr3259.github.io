@@ -32,6 +32,7 @@ export interface TrackMetadata {
     category?: string | null;
     createdAt?: Date;
     order?: number; // Explicit order for tracks
+    virtualPlaylists?: string[]; // 记录该歌曲所属的虚拟歌单ID
 }
 
 export interface TrackWithContent extends TrackMetadata {
@@ -198,7 +199,7 @@ export async function getTracksMetadata(): Promise<TrackMetadata[]> {
 
         request.onsuccess = () => {
             const allTracks: TrackWithContent[] = request.result;
-            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category, createdAt, order }) => ({ id, title, type, artist, album, duration, category, createdAt, order }));
+            const metadata: TrackMetadata[] = allTracks.map(({ id, title, type, artist, album, duration, category, createdAt, order, virtualPlaylists }) => ({ id, title, type, artist, album, duration, category, createdAt, order, virtualPlaylists }));
             
             // Sort by the new 'order' field, with a fallback to createdAt for older data
             metadata.sort((a, b) => {
