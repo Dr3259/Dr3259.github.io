@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileEdit, Trash2, GripVertical, MoreVertical } from 'lucide-react';
+import { FileEdit, Trash2, GripVertical, MoreVertical, Bookmark } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
@@ -101,6 +101,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
   };
   
   const displayTitle = track.title.length > 25 ? `${track.title.substring(0, 25)}...` : track.title;
+  const isBookmarked = track.virtualPlaylists && track.virtualPlaylists.length > 0;
 
   return (
     <TooltipProvider>
@@ -142,7 +143,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -163,6 +164,16 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    {isBookmarked && (
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Bookmark className="h-3.5 w-3.5 text-blue-500 fill-blue-500/50" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>这首歌已在歌单中</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                 </div>
               </div>
             </div>

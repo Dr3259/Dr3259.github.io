@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { useToast } from '@/hooks/use-toast';
 import { useMusic } from '@/context/MusicContext'; // 导入原有的MusicContext
 import type { Playlist, VirtualPlaylist, FolderPlaylist, AllMusicPlaylist, PlaylistTrackRef } from './playlist-types';
-import type { TrackMetadata } from '@/lib/db';
+import type { TrackMetadata, TrackWithContent } from '@/lib/db';
 import { PlaylistDB, FolderScanner } from './playlist-db';
 
 // 歌单专用的Context，与原有MusicContext并存
@@ -68,8 +68,8 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const { toast } = useToast();
   
-  // 获取原有的音乐功能，但不修改它们
-  const { tracks, playTrack, setPlaybackScope, currentTrack, isPlaying, audioRef, closePlayer } = useMusic();
+  // 获取原有的音乐功能
+  const { tracks, playTrack, setPlaybackScope, closePlayer, handleSaveTrackMeta, isPlaying, currentTrack } = useMusic();
   
   // 数据库实例 - 使用useMemo确保只创建一次
   const playlistDB = useMemo(() => new PlaylistDB(), []);
@@ -292,6 +292,9 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toast({ title: '只能添加到虚拟歌单', variant: 'destructive' });
       return;
     }
+
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) return;
     
     const virtualPlaylist = playlist as VirtualPlaylist;
     const trackExists = virtualPlaylist.tracks.some(ref => ref.trackId === trackId);
@@ -304,7 +307,11 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       await playlistDB.addTrackToVirtualPlaylist(trackId, playlistId);
       
-      // 更新本地状态
+      // 更新歌曲元数据
+      const updatedTrackPlaylists = [...(track.virtualPlaylists || []), playlistId];
+      handleSaveTrackMeta(trackId, { ...track, virtualPlaylists: updatedTrackPlaylists });
+      
+      // 更新歌单状态
       const updatedPlaylist: VirtualPlaylist = {
         ...virtualPlaylist,
         tracks: [...virtualPlaylist.tracks, { trackId, addedAt: new Date(), order: virtualPlaylist.tracks.length }],
@@ -318,12 +325,42 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Failed to add track to playlist:', error);
       toast({ title: '添加失败', variant: 'destructive' });
     }
-  }, [playlists, toast, playlistDB]);
+  }, [playlists, toast, playlistDB, tracks, handleSaveTrackMeta]);
   
   // 拖拽处理
   const handleTrackDrop = useCallback(async (trackId: string, targetPlaylistId: string) => {
     await addTrackToPlaylist(trackId, targetPlaylistId);
   }, [addTrackToPlaylist]);
+
+  const removeTrackFromPlaylist = async (trackId: string, playlistId: string) => {
+    try {
+      await playlistDB.removeTrackFromVirtualPlaylist(trackId, playlistId);
+      
+      const track = tracks.find(t => t.id === trackId);
+      if (track) {
+        const updatedTrackPlaylists = track.virtualPlaylists?.filter(id => id !== playlistId) || [];
+        handleSaveTrackMeta(trackId, { ...track, virtualPlaylists: updatedTrackPlaylists });
+      }
+
+      setPlaylists(prev => prev.map(p => {
+        if (p.id === playlistId && p.type === 'virtual') {
+          const virtualPlaylist = p as VirtualPlaylist;
+          return {
+            ...virtualPlaylist,
+            tracks: virtualPlaylist.tracks.filter(ref => ref.trackId !== trackId),
+            trackCount: virtualPlaylist.trackCount - 1,
+            updatedAt: new Date(),
+          };
+        }
+        return p;
+      }));
+      
+      toast({ title: '已从歌单中移除' });
+    } catch (error) {
+      console.error('Failed to remove track from playlist:', error);
+      toast({ title: '移除失败', variant: 'destructive' });
+    }
+  };
   
   // 播放歌单 - 与原有播放功能集成
   const playPlaylist = useCallback(async (playlistId: string) => {
@@ -369,7 +406,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setPlaybackScope([]);
         closePlayer();
     }
-  }, [playlists, tracks, playTrack, toast, setPlaybackScope, currentTrack, isPlaying, audioRef, closePlayer]);
+  }, [playlists, tracks, playTrack, toast, setPlaybackScope, currentTrack, isPlaying, closePlayer]);
   
   // 切换歌单侧边栏显示
   const togglePlaylistSidebar = useCallback(() => {
@@ -425,30 +462,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     },
     addTrackToPlaylist,
-    removeTrackFromPlaylist: async (trackId: string, playlistId: string) => {
-      try {
-        await playlistDB.removeTrackFromVirtualPlaylist(trackId, playlistId);
-        
-        // 更新本地状态
-        setPlaylists(prev => prev.map(p => {
-          if (p.id === playlistId && p.type === 'virtual') {
-            const virtualPlaylist = p as VirtualPlaylist;
-            return {
-              ...virtualPlaylist,
-              tracks: virtualPlaylist.tracks.filter(ref => ref.trackId !== trackId),
-              trackCount: virtualPlaylist.trackCount - 1,
-              updatedAt: new Date(),
-            };
-          }
-          return p;
-        }));
-        
-        toast({ title: '已从歌单中移除' });
-      } catch (error) {
-        console.error('Failed to remove track from playlist:', error);
-        toast({ title: '移除失败', variant: 'destructive' });
-      }
-    },
+    removeTrackFromPlaylist,
     importFolderAsPlaylist,
     refreshFolderPlaylist,
     clearAllPlaylists: async () => {
