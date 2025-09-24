@@ -295,7 +295,11 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
                     });
 
                 } catch (error) {
-                    toast({ title: `导入 ${fileName} 时出错`, variant: 'destructive' });
+                    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+                        toast({ title: "浏览器存储空间已满", description: "无法导入更多歌曲。", variant: 'destructive' });
+                    } else {
+                        toast({ title: `导入 ${fileName} 时出错`, variant: 'destructive' });
+                    }
                     resolve(null);
                 }
             });
@@ -307,7 +311,15 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
         if (newTracks.length > 0) {
             for (const track of newTracks) {
-                await saveTrack(track);
+                try {
+                    await saveTrack(track);
+                } catch (error) {
+                    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+                        toast({ title: "浏览器存储空间已满", description: `歌曲 "${track.title}" 未能保存。`, variant: 'destructive' });
+                        continue; // Skip adding this track to state
+                    }
+                    throw error; // Re-throw other errors
+                }
             }
             const newMetadata = newTracks.map(({ id, title, artist, type, duration, category, createdAt, order }) => ({ id, title, artist, type, duration, category, createdAt, order }));
             setTracks(prev => [...prev, ...newMetadata].sort((a,b) => (a.order ?? 0) - (b.order ?? 0)));
@@ -361,11 +373,6 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         }
     };
     
-    const handleClearPlaylist = async () => {
-        // This function is being removed per user request.
-        // It's functionality is confusing next to handleDeleteAllTracks.
-    };
-
     const handleDeleteAllTracks = async () => {
         if (audioRef.current) {
             audioRef.current.pause();
@@ -539,7 +546,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         tracks, currentTrack, currentTrackIndex, isPlaying, progress, volume, isMuted, playMode,
         isLoading, importingTracks, audioRef, playTrack, handlePlayPause, handleNextTrack,
         handlePrevTrack, handleProgressChange, handleVolumeAdjust, toggleMute, handleFileImport,
-        handleFolderImport, handleDeleteTrack, handleClearPlaylist, handleDeleteAllTracks, handleSaveTrackMeta,
+        handleFolderImport, handleDeleteTrack, handleDeleteAllTracks, handleSaveTrackMeta,
         cyclePlayMode, closePlayer, setPlaybackScope, playbackScope,
     };
 
