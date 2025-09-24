@@ -18,7 +18,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -449,6 +448,7 @@ export default function IntegratedMusicPlayerPage() {
                           key={track.id}
                           track={track}
                           index={index}
+                          allPlaylists={playlists}
                           isCurrentTrack={currentTrack?.id === track.id}
                           onPlay={() => handlePlayTrack(index)}
                           onEdit={() => setEditingTrack(track)}

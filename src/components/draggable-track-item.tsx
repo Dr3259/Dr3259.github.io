@@ -10,12 +10,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
 import type { TrackMetadata } from '@/lib/db';
+import type { Playlist } from '@/lib/playlist-types';
 
 interface DraggableTrackItemProps {
   track: TrackMetadata;
   index: number;
   isCurrentTrack: boolean;
   isInVirtualPlaylist?: boolean;
+  allPlaylists: Playlist[]; // 新增：传递所有歌单信息
   onPlay: () => void;
   onEdit: () => void;
   onDelete?: () => void;
@@ -69,6 +71,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
   index,
   isCurrentTrack,
   isInVirtualPlaylist = false,
+  allPlaylists,
   onPlay,
   onEdit,
   onDelete,
@@ -102,6 +105,19 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
   
   const displayTitle = track.title.length > 25 ? `${track.title.substring(0, 25)}...` : track.title;
   const isBookmarked = track.virtualPlaylists && track.virtualPlaylists.length > 0;
+  
+  const bookmarkTooltipContent = React.useMemo(() => {
+    if (!isBookmarked) return "未收藏";
+    
+    const playlistNames = track.virtualPlaylists!
+      .map(playlistId => allPlaylists.find(p => p.id === playlistId)?.name)
+      .filter(Boolean); // 过滤掉未找到的歌单名
+      
+    if (playlistNames.length === 0) return "已收藏";
+    
+    return `存在于: ${playlistNames.join(', ')}`;
+  }, [isBookmarked, track.virtualPlaylists, allPlaylists]);
+
 
   return (
     <TooltipProvider>
@@ -170,7 +186,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                                 <Bookmark className="h-3.5 w-3.5 text-blue-500 fill-blue-500/50" />
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>这首歌已在歌单中</p>
+                                <p>{bookmarkTooltipContent}</p>
                             </TooltipContent>
                         </Tooltip>
                     )}
