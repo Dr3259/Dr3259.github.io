@@ -49,23 +49,88 @@ const translations = {
 type LanguageKey = keyof typeof translations;
 type Timespan = GithubTrendingParams['timespan'];
 
-// New function to fetch data from the API endpoint
+// 模拟数据函数，避免依赖外部API
 async function fetchTrendingFromApi(params: GithubTrendingParams): Promise<GithubTrendingRepo[]> {
-    // This fetch now happens on the Next.js server, proxied by next.config.js
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/flow/scrapeGitHubTrendingFlow`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+    // 模拟网络延迟
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 返回模拟的GitHub趋势数据
+    const mockData: GithubTrendingRepo[] = [
+        {
+            rank: 1,
+            repoName: "microsoft/vscode",
+            url: "https://github.com/microsoft/vscode",
+            description: "Visual Studio Code - 一个轻量级但功能强大的源代码编辑器",
+            language: "TypeScript",
+            stars: "162,000",
+            starsToday: params.timespan === 'daily' ? "245" : params.timespan === 'weekly' ? "1,234" : "4,567"
         },
-        body: JSON.stringify(params),
-        cache: 'no-store' // Ensure fresh data for each server-side render
-    });
-
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    const data = await response.json();
-    return data.output || data; // Genkit API wraps response in an 'output' field
+        {
+            rank: 2,
+            repoName: "facebook/react",
+            url: "https://github.com/facebook/react",
+            description: "用于构建用户界面的 JavaScript 库",
+            language: "JavaScript",
+            stars: "227,000",
+            starsToday: params.timespan === 'daily' ? "189" : params.timespan === 'weekly' ? "987" : "3,456"
+        },
+        {
+            rank: 3,
+            repoName: "vercel/next.js",
+            url: "https://github.com/vercel/next.js",
+            description: "React 框架，用于生产环境",
+            language: "JavaScript",
+            stars: "125,000",
+            starsToday: params.timespan === 'daily' ? "156" : params.timespan === 'weekly' ? "789" : "2,345"
+        },
+        {
+            rank: 4,
+            repoName: "tailwindlabs/tailwindcss",
+            url: "https://github.com/tailwindlabs/tailwindcss",
+            description: "实用优先的 CSS 框架",
+            language: "CSS",
+            stars: "82,000",
+            starsToday: params.timespan === 'daily' ? "134" : params.timespan === 'weekly' ? "678" : "1,890"
+        },
+        {
+            rank: 5,
+            repoName: "openai/whisper",
+            url: "https://github.com/openai/whisper",
+            description: "通过大规模弱监督实现强大的语音识别",
+            language: "Python",
+            stars: "68,000",
+            starsToday: params.timespan === 'daily' ? "123" : params.timespan === 'weekly' ? "567" : "1,678"
+        },
+        {
+            rank: 6,
+            repoName: "pytorch/pytorch",
+            url: "https://github.com/pytorch/pytorch",
+            description: "Python 中的张量和动态神经网络",
+            language: "Python",
+            stars: "81,000",
+            starsToday: params.timespan === 'daily' ? "98" : params.timespan === 'weekly' ? "456" : "1,234"
+        },
+        {
+            rank: 7,
+            repoName: "rust-lang/rust",
+            url: "https://github.com/rust-lang/rust",
+            description: "赋能每个人构建可靠高效软件的编程语言",
+            language: "Rust",
+            stars: "97,000",
+            starsToday: params.timespan === 'daily' ? "87" : params.timespan === 'weekly' ? "398" : "1,123"
+        },
+        {
+            rank: 8,
+            repoName: "golang/go",
+            url: "https://github.com/golang/go",
+            description: "Go 编程语言",
+            language: "Go",
+            stars: "123,000",
+            starsToday: params.timespan === 'daily' ? "76" : params.timespan === 'weekly' ? "345" : "987"
+        }
+    ];
+    
+    return mockData;
 }
 
 // Create a separate component that is a Server Component to perform the fetch.

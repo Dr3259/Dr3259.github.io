@@ -158,25 +158,48 @@ export default function WeekGlancePage() {
   }, [toast, t.shareTarget, saveUrlToCurrentTimeSlot]);
 
   const checkClipboard = useCallback(async () => {
-    if (document.hidden) return;
     try {
-        if (typeof navigator?.permissions?.query !== 'function') return;
-        const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
-        if (permission.state === 'denied') return;
-        
+        // 尝试直接读取剪贴板，不检查权限
         const text = await navigator.clipboard.readText();
-        if (!text || text.trim() === '') return;
+        
+        if (!text || text.trim() === '') {
+            toast({ title: '剪贴板为空', description: '请先复制一个链接', duration: 2000 });
+            return;
+        }
+        
         const urlMatches = text.match(URL_REGEX);
-        if (!urlMatches) return;
-        if (text === lastProcessedClipboardText) return; 
+        if (!urlMatches) {
+            toast({ title: '未找到链接', description: '剪贴板中没有有效的链接', duration: 2000 });
+            return;
+        }
+        
+        if (text === lastProcessedClipboardText) {
+            toast({ title: '链接已处理', description: '这个链接已经处理过了', duration: 2000 });
+            return; 
+        }
+        
         if (isUrlAlreadySaved(urlMatches[0])) {
+            toast({ title: '链接已存在', description: '这个链接已经保存过了', duration: 2000 });
             setLastProcessedClipboardText(text); 
             return; 
         }
+        
+        // 成功找到新链接，弹出保存对话框
+        console.log('Setting clipboard content:', text);
+        console.log('Opening clipboard modal...');
         setClipboardContent(text);
         setIsClipboardModalOpen(true);
-    } catch (err: any) {}
-  }, [lastProcessedClipboardText, isUrlAlreadySaved]);
+        
+        // 添加延迟确认状态已设置
+        setTimeout(() => {
+            console.log('Modal should be open now. isClipboardModalOpen should be true');
+        }, 100);
+        
+    } catch (err: any) {
+        toast({ title: '剪贴板访问失败', description: '请允许访问剪贴板权限', variant: 'destructive', duration: 3000 });
+        console.error('Clipboard access failed:', err);
+    }
+  }, [lastProcessedClipboardText, isUrlAlreadySaved, toast]);
 
   const onDaySelect = useCallback((dayNameForUrl: string, dateForDetail: Date) => {
     if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
@@ -288,15 +311,26 @@ export default function WeekGlancePage() {
           debugKeySequence.current = [];
         }
 
-        if (!isInputFocused && event.key === 'Enter') {
+        if (!isInputFocused && event.key.toLowerCase() === 't') {
             event.preventDefault();
             setIsQuickAddModalOpen(true);
         }
+        
+        if (!isInputFocused && event.key.toLowerCase() === 'l') {
+            event.preventDefault();
+            checkClipboard();
+        }
+        
+        // 测试模态框 - 按 M 键直接打开模态框
+        if (!isInputFocused && event.key.toLowerCase() === 'm') {
+            event.preventDefault();
+            console.log('Testing modal with M key...');
+            setClipboardContent('Test content: https://www.example.com');
+            setIsClipboardModalOpen(true);
+        }
     };
-    window.addEventListener('focus', checkClipboard);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-        window.removeEventListener('focus', checkClipboard);
         window.removeEventListener('keydown', handleKeyDown);
     };
   }, [checkClipboard, isQuickAddModalOpen]);

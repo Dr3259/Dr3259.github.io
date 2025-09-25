@@ -124,9 +124,9 @@ export const QuickAddTodoModal: React.FC<QuickAddTodoModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none p-0">
          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.98, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            transition={{ type: "spring", stiffness: 600, damping: 30, duration: 0.15 }}
             className="rounded-xl border bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl shadow-2xl text-neutral-800 dark:text-neutral-200 border-white/50 dark:border-neutral-800"
          >
             <DialogHeader className="p-6 pb-4">

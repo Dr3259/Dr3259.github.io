@@ -175,6 +175,7 @@ export default function IntegratedMusicPlayerPage() {
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
   const [isImportFileAlertOpen, setIsImportFileAlertOpen] = useState(false);
   const [isImportFolderAlertOpen, setIsImportFolderAlertOpen] = useState(false);
+  const [isImportDropdownOpen, setIsImportDropdownOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<VirtualPlaylist | null>(null);
@@ -562,14 +563,14 @@ export default function IntegratedMusicPlayerPage() {
                   <Plus className="mr-2 h-4 w-4" />{t.createPlaylist}
               </Button>
 
-              <DropdownMenu>
+              <DropdownMenu open={isImportDropdownOpen} onOpenChange={setIsImportDropdownOpen}>
                   <DropdownMenuTrigger asChild>
                       <Button variant="outline" className="border-border/50 hover:border-border/80">
                           <Upload className="mr-2 h-4 w-4" />{t.importMusic}
                       </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                      <AlertDialog>
+                      <AlertDialog open={isImportFileAlertOpen} onOpenChange={setIsImportFileAlertOpen}>
                           <AlertDialogTrigger asChild>
                               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                   <Music className="mr-2 h-4 w-4" />
@@ -583,11 +584,15 @@ export default function IntegratedMusicPlayerPage() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                   <AlertDialogCancel>取消</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => fileInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
+                                  <AlertDialogAction onClick={() => {
+                                    fileInputRef.current?.click();
+                                    setIsImportFileAlertOpen(false);
+                                    setIsImportDropdownOpen(false);
+                                  }}>{t.importLimitConfirm}</AlertDialogAction>
                               </AlertDialogFooter>
                           </AlertDialogContent>
                       </AlertDialog>
-                      <AlertDialog>
+                      <AlertDialog open={isImportFolderAlertOpen} onOpenChange={setIsImportFolderAlertOpen}>
                           <AlertDialogTrigger asChild>
                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                   <FolderPlus className="mr-2 h-4 w-4" />
@@ -601,7 +606,11 @@ export default function IntegratedMusicPlayerPage() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                   <AlertDialogCancel>取消</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => folderInputRef.current?.click()}>{t.importLimitConfirm}</AlertDialogAction>
+                                  <AlertDialogAction onClick={() => {
+                                    folderInputRef.current?.click();
+                                    setIsImportFolderAlertOpen(false);
+                                    setIsImportDropdownOpen(false);
+                                  }}>{t.importLimitConfirm}</AlertDialogAction>
                               </AlertDialogFooter>
                           </AlertDialogContent>
                       </AlertDialog>
