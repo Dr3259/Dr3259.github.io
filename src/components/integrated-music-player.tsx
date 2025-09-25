@@ -1,5 +1,6 @@
-// 集成歌单功能的音乐播放器 - 在原有基础上添加歌单区域
 "use client";
+
+// 集成歌单功能的音乐播放器 - 在原有基础上添加歌单区域
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditTrackModal } from '@/components/EditTrackModal';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useMusic } from '@/context/MusicContext';
+import { useMusicWithPlaylist } from '@/lib/enhanced-music-context';
 import type { TrackMetadata } from '@/lib/db';
 import { MusicVisualizer } from '@/components/MusicVisualizer';
 import { Slider } from '@/components/ui/slider';
@@ -30,7 +31,6 @@ import { Badge } from '@/components/ui/badge';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
 
 // 导入歌单功能
-import { usePlaylist } from '@/lib/enhanced-music-context';
 import { PlaylistGrid } from './playlist-grid';
 import { CreatePlaylistModal } from './create-playlist-modal';
 import { EditPlaylistModal } from './EditPlaylistModal';
@@ -173,11 +173,13 @@ export default function IntegratedMusicPlayerPage() {
   const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('zh-CN');
   const [isDeleteAllAlertOpen, setIsDeleteAllAlertOpen] = useState(false);
+  const [isImportFileAlertOpen, setIsImportFileAlertOpen] = useState(false);
+  const [isImportFolderAlertOpen, setIsImportFolderAlertOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<TrackMetadata | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<VirtualPlaylist | null>(null);
 
-  // 原有音乐功能
+  // 音乐和歌单功能
   const {
     tracks,
     currentTrack,
@@ -204,37 +206,43 @@ export default function IntegratedMusicPlayerPage() {
     cyclePlayMode,
     closePlayer,
     setPlaybackScope,
-  } = useMusic();
-
-  // 歌单功能
-  const {
     playlists,
     currentPlaylist,
     isLoadingPlaylists,
     createVirtualPlaylist,
     editVirtualPlaylist,
+    updatePlaylistImageSeed,
     playPlaylist,
     selectPlaylist,
     refreshFolderPlaylist,
     deletePlaylist,
     clearAllPlaylists,
     handleTrackDrop,
-  } = usePlaylist();
+    removeTrackFromPlaylist,
+  } = useMusicWithPlaylist();
 
   // 根据当前选中的歌单获取要显示的歌曲列表
   const displayTracks = useMemo(() => {
+    console.log('displayTracks useMemo recalculating...');
+    console.log('currentPlaylist:', currentPlaylist);
+    
     if (!currentPlaylist) {
+      console.log('No current playlist, returning all tracks:', tracks.length);
       return tracks;
     }
     if (currentPlaylist.type === 'all') {
+      console.log('All music playlist, returning all tracks:', tracks.length);
       return tracks;
     }
     if (currentPlaylist.type === 'virtual') {
       const virtualPlaylist = currentPlaylist as VirtualPlaylist;
-      return virtualPlaylist.tracks
+      const result = virtualPlaylist.tracks
         .map(ref => tracks.find(t => t.id === ref.trackId))
         .filter((track): track is TrackMetadata => track !== undefined);
+      console.log('Virtual playlist tracks:', virtualPlaylist.tracks.length, 'found tracks:', result.length);
+      return result;
     }
+    console.log('Unknown playlist type, returning empty array');
     return [];
   }, [currentPlaylist, tracks]);
 
@@ -258,26 +266,48 @@ export default function IntegratedMusicPlayerPage() {
 
   const t = useMemo(() => translations[currentLanguage], [currentLanguage]);
 
-  useEffect(() => {
+  // 滚动到当前播放歌曲的逻辑
+  const scrollToCurrentTrack = useCallback(() => {
     if (currentTrack && scrollAreaRef.current) {
-        const trackElement = document.getElementById(`track-item-${currentTrack.id}`);
-        const scrollContainer = scrollAreaRef.current;
-        
-        if(trackElement && scrollContainer) {
-            const trackRect = trackElement.getBoundingClientRect();
-            const containerRect = scrollContainer.getBoundingClientRect();
+        const timer = setTimeout(() => {
+            const trackElement = document.getElementById(`track-item-${currentTrack.id}`);
+            const scrollContainer = scrollAreaRef.current;
             
-            const isVisible = trackRect.top >= containerRect.top && trackRect.bottom <= containerRect.bottom;
+            if (trackElement && scrollContainer) {
+                const trackRect = trackElement.getBoundingClientRect();
+                const containerRect = scrollContainer.getBoundingClientRect();
+                
+                // 检查元素是否在可视区域内
+                const isVisible = trackRect.top >= containerRect.top && 
+                                trackRect.bottom <= containerRect.bottom;
 
-            if (!isVisible) {
-                trackElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                if (!isVisible) {
+                    trackElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
             }
-        }
+        }, 100);
+        
+        return () => clearTimeout(timer);
     }
   }, [currentTrack]);
+
+  // 当前播放歌曲变化时滚动
+  useEffect(() => {
+    const cleanup = scrollToCurrentTrack();
+    return cleanup;
+  }, [scrollToCurrentTrack]);
+
+  // 当切换到"所有音乐"歌单时也滚动到当前播放歌曲
+  useEffect(() => {
+    if (currentPlaylist?.type === 'all' && currentTrack) {
+        const cleanup = scrollToCurrentTrack();
+        return cleanup;
+    }
+  }, [currentPlaylist, scrollToCurrentTrack]);
 
   const handleCreatePlaylist = async (name: string, description?: string) => {
     await createVirtualPlaylist(name, description);
@@ -307,6 +337,69 @@ export default function IntegratedMusicPlayerPage() {
     }
   };
 
+  const handleRemoveTrackFromPlaylist = useCallback(async (trackId: string) => {
+    console.log('=== handleRemoveTrackFromPlaylist called ===');
+    console.log('trackId:', trackId);
+    console.log('currentPlaylist:', currentPlaylist);
+    
+    if (!currentPlaylist || currentPlaylist.type !== 'virtual') {
+      console.log('Not in virtual playlist, cannot remove');
+      return;
+    }
+
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) {
+      console.log('Track not found');
+      return;
+    }
+
+    // 检查是否正在移除当前播放的歌曲
+    const isRemovingCurrentTrack = currentTrack?.id === trackId;
+    console.log('Is removing current track:', isRemovingCurrentTrack);
+
+    try {
+      console.log('Removing track from playlist...');
+      console.log('Calling removeTrackFromPlaylist with:', { trackId, playlistId: currentPlaylist.id });
+      
+      await removeTrackFromPlaylist(trackId, currentPlaylist.id);
+      
+      console.log('Successfully removed track from playlist');
+      console.log('Current playlist after removal:', currentPlaylist);
+      console.log('Display tracks length should update now');
+      
+      // 如果移除的是当前播放的歌曲，需要处理播放状态
+      if (isRemovingCurrentTrack) {
+        console.log('Removed track was currently playing, handling playback...');
+        
+        // 获取更新后的歌单歌曲列表
+        const updatedPlaylist = currentPlaylist as VirtualPlaylist;
+        const remainingTracks = updatedPlaylist.tracks
+          .filter(ref => ref.trackId !== trackId)
+          .map(ref => tracks.find(t => t.id === ref.trackId))
+          .filter((t): t is TrackMetadata => t !== undefined);
+        
+        if (remainingTracks.length > 0) {
+          // 如果歌单还有其他歌曲，播放第一首
+          console.log('Playing first remaining track in playlist');
+          const firstTrackIndex = tracks.findIndex(t => t.id === remainingTracks[0].id);
+          if (firstTrackIndex >= 0) {
+            playTrack(firstTrackIndex);
+          }
+        } else {
+          // 如果歌单已空，停止播放
+          console.log('Playlist is now empty, stopping playback');
+          closePlayer();
+        }
+      }
+      
+      toast({ title: `已从歌单中移除《${track.title}》` });
+    } catch (error) {
+      console.error('Failed to remove track from playlist:', error);
+      console.error('Error details:', error);
+      toast({ title: '移除失败', variant: 'destructive' });
+    }
+  }, [currentPlaylist, tracks, removeTrackFromPlaylist, toast, currentTrack, playTrack, closePlayer]);
+
   const handleDownloadPlaylist = (playlistId: string) => {
     const playlist = playlists.find(p => p.id === playlistId);
     if (!playlist) {
@@ -332,6 +425,115 @@ export default function IntegratedMusicPlayerPage() {
       await playPlaylist(playlistId);
     }
   };
+
+  const handleChangePlaylistImage = (playlistId: string) => {
+    updatePlaylistImageSeed(playlistId);
+  };
+
+  const handleResetPlaylistImage = (playlistId: string) => {
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist || (playlist.type !== 'virtual' && playlist.type !== 'all')) {
+      toast({ title: '只能重置虚拟歌单和所有音乐歌单的图片', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // 清除自定义封面图片，恢复到随机生成的图片
+      if (playlist.type === 'virtual') {
+        editVirtualPlaylist(playlistId, { 
+          name: playlist.name, 
+          description: (playlist as VirtualPlaylist).description,
+          coverImage: undefined 
+        });
+      } else if (playlist.type === 'all') {
+        // 对于"所有音乐"歌单，清除localStorage中的图片
+        localStorage.removeItem('all-music-playlist-coverImage');
+        // 刷新页面来重新加载歌单状态
+        window.location.reload();
+      }
+      
+      toast({ title: '歌单图片已重置' });
+    } catch (error) {
+      console.error('Failed to reset playlist image:', error);
+      toast({ title: '重置图片失败', variant: 'destructive' });
+    }
+  };
+
+  const handleUploadPlaylistImage = (playlistId: string) => {
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist || (playlist.type !== 'virtual' && playlist.type !== 'all')) {
+      toast({ title: '只能为虚拟歌单和所有音乐歌单上传图片', variant: 'destructive' });
+      return;
+    }
+
+    // 创建文件输入元素
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+    
+    input.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      // 检查文件大小（限制为 5MB）
+      if (file.size > 5 * 1024 * 1024) {
+        toast({ title: '图片文件过大，请选择小于 5MB 的图片', variant: 'destructive' });
+        return;
+      }
+      
+      // 检查文件类型
+      if (!file.type.startsWith('image/')) {
+        toast({ title: '请选择有效的图片文件', variant: 'destructive' });
+        return;
+      }
+      
+      try {
+        // 将图片转换为 base64
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64Image = e.target?.result as string;
+          
+          try {
+            // 更新歌单的封面图片
+            if (playlist.type === 'virtual') {
+              await editVirtualPlaylist(playlistId, { 
+                name: playlist.name, 
+                description: (playlist as VirtualPlaylist).description,
+                coverImage: base64Image 
+              });
+            } else if (playlist.type === 'all') {
+              // 对于"所有音乐"歌单，使用localStorage保存
+              localStorage.setItem('all-music-playlist-coverImage', base64Image);
+              // 刷新页面来重新加载歌单状态
+              window.location.reload();
+            }
+            
+            toast({ title: '歌单图片上传成功' });
+          } catch (error) {
+            console.error('Failed to update playlist image:', error);
+            toast({ title: '上传图片失败', variant: 'destructive' });
+          }
+        };
+        
+        reader.onerror = () => {
+          toast({ title: '读取图片文件失败', variant: 'destructive' });
+        };
+        
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Failed to process image:', error);
+        toast({ title: '处理图片失败', variant: 'destructive' });
+      }
+    };
+    
+    // 触发文件选择
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  };
+
+
 
   const currentTrackOriginalIndex = useMemo(() => {
     if (!currentTrack) return -1;
@@ -429,6 +631,12 @@ export default function IntegratedMusicPlayerPage() {
                   {t.totalTracks(displayTracks.length)}
                 </span>
               </span>
+              {importingTracks.length > 0 && (
+                <div className="ml-3 flex items-center text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span className="text-sm">{t.importing}</span>
+                </div>
+              )}
             </h2>
             <ScrollArea className="flex-1 -mx-4" ref={scrollAreaRef}>
                 <ul className="space-y-2 p-px px-4">
@@ -451,19 +659,17 @@ export default function IntegratedMusicPlayerPage() {
                           index={index}
                           allPlaylists={playlists}
                           isCurrentTrack={currentTrack?.id === track.id}
+                          isInVirtualPlaylist={currentPlaylist?.type === 'virtual'}
                           onPlay={() => handlePlayTrack(index)}
                           onEdit={() => setEditingTrack(track)}
                           onDelete={() => handleDeleteTrack(track.id, track.title)}
+                          onRemoveFromPlaylist={
+                            currentPlaylist?.type === 'virtual' 
+                              ? () => handleRemoveTrackFromPlaylist(track.id, currentPlaylist.id)
+                              : undefined
+                          }
                         />
                       ))}
-                      {importingTracks.length > 0 && (
-                         <li className="p-3 rounded-md flex justify-between items-center opacity-60">
-                           <div>
-                              <p className="font-medium text-sm truncate">{t.importing}</p>
-                           </div>
-                           <Loader2 className="h-4 w-4 animate-spin" />
-                         </li>
-                      )}
                     </>
                   )}
                 </ul>
@@ -484,6 +690,9 @@ export default function IntegratedMusicPlayerPage() {
                   onRefreshFolderPlaylist={refreshFolderPlaylist}
                   onDeletePlaylist={deletePlaylist}
                   onTrackDrop={handleTrackDrop}
+                  onChangePlaylistImage={handleChangePlaylistImage}
+                  onUploadPlaylistImage={handleUploadPlaylistImage}
+                  onResetImage={handleResetPlaylistImage}
                 />
               </div>
               

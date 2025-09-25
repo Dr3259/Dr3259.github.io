@@ -13,7 +13,9 @@ import {
   Trash2,
   ListMusic,
   FileEdit,
-  Download
+  Download,
+  Shuffle,
+  Upload,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -42,6 +44,9 @@ interface PlaylistCardProps {
   onCreate?: () => void;
   onImportFolder?: () => void;
   onTrackDrop?: (trackId: string) => void;
+  onChangeImage?: () => void;
+  onUploadImage?: () => void;
+  onResetImage?: () => void;
 }
 
 // Simple hash function to generate a number from a string
@@ -70,6 +75,9 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   onCreate,
   onImportFolder,
   onTrackDrop,
+  onChangeImage,
+  onUploadImage,
+  onResetImage,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -121,12 +129,31 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   const isAllMusic = playlist.type === 'all';
   
   const getImageData = () => {
-    if (isVirtual && playlist.id) {
-        const hash = simpleHash(playlist.id);
-        return { seed: hash % 1000, hint: 'abstract texture' }; // Use hash for seed
+    if ((isVirtual || isAllMusic) && playlist.id) {
+        // 如果歌单有自定义的 imageSeed，使用它；否则使用 ID 的哈希值
+        const seed = (playlist as any).imageSeed ?? simpleHash(playlist.id);
+        return { seed: seed % 1000, hint: 'abstract texture' };
     }
     const imageDataKey = isAllMusic ? 'allMusicPlaylist' : 'folderPlaylist';
     return (placeholderImageData as any)[imageDataKey] || { seed: 100, hint: 'music abstract' };
+  };
+
+  const getImageSrc = () => {
+    // 如果有自定义封面图片，优先使用（虚拟歌单或所有音乐歌单）
+    if ((isVirtual || isAllMusic) && (playlist as any).coverImage) {
+      return (playlist as any).coverImage;
+    }
+    
+    // 否则使用随机生成的图片
+    const imageData = getImageData();
+    // 只有当 imageSeed 存在时才添加时间戳，避免不必要的缓存破坏
+    const seed = imageData.seed;
+    const imageSeed = (playlist as any).imageSeed;
+    if (imageSeed !== undefined) {
+      // 使用 imageSeed 作为缓存破坏参数，而不是 updatedAt
+      return `https://picsum.photos/seed/${seed}/300/300?v=${imageSeed}`;
+    }
+    return `https://picsum.photos/seed/${seed}/300/300`;
   };
 
   const imageData = getImageData();
@@ -154,14 +181,15 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Image
-        src={`https://picsum.photos/seed/${imageData.seed}/300/300`}
+        key={`${playlist.id}-${(playlist as any).imageSeed || 0}-${(playlist as any).coverImage ? 'custom' : 'random'}`}
+        src={getImageSrc()}
         alt={playlist.name}
         fill
         className={cn(
             "object-cover transition-all duration-500 ease-in-out",
             isImageBlurred ? "scale-110 blur-sm brightness-50" : ""
         )}
-        data-ai-hint={imageData.hint}
+        data-ai-hint={getImageData().hint}
       />
       
       {/* 律动效果 */}
@@ -218,11 +246,43 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
           </div>
         </div>
 
-        {/* Bottom section with track count */}
+        {/* Bottom section with track count and image buttons */}
         <div className="flex items-end justify-between">
            <div className="flex items-center space-x-1">
-              <Music className="h-3 w-3 opacity-80" />
+              <Music className="h-4 w-4 opacity-80" />
               <span className="text-xs font-medium opacity-80">{playlist.trackCount}</span>
+            </div>
+            
+            {/* Image control buttons */}
+            <div className="flex items-center space-x-1">
+              {onChangeImage && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-white/80 hover:text-white hover:bg-white/20 rounded-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChangeImage();
+                  }}
+                  title="更新随机图片"
+                >
+                  <Shuffle className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {onUploadImage && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-white/80 hover:text-white hover:bg-white/20 rounded-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUploadImage();
+                  }}
+                  title="上传自定义图片"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
         </div>
       </div>

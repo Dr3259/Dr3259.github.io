@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, type TrackMetadata, type TrackWithContent } from '@/lib/db';
+import { saveTrack, getTracksMetadata, deleteTrack, getTrackContent, updateTrackMetadata, type TrackMetadata, type TrackWithContent } from '@/lib/db';
 
 type PlayMode = 'repeat' | 'repeat-one' | 'shuffle';
 
@@ -32,13 +32,16 @@ interface MusicContextType {
     handleFolderImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleDeleteTrack: (trackId: string, trackTitle: string) => Promise<void>;
     handleDeleteAllTracks: () => Promise<void>;
-    handleSaveTrackMeta: (trackId: string, meta: { title: string, artist: string | undefined, category: string | null }) => void;
+    handleSaveTrackMeta: (trackId: string, meta: Partial<TrackMetadata>) => Promise<void>;
+    handleUpdateTrackMetadata: (trackId: string, meta: Partial<TrackMetadata>) => Promise<void>;
     cyclePlayMode: () => void;
     closePlayer: () => void;
     
     // 播放范围控制
     setPlaybackScope: (scopeTracks: TrackMetadata[]) => void;
     playbackScope: TrackMetadata[] | null;
+    
+
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -67,6 +70,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     const [playMode, setPlayMode] = useState<PlayMode>('repeat');
     const [playHistory, setPlayHistory] = useState<number[]>([]);
     const [playbackScope, setPlaybackScope] = useState<TrackMetadata[] | null>(null);
+
 
     const { toast } = useToast();
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -416,7 +420,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         setIsMuted(newMuted);
     }
     
-    const handleSaveTrackMeta = async (trackId: string, meta: { title: string, artist: string | undefined, category: string | null }) => {
+    // 完整保存函数 - 用于编辑歌曲信息（标题、艺术家等）
+    const handleSaveTrackMeta = async (trackId: string, meta: Partial<TrackMetadata>) => {
         const trackToUpdate = await getTrackContent(trackId);
         if (!trackToUpdate) return;
         
@@ -431,11 +436,24 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
             duration: updatedTrack.duration, 
             category: updatedTrack.category, 
             createdAt: updatedTrack.createdAt,
-            order: updatedTrack.order 
+            order: updatedTrack.order,
+            virtualPlaylists: updatedTrack.virtualPlaylists
         };
         setTracks(prev => prev.map(t => (t.id === trackId ? updatedMetadata : t)));
         
         if (currentTrack?.id === trackId) setCurrentTrack(updatedMetadata);
+    };
+
+    // 轻量级元数据更新函数 - 用于歌单操作（只更新 virtualPlaylists 等字段）
+    const handleUpdateTrackMetadata = async (trackId: string, meta: Partial<TrackMetadata>) => {
+        await updateTrackMetadata(trackId, meta);
+        
+        // 更新界面状态
+        setTracks(prev => prev.map(t => (t.id === trackId ? { ...t, ...meta } : t)));
+        
+        if (currentTrack?.id === trackId) {
+            setCurrentTrack(prev => prev ? { ...prev, ...meta } : null);
+        }
     };
   
     const cyclePlayMode = () => {
@@ -547,7 +565,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
         isLoading, importingTracks, audioRef, playTrack, handlePlayPause, handleNextTrack,
         handlePrevTrack, handleProgressChange, handleVolumeAdjust, toggleMute, handleFileImport,
         handleFolderImport, handleDeleteTrack, handleDeleteAllTracks, handleSaveTrackMeta,
-        cyclePlayMode, closePlayer, setPlaybackScope, playbackScope,
+        handleUpdateTrackMetadata, cyclePlayMode, closePlayer, setPlaybackScope, playbackScope,
     };
 
     return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;

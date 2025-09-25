@@ -1,7 +1,7 @@
 // 创建歌单的模态框组件
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,54 @@ interface CreatePlaylistModalProps {
   onConfirm: (name: string, description?: string) => Promise<void>;
 }
 
-export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
+// 模板卡片组件 - 使用 memo 优化
+const TemplateCard = memo(({ 
+  template, 
+  onSelect 
+}: { 
+  template: PlaylistTemplate; 
+  onSelect: (template: PlaylistTemplate) => void;
+}) => (
+  <div
+    onClick={() => onSelect(template)}
+    className="p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-md group bg-card hover:bg-accent/50 border-border/50 hover:border-border/80"
+  >
+    <div className="flex items-start gap-3 mb-3">
+      <div className="text-2xl">{template.icon}</div>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors">
+          {template.name}
+        </h3>
+        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+          {template.description}
+        </p>
+      </div>
+    </div>
+    <div className="flex flex-wrap gap-1">
+      {template.tags.slice(0, 3).map((tag) => (
+        <Badge
+          key={tag}
+          variant="secondary"
+          className="text-xs px-2 py-0.5"
+        >
+          {tag}
+        </Badge>
+      ))}
+      {template.tags.length > 3 && (
+        <Badge
+          variant="secondary"
+          className="text-xs px-2 py-0.5"
+        >
+          +{template.tags.length - 3}
+        </Badge>
+      )}
+    </div>
+  </div>
+));
+
+TemplateCard.displayName = 'TemplateCard';
+
+export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = memo(({
   isOpen,
   onClose,
   onConfirm,
@@ -44,6 +91,14 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
     setMode('custom');
   };
 
+  // 按分类缓存模板数据
+  const templatesByCategory = useMemo(() => {
+    return templateCategories.reduce((acc, category) => {
+      acc[category.id] = playlistTemplates.filter(template => template.category === category.id);
+      return acc;
+    }, {} as Record<string, PlaylistTemplate[]>);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -51,36 +106,53 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
     setIsCreating(true);
     try {
       await onConfirm(name.trim(), description.trim() || undefined);
-      handleClose();
-    } finally {
+      // 成功后立即关闭，不等待状态重置
+      onClose();
+      // 延迟重置状态
+      setTimeout(() => {
+        setMode('template');
+        setSelectedTemplate(null);
+        setName('');
+        setDescription('');
+        setIsCreating(false);
+      }, 150);
+    } catch (error) {
       setIsCreating(false);
     }
   };
 
   const handleClose = () => {
     if (!isCreating) {
-      setMode('template');
-      setSelectedTemplate(null);
-      setName('');
-      setDescription('');
+      // 立即关闭弹窗，延迟重置状态以避免卡顿
       onClose();
+      
+      // 使用 setTimeout 延迟重置状态，让关闭动画先执行
+      setTimeout(() => {
+        setMode('template');
+        setSelectedTemplate(null);
+        setName('');
+        setDescription('');
+      }, 150); // 等待关闭动画完成
     }
   };
 
   const handleBackToTemplates = () => {
+    // 优化状态更新，减少重渲染
     setMode('template');
-    setSelectedTemplate(null);
-    setName('');
-    setDescription('');
+    setTimeout(() => {
+      setSelectedTemplate(null);
+      setName('');
+      setDescription('');
+    }, 0);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className={cn(
-        "bg-gradient-to-br from-background via-background/95 to-background/90 backdrop-blur-xl border border-purple-200/20 shadow-2xl",
+        "bg-background border shadow-lg",
         mode === 'template' ? "sm:max-w-4xl" : "sm:max-w-lg"
       )}>
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-400 via-purple-500 to-violet-600 rounded-t-lg"></div>
+        <div className="absolute top-0 inset-x-0 h-1 bg-primary rounded-t-lg"></div>
         
         <DialogHeader className="mb-6 space-y-3">
           <DialogTitle className="text-xl font-medium text-foreground flex items-center gap-3">
@@ -94,11 +166,11 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-200/30 flex items-center justify-center backdrop-blur-sm">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
               {mode === 'template' ? (
-                <Sparkles className="w-6 h-6 text-purple-600" />
+                <Sparkles className="w-6 h-6 text-primary" />
               ) : (
-                <Plus className="w-6 h-6 text-purple-600" />
+                <Plus className="w-6 h-6 text-primary" />
               )}
             </div>
             {mode === 'template' ? '选择歌单模板' : '创建新歌单'}
@@ -121,54 +193,13 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
                 <TabsContent key={category.id} value={category.id}>
                   <ScrollArea className="h-96">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-1">
-                      {playlistTemplates
-                        .filter(template => template.category === category.id)
-                        .map((template) => (
-                          <div
-                            key={template.id}
-                            onClick={() => handleTemplateSelect(template)}
-                            className={cn(
-                              "p-4 rounded-xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group",
-                              `bg-gradient-to-br ${template.gradient} bg-opacity-10 hover:bg-opacity-20`,
-                              "border-border/50 hover:border-purple-300/50"
-                            )}
-                          >
-                            <div className="flex items-start gap-3 mb-3">
-                              <div className="text-2xl">{template.icon}</div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-purple-600 transition-colors">
-                                  {template.name}
-                                </h3>
-                                <p className="text-xs text-muted-foreground leading-relaxed overflow-hidden" style={{
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                }}>
-                                  {template.description}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {template.tags.slice(0, 3).map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="secondary"
-                                  className="text-xs px-2 py-0.5 bg-background/50 text-muted-foreground border-0"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {template.tags.length > 3 && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs px-2 py-0.5 bg-background/50 text-muted-foreground border-0"
-                                >
-                                  +{template.tags.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                      {templatesByCategory[category.id]?.map((template) => (
+                        <TemplateCard
+                          key={template.id}
+                          template={template}
+                          onSelect={handleTemplateSelect}
+                        />
+                      ))}
                     </div>
                   </ScrollArea>
                 </TabsContent>
@@ -196,14 +227,10 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {selectedTemplate && (
-              <div className={cn(
-                "p-4 rounded-xl border bg-gradient-to-br bg-opacity-10",
-                `${selectedTemplate.gradient}`,
-                "border-purple-200/30"
-              )}>
+              <div className="p-4 rounded-xl border bg-muted/50">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-xl">{selectedTemplate.icon}</span>
-                  <span className="text-sm font-medium text-purple-600">
+                  <span className="text-sm font-medium text-primary">
                     基于模板: {selectedTemplate.name}
                   </span>
                 </div>
@@ -212,7 +239,7 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="text-xs px-2 py-0.5 bg-background/50 text-muted-foreground border-0"
+                      className="text-xs px-2 py-0.5"
                     >
                       {tag}
                     </Badge>
@@ -232,7 +259,7 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="输入歌单名称"
                   disabled={isCreating}
-                  className="h-11 text-base border-2 border-border/50 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 focus:outline-none focus:shadow-lg focus:shadow-purple-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-500/15 focus-visible:ring-offset-0 transition-all duration-300 bg-background/50 backdrop-blur-sm rounded-xl hover:shadow-md hover:border-purple-400/60 hover:bg-background/70"
+                  className="h-11"
                   autoFocus
                 />
               </div>
@@ -247,7 +274,7 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="为这个歌单添加一些描述"
                   disabled={isCreating}
-                  className="min-h-[80px] text-base border-2 border-border/50 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 focus:outline-none focus:shadow-lg focus:shadow-purple-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-500/15 focus-visible:ring-offset-0 transition-all duration-300 bg-background/50 backdrop-blur-sm rounded-xl hover:shadow-md hover:border-purple-400/60 hover:bg-background/70 resize-none"
+                  className="min-h-[80px] resize-none"
                   rows={3}
                 />
               </div>
@@ -256,17 +283,15 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
             <DialogFooter className="flex items-center justify-between pt-6 border-t border-border/50">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={handleClose}
                 disabled={isCreating}
-                className="h-11 px-6 text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/50 hover:border-border/70 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md"
               >
                 取消
               </Button>
               <Button
                 type="submit"
                 disabled={!name.trim() || isCreating}
-                className="h-11 px-8 bg-gradient-to-r from-purple-500 via-purple-600 to-violet-500 hover:from-purple-600 hover:via-purple-700 hover:to-violet-600 text-white font-medium shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all duration-300 rounded-xl border-0 focus:ring-4 focus:ring-purple-500/20"
               >
                 {isCreating ? '创建中...' : '创建歌单'}
               </Button>
@@ -276,4 +301,6 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+CreatePlaylistModal.displayName = 'CreatePlaylistModal';

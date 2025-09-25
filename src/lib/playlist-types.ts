@@ -17,6 +17,7 @@ export interface VirtualPlaylist extends BasePlaylist {
     description?: string;
     tracks: PlaylistTrackRef[]; // 使用引用而不是直接存储ID数组
     coverImage?: string; // 可选的封面图片
+    imageSeed?: number; // 自定义图片种子，用于生成随机背景图片
 }
 
 // 文件夹歌单 - 映射本地文件夹
@@ -32,6 +33,8 @@ export interface FolderPlaylist extends BasePlaylist {
 export interface AllMusicPlaylist extends BasePlaylist {
     type: 'all';
     isDefault: true; // 标记为默认歌单
+    coverImage?: string; // 可选的封面图片
+    imageSeed?: number; // 自定义图片种子，用于生成随机背景图片
 }
 
 export type Playlist = VirtualPlaylist | FolderPlaylist | AllMusicPlaylist;

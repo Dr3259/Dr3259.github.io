@@ -67,6 +67,21 @@ export class PlaylistDB {
     this.savePlaylists(playlists);
   }
 
+  async updateAllMusicPlaylist(id: string, updates: Partial<AllMusicPlaylist>): Promise<void> {
+    const playlists = this.getPlaylists();
+    const index = playlists.findIndex(p => p.id === id);
+    
+    if (index === -1) {
+      throw new Error('Playlist not found');
+    }
+    
+    const playlist = playlists[index];
+    if (playlist.type === 'all') {
+      playlists[index] = { ...playlist, ...updates, updatedAt: new Date() } as AllMusicPlaylist;
+      this.savePlaylists(playlists);
+    }
+  }
+
   async deleteVirtualPlaylist(id: string): Promise<void> {
     const playlists = this.getPlaylists();
     const filtered = playlists.filter(p => p.id !== id);

@@ -190,6 +190,39 @@ export async function getTrackContent(id: string): Promise<TrackWithContent | un
   });
 }
 
+// 轻量级元数据更新函数 - 只更新元数据，不重新读写音频内容
+export async function updateTrackMetadata(id: string, metadata: Partial<TrackMetadata>): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([MUSIC_STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(MUSIC_STORE_NAME);
+    
+    // 先获取现有记录
+    const getRequest = store.get(id);
+    
+    getRequest.onsuccess = () => {
+      const existingTrack = getRequest.result as TrackWithContent;
+      if (!existingTrack) {
+        reject(new Error('Track not found'));
+        return;
+      }
+      
+      // 只更新元数据字段，保持音频内容不变
+      const updatedTrack: TrackWithContent = {
+        ...existingTrack,
+        ...metadata
+      };
+      
+      // 保存更新后的记录
+      const putRequest = store.put(updatedTrack);
+      putRequest.onsuccess = () => resolve();
+      putRequest.onerror = () => reject(putRequest.error);
+    };
+    
+    getRequest.onerror = () => reject(getRequest.error);
+  });
+}
+
 export async function getTracksMetadata(): Promise<TrackMetadata[]> {
     const db = await openDB();
     return new Promise((resolve, reject) => {

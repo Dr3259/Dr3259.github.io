@@ -18,10 +18,11 @@ interface PlaylistContextType {
   
   // 歌单操作方法
   createVirtualPlaylist: (name: string, description?: string) => Promise<void>;
-  editVirtualPlaylist: (id: string, updates: { name: string; description?: string }) => Promise<void>;
+  editVirtualPlaylist: (id: string, updates: { name: string; description?: string; coverImage?: string; imageSeed?: number }) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (trackId: string, playlistId: string) => Promise<void>;
   removeTrackFromPlaylist: (trackId: string, playlistId: string) => Promise<void>;
+  updatePlaylistImageSeed: (playlistId: string) => Promise<void>;
   
   // 文件夹歌单操作
   importFolderAsPlaylist: () => Promise<void>;
@@ -29,6 +30,8 @@ interface PlaylistContextType {
   
   // 清理操作
   clearAllPlaylists: () => Promise<void>;
+  cleanupInvalidPlaylistReferences: () => Promise<void>;
+  removeTrackFromAllPlaylists: (trackId: string) => Promise<void>;
   
   // UI控制
   togglePlaylistSidebar: () => void;
@@ -54,9 +57,33 @@ export const useMusicWithPlaylist = () => {
   const musicContext = useMusic();
   const playlistContext = usePlaylist();
   
+  // 创建增强的删除函数
+  const enhancedHandleDeleteTrack = async (trackId: string, trackTitle: string) => {
+    if (window.confirm(`您确定要删除《${trackTitle}》吗？`)) {
+      try {
+        // 先从所有歌单中移除该歌曲
+        await playlistContext.removeTrackFromAllPlaylists(trackId);
+        
+        // 然后调用原来的删除函数，但绕过确认对话框
+        const originalConfirm = window.confirm;
+        window.confirm = () => true;
+        try {
+          await musicContext.handleDeleteTrack(trackId, trackTitle);
+        } finally {
+          window.confirm = originalConfirm;
+        }
+        
+      } catch (error) {
+        console.error('Failed to delete track:', error);
+      }
+    }
+  };
+  
   return {
     ...musicContext,
     ...playlistContext,
+    // 覆盖原来的删除函数
+    handleDeleteTrack: enhancedHandleDeleteTrack,
   };
 };
 
@@ -69,7 +96,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { toast } = useToast();
   
   // 获取原有的音乐功能
-  const { tracks, playTrack, setPlaybackScope, closePlayer, handleSaveTrackMeta, isPlaying, currentTrack } = useMusic();
+  const { tracks, playTrack, setPlaybackScope, closePlayer, handleSaveTrackMeta, handleUpdateTrackMetadata, isPlaying, currentTrack } = useMusic();
   
   // 数据库实例 - 使用useMemo确保只创建一次
   const playlistDB = useMemo(() => new PlaylistDB(), []);
@@ -79,6 +106,9 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // 创建默认的"所有音乐"歌单
   const createAllMusicPlaylist = useCallback((): AllMusicPlaylist => {
+    const savedImageSeed = localStorage.getItem('all-music-playlist-imageSeed');
+    const savedCoverImage = localStorage.getItem('all-music-playlist-coverImage');
+    
     return {
       id: 'all-music',
       name: '所有音乐',
@@ -87,6 +117,8 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       trackCount: tracks.length,
       createdAt: new Date(),
       updatedAt: new Date(),
+      imageSeed: savedImageSeed ? parseInt(savedImageSeed) : undefined,
+      coverImage: savedCoverImage || undefined,
     };
   }, [tracks.length]);
 
@@ -147,7 +179,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
   }, [currentTrack, currentPlaylist, playlistDB]);
-  
+
   // 创建虚拟歌单
   const createVirtualPlaylist = useCallback(async (name: string, description?: string) => {
     // 检查是否存在同名歌单
@@ -167,7 +199,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [toast, playlistDB, playlists]);
 
   // 编辑虚拟歌单
-  const editVirtualPlaylist = useCallback(async (id: string, updates: { name: string; description?: string }) => {
+  const editVirtualPlaylist = useCallback(async (id: string, updates: { name: string; description?: string; coverImage?: string; imageSeed?: number }) => {
     if (id === 'all-music') {
       toast({ title: '不能编辑默认歌单', variant: 'destructive' });
       return;
@@ -193,6 +225,50 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toast({ title: '更新歌单失败', variant: 'destructive' });
     }
   }, [toast, playlistDB, currentPlaylist]);
+
+  // 更新歌单图片种子
+  const updatePlaylistImageSeed = useCallback(async (playlistId: string) => {
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist || (playlist.type !== 'virtual' && playlist.type !== 'all')) {
+      toast({ title: '只能更改虚拟歌单和所有音乐歌单的图片', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // 生成新的随机种子
+      const newSeed = Math.floor(Math.random() * 10000);
+      
+      // 根据歌单类型选择不同的更新方法
+      if (playlist.type === 'virtual') {
+        // 更新随机种子并清除自定义封面图片
+        await playlistDB.updateVirtualPlaylist(playlistId, { 
+          imageSeed: newSeed,
+          coverImage: undefined // 清除自定义上传的图片
+        });
+      } else if (playlist.type === 'all') {
+        // 对于"所有音乐"歌单，使用localStorage直接保存
+        localStorage.setItem('all-music-playlist-imageSeed', newSeed.toString());
+        // 清除自定义上传的封面图片
+        localStorage.removeItem('all-music-playlist-coverImage');
+      }
+      
+      setPlaylists(prev => prev.map(p => 
+        p.id === playlistId 
+          ? { ...p, imageSeed: newSeed, coverImage: undefined, updatedAt: new Date() }
+          : p
+      ));
+      
+      // 如果当前选中的是被更新的歌单，也要更新
+      if (currentPlaylist?.id === playlistId) {
+        setCurrentPlaylist(prev => prev ? { ...prev, imageSeed: newSeed, coverImage: undefined, updatedAt: new Date() } : null);
+      }
+      
+      toast({ title: '歌单图片已更新为随机图片' });
+    } catch (error) {
+      console.error('Failed to update playlist image:', error);
+      toast({ title: '更新图片失败', variant: 'destructive' });
+    }
+  }, [playlists, toast, playlistDB, currentPlaylist]);
   
   // 导入文件夹作为歌单
   const importFolderAsPlaylist = useCallback(async () => {
@@ -307,9 +383,9 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       await playlistDB.addTrackToVirtualPlaylist(trackId, playlistId);
       
-      // 更新歌曲元数据
+      // 更新歌曲元数据 - 使用轻量级函数
       const updatedTrackPlaylists = [...(track.virtualPlaylists || []), playlistId];
-      handleSaveTrackMeta(trackId, { ...track, virtualPlaylists: updatedTrackPlaylists });
+      handleSaveTrackMeta(trackId, { virtualPlaylists: updatedTrackPlaylists });
       
       // 更新歌单状态
       const updatedPlaylist: VirtualPlaylist = {
@@ -334,12 +410,16 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const removeTrackFromPlaylist = async (trackId: string, playlistId: string) => {
     try {
+      console.log('removeTrackFromPlaylist called with:', { trackId, playlistId });
+      
       await playlistDB.removeTrackFromVirtualPlaylist(trackId, playlistId);
+      console.log('Successfully removed from database');
       
       const track = tracks.find(t => t.id === trackId);
       if (track) {
         const updatedTrackPlaylists = track.virtualPlaylists?.filter(id => id !== playlistId) || [];
-        handleSaveTrackMeta(trackId, { ...track, virtualPlaylists: updatedTrackPlaylists });
+        await handleUpdateTrackMetadata(trackId, { virtualPlaylists: updatedTrackPlaylists.length > 0 ? updatedTrackPlaylists : undefined });
+        console.log('Updated track metadata');
       }
 
       setPlaylists(prev => prev.map(p => {
@@ -355,12 +435,82 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return p;
       }));
       
-      toast({ title: '已从歌单中移除' });
+      // 同时更新 currentPlaylist 如果它是被修改的歌单
+      if (currentPlaylist?.id === playlistId) {
+        setCurrentPlaylist(prev => {
+          if (prev && prev.type === 'virtual') {
+            const virtualPlaylist = prev as VirtualPlaylist;
+            return {
+              ...virtualPlaylist,
+              tracks: virtualPlaylist.tracks.filter(ref => ref.trackId !== trackId),
+              trackCount: virtualPlaylist.trackCount - 1,
+              updatedAt: new Date(),
+            };
+          }
+          return prev;
+        });
+      }
+      
+      console.log('Updated playlists state and currentPlaylist');
+      // 不在这里显示 toast，让调用方处理
     } catch (error) {
       console.error('Failed to remove track from playlist:', error);
-      toast({ title: '移除失败', variant: 'destructive' });
+      throw error; // 重新抛出错误，让调用方处理
     }
   };
+
+  // 从所有歌单中移除指定歌曲
+  const removeTrackFromAllPlaylists = useCallback(async (trackId: string) => {
+    try {
+      // 找到包含该歌曲的所有虚拟歌单
+      const playlistsToUpdate = playlists.filter(playlist => {
+        if (playlist.type === 'virtual') {
+          const virtualPlaylist = playlist as VirtualPlaylist;
+          return virtualPlaylist.tracks.some(track => track.trackId === trackId);
+        }
+        return false;
+      });
+
+      // 如果没有歌单包含这首歌，直接返回
+      if (playlistsToUpdate.length === 0) {
+        return;
+      }
+
+      // 批量从数据库中移除歌曲
+      await Promise.all(
+        playlistsToUpdate.map(playlist => 
+          playlistDB.removeTrackFromVirtualPlaylist(trackId, playlist.id)
+        )
+      );
+
+      // 批量更新歌单状态
+      setPlaylists(prev => prev.map(p => {
+        const playlistToUpdate = playlistsToUpdate.find(pu => pu.id === p.id);
+        if (playlistToUpdate && p.type === 'virtual') {
+          const virtualPlaylist = p as VirtualPlaylist;
+          return {
+            ...virtualPlaylist,
+            tracks: virtualPlaylist.tracks.filter(ref => ref.trackId !== trackId),
+            trackCount: virtualPlaylist.trackCount - 1,
+            updatedAt: new Date(),
+          };
+        }
+        return p;
+      }));
+
+      // 清理歌曲的 virtualPlaylists 字段
+      const track = tracks.find(t => t.id === trackId);
+      if (track && track.virtualPlaylists && track.virtualPlaylists.length > 0) {
+        await handleUpdateTrackMetadata(trackId, {
+          virtualPlaylists: undefined
+        });
+      }
+    } catch (error) {
+      console.error('Failed to remove track from all playlists:', error);
+    }
+  }, [playlists, tracks, handleUpdateTrackMetadata, playlistDB]);
+
+
   
   // 播放歌单 - 与原有播放功能集成
   const playPlaylist = useCallback(async (playlistId: string) => {
@@ -429,6 +579,39 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setPlaybackScope(tracksToShow);
     }
   }, [playlists, tracks, setPlaybackScope]);
+
+  // 数据修复函数 - 清理歌曲中无效的歌单引用
+  const cleanupInvalidPlaylistReferences = useCallback(async () => {
+    try {
+      const validPlaylistIds = new Set(playlists.map(p => p.id));
+      let cleanedCount = 0;
+      
+      for (const track of tracks) {
+        if (track.virtualPlaylists && track.virtualPlaylists.length > 0) {
+          const validPlaylists = track.virtualPlaylists.filter(id => validPlaylistIds.has(id));
+          
+          if (validPlaylists.length !== track.virtualPlaylists.length) {
+            await handleUpdateTrackMetadata(track.id, { 
+              virtualPlaylists: validPlaylists.length > 0 ? validPlaylists : undefined 
+            });
+            cleanedCount++;
+          }
+        }
+      }
+      
+      if (cleanedCount > 0) {
+        toast({ 
+          title: `数据修复完成`, 
+          description: `已清理 ${cleanedCount} 首歌曲的无效歌单引用` 
+        });
+      } else {
+        toast({ title: '数据检查完成，无需修复' });
+      }
+    } catch (error) {
+      console.error('Failed to cleanup invalid playlist references:', error);
+      toast({ title: '数据修复失败', variant: 'destructive' });
+    }
+  }, [playlists, tracks, handleSaveTrackMeta, toast]);
   
   const value: PlaylistContextType = {
     playlists,
@@ -447,8 +630,27 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       try {
         const playlistToDelete = playlists.find(p => p.id === id);
+        
+        // 如果是虚拟歌单，需要清理相关歌曲的 virtualPlaylists 字段
         if (playlistToDelete?.type === 'virtual') {
-            await playlistDB.deleteVirtualPlaylist(id);
+          const virtualPlaylist = playlistToDelete as VirtualPlaylist;
+          
+          // 获取该歌单中的所有歌曲ID
+          const trackIdsInPlaylist = virtualPlaylist.tracks.map(ref => ref.trackId);
+          
+          // 删除歌单数据
+          await playlistDB.deleteVirtualPlaylist(id);
+          
+          // 清理相关歌曲的 virtualPlaylists 字段
+          for (const trackId of trackIdsInPlaylist) {
+            const track = tracks.find(t => t.id === trackId);
+            if (track && track.virtualPlaylists) {
+              const updatedPlaylists = track.virtualPlaylists.filter(playlistId => playlistId !== id);
+              await handleUpdateTrackMetadata(trackId, { 
+                virtualPlaylists: updatedPlaylists.length > 0 ? updatedPlaylists : undefined 
+              });
+            }
+          }
         }
 
         setPlaylists(prev => prev.filter(p => p.id !== id));
@@ -463,13 +665,33 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     },
     addTrackToPlaylist,
     removeTrackFromPlaylist,
+    updatePlaylistImageSeed,
     importFolderAsPlaylist,
     refreshFolderPlaylist,
     clearAllPlaylists: async () => {
       try {
         // 删除所有虚拟歌单（除了"所有音乐"歌单）
         const virtualPlaylists = playlists.filter(p => p.type === 'virtual' && p.id !== 'all-music');
+        
+        // 收集所有需要清理的歌曲ID
+        const allTrackIds = new Set<string>();
+        virtualPlaylists.forEach(playlist => {
+          if (playlist.type === 'virtual') {
+            (playlist as VirtualPlaylist).tracks.forEach(ref => {
+              allTrackIds.add(ref.trackId);
+            });
+          }
+        });
+        
+        // 删除歌单数据
         await Promise.all(virtualPlaylists.map(p => playlistDB.deleteVirtualPlaylist(p.id)));
+        
+        // 清理所有相关歌曲的 virtualPlaylists 字段
+        for (const trackId of allTrackIds) {
+          await handleUpdateTrackMetadata(trackId, { 
+            virtualPlaylists: undefined 
+          });
+        }
         
         // 重置歌单状态，只保留"所有音乐"歌单
         const allMusicPlaylist = createAllMusicPlaylist();
@@ -482,6 +704,8 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         toast({ title: '清空歌单失败', variant: 'destructive' });
       }
     },
+    cleanupInvalidPlaylistReferences,
+    removeTrackFromAllPlaylists,
     togglePlaylistSidebar,
     playPlaylist,
     selectPlaylist,

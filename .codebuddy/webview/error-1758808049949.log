@@ -1,0 +1,6 @@
+Webview errors at url: http://localhost:3001/private-music-player-enhanced
+error: 
+ %o
+
+%s ReferenceError: forceUpdate is not defined The above error occurred in the <IntegratedMusicPlayerPage> component. It was handled by the <ErrorBoundaryHandler> error boundary.
+ReferenceError: forceUpdate is not defined

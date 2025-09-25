@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -63,7 +63,7 @@ const CATEGORY_TYPES_ZH = Object.fromEntries(Object.entries(CATEGORY_TYPES_EN).m
 const CATEGORY_PURPOSES_ZH = Object.fromEntries(Object.entries(CATEGORY_PURPOSES_EN).map(([k, v]) => [v, k]));
 
 
-export const EditTrackModal: React.FC<EditTrackModalProps> = ({
+export const EditTrackModal: React.FC<EditTrackModalProps> = memo(({
   isOpen,
   onClose,
   onSave,
@@ -119,20 +119,45 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
             artist: artist.trim() || undefined,
             category: finalCategories.length > 0 ? finalCategories.join(', ') : null
         });
+        
+        // 立即关闭，延迟重置状态
         onClose();
+        setTimeout(() => {
+          setTitle('');
+          setArtist('');
+          setSelectedType(null);
+          setSelectedPurposes(new Set());
+        }, 150);
     }
   };
 
   const handleDeleteClick = () => {
     if (track && onDelete) {
         onDelete(track.id, track.title);
+        
+        // 立即关闭，延迟重置状态
         onClose();
+        setTimeout(() => {
+          setTitle('');
+          setArtist('');
+          setSelectedType(null);
+          setSelectedPurposes(new Set());
+        }, 150);
     }
   };
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
+      // 立即关闭弹窗，延迟重置状态
       onClose();
+      
+      // 延迟重置状态，让关闭动画先执行
+      setTimeout(() => {
+        setTitle('');
+        setArtist('');
+        setSelectedType(null);
+        setSelectedPurposes(new Set());
+      }, 150);
     }
   };
 
@@ -161,13 +186,13 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-background via-background/95 to-background/90 backdrop-blur-xl border border-blue-200/20 shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-600 rounded-t-lg"></div>
+      <DialogContent className="sm:max-w-lg bg-background border shadow-lg">
+        <div className="absolute top-0 inset-x-0 h-1 bg-primary rounded-t-lg"></div>
         
         <DialogHeader className="mb-6 space-y-3">
           <DialogTitle className="text-xl font-medium text-foreground flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-200/30 flex items-center justify-center backdrop-blur-sm">
-              <PenSquare className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <PenSquare className="w-6 h-6 text-primary" />
             </div>
             {translations.title}
           </DialogTitle>
@@ -192,7 +217,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder={translations.titlePlaceholder}
-                            className="h-11 text-base border-2 border-border/50 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 focus:outline-none focus:shadow-lg focus:shadow-blue-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 focus-visible:ring-offset-0 transition-all duration-300 bg-background/50 backdrop-blur-sm rounded-xl hover:shadow-md hover:border-blue-400/60 hover:bg-background/70"
+                            className="h-11"
                             autoComplete="off"
                         />
                     </div>
@@ -203,7 +228,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                             value={artist}
                             onChange={(e) => setArtist(e.target.value)}
                             placeholder={translations.artistPlaceholder}
-                            className="h-11 text-base border-2 border-border/50 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 focus:outline-none focus:shadow-lg focus:shadow-blue-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/15 focus-visible:ring-offset-0 transition-all duration-300 bg-background/50 backdrop-blur-sm rounded-xl hover:shadow-md hover:border-blue-400/60 hover:bg-background/70"
+                            className="h-11"
                             autoComplete="off"
                         />
                     </div>
@@ -232,8 +257,8 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                                         variant={isSelected ? "default" : "secondary"}
                                         onClick={() => handleTypeClick(key)}
                                         className={cn(
-                                            "cursor-pointer text-sm py-2 px-4 border-transparent transition-all duration-200 hover:scale-105",
-                                            isSelected ? "shadow-lg" : "hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
+                                            "cursor-pointer text-sm py-2 px-4 border-transparent transition-all duration-150 hover:scale-[1.02]",
+                                            isSelected ? "shadow-md" : "hover:bg-accent/50"
                                         )}
                                         style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
                                     >
@@ -256,8 +281,8 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                                         variant={isSelected ? "default" : "secondary"}
                                         onClick={() => handlePurposeClick(key)}
                                         className={cn(
-                                            "cursor-pointer text-sm py-2 px-4 border-transparent transition-all duration-200 hover:scale-105",
-                                            isSelected ? "shadow-lg" : "hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
+                                            "cursor-pointer text-sm py-2 px-4 border-transparent transition-all duration-150 hover:scale-[1.02]",
+                                            isSelected ? "shadow-md" : "hover:bg-accent/50"
                                         )}
                                         style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
                                     >
@@ -280,7 +305,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                         variant="ghost"
                         size="lg"
                         onClick={handleDeleteClick} 
-                        className="h-11 px-6 text-red-600 hover:text-red-700 hover:bg-red-50/80 dark:hover:bg-red-900/20 border border-red-200/50 hover:border-red-300/70 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md"
+                        className="h-11 px-6 text-destructive hover:bg-destructive/10 border border-destructive/20 hover:border-destructive/30"
                     >
                         <Trash2 className="w-4 h-4 mr-2" />
                         删除歌曲
@@ -297,7 +322,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                     variant="ghost"
                     size="lg"
                     onClick={onClose} 
-                    className="h-11 px-6 text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/50 hover:border-border/70 transition-all duration-300 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md"
+                    className="h-11 px-6"
                 >
                     {translations.cancelButton}
                 </Button>
@@ -305,7 +330,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
                     type="button" 
                     size="lg"
                     onClick={handleSaveClick} 
-                    className="h-11 px-8 bg-gradient-to-r from-blue-500 via-blue-600 to-cyan-500 hover:from-blue-600 hover:via-blue-700 hover:to-cyan-600 text-white font-medium shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 rounded-xl border-0 focus:ring-4 focus:ring-blue-500/20"
+                    className="h-11 px-8"
                 >
                     {translations.saveButton}
                 </Button>
@@ -314,6 +339,8 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+EditTrackModal.displayName = 'EditTrackModal';
 
     

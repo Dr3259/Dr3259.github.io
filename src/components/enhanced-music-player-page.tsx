@@ -53,12 +53,16 @@ const EnhancedPlayerContent: React.FC = () => {
               playlists={playlists}
               currentPlaylist={currentPlaylist}
               isLoadingPlaylists={isLoadingPlaylists}
-              onCreateVirtualPlaylist={() => setShowCreateModal(true)}
-              onImportFolderPlaylist={importFolderAsPlaylist}
+              isPlaying={false}
               onPlayPlaylist={playPlaylist}
+              onSelectPlaylist={playPlaylist}
+              onEditPlaylist={() => {}}
+              onDownloadPlaylist={() => {}}
               onRefreshFolderPlaylist={refreshFolderPlaylist}
               onDeletePlaylist={deletePlaylist}
               onTrackDrop={handleTrackDrop}
+              onChangePlaylistImage={() => {}}
+              onUploadPlaylistImage={() => {}}
             />
           </div>
           

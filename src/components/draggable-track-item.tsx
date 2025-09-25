@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileEdit, Trash2, GripVertical, MoreHorizontal, Bookmark } from 'lucide-react';
+import { FileEdit, Trash2, GripVertical, MoreVertical, Bookmark } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { getTagColor, getHighContrastTextColor } from '@/lib/utils';
@@ -122,6 +122,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
   return (
     <TooltipProvider>
       <div
+        id={`track-item-${track.id}`}
         className={cn(
           "group flex items-center p-3 rounded-md cursor-pointer transition-colors select-none",
           isCurrentTrack ? "bg-primary/20" : "hover:bg-accent/50"
@@ -149,8 +150,18 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                     {displayTitle}
                   </p>
                 </SmartTooltip>
-                {/* 操作按钮 - 移动到这里 */}
+                {/* 操作按钮 - 收藏标识在前，三个点按钮在后 */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isBookmarked && (
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Bookmark className="h-3.5 w-3.5 text-blue-500 fill-blue-500/50" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{bookmarkTooltipContent}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button 
@@ -159,7 +170,7 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <MoreHorizontal className="h-4 w-4" />
+                                <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -180,16 +191,6 @@ export const DraggableTrackItem: React.FC<DraggableTrackItemProps> = ({
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    {isBookmarked && (
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Bookmark className="h-3.5 w-3.5 text-blue-500 fill-blue-500/50" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>{bookmarkTooltipContent}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
                 </div>
               </div>
             </div>

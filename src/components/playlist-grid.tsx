@@ -19,6 +19,9 @@ interface PlaylistGridProps {
   onRefreshFolderPlaylist: (playlistId: string) => void;
   onDeletePlaylist: (playlistId: string) => void;
   onTrackDrop: (trackId: string, playlistId: string) => void;
+  onChangePlaylistImage: (playlistId: string) => void;
+  onUploadPlaylistImage: (playlistId: string) => void;
+  onResetImage: (playlistId: string) => void;
 }
 
 export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
@@ -33,6 +36,9 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
   onRefreshFolderPlaylist,
   onDeletePlaylist,
   onTrackDrop,
+  onChangePlaylistImage,
+  onUploadPlaylistImage,
+  onResetImage,
 }) => {
   return (
     <div className="w-full h-full flex flex-col">
@@ -78,6 +84,21 @@ export const PlaylistGrid: React.FC<PlaylistGridProps> = ({
                   }
                   onDelete={playlist.id !== 'all-music' ? () => onDeletePlaylist(playlist.id) : undefined}
                   onTrackDrop={(trackId) => onTrackDrop(trackId, playlist.id)}
+                  onChangeImage={
+                    playlist.type === 'virtual' || playlist.type === 'all'
+                      ? () => onChangePlaylistImage(playlist.id)
+                      : undefined
+                  }
+                  onUploadImage={
+                    playlist.type === 'virtual' || playlist.type === 'all'
+                      ? () => onUploadPlaylistImage(playlist.id)
+                      : undefined
+                  }
+                  onResetImage={
+                    playlist.type === 'virtual' || playlist.type === 'all'
+                      ? () => onResetImage(playlist.id)
+                      : undefined
+                  }
                 />
             )
           })}
