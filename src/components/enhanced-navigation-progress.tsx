@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 interface EnhancedNavigationProgressProps {
@@ -11,7 +11,7 @@ interface EnhancedNavigationProgressProps {
   className?: string;
 }
 
-export function EnhancedNavigationProgress({
+function EnhancedNavigationProgressContent({
   height = 3,
   color = '#3b82f6',
   showSpinner = false,
@@ -142,3 +142,10 @@ export function EnhancedNavigationProgress({
   );
 }
 
+export function EnhancedNavigationProgress(props: EnhancedNavigationProgressProps) {
+  return (
+    <Suspense fallback={null}>
+      <EnhancedNavigationProgressContent {...props} />
+    </Suspense>
+  );
+}

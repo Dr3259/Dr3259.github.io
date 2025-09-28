@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 interface NavigationProgressProps {
@@ -10,7 +10,7 @@ interface NavigationProgressProps {
   delay?: number;
 }
 
-export function NavigationProgress({
+function NavigationProgressContent({
   height = 3,
   color = '#3b82f6',
   showSpinner = false,
@@ -135,4 +135,12 @@ export function useNavigationProgress() {
     update,
     complete
   };
+}
+
+export function NavigationProgress(props: NavigationProgressProps) {
+  return (
+    <Suspense fallback={null}>
+      <NavigationProgressContent {...props} />
+    </Suspense>
+  );
 }

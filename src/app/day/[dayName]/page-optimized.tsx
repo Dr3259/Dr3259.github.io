@@ -1,7 +1,7 @@
 // src/app/day/[dayName]/page-optimized.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ const TIME_INTERVALS = [
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 const getDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
 
-export default function DayDetailPageOptimized() {
+function DayDetailPageOptimizedContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -372,5 +372,20 @@ export default function DayDetailPageOptimized() {
         translations={translations_cache.clipboard || {}}
       />
     </TooltipProvider>
+  );
+}
+
+export default function DayDetailPageOptimized() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 sm:p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    }>
+      <DayDetailPageOptimizedContent />
+    </Suspense>
   );
 }

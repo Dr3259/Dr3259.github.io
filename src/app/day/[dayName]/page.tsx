@@ -90,7 +90,7 @@ export const RATING_ICONS: Record<string, React.ElementType> = { excellent: Smil
 
 const getDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
 
-export default function DayDetailPage() {
+function DayDetailPageContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -403,7 +403,10 @@ export default function DayDetailPage() {
   }, [dateKey]);
 
   const isViewingCurrentDay = useMemo(() => clientPageLoadTime && dayProperties.dateObject ? format(dayProperties.dateObject, 'yyyy-MM-dd') === format(clientPageLoadTime, 'yyyy-MM-dd') : false, [dayProperties, clientPageLoadTime]);
-  const isPastDay = useMemo(() => clientPageLoadTime && dayProperties.dateObject ? isBefore(dayProperties.dateObject, new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate())) : false, [clientPageLoadTime, dayProperties]);
+  const isPastDay = useMemo(() => {
+    if (!clientPageLoadTime || !dayProperties.dateObject) return false;
+    return isBefore(dayProperties.dateObject, new Date(clientPageLoadTime.getFullYear(), clientPageLoadTime.getMonth(), clientPageLoadTime.getDate()));
+  }, [clientPageLoadTime, dayProperties]);
 
   // Handlers for modals and data manipulation, now calling Zustand actions
   const handleOpenTodoModal = (hourSlot: string) => { 
@@ -515,7 +518,7 @@ export default function DayDetailPage() {
       <div className="flex flex-col items-center min-h-screen bg-background text-foreground p-4 sm:p-8">
         <header className="w-full max-w-4xl mb-8 flex justify-between items-center">
             <Link href="/" passHref><Button variant="outline" size="sm"><ArrowLeft className="mr-2 h-4 w-4" />{t.backToWeek}</Button></Link>
-            {!dayProperties.isValid || isBefore(dayProperties.dateObject, new Date()) && <div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => navigateToDay('prev')} aria-label={t.previousDay} disabled={isPrevDisabled}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => navigateToDay('next')} aria-label={t.nextDay} disabled={isNextDisabled}><ChevronRight className="h-4 w-4" /></Button></div>}
+            {!dayProperties.isValid || (dayProperties.dateObject && isBefore(dayProperties.dateObject, new Date())) && <div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => navigateToDay('prev')} aria-label={t.previousDay} disabled={isPrevDisabled}><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => navigateToDay('next')} aria-label={t.nextDay} disabled={isNextDisabled}><ChevronRight className="h-4 w-4" /></Button></div>}
         </header>
 
         <main className="w-full max-w-4xl">
@@ -635,5 +638,20 @@ export default function DayDetailPage() {
 
       <ClipboardModal isOpen={isClipboardModalOpen} onClose={handleCloseClipboardModal} onSave={handleSaveFromClipboard} content={clipboardContent} translations={t.clipboard} />
     </TooltipProvider>
+  );
+}
+
+export default function DayDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 sm:p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    }>
+      <DayDetailPageContent />
+    </Suspense>
   );
 }
