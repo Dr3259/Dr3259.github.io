@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { MusicProvider } from '@/context/MusicContext';
 import { MiniMusicPlayer } from '@/components/MiniMusicPlayer';
 import { AuthProvider } from '@/context/AuthContext';
-import { EnhancedNavigationProgress } from '@/components/enhanced-navigation-progress';
+import { InstantNavigationProgress } from '@/components/InstantNavigationProgress';
 // import type { Metric } from 'next/dist/compiled/next-server/server.edge';
 
 const inter = Inter({
@@ -43,12 +43,7 @@ export default function RootLayout({
       <head>
       </head>
       <body className={`${inter.variable} font-body antialiased`}>
-        <EnhancedNavigationProgress 
-          height={3}
-          color="#3b82f6"
-          showSpinner={false}
-          delay={50}
-        />
+        <InstantNavigationProgress />
         <AuthProvider>
           <MusicProvider>
             {children}
