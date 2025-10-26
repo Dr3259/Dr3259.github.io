@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useRef, type DragEvent } from 'rea
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, Brain, BookOpen, Music, MoreVertical, Pin, PinOff, GripVertical, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Clock, Brain, BookOpen, Music, MoreVertical, Pin, PinOff, GripVertical, Lightbulb, Code } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ const translations = {
       knowledgeBase: { title: '知识库', description: '整理和查阅您的学习笔记和资料。', icon: BookOpen, path: '/study/knowledge-base' },
       studyMusic: { title: '学习音乐', description: '精选白噪音和纯音乐，创造沉浸式学习环境。', icon: Music, path: '/study/music' },
       thinkingModels: { title: '思维模式', description: '掌握经典思维模型，提升认知深度。', icon: Lightbulb, path: '/study/thinking-models' },
+      learnCoding: { title: '学习编程', description: '从零开始学习编程，掌握热门编程语言和技术。', icon: Code, path: '/study/learn-coding' },
     }
   },
   'en': {
@@ -44,6 +45,7 @@ const translations = {
       knowledgeBase: { title: 'Knowledge Base', description: 'Organize and consult your study notes and materials.', icon: BookOpen, path: '/study/knowledge-base' },
       studyMusic: { title: 'Study Music', description: 'Curated white noise and ambient music for focus.', icon: Music, path: '/study/music' },
       thinkingModels: { title: 'Thinking Models', description: 'Master classic thinking models to enhance cognitive depth.', icon: Lightbulb, path: '/study/thinking-models' },
+      learnCoding: { title: 'Learn Coding', description: 'Start learning programming from scratch, master popular languages and technologies.', icon: Code, path: '/study/learn-coding' },
     }
   }
 };
@@ -69,6 +71,7 @@ interface StudyItemProps {
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnter: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
+  onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDrop: (e: DragEvent<HTMLDivElement>) => void;
   isDragging: boolean;
 }
@@ -82,49 +85,53 @@ const StudyItem: React.FC<StudyItemProps> = ({
     isPinned, canPin, onPinToggle, onClick, 
     pinLimitReachedText, pinItemText, unpinItemText,
     isDraggable, dragHandleLabel,
-    onDragStart, onDragEnter, onDragEnd, onDrop, isDragging
+    onDragStart, onDragEnter, onDragEnd, onDragOver, onDrop, isDragging
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    // 只在点击非拖拽手柄区域时触发导航
+    const target = e.target as HTMLElement;
+    if (!target.closest('.drag-handle') && !isDragging) {
+      onClick(path);
+    }
+  };
+
   return (
     <div
       draggable={isDraggable}
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
       onDragEnd={onDragEnd}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={onDragOver}
       onDrop={onDrop}
+      onClick={handleClick}
       className={cn(
-        "group w-full text-left rounded-xl transition-all duration-200 flex items-center gap-5 relative focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
+        "group w-full text-left rounded-xl transition-all duration-200 relative focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background",
         isPinned 
           ? "bg-primary/10 border-2 border-primary/20 hover:bg-primary/20 hover:shadow-lg"
           : "bg-card/60 hover:bg-card/90 hover:shadow-lg",
-        isDraggable ? "cursor-grab" : "cursor-pointer",
+        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
         isDragging ? "opacity-30" : "opacity-100",
       )}
       data-item-key={itemKey}
     >
-      <div 
-        className={cn(isDragging && "pointer-events-none", "w-full")}
-        onClick={() => !isDragging && onClick(path)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(path); }}
-        role="button"
-        tabIndex={0}
-      >
-        <div className="flex items-center gap-5 p-4 sm:p-5">
-           {isDraggable && (
-            <div className="text-muted-foreground/50 group-hover:text-muted-foreground" title={dragHandleLabel}>
-                <GripVertical className="h-5 w-5" />
-            </div>
-          )}
-          <div className={cn(
-              "p-2.5 rounded-lg transition-colors",
-              isPinned ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"
-          )}>
-            <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110 h-6 w-6")} />
+      <div className="flex items-center gap-5 p-4 sm:p-5">
+        {isDraggable && (
+          <div 
+            className="drag-handle text-muted-foreground/50 group-hover:text-muted-foreground cursor-grab active:cursor-grabbing flex-shrink-0" 
+            title={dragHandleLabel}
+          >
+            <GripVertical className="h-5 w-5" />
           </div>
-          <div className="flex-grow">
-            <p className={cn("font-semibold text-foreground text-base")}>{title}</p>
-            {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
-          </div>
+        )}
+        <div className={cn(
+            "p-2.5 rounded-lg transition-colors flex-shrink-0",
+            isPinned ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"
+        )}>
+          <Icon className={cn("text-primary transition-transform duration-300 group-hover:scale-110 h-6 w-6")} />
+        </div>
+        <div className="flex-grow min-w-0">
+          <p className={cn("font-semibold text-foreground text-base")}>{title}</p>
+          {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
         </div>
       </div>
       
@@ -168,6 +175,7 @@ export default function StudyPage() {
   const [unpinnedOrder, setUnpinnedOrder] = useState<StudyItemKey[]>([]);
   
   const draggedItemRef = useRef<StudyItemKey | null>(null);
+  const dragOverItemRef = useRef<StudyItemKey | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
@@ -232,6 +240,8 @@ export default function StudyPage() {
   
   const onDragStart = (e: DragEvent<HTMLDivElement>) => {
     const itemKey = e.currentTarget.dataset.itemKey as StudyItemKey;
+    if (!itemKey) return;
+    
     draggedItemRef.current = itemKey;
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
@@ -243,11 +253,33 @@ export default function StudyPage() {
     document.body.appendChild(ghost);
     e.dataTransfer.setDragImage(ghost, e.currentTarget.offsetWidth / 2, e.currentTarget.offsetHeight / 2);
     
-    setTimeout(() => document.body.removeChild(ghost), 0);
+    setTimeout(() => {
+      if (document.body.contains(ghost)) {
+        document.body.removeChild(ghost);
+      }
+    }, 0);
   };
 
   const onDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    const draggedItemKey = draggedItemRef.current;
+    const targetItemKey = dragOverItemRef.current;
+    
+    if (draggedItemKey && targetItemKey && draggedItemKey !== targetItemKey) {
+        const currentIndex = unpinnedOrder.indexOf(draggedItemKey);
+        const targetIndex = unpinnedOrder.indexOf(targetItemKey);
+
+        if (currentIndex !== -1 && targetIndex !== -1) {
+          const newOrder = [...unpinnedOrder];
+          const [movedItem] = newOrder.splice(currentIndex, 1);
+          newOrder.splice(targetIndex, 0, movedItem);
+          
+          setUnpinnedOrder(newOrder);
+          localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER, JSON.stringify(newOrder));
+        }
+    }
+    
     draggedItemRef.current = null;
+    dragOverItemRef.current = null;
     setIsDragging(false);
     document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
   };
@@ -259,7 +291,12 @@ export default function StudyPage() {
     document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
     
     const targetElement = e.currentTarget as HTMLDivElement;
-    if (targetElement.dataset.itemKey === draggedItemRef.current) return;
+    const targetKey = targetElement.dataset.itemKey as StudyItemKey;
+    
+    if (!targetKey || targetKey === draggedItemRef.current) return;
+    
+    // 记录最后进入的目标
+    dragOverItemRef.current = targetKey;
 
     const indicator = document.createElement('div');
     indicator.className = 'drop-indicator h-2 bg-primary rounded-full my-1';
@@ -267,24 +304,15 @@ export default function StudyPage() {
     targetElement.parentElement?.insertBefore(indicator, targetElement);
   };
 
+  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const draggedItemKey = draggedItemRef.current;
-    const targetItemKey = (e.currentTarget as HTMLDivElement).dataset.itemKey as StudyItemKey;
-    
-    document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
-    
-    if (draggedItemKey && targetItemKey && draggedItemKey !== targetItemKey) {
-        const currentIndex = unpinnedOrder.indexOf(draggedItemKey);
-        const targetIndex = unpinnedOrder.indexOf(targetItemKey);
-
-        const newOrder = [...unpinnedOrder];
-        const [movedItem] = newOrder.splice(currentIndex, 1);
-        newOrder.splice(targetIndex, 0, movedItem);
-
-        setUnpinnedOrder(newOrder);
-        localStorage.setItem(LOCAL_STORAGE_KEY_UNPINNED_STUDY_ORDER, JSON.stringify(newOrder));
-    }
+    e.stopPropagation();
   };
   
   return (
@@ -329,6 +357,7 @@ export default function StudyPage() {
                       onDragStart={() => {}}
                       onDragEnter={() => {}}
                       onDragEnd={() => {}}
+                      onDragOver={() => {}}
                       onDrop={() => {}}
                       isDragging={false}
                     />
@@ -361,6 +390,7 @@ export default function StudyPage() {
                           onDragStart={onDragStart}
                           onDragEnter={onDragEnter}
                           onDragEnd={onDragEnd}
+                          onDragOver={onDragOver}
                           onDrop={onDrop}
                           isDragging={draggedItemRef.current === itemKey && isDragging}
                       />
