@@ -94,11 +94,8 @@ export default function FrontendSeniorPage() {
             掌握前端架构设计 · 微前端、跨平台、性能优化、团队协作
           </p>
         </div>
-      </div>
-    </div>
-  );
-}        {
-/* 标签页导航 */}
+
+        {/* 标签页导航 */}
         <div className="flex justify-center mb-8">
           <div className="flex bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-sm overflow-x-auto">
             <button

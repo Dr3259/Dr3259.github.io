@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Zap, ChevronRight, Play, BookOpen, Code, Target, Trophy, Layers, Cpu, Database } from 'lucide-react';
+import { ArrowLeft, Zap, ChevronRight, BookOpen, Code, Target, Layers, Cpu, Database } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -94,11 +94,8 @@ export default function FrontendMidPage() {
             深入现代前端框架 · 掌握 React/Vue、TypeScript、工程化
           </p>
         </div>
-      </div>
-    </div>
-  );
-}       
- {/* 标签页导航 */}
+
+        {/* 标签页导航 */}
         <div className="flex justify-center mb-8">
           <div className="flex bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-sm">
             <button
