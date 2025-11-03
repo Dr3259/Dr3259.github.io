@@ -27,6 +27,7 @@ const translations = {
       studyMusic: { title: '学习音乐', description: '精选白噪音和纯音乐，创造沉浸式学习环境。', icon: Music, path: '/study/music' },
       thinkingModels: { title: '思维模式', description: '掌握经典思维模型，提升认知深度。', icon: Lightbulb, path: '/study/thinking-models' },
       learnCoding: { title: '学习编程', description: '从零开始学习编程，掌握热门编程语言和技术。', icon: Code, path: '/study/learn-coding' },
+      learnCoding2: { title: '学习编程2.0', description: '全新升级的编程学习体验，更系统、更深入。', icon: Code, path: '/study/learn-coding-2' },
     }
   },
   'en': {
@@ -46,6 +47,7 @@ const translations = {
       studyMusic: { title: 'Study Music', description: 'Curated white noise and ambient music for focus.', icon: Music, path: '/study/music' },
       thinkingModels: { title: 'Thinking Models', description: 'Master classic thinking models to enhance cognitive depth.', icon: Lightbulb, path: '/study/thinking-models' },
       learnCoding: { title: 'Learn Coding', description: 'Start learning programming from scratch, master popular languages and technologies.', icon: Code, path: '/study/learn-coding' },
+      learnCoding2: { title: 'Learn Coding 2.0', description: 'Upgraded programming learning experience, more systematic and in-depth.', icon: Code, path: '/study/learn-coding-2' },
     }
   }
 };

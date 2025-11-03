@@ -82,3 +82,78 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* 文本截断工具 */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* 响应式容器 */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* 响应式网格 */
+  .grid-responsive-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+
+  /* 响应式间距 */
+  .spacing-responsive {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+
+  /* 响应式文本大小 */
+  .text-responsive-title {
+    @apply text-2xl sm:text-3xl lg:text-4xl;
+  }
+  
+  .text-responsive-subtitle {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  .text-responsive-body {
+    @apply text-sm sm:text-base;
+  }
+
+  /* 响应式按钮 */
+  .btn-responsive {
+    @apply px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm;
+  }
+
+  /* 响应式卡片内边距 */
+  .card-padding-responsive {
+    @apply p-4 sm:p-6;
+  }
+
+  /* 响应式图标大小 */
+  .icon-responsive-sm {
+    @apply w-4 h-4 sm:w-5 sm:h-5;
+  }
+  
+  .icon-responsive-md {
+    @apply w-5 h-5 sm:w-6 sm:h-6;
+  }
+  
+  .icon-responsive-lg {
+    @apply w-6 h-6 sm:w-8 sm:h-8;
+  }
+}
