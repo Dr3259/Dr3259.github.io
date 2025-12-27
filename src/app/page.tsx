@@ -65,6 +65,7 @@ export default function WeekGlancePage() {
   const [isClientMounted, setIsClientMounted] = useState(false);
   
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+  const [currentHoveredDate, setCurrentHoveredDate] = useState<Date | null>(null);
   const [cardPosition, setCardPosition] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [isClipboardModalOpen, setIsClipboardModalOpen] = useState(false);
   const [clipboardContent, setClipboardContent] = useState('');
@@ -214,10 +215,12 @@ export default function WeekGlancePage() {
    const handleHoverStart = (date: Date, event?: React.MouseEvent) => {
     if (isPreviewSuppressedByClickRef.current) return;
     
-    // 立即清除旧的黄历显示，确保不会有内容错配
+    // 清除旧的定时器
     if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
     if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
-    setHoveredDate(null); // 立即隐藏当前黄历
+    
+    // 记录当前悬停的日期，但不显示黄历
+    setCurrentHoveredDate(date);
     
     // 记录日期卡片的位置信息
     if (event?.currentTarget) {
@@ -239,11 +242,6 @@ export default function WeekGlancePage() {
     } else {
       setCardPosition(null);
     }
-    
-    // 延迟1秒显示新的黄历
-    showPreviewTimerRef.current = setTimeout(() => {
-      setHoveredDate(date);
-    }, SHOW_PREVIEW_DELAY);
   };
 
   const handleHoverEnd = () => {
@@ -251,7 +249,8 @@ export default function WeekGlancePage() {
     if (showPreviewTimerRef.current) clearTimeout(showPreviewTimerRef.current);
     if (hidePreviewTimerRef.current) clearTimeout(hidePreviewTimerRef.current);
     
-    // 鼠标离开时立即隐藏黄历，不延迟
+    // 鼠标离开时清除悬停日期和隐藏黄历
+    setCurrentHoveredDate(null);
     setHoveredDate(null);
   };
 
@@ -323,6 +322,14 @@ export default function WeekGlancePage() {
             setIsQuickInspirationModalOpen(true);
         }
         
+        if (!isInputFocused && event.key.toLowerCase() === 'h') {
+            event.preventDefault();
+            // 如果当前有悬停的日期，显示黄历
+            if (currentHoveredDate) {
+                setHoveredDate(currentHoveredDate);
+            }
+        }
+        
         if (!isInputFocused && event.key.toLowerCase() === 'l') {
             event.preventDefault();
             checkClipboard();
@@ -340,7 +347,7 @@ export default function WeekGlancePage() {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [checkClipboard, isQuickAddModalOpen, isQuickInspirationModalOpen]);
+  }, [checkClipboard, isQuickAddModalOpen, isQuickInspirationModalOpen, currentHoveredDate]);
 
   const handleSaveFromClipboard = (data: { category: string }) => {
     if (!clipboardContent) return;
