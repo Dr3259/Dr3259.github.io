@@ -11,7 +11,12 @@ export interface TodoItem {
 }
 export interface MeetingNoteItem { id: string; title: string; notes: string; attendees: string; actionItems: string; }
 export interface ShareLinkItem { id: string; url: string; title: string; category: string | null; }
-export interface ReflectionItem { id: string; text: string; }
+export interface ReflectionItem { 
+  id: string; 
+  text: string; 
+  category?: string; // 改为字符串，支持自定义标签
+  timestamp?: string;
+}
 
 export type RatingType = 'excellent' | 'terrible' | 'average' | null;
 

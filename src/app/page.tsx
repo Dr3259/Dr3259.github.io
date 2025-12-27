@@ -10,6 +10,7 @@ import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
 import { QuickAddTodoModal } from '@/components/QuickAddTodoModal';
+import { QuickInspirationModal } from '@/components/QuickInspirationModal';
 import copy from 'copy-to-clipboard';
 import { MainHeader } from '@/components/page/MainHeader';
 import { WeekNavigator } from '@/components/page/WeekNavigator';
@@ -54,7 +55,7 @@ export default function WeekGlancePage() {
   const { user } = useAuth();
   
   const plannerState = usePlannerStore();
-  const { setRating, addShareLink, addTodo: addTodoToStore, lastTodoMigrationDate, addUnfinishedTodosToToday } = plannerState;
+  const { setRating, addShareLink, addTodo: addTodoToStore, addReflection: addReflectionToStore, lastTodoMigrationDate, addUnfinishedTodosToToday } = plannerState;
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); 
   const [theme, setTheme] = useState<Theme>('light'); 
@@ -69,6 +70,7 @@ export default function WeekGlancePage() {
   const [clipboardContent, setClipboardContent] = useState('');
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
   const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
+  const [isQuickInspirationModalOpen, setIsQuickInspirationModalOpen] = useState(false);
   const [isLoginPromptDismissed, setIsLoginPromptDismissed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('loginPromptDismissed') === 'true';
@@ -293,7 +295,7 @@ export default function WeekGlancePage() {
   
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (isQuickAddModalOpen) return;
+        if (isQuickAddModalOpen || isQuickInspirationModalOpen) return;
         const activeElement = document.activeElement;
         const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
         
@@ -316,6 +318,11 @@ export default function WeekGlancePage() {
             setIsQuickAddModalOpen(true);
         }
         
+        if (!isInputFocused && event.key.toLowerCase() === 'b') {
+            event.preventDefault();
+            setIsQuickInspirationModalOpen(true);
+        }
+        
         if (!isInputFocused && event.key.toLowerCase() === 'l') {
             event.preventDefault();
             checkClipboard();
@@ -333,7 +340,7 @@ export default function WeekGlancePage() {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [checkClipboard, isQuickAddModalOpen]);
+  }, [checkClipboard, isQuickAddModalOpen, isQuickInspirationModalOpen]);
 
   const handleSaveFromClipboard = (data: { category: string }) => {
     if (!clipboardContent) return;
@@ -370,6 +377,22 @@ export default function WeekGlancePage() {
     addTodoToStore(dateKey, slotKey, { text, completed, category: null, deadline: null, importance: null });
     toast({ title: t.quickAddTodo.successToast, duration: 3000 });
     setIsQuickAddModalOpen(false);
+  };
+
+  const handleSaveQuickInspiration = ({ text, category, date }: { text: string; category: string; date: Date }) => {
+    const dateKey = getDateKey(date);
+    const now = new Date();
+    const currentHour = now.getHours();
+    const slotKey = `${String(currentHour).padStart(2, '0')}:00 - ${String(currentHour + 1).padStart(2, '0')}:00`;
+    
+    addReflectionToStore(dateKey, slotKey, { 
+      text, 
+      category,
+      timestamp: new Date().toISOString()
+    });
+    
+    toast({ title: t.quickInspiration.successToast, duration: 3000 });
+    setIsQuickInspirationModalOpen(false);
   };
 
   useEffect(() => {
@@ -486,6 +509,12 @@ export default function WeekGlancePage() {
       </main>
       <ClipboardModal isOpen={isClipboardModalOpen} onClose={handleCloseClipboardModal} onSave={handleSaveFromClipboard} content={clipboardContent} translations={t.clipboard} />
       <QuickAddTodoModal isOpen={isQuickAddModalOpen} onClose={() => setIsQuickAddModalOpen(false)} onSave={handleSaveQuickAddTodo} weekDays={daysToDisplay.filter(day => isSameDay(day, systemToday) || isAfter(day, systemToday))} translations={t.quickAddTodo} dateLocale={dateLocale} />
+      <QuickInspirationModal 
+        isOpen={isQuickInspirationModalOpen} 
+        onClose={() => setIsQuickInspirationModalOpen(false)} 
+        onSave={handleSaveQuickInspiration} 
+        translations={t.quickInspiration} 
+      />
     </>
   );
 }

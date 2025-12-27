@@ -381,6 +381,7 @@ function DayDetailPageContent() {
       modalDescription: isZh ? '为这个时间段记录你的思维火花和创意灵感。' : 'Record your thoughts and creative inspirations for this time slot.',
       textLabel: isZh ? '灵感内容' : 'Inspiration Content',
       textPlaceholder: isZh ? '记录下你的思维灵感、创意想法或深度思考...' : 'Record your inspirations, creative ideas or deep thoughts...',
+      categoryLabel: isZh ? '分类' : 'Category',
       saveButton: isZh ? '保存灵感' : 'Save Inspiration',
       updateButton: isZh ? '更新灵感' : 'Update Inspiration',
       deleteButton: isZh ? '删除灵感' : 'Delete Inspiration',
@@ -546,7 +547,34 @@ function DayDetailPageContent() {
           <div>
             <h2 className="text-2xl font-semibold text-primary mb-4">{t.timeIntervalsTitle(dayNameForDisplay)}</h2>
             <div className="grid grid-cols-1 gap-6">
-              {timeIntervals.map(interval => ( <TimeIntervalSection key={interval.key} interval={interval} dateKey={dateKey} isPastDay={isPastDay} isViewingCurrentDay={isViewingCurrentDay} clientPageLoadTime={clientPageLoadTime} isCurrentActiveInterval={isViewingCurrentDay && activeIntervalKey === interval.key} intervalRef={el => { if (el) intervalRefs.current[interval.key] = el; }} allTodos={{[dateKey]: currentDayData.todos}} allMeetingNotes={{[dateKey]: currentDayData.meetingNotes}} allShareLinks={{[dateKey]: currentDayData.shareLinks}} allReflections={{[dateKey]: currentDayData.reflections}} onToggleTodoCompletion={handleToggleTodoCompletion} onDeleteTodo={handleDeleteTodo} onOpenTodoModal={handleOpenTodoModal} onOpenEditTodoModal={handleOpenEditTodoModal} onMoveTodoModal={handleMoveTodoModal} onOpenMeetingNoteModal={handleOpenMeetingNoteModal} onOpenShareLinkModal={handleOpenShareLinkModal} onOpenReflectionModal={handleOpenReflectionModal} onDeleteMeetingNote={handleDeleteMeetingNote} onDeleteShareLink={handleDeleteShareLink} onDeleteReflection={handleDeleteReflection} translations={t} /> ))}
+              {timeIntervals.map(interval => ( 
+                <TimeIntervalSection 
+                  key={interval.key} 
+                  interval={interval} 
+                  dateKey={dateKey} 
+                  isPastDay={isPastDay} 
+                  isViewingCurrentDay={isViewingCurrentDay} 
+                  clientPageLoadTime={clientPageLoadTime} 
+                  isCurrentActiveInterval={isViewingCurrentDay && activeIntervalKey === interval.key} 
+                  intervalRef={el => { if (el) intervalRefs.current[interval.key] = el; }} 
+                  allTodos={{[dateKey]: currentDayData.todos}} 
+                  allMeetingNotes={{[dateKey]: currentDayData.meetingNotes}} 
+                  allShareLinks={{[dateKey]: currentDayData.shareLinks}} 
+                  allReflections={{[dateKey]: currentDayData.reflections}} 
+                  onToggleTodoCompletion={handleToggleTodoCompletion} 
+                  onDeleteTodo={handleDeleteTodo} 
+                  onOpenTodoModal={handleOpenTodoModal} 
+                  onOpenEditTodoModal={handleOpenEditTodoModal} 
+                  onMoveTodoModal={handleMoveTodoModal} 
+                  onOpenMeetingNoteModal={handleOpenMeetingNoteModal} 
+                  onOpenShareLinkModal={handleOpenShareLinkModal} 
+                  onOpenReflectionModal={handleOpenReflectionModal} 
+                  onDeleteMeetingNote={handleDeleteMeetingNote} 
+                  onDeleteShareLink={handleDeleteShareLink} 
+                  onDeleteReflection={handleDeleteReflection} 
+                  translations={t} 
+                /> 
+              ))}
             </div>
           </div>
         </main>

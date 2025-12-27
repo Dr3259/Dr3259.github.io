@@ -11,6 +11,7 @@ export interface PlannerData {
     allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
     allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
     allReflections: Record<string, Record<string, ReflectionItem[]>>;
+    customInspirationTags: Array<{id: string; name: string; emoji: string; color: string}>; // 自定义标签
     allDailyNotes: Record<string, string>;
     allRatings: Record<string, RatingType>;
     lastTodoMigrationDate: string | null;
@@ -29,6 +30,10 @@ export interface PlannerState extends PlannerData {
     addUnfinishedTodosToToday: (today: string, yesterday: string) => number;
     addShareLink: (dateKey: string, hourSlot: string, link: ShareLinkItem) => void;
     addTodo: (dateKey: string, hourSlot: string, todo: Omit<TodoItem, 'id'>) => void;
+    addReflection: (dateKey: string, hourSlot: string, reflection: Omit<ReflectionItem, 'id'>) => void;
+    addCustomInspirationTag: (tag: {name: string; emoji: string; color: string}) => void;
+    updateCustomInspirationTag: (id: string, tag: {name: string; emoji: string; color: string}) => void;
+    deleteCustomInspirationTag: (id: string) => void;
     clearAllPlannerData: () => void;
     _initialize: (user: User | null) => void;
     _setStore: (data: Partial<PlannerData>) => void;
@@ -38,11 +43,20 @@ const LOCAL_STORAGE_PLANNER_KEY = 'weekglance_planner_data_v3';
 
 let firestoreUnsubscribe: (() => void) | null = null;
 
+const DEFAULT_INSPIRATION_TAGS = [
+    { id: 'idea', name: '想法', emoji: '💡', color: '#fbbf24' },
+    { id: 'thought', name: '思考', emoji: '🤔', color: '#8b5cf6' },
+    { id: 'quote', name: '摘录', emoji: '📝', color: '#06b6d4' },
+    { id: 'reminder', name: '提醒', emoji: '⏰', color: '#f59e0b' },
+    { id: 'other', name: '其他', emoji: '📌', color: '#6b7280' }
+];
+
 const usePlannerStore = create<PlannerState>()((set, get) => ({
     allTodos: {},
     allMeetingNotes: {},
     allShareLinks: {},
     allReflections: {},
+    customInspirationTags: DEFAULT_INSPIRATION_TAGS,
     allDailyNotes: {},
     allRatings: {},
     lastTodoMigrationDate: null,
@@ -63,16 +77,18 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
                     get()._setStore(remoteData);
                 } else {
                     // No data on remote, check local and upload if exists
-                    const localDataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
-                    if (localDataString) {
-                        try {
-                            const { state: localData } = JSON.parse(localDataString);
-                            if (localData) {
-                                dataProvider.saveData(user.uid, localData);
-                                localStorage.removeItem(LOCAL_STORAGE_PLANNER_KEY);
+                    if (typeof window !== 'undefined') {
+                        const localDataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
+                        if (localDataString) {
+                            try {
+                                const { state: localData } = JSON.parse(localDataString);
+                                if (localData) {
+                                    dataProvider.saveData(user.uid, localData);
+                                    localStorage.removeItem(LOCAL_STORAGE_PLANNER_KEY);
+                                }
+                            } catch (e) {
+                                console.error("Failed to parse or upload local data:", e);
                             }
-                        } catch (e) {
-                            console.error("Failed to parse or upload local data:", e);
                         }
                     }
                 }
@@ -83,17 +99,19 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
                 currentUser: null,
                 isFirebaseConnected: false,
                 allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
-                allReflections: {}, allDailyNotes: {}, allRatings: {},
+                allReflections: {}, customInspirationTags: DEFAULT_INSPIRATION_TAGS, allDailyNotes: {}, allRatings: {},
                 lastTodoMigrationDate: null,
             });
-            try {
-                const dataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
-                if (dataString) {
-                    const { state } = JSON.parse(dataString);
-                    if (state) get()._setStore(state);
+            if (typeof window !== 'undefined') {
+                try {
+                    const dataString = localStorage.getItem(LOCAL_STORAGE_PLANNER_KEY);
+                    if (dataString) {
+                        const { state } = JSON.parse(dataString);
+                        if (state) get()._setStore(state);
+                    }
+                } catch (e) {
+                    console.error("Failed to load local data after logout:", e);
                 }
-            } catch (e) {
-                console.error("Failed to load local data after logout:", e);
             }
         }
     },
@@ -184,6 +202,35 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     addShareLink: (dateKey, hourSlot, link) => {
         get().setShareLinksForSlot(dateKey, hourSlot, [...(get().allShareLinks[dateKey]?.[hourSlot] || []), link]);
     },
+    addReflection: (dateKey, hourSlot, reflection) => {
+        const newReflection = { ...reflection, id: Date.now().toString() };
+        get().setReflectionsForSlot(dateKey, hourSlot, [...(get().allReflections[dateKey]?.[hourSlot] || []), newReflection]);
+    },
+    addCustomInspirationTag: (tag) => {
+        const newTag = { ...tag, id: Date.now().toString() };
+        const newTags = [...get().customInspirationTags, newTag];
+        set({ customInspirationTags: newTags });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags });
+        }
+    },
+    updateCustomInspirationTag: (id, tag) => {
+        const newTags = get().customInspirationTags.map(t => t.id === id ? { ...tag, id } : t);
+        set({ customInspirationTags: newTags });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags });
+        }
+    },
+    deleteCustomInspirationTag: (id) => {
+        const newTags = get().customInspirationTags.filter(t => t.id !== id);
+        set({ customInspirationTags: newTags });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags });
+        }
+    },
     addUnfinishedTodosToToday: (today, yesterday) => {
         const state = get();
         const yesterdayTodos = state.allTodos[yesterday] || {};
@@ -213,7 +260,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     clearAllPlannerData: () => {
         const emptyState: PlannerData = {
             allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
-            allReflections: {}, allDailyNotes: {}, allRatings: {},
+            allReflections: {}, customInspirationTags: get().customInspirationTags, allDailyNotes: {}, allRatings: {},
             lastTodoMigrationDate: get().lastTodoMigrationDate
         };
         set(emptyState);
@@ -242,12 +289,13 @@ if (typeof window !== 'undefined' && !usePlannerStore.getState().currentUser) {
 // Persist to localStorage only when not logged in
 usePlannerStore.subscribe(
     (state) => {
-        if (!state.currentUser) {
+        if (!state.currentUser && typeof window !== 'undefined') {
             const dataToSave = {
                 allTodos: state.allTodos,
                 allMeetingNotes: state.allMeetingNotes,
                 allShareLinks: state.allShareLinks,
                 allReflections: state.allReflections,
+                customInspirationTags: state.customInspirationTags,
                 allDailyNotes: state.allDailyNotes,
                 allRatings: state.allRatings,
                 lastTodoMigrationDate: state.lastTodoMigrationDate

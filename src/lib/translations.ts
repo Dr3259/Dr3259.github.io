@@ -67,6 +67,14 @@ export const translations = {
       pasteFromClipboard: '从剪贴板粘贴',
       successToast: '待办事项已添加！'
     },
+    quickInspiration: {
+      modalTitle: '快速记录灵感',
+      placeholder: '记录你的想法、灵感或思考...',
+      categoryLabel: '分类',
+      saveButton: '保存',
+      cancelButton: '取消',
+      successToast: '灵感已记录！'
+    },
     timeIntervals: {
         midnight: "凌晨",
         earlyMorning: "清晨",
@@ -139,6 +147,14 @@ export const translations = {
       cancelButton: 'Cancel',
       pasteFromClipboard: 'Paste from clipboard',
       successToast: 'To-do item added!'
+    },
+    quickInspiration: {
+      modalTitle: 'Quick Inspiration',
+      placeholder: 'Record your thoughts, ideas, or insights...',
+      categoryLabel: 'Category',
+      saveButton: 'Save',
+      cancelButton: 'Cancel',
+      successToast: 'Inspiration recorded!'
     },
     timeIntervals: {
         midnight: "Midnight",

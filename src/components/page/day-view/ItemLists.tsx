@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { getTagColor } from '@/lib/utils';
+import { usePlannerStore } from '@/hooks/usePlannerStore';
 import {
     ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText, FileEdit, Trash2,
     Star as StarIcon, ArrowRight
@@ -47,6 +48,16 @@ export const ItemLists: React.FC<ItemListsProps> = ({
 }) => {
     
     let sectionsRenderedInSlotCount = 0;
+    const { customInspirationTags } = usePlannerStore();
+
+    const getTagInfo = (categoryId: string) => {
+        return customInspirationTags.find(tag => tag.id === categoryId) || {
+            id: categoryId,
+            name: categoryId,
+            emoji: '📌',
+            color: '#6b7280'
+        };
+    };
 
     const getCategoryTooltipText = (category: CategoryType | null) => {
         if (!category || !t.todoModal.categories[category]) return '';
@@ -170,17 +181,37 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                         <span className="text-xs font-medium text-green-600 dark:text-green-400">思维灵感</span>
                     </div>
                     <ul className="space-y-2 p-px border-l-2 border-green-200 pl-3">
-                        {reflections.map((reflection) => (
-                            <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-green-50 dark:hover:bg-green-950/20 p-1.5 rounded-md transition-colors">
-                                <ScrollArea className="max-h-20 w-full mr-2">
-                                    <p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p>
-                                </ScrollArea>
-                                {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
-                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenReflectionModal(slot, reflection)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editReflection}</p></TooltipContent></Tooltip>
-                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteReflection(dateKey, slot, reflection.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteReflection}</p></TooltipContent></Tooltip>
-                                </div>}
-                            </li>
-                        ))}
+                        {reflections.map((reflection) => {
+                            const tagInfo = reflection.category ? getTagInfo(reflection.category) : null;
+                            return (
+                                <li key={reflection.id} className="flex items-start justify-between group/reflectionitem hover:bg-green-50 dark:hover:bg-green-950/20 p-1.5 rounded-md transition-colors">
+                                    <div className="flex-1 min-w-0 mr-2">
+                                        {tagInfo && (
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <span 
+                                                    className="text-xs px-1.5 py-0.5 rounded-full text-white font-medium"
+                                                    style={{ backgroundColor: tagInfo.color }}
+                                                >
+                                                    {tagInfo.emoji} {tagInfo.name}
+                                                </span>
+                                                {reflection.timestamp && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {new Date(reflection.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        <ScrollArea className="max-h-20 w-full">
+                                            <p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p>
+                                        </ScrollArea>
+                                    </div>
+                                    {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
+                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenReflectionModal(slot, reflection)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editReflection}</p></TooltipContent></Tooltip>
+                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteReflection(dateKey, slot, reflection.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteReflection}</p></TooltipContent></Tooltip>
+                                    </div>}
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             );})()}
