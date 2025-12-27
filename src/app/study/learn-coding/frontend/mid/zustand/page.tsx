@@ -604,7 +604,7 @@ unsubscribe();`,
           <div className="space-y-3">
             <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
               <h3 className="font-semibold text-gray-800 mb-2">✅ Selector 优化</h3>
-              <p className="text-sm text-gray-600">避免整 store 重渲染 → useStore(s => s.count)</p>
+              <p className="text-sm text-gray-600">避免整 store 重渲染 → useStore(s =&gt; s.count)</p>
             </div>
             <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
               <h3 className="font-semibold text-gray-800 mb-2">✅ 浅比较</h3>
@@ -620,7 +620,7 @@ unsubscribe();`,
             </div>
             <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
               <h3 className="font-semibold text-gray-800 mb-2">✅ TS 类型自动推导</h3>
-              <p className="text-sm text-gray-600">函数式定义天然支持 → create&lt;State&gt;()(set => (...))</p>
+              <p className="text-sm text-gray-600">函数式定义天然支持 → create&lt;State&gt;()(set =&gt; (...))</p>
             </div>
           </div>
         </Card>
