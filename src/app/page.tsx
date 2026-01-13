@@ -510,7 +510,11 @@ export default function WeekGlancePage() {
         
         <FeatureGrid />
         
-        {showDebugger && <SyncDebugger />}
+        {showDebugger && (
+          <div className="space-y-4">
+            <SyncDebugger />
+          </div>
+        )}
 
         <PageFooter translations={t} currentYear={systemToday.getFullYear()} />
       </main>
@@ -520,7 +524,13 @@ export default function WeekGlancePage() {
         isOpen={isQuickInspirationModalOpen} 
         onClose={() => setIsQuickInspirationModalOpen(false)} 
         onSave={handleSaveQuickInspiration} 
-        translations={t.quickInspiration} 
+        translations={{
+          title: t.quickInspiration.modalTitle,
+          placeholder: t.quickInspiration.placeholder,
+          categoryLabel: t.quickInspiration.categoryLabel,
+          saveButton: t.quickInspiration.saveButton,
+          cancelButton: t.quickInspiration.cancelButton
+        }} 
       />
     </>
   );
