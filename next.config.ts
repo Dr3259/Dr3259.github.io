@@ -6,15 +6,21 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  experimental: {
-    turbo: {
-      // Turbopack specific configuration
-    },
-  },
+  // eslint configuration in next.config.ts is no longer supported in Next 16; comment out to avoid invalid config warning
+  // eslint: {
+  //   ignoreDuringBuilds: true,
+  // },
+  // experimental.turbo is an invalid key in Next 16; Turbopack config should not be set here
+  // experimental: {
+  //   turbo: {
+  //     // Turbopack specific configuration (removed for Next 16)
+  //   },
+  // },
   async rewrites() {
+    // Only apply dev-time rewrites; avoid proxying in production
+    if (process.env.NODE_ENV !== 'development') {
+      return [];
+    }
     return [
       {
         source: '/api/flow/:path*',
