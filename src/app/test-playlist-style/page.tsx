@@ -14,8 +14,10 @@ export default function TestPlaylistStylePage() {
       id: 'all-music',
       name: '所有音乐',
       type: 'all' as const,
+      isDefault: true,
       trackCount: 25,
-      createdAt: new Date('2024-01-01')
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-15')
     } as AllMusicPlaylist,
     {
       id: 'playlist-1',
@@ -24,6 +26,7 @@ export default function TestPlaylistStylePage() {
       type: 'virtual' as const,
       trackCount: 12,
       createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-20'),
       tracks: []
     } as VirtualPlaylist,
     {
@@ -33,6 +36,7 @@ export default function TestPlaylistStylePage() {
       type: 'virtual' as const,
       trackCount: 8,
       createdAt: new Date('2024-02-01'),
+      updatedAt: new Date('2024-02-05'),
       tracks: []
     } as VirtualPlaylist,
     {
@@ -42,6 +46,7 @@ export default function TestPlaylistStylePage() {
       type: 'virtual' as const,
       trackCount: 15,
       createdAt: new Date('2024-02-10'),
+      updatedAt: new Date('2024-02-12'),
       tracks: []
     } as VirtualPlaylist,
     {
@@ -50,7 +55,10 @@ export default function TestPlaylistStylePage() {
       type: 'folder' as const,
       trackCount: 20,
       createdAt: new Date('2024-01-20'),
-      folderPath: '/downloads/music'
+      updatedAt: new Date('2024-01-21'),
+      folderPath: '/downloads/music',
+      lastScanTime: new Date('2024-01-21'),
+      autoRefresh: false
     }
   ];
 

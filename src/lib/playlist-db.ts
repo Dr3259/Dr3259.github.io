@@ -1,5 +1,11 @@
 // 歌单数据存储 - 使用localStorage避免与原有数据库冲突
 import type { Playlist, VirtualPlaylist, FolderPlaylist, AllMusicPlaylist, PlaylistTrackRef } from './playlist-types';
+import type { TrackMetadata } from './db';
+
+export interface ExtendedTrackMetadata extends TrackMetadata {
+  source: 'folder';
+  originalPath: string;
+}
 
 const PLAYLIST_STORAGE_KEY = 'weekglance_playlists_v1';
 
@@ -63,7 +69,11 @@ export class PlaylistDB {
       throw new Error('Playlist not found');
     }
     
-    playlists[index] = { ...playlists[index], ...updates, updatedAt: new Date() };
+    const existing = playlists[index];
+    if (existing.type !== 'virtual') {
+      throw new Error('Target playlist is not virtual');
+    }
+    playlists[index] = { ...(existing as VirtualPlaylist), ...updates, updatedAt: new Date() };
     this.savePlaylists(playlists);
   }
 
@@ -146,7 +156,7 @@ export class FolderScanner {
     const tracks: ExtendedTrackMetadata[] = [];
     let totalFiles = 0;
     
-    for await (const [name, handle] of dirHandle.entries()) {
+    for await (const [name, handle] of (dirHandle as any).entries()) {
       if (handle.kind === 'file') {
         totalFiles++;
         const extension = this.getFileExtension(name);

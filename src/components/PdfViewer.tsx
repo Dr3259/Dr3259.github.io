@@ -5,7 +5,6 @@ import React, { useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +23,7 @@ interface PdfViewerProps {
     pageNumber: number;
     pageLayout: PageLayout;
     numPages: number | null;
-    onDocumentLoadSuccess: ({ numPages }: PDFDocumentProxy) => void;
+    onDocumentLoadSuccess: (document: any) => void;
     wrapperRef: React.RefObject<HTMLDivElement>;
     translations: {
         pdfError: string;

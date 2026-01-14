@@ -20,7 +20,11 @@ export default function ComparePage() {
       backButton: 'Back to AI Watch',
       comingSoon: 'Coming Soon! This feature is under development.',
     }
-  }[currentLanguage]), [currentLanguage]);
+  }[currentLanguage] || {
+    pageTitle: 'Dimension Comparison',
+    backButton: 'Back',
+    comingSoon: 'Coming soon.',
+  }), [currentLanguage]);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined') {

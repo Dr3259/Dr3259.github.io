@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { format, isSameDay, isBefore, isAfter } from 'date-fns';
+import type { Locale } from 'date-fns';
 import { DayBox } from '@/components/DayBox';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { BarChart } from "lucide-react";

@@ -37,7 +37,7 @@ import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations, type LanguageKey } from '@/lib/translations';
 import { useAuth } from '@/context/AuthContext';
 
-type RatingType = 'excellent' | 'terrible' | 'average' | null;
+export type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
 // 优化的时间段生成函数，使用缓存避免重复计算
 const slotsCache = new Map<string, string[]>();

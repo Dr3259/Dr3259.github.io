@@ -285,7 +285,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsLoadingPlaylists(true);
       
       // 让用户选择文件夹
-      const dirHandle = await window.showDirectoryPicker();
+      const dirHandle = await (window as any).showDirectoryPicker();
       
       // 扫描文件夹
       const scanner = new FolderScanner();

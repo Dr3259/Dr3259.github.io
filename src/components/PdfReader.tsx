@@ -41,6 +41,7 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
     pageLayout,
     scaleMode,
     bookmarks,
+    onRemoveBookmark,
     onOpenAddBookmarkDialog,
     translations
 }) => {

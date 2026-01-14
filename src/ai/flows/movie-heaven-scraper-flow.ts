@@ -90,18 +90,24 @@ const scrapeMovieHeavenFlow = ai.defineFlow(
             const introMatch = zoomText.match(/◎简\s+介\s+([\s\S]*?)(?=◎|$)/);
             let shortIntro = introMatch && introMatch[1] ? introMatch[1].trim().split('\n')[0] : undefined;
 
-            if(shortIntro && shortIntro.length > 100) {
+            if (shortIntro && shortIntro.length > 100) {
               shortIntro = shortIntro.substring(0, 100) + '...';
             }
-
-            return { title, downloadUrl, rating, tags, shortIntro };
+            const item: MovieHeavenItem = {
+              title,
+              downloadUrl,
+              ...(rating ? { rating } : {}),
+              ...(tags ? { tags } : {}),
+              ...(shortIntro ? { shortIntro } : {}),
+            };
+            return item;
         } catch (e: any) {
             return null;
         }
       });
       
       const results = await Promise.all(detailPromises);
-      const validMovies = results.filter((m): m is MovieHeavenItem => m !== null);
+      const validMovies = results.filter(Boolean) as MovieHeavenItem[];
       
       if (validMovies.length === 0) {
         throw new Error('Could not parse any movies. The website structure may have changed.');

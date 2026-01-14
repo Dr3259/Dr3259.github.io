@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
-import type { Playlist, VirtualPlaylist, FolderPlaylist } from './playlist-types';
+import type { Playlist, VirtualPlaylist, FolderPlaylist } from '@/lib/playlist-types';
 
 interface PlaylistSidebarProps {
   playlists: Playlist[];

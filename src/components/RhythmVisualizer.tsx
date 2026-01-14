@@ -33,7 +33,7 @@ export const RhythmVisualizer: React.FC<RhythmVisualizerProps> = ({ className })
         }
         if (!sourceRef.current) {
             try {
-                const source = audioContextRef.current.createMediaElementSource(audioRef.current);
+                const source = audioContextRef.current!.createMediaElementSource(audioRef.current!);
                 sourceRef.current = source;
                 source.connect(analyserRef.current!);
                 analyserRef.current!.connect(audioContextRef.current.destination);

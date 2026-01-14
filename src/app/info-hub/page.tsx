@@ -12,6 +12,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { HistoryItem } from '@/lib/types';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import {

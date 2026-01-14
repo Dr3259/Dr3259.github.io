@@ -15,56 +15,64 @@ export default function LearnCoding2Page() {
       title: '前端',
       description: 'HTML、CSS、JavaScript、React、Vue',
       icon: '🎨',
-      path: '/study/learn-coding-2/frontend'
+      path: '/study/learn-coding-2/frontend',
+      color: 'bg-blue-500'
     },
     {
       id: 2,
       title: '移动端',
       description: 'Android、iOS、Flutter、React Native',
       icon: '📱',
-      path: '/study/learn-coding-2/mobile'
+      path: '/study/learn-coding-2/mobile',
+      color: 'bg-purple-500'
     },
     {
       id: 3,
       title: '后端',
       description: 'Java、Python、Node.js、微服务',
       icon: '⚙️',
-      path: '/study/learn-coding-2/backend'
+      path: '/study/learn-coding-2/backend',
+      color: 'bg-gray-500'
     },
     {
       id: 4,
       title: '数据库',
       description: 'MySQL、Redis、MongoDB、SQL优化',
       icon: '💾',
-      path: '/study/learn-coding-2/database'
+      path: '/study/learn-coding-2/database',
+      color: 'bg-emerald-500'
     },
     {
       id: 5,
       title: '操作系统',
       description: 'Linux、进程、内存、网络',
       icon: '🖥️',
-      path: '/study/learn-coding-2/os'
+      path: '/study/learn-coding-2/os',
+      color: 'bg-teal-500'
     },
     {
       id: 6,
       title: '算法与数据结构',
       description: '排序、搜索、动态规划、图论',
       icon: '🧮',
-      path: '/study/learn-coding-2/algorithm'
+      path: '/study/learn-coding-2/algorithm',
+      color: 'bg-orange-500'
     },
     {
       id: 7,
       title: '人工智能',
       description: '机器学习、深度学习、LLM应用',
       icon: '🤖',
-      path: '/study/learn-coding-2/ai'
+      path: '/study/learn-coding-2/ai',
+      color: 'bg-pink-500'
     },
     {
       id: 8,
       title: '项目管理',
       description: 'Scrum、敏捷开发、团队协作、产品管理',
       icon: '📋',
-      path: '/study/learn-coding-2/project-management'
+      path: '/study/learn-coding-2/project-management',
+      color: 'bg-indigo-500'
     }
   ];
 

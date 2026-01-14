@@ -310,7 +310,7 @@ export default function PrivateMusicPlayerPage() {
         title: trackTitle,
         type: file.type,
         duration: duration,
-        content: arrayBuffer,
+        content: new Blob([arrayBuffer], { type: file.type }),
         category: null,
       };
 
@@ -506,7 +506,7 @@ export default function PrivateMusicPlayerPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
+      const activeElement = document.activeElement as HTMLElement | null;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
         return;
       }
@@ -724,9 +724,20 @@ export default function PrivateMusicPlayerPage() {
       <EditTrackModal
         isOpen={!!editingTrack}
         onClose={() => setEditingTrack(null)}
-        onSave={handleSaveTrackCategory}
+        onSave={(trackId, meta) => handleSaveTrackCategory(trackId, meta.category)}
         track={editingTrack}
-        translations={t.editTrackModal}
+        translations={{
+          title: t.editTrackModal.title,
+          description: t.editTrackModal.description,
+          titleLabel: '标题',
+          titlePlaceholder: '输入标题',
+          artistLabel: '艺术家',
+          artistPlaceholder: '输入艺术家',
+          categoryLabel: t.editTrackModal.categoryLabel,
+          categoryPlaceholder: t.editTrackModal.categoryPlaceholder,
+          saveButton: t.editTrackModal.saveButton,
+          cancelButton: t.editTrackModal.cancelButton,
+        }}
        />
     </>
   );

@@ -32,6 +32,7 @@ export default function TestDownloadPage() {
       artist: '周杰伦',
       category: '古风',
       duration: 240,
+      type: 'audio/mp3',
       createdAt: new Date('2024-01-01')
     },
     {
@@ -40,6 +41,7 @@ export default function TestDownloadPage() {
       artist: '周杰伦',
       category: '流行',
       duration: 210,
+      type: 'audio/mp3',
       createdAt: new Date('2024-01-02')
     },
     {
@@ -48,6 +50,7 @@ export default function TestDownloadPage() {
       artist: '周杰伦',
       category: '治愈',
       duration: 220,
+      type: 'audio/mp3',
       createdAt: new Date('2024-01-03')
     }
   ];
@@ -74,8 +77,10 @@ export default function TestDownloadPage() {
       id: 'all-music',
       name: '所有音乐',
       type: 'all',
+      isDefault: true,
       trackCount: mockTracks.length,
-      createdAt: new Date('2024-01-01')
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-15')
     };
 
     try {

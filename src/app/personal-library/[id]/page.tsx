@@ -216,7 +216,7 @@ export default function BookReaderPage() {
       return <div ref={txtContentRef} className="flex-1 p-6 md:p-8 lg:p-12 overflow-y-auto"><p className="whitespace-pre-wrap leading-relaxed max-w-3xl mx-auto" style={{ fontSize: `${settings.fontSize}px` }}>{textContent}</p></div>;
     }
     if (book.type === 'pdf') {
-      return <PdfReader file={book.content} theme={settings.theme} pageLayout={settings.pageLayout} scaleMode={settings.pdfScaleMode} bookmarks={bookmarks} onOpenAddBookmarkDialog={handleOpenAddBookmarkDialog} onRemoveBookmark={removeBookmark} translations={t} />;
+      return <PdfReader file={book.content} theme={settings.theme} pageLayout={settings.pageLayout} scaleMode={settings.pdfScaleMode} bookmarks={bookmarks} onBookmarkToggle={async () => {}} onAddBookmark={addBookmark} onOpenAddBookmarkDialog={handleOpenAddBookmarkDialog} onRemoveBookmark={removeBookmark} translations={t} />;
     }
     return null;
   };

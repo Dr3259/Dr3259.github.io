@@ -36,7 +36,7 @@ import { CreatePlaylistModal } from './create-playlist-modal';
 import { EditPlaylistModal } from './EditPlaylistModal';
 import { DraggableTrackItem } from './draggable-track-item';
 import { exportPlaylistToText, downloadTextFile, generateSafeFilename } from '@/lib/playlist-export';
-import type { VirtualPlaylist } from '@/lib/playlist-types';
+import type { VirtualPlaylist, AllMusicPlaylist } from '@/lib/playlist-types';
 
 const translations = {
   'zh-CN': {
@@ -409,7 +409,17 @@ export default function IntegratedMusicPlayerPage() {
     }
 
     try {
-      const textContent = exportPlaylistToText(playlist, tracks);
+      const typed =
+        playlist.type === 'all'
+          ? (playlist as AllMusicPlaylist)
+          : playlist.type === 'virtual'
+          ? (playlist as VirtualPlaylist)
+          : null;
+      if (!typed) {
+        toast({ title: '该类型歌单暂不支持导出', variant: 'destructive' });
+        return;
+      }
+      const textContent = exportPlaylistToText(typed, tracks);
       const filename = generateSafeFilename(playlist.name);
       downloadTextFile(textContent, filename);
       toast({ title: `歌单信息已导出: ${filename}` });
@@ -674,7 +684,7 @@ export default function IntegratedMusicPlayerPage() {
                           onDelete={() => handleDeleteTrack(track.id, track.title)}
                           onRemoveFromPlaylist={
                             currentPlaylist?.type === 'virtual' 
-                              ? () => handleRemoveTrackFromPlaylist(track.id, currentPlaylist.id)
+                              ? () => handleRemoveTrackFromPlaylist(track.id)
                               : undefined
                           }
                         />

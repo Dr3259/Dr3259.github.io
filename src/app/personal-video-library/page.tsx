@@ -165,7 +165,7 @@ export default function PersonalVideoLibraryPage() {
     setSearchResults([]);
     try {
       const results = await searchMovies({ query: searchQuery });
-      setSearchResults(results);
+      setSearchResults(results.map(r => ({ ...r, poster_path: r.poster_path ?? '' })));
     } catch (error) {
       toast({ title: "Search Error", variant: "destructive" });
     } finally {

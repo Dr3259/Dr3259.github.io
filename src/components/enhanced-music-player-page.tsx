@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import OriginalMusicPlayerPage from '@/app/private-music-player/page';
 
 // 导入新的歌单功能
-import { PlaylistProvider, usePlaylist } from './enhanced-music-context';
+import { PlaylistProvider, usePlaylist } from '@/lib/enhanced-music-context';
 import { PlaylistGrid } from './playlist-grid';
 import { CreatePlaylistModal } from './create-playlist-modal';
 
@@ -24,7 +24,7 @@ const EnhancedPlayerContent: React.FC = () => {
     importFolderAsPlaylist,
     playPlaylist,
     refreshFolderPlaylist,
-    deleteFolderPlaylist: deletePlaylist,
+    deletePlaylist,
     handleTrackDrop,
   } = usePlaylist();
 
@@ -63,6 +63,7 @@ const EnhancedPlayerContent: React.FC = () => {
               onTrackDrop={handleTrackDrop}
               onChangePlaylistImage={() => {}}
               onUploadPlaylistImage={() => {}}
+              onResetImage={() => {}}
             />
           </div>
           

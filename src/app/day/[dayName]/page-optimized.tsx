@@ -81,6 +81,7 @@ function DayDetailPageOptimizedContent() {
     
     return {
       ...t,
+      backToWeek: isZh ? '返回周视图' : 'Back to Week',
       // 预计算所有需要的翻译
       timeIntervals: TIME_INTERVALS.map(interval => ({
         ...interval,
@@ -90,9 +91,62 @@ function DayDetailPageOptimizedContent() {
         todo: {
           modalTitle: (hourSlot: string) => isZh ? `为 ${hourSlot} 添加任务` : `Add Tasks for ${hourSlot}`,
           modalDescription: isZh ? '为这个时间段添加和管理任务。' : 'Add and manage your tasks for this time slot.',
-          // ... 其他翻译
+          addItemPlaceholder: isZh ? '输入任务...' : 'Enter task...',
+          categoryInputPlaceholder: isZh ? '输入分类...' : 'Enter category...',
+          addButton: isZh ? '添加' : 'Add',
+          updateButton: isZh ? '更新' : 'Update',
+          saveButton: isZh ? '保存' : 'Save',
+          noTodos: isZh ? '暂无任务' : 'No todos',
+          markComplete: isZh ? '标记完成' : 'Mark complete',
+          markIncomplete: isZh ? '标记未完成' : 'Mark incomplete',
+          editTodo: isZh ? '编辑任务' : 'Edit todo',
+          deleteTodo: isZh ? '删除任务' : 'Delete todo',
+          cancelButton: isZh ? '取消' : 'Cancel',
+          editModalTitle: isZh ? '编辑任务' : 'Edit Task',
+          moveModalTitle: isZh ? '移动任务' : 'Move Task',
+          importanceLabel: isZh ? '重要性' : 'Importance',
+          categoryLabel: isZh ? '分类' : 'Category',
+          deadlineLabel: isZh ? '截止时间' : 'Deadline',
+          selectPlaceholder: isZh ? '请选择' : 'Select',
+          deleteButton: isZh ? '删除' : 'Delete',
+          importancePlaceholder: isZh ? '选择重要性' : 'Select importance',
+          categories: {
+            work: isZh ? '工作' : 'Work',
+            study: isZh ? '学习' : 'Study',
+            shopping: isZh ? '购物' : 'Shopping',
+            organizing: isZh ? '整理' : 'Organizing',
+            relaxing: isZh ? '放松' : 'Relaxing',
+            cooking: isZh ? '烹饪' : 'Cooking',
+            childcare: isZh ? '育儿' : 'Childcare',
+            dating: isZh ? '约会' : 'Dating',
+          },
+          deadlines: {
+            hour: isZh ? '一小时内' : 'In an hour',
+            today: isZh ? '今天' : 'Today',
+            tomorrow: isZh ? '明天' : 'Tomorrow',
+            thisWeek: isZh ? '本周' : 'This week',
+            nextWeek: isZh ? '下周' : 'Next week',
+            nextMonth: isZh ? '下月' : 'Next month',
+          },
+          importances: { important: isZh ? '重要' : 'Important', notImportant: isZh ? '不重要' : 'Not important' }
         },
-        // ... 其他模态框翻译
+        meetingNote: {
+          modalTitleNew: isZh ? '新增会议记录' : 'New Meeting Note',
+          modalTitleEdit: (title: string) => isZh ? `编辑：${title}` : `Edit: ${title}`,
+          modalDescription: isZh ? '记录会议要点。' : 'Record meeting key points.',
+          titleLabel: isZh ? '标题' : 'Title',
+          titlePlaceholder: isZh ? '输入标题' : 'Enter title',
+          notesLabel: isZh ? '记录' : 'Notes',
+          notesPlaceholder: isZh ? '输入会议记录' : 'Enter notes',
+          attendeesLabel: isZh ? '参会人员' : 'Attendees',
+          attendeesPlaceholder: isZh ? '输入人员' : 'Enter attendees',
+          actionItemsLabel: isZh ? '行动项' : 'Action Items',
+          actionItemsPlaceholder: isZh ? '输入行动项' : 'Enter action items',
+          saveButton: isZh ? '保存' : 'Save',
+          updateButton: isZh ? '更新' : 'Update',
+          cancelButton: isZh ? '取消' : 'Cancel',
+          deleteButton: isZh ? '删除' : 'Delete',
+        }
       }
     };
   }, [pageState.currentLanguage]);
@@ -278,13 +332,14 @@ function DayDetailPageOptimizedContent() {
                   dateKey={dateKey}
                   isPastDay={dayProperties.isPastDay}
                   isViewingCurrentDay={dayProperties.isViewingCurrentDay}
-                  clientPageLoadTime={pageState.clientPageLoadTime}
+                  clientPageLoadTime={pageState.clientPageLoadTime || new Date()}
                   isCurrentActiveInterval={false} // 简化活动区间逻辑
                   intervalRef={() => {}} // 简化引用逻辑
                   allTodos={{[dateKey]: currentDayData.todos}}
                   allMeetingNotes={{[dateKey]: currentDayData.meetingNotes}}
                   allShareLinks={{[dateKey]: currentDayData.shareLinks}}
                   allReflections={{[dateKey]: currentDayData.reflections}}
+                  allDrafts={{}}
                   onToggleTodoCompletion={(dateKey, hourSlot, todoId) => {
                     const todos = currentDayData.todos[hourSlot] || [];
                     plannerStore.setTodosForSlot(dateKey, hourSlot, todos.map(t => 
@@ -313,6 +368,8 @@ function DayDetailPageOptimizedContent() {
                     const reflections = currentDayData.reflections[hourSlot] || [];
                     plannerStore.setReflectionsForSlot(dateKey, hourSlot, reflections.filter(r => r.id !== reflectionId));
                   }}
+                  onOpenDraftModal={() => {}}
+                  onDeleteDraft={() => {}}
                   translations={translations_cache}
                 />
               ))}

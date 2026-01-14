@@ -10,7 +10,7 @@ import { format, startOfWeek, endOfWeek, subWeeks, isSameWeek, isAfter, parseISO
 import type { Locale } from 'date-fns';
 import { startOfMonth, isSameDay, differenceInDays } from 'date-fns';
 
-const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: number }): number => {
+const getDisplayWeekOfMonth = (weekStartDate: Date, options: { locale: Locale, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 }): number => {
   const monthOfLabel = weekStartDate.getMonth();
   const yearOfLabel = weekStartDate.getFullYear();
 

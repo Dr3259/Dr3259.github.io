@@ -5,7 +5,10 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { generateHourlySlots } from '@/app/day/[dayName]/page';
 import { ItemLists } from './ItemLists';
-import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem } from '@/app/day/[dayName]/page';
+import type { TodoItem } from '@/components/TodoModal';
+import type { MeetingNoteItem } from '@/components/MeetingNoteModal';
+import type { ShareLinkItem } from '@/components/ShareLinkModal';
+import type { ReflectionItem } from '@/components/ReflectionModal';
 
 export interface DraftItem {
     id: string;

@@ -2,20 +2,29 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  transform: {
+    '^.+\\.jsx?$': ['babel-jest', {}],
+    '^.+\\.tsx?$': ['babel-jest', {}],
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.json',
+        useESM: true,
+      },
+    ],
+  },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(lucide-react)/)',
+  ],
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/lib/(.*)$': '<rootDir>/src/lib/$1',
     '^@/app/(.*)$': '<rootDir>/src/app/$1',
-  },
-  transform: {
-    // '^.+\\.[tj]sx?$' is needed to transpile node_modules.
-    '^.+\\.[tj]sx?$': [
-      'ts-jest',
-      {
-        tsconfig: 'tsconfig.json',
-      },
-    ],
+    '^@/hooks/(.*)$': '<rootDir>/src/hooks/$1',
+    '^@/context/(.*)$': '<rootDir>/src/context/$1',
   },
 };

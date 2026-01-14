@@ -19,7 +19,7 @@ interface Feature {
 const FeatureButton: React.FC<{
   item: Feature;
   onDragStart: (e: DragEvent<HTMLDivElement>, item: Feature) => void;
-  onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
+  onDragEnd: () => void;
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnter: (e: DragEvent<HTMLDivElement>, item: Feature) => void;
   isDragging: boolean;
@@ -29,7 +29,7 @@ const FeatureButton: React.FC<{
     layout
     draggable
     onDragStart={(e) => onDragStart(e as unknown as DragEvent<HTMLDivElement>, item)}
-    onDragEnd={onDragEnd}
+    onDragEnd={(_: any, __: any) => onDragEnd()}
     onDragOver={onDragOver}
     onDragEnter={(e) => onDragEnter(e as unknown as DragEvent<HTMLDivElement>, item)}
     className={cn(

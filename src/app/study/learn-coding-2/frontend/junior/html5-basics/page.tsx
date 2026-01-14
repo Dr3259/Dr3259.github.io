@@ -1379,11 +1379,11 @@ x<sup>2</sup>                     <!-- 上标 -->
               {!collapsedSections.has(idx) && (
                 <>
                   {/* 代码示例 */}
-                  {section.code && (
+                  {('code' in section) && (section as any).code && (
                     <div className="mb-4">
                       <h3 className="font-semibold text-gray-800 mb-2">代码示例</h3>
                       <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                        <code>{section.code}</code>
+                        <code>{(section as any).code}</code>
                       </pre>
                     </div>
                   )}
@@ -1400,7 +1400,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                       {/* 时间线 */}
                       <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-green-400 to-green-600"></div>
                       <div className="space-y-6 h-full flex flex-col justify-between">
-                        {section.keyPoints.map((point, i) => {
+                        {(section.keyPoints ?? []).map((point: string, i: number) => {
                           const [year, ...rest] = point.split('：');
                           const description = rest.join('：');
                           return (
@@ -1464,7 +1464,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                 ) : section.title === '设计美学' ? (
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
                     <div className="space-y-3">
-                      {section.keyPoints.map((point, i) => {
+                      {(section.keyPoints ?? []).map((point: string, i: number) => {
                         const [title, ...content] = point.split('：');
                         const description = content.join('：');
                         
@@ -1484,9 +1484,9 @@ x<sup>2</sup>                     <!-- 上标 -->
                     </div>
 
                   </div>
-                ) : section.isCoreContentSection ? (
+                ) : (section as any).isCoreContentSection ? (
                   <div className="space-y-4">
-                    {section.categories.map((category, idx) => (
+                    {(section as any).categories.map((category: any, idx: number) => (
                       <div key={idx} className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
                         <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                           <div className="sm:w-1/4">
@@ -1500,7 +1500,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                           
                           <div className="sm:w-1/2">
                             <div className="flex flex-wrap gap-1 mb-2">
-                              {category.tags.map((tag, tagIdx) => (
+                              {(category.tags as string[]).map((tag: string, tagIdx: number) => (
                                 <span key={tagIdx} className="inline-block px-2 py-1 bg-white/80 text-xs text-green-700 rounded border border-green-300 font-mono">
                                   &lt;{tag}&gt;
                                 </span>
@@ -1565,7 +1565,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                           <div className="flex flex-wrap gap-2">
                             {category.tags.map((tag, tagIdx) => {
                               // 处理特殊标签名称，生成正确的MDN链接
-                              const getTagUrl = (tagName) => {
+                              const getTagUrl = (tagName: string) => {
                                 const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                 // 处理特殊情况
                                 if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
@@ -1633,7 +1633,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                           <div className="flex flex-wrap gap-2">
                             {type.tags.map((tag, tagIdx) => {
                               // 处理特殊标签名称，生成正确的MDN链接
-                              const getTagUrl = (tagName) => {
+                              const getTagUrl = (tagName: string) => {
                                 const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                 // 处理特殊情况
                                 if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
@@ -1693,7 +1693,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                           <div className="flex flex-wrap gap-2">
                             {model.tags.map((tag, tagIdx) => {
                               // 处理特殊标签名称，生成正确的MDN链接
-                              const getTagUrl = (tagName) => {
+                              const getTagUrl = (tagName: string) => {
                                 const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                 // 处理特殊情况
                                 if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
@@ -1753,7 +1753,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                             <div className="space-y-2">
                               {category.tags.map((item, tagIdx) => {
                                 // 处理特殊标签名称，生成正确的MDN链接
-                                const getTagUrl = (tagName) => {
+                                const getTagUrl = (tagName: string) => {
                                   const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                   // 处理特殊情况
                                   if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
@@ -1824,7 +1824,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                             {category.tags && (
                               <div className="flex flex-wrap gap-2">
                                 {category.tags.map((tag, tagIdx) => {
-                                  const getTagUrl = (tagName) => {
+                                  const getTagUrl = (tagName: string) => {
                                     const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                     if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
                                     if (tagName.includes('-')) return baseUrl + tagName.split('-')[0];
@@ -1857,7 +1857,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                                     </h6>
                                     <div className="flex flex-wrap gap-1">
                                       {subcat.tags.map((tag, tagIdx) => {
-                                        const getTagUrl = (tagName) => {
+                                        const getTagUrl = (tagName: string) => {
                                           const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                           if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
                                           if (tagName.includes('-')) return baseUrl + tagName.split('-')[0];
@@ -1920,7 +1920,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                             <div className="flex flex-wrap gap-2">
                               {category.tags.map((tag, tagIdx) => {
                                 // 处理特殊标签名称，生成正确的MDN链接
-                                const getTagUrl = (tagName) => {
+                                const getTagUrl = (tagName: string) => {
                                   const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                   // 处理特殊情况
                                   if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
@@ -1986,8 +1986,8 @@ x<sup>2</sup>                     <!-- 上标 -->
                           
                           {!stage.isComplete && (
                             <div className="flex flex-wrap gap-2">
-                              {stage.tags.map((tag, tagIdx) => {
-                                const getTagUrl = (tagName) => {
+                              {(stage.tags ?? []).map((tag: string, tagIdx: number) => {
+                                const getTagUrl = (tagName: string) => {
                                   const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                   if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
                                   if (tagName.includes('-')) return baseUrl + tagName.split('-')[0];
@@ -2042,7 +2042,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                             </h5>
                             <div className="flex flex-wrap gap-1">
                               {group.tags.map((tag, tagIdx) => {
-                                const getTagUrl = (tagName) => {
+                                const getTagUrl = (tagName: string) => {
                                   const baseUrl = 'https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/';
                                   if (tagName === 'h1-h6') return baseUrl + 'Heading_Elements';
                                   if (tagName.includes('-')) return baseUrl + tagName.split('-')[0];
@@ -2179,7 +2179,7 @@ x<sup>2</sup>                     <!-- 上标 -->
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    {section.keyPoints.map((point, i) => (
+                    {(section.keyPoints ?? []).map((point: string, i: number) => (
                       <div key={i} className="text-sm text-gray-600 flex items-center gap-2">
                         <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0" />
                         <span>{point}</span>

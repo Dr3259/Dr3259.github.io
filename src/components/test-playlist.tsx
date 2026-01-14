@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { MusicProvider } from '@/context/MusicContext';
-import { PlaylistProvider, usePlaylist, useMusicWithPlaylist } from './enhanced-music-context';
+import { PlaylistProvider, usePlaylist, useMusicWithPlaylist } from '@/lib/enhanced-music-context';
 import { Button } from '@/components/ui/button';
 
 const TestPlaylistContent: React.FC = () => {
