@@ -7,6 +7,12 @@ import { generateHourlySlots } from '@/app/day/[dayName]/page';
 import { ItemLists } from './ItemLists';
 import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem } from '@/app/day/[dayName]/page';
 
+export interface DraftItem {
+    id: string;
+    content: string;
+    timestamp?: string;
+}
+
 interface TimeIntervalSectionProps {
     interval: { key: string; label: string };
     dateKey: string;
@@ -19,6 +25,7 @@ interface TimeIntervalSectionProps {
     allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
     allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
     allReflections: Record<string, Record<string, ReflectionItem[]>>;
+    allDrafts: Record<string, Record<string, DraftItem[]>>;
     translations: any;
     onToggleTodoCompletion: (dateKey: string, hourSlot: string, todoId: string) => void;
     onDeleteTodo: (dateKey: string, hourSlot: string, todoId: string) => void;
@@ -31,14 +38,17 @@ interface TimeIntervalSectionProps {
     onDeleteShareLink: (dateKey: string, hourSlot: string, linkId: string) => void;
     onOpenReflectionModal: (hourSlot: string, reflection?: ReflectionItem) => void;
     onDeleteReflection: (dateKey: string, hourSlot: string, reflectionId: string) => void;
+    onOpenDraftModal: (hourSlot: string, draft?: DraftItem) => void;
+    onDeleteDraft: (dateKey: string, hourSlot: string, draftId: string) => void;
 }
 
 export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
     interval, dateKey, isPastDay, isViewingCurrentDay, clientPageLoadTime,
     isCurrentActiveInterval, intervalRef, allTodos, allMeetingNotes, allShareLinks,
-    allReflections, translations: t,
+    allReflections, allDrafts, translations: t,
     onToggleTodoCompletion, onDeleteTodo, onOpenTodoModal, onOpenEditTodoModal, onMoveTodoModal, onOpenMeetingNoteModal,
-    onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection
+    onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection,
+    onOpenDraftModal, onDeleteDraft
 }) => {
 
     const hourlySlotsForInterval = generateHourlySlots(interval.label);
@@ -46,7 +56,8 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
         (allTodos[dateKey]?.[slot]?.length > 0) ||
         (allMeetingNotes[dateKey]?.[slot]?.length > 0) ||
         (allShareLinks[dateKey]?.[slot]?.length > 0) ||
-        (allReflections[dateKey]?.[slot]?.length > 0)
+        (allReflections[dateKey]?.[slot]?.length > 0) ||
+        (allDrafts[dateKey]?.[slot]?.length > 0)
     );
 
     if (isPastDay && !hasContentInAnySlotOfInterval) {
@@ -91,7 +102,8 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                             (allTodos[dateKey]?.[slot]?.length > 0) ||
                             (allMeetingNotes[dateKey]?.[slot]?.length > 0) ||
                             (allShareLinks[dateKey]?.[slot]?.length > 0) ||
-                            (allReflections[dateKey]?.[slot]?.length > 0);
+                            (allReflections[dateKey]?.[slot]?.length > 0) ||
+                            (allDrafts[dateKey]?.[slot]?.length > 0);
 
                         let isAddingDisabledForThisSlot = isPastDay;
                         let shouldHideSlot = false;
@@ -135,6 +147,7 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                                 meetingNotes={allMeetingNotes[dateKey]?.[slot] || []}
                                 shareLinks={allShareLinks[dateKey]?.[slot] || []}
                                 reflections={allReflections[dateKey]?.[slot] || []}
+                                drafts={allDrafts[dateKey]?.[slot] || []}
                                 onToggleTodoCompletion={onToggleTodoCompletion}
                                 onDeleteTodo={onDeleteTodo}
                                 onOpenTodoModal={onOpenTodoModal}
@@ -146,6 +159,8 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                                 onDeleteShareLink={onDeleteShareLink}
                                 onOpenReflectionModal={onOpenReflectionModal}
                                 onDeleteReflection={onDeleteReflection}
+                                onOpenDraftModal={onOpenDraftModal}
+                                onDeleteDraft={onDeleteDraft}
                                 translations={t}
                             />
                         );

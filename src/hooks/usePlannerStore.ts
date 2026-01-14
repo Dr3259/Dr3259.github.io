@@ -2,7 +2,7 @@
 "use client";
 
 import { create } from 'zustand';
-import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, RatingType } from '@/lib/page-types';
+import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, DraftItem, RatingType } from '@/lib/page-types';
 import { dataProvider } from '@/lib/data-provider';
 import type { User } from 'firebase/auth';
 
@@ -11,6 +11,7 @@ export interface PlannerData {
     allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
     allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
     allReflections: Record<string, Record<string, ReflectionItem[]>>;
+    allDrafts: Record<string, Record<string, DraftItem[]>>;
     customInspirationTags: Array<{id: string; name: string; emoji: string; color: string}>; // 自定义标签
     allDailyNotes: Record<string, string>;
     allRatings: Record<string, RatingType>;
@@ -24,6 +25,7 @@ export interface PlannerState extends PlannerData {
     setMeetingNotesForSlot: (dateKey: string, hourSlot: string, notes: MeetingNoteItem[]) => void;
     setShareLinksForSlot: (dateKey: string, hourSlot: string, links: ShareLinkItem[]) => void;
     setReflectionsForSlot: (dateKey: string, hourSlot: string, reflections: ReflectionItem[]) => void;
+    setDraftsForSlot: (dateKey: string, hourSlot: string, drafts: DraftItem[]) => void;
     setDailyNote: (dateKey: string, note: string) => void;
     setRating: (dateKey: string, rating: RatingType) => void;
     setLastTodoMigrationDate: (date: string) => void;
@@ -31,6 +33,7 @@ export interface PlannerState extends PlannerData {
     addShareLink: (dateKey: string, hourSlot: string, link: ShareLinkItem) => void;
     addTodo: (dateKey: string, hourSlot: string, todo: Omit<TodoItem, 'id'>) => void;
     addReflection: (dateKey: string, hourSlot: string, reflection: Omit<ReflectionItem, 'id'>) => void;
+    addDraft: (dateKey: string, hourSlot: string, draft: Omit<DraftItem, 'id'>) => void;
     addCustomInspirationTag: (tag: {name: string; emoji: string; color: string}) => void;
     updateCustomInspirationTag: (id: string, tag: {name: string; emoji: string; color: string}) => void;
     deleteCustomInspirationTag: (id: string) => void;
@@ -56,6 +59,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     allMeetingNotes: {},
     allShareLinks: {},
     allReflections: {},
+    allDrafts: {},
     customInspirationTags: DEFAULT_INSPIRATION_TAGS,
     allDailyNotes: {},
     allRatings: {},
@@ -99,7 +103,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
                 currentUser: null,
                 isFirebaseConnected: false,
                 allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
-                allReflections: {}, customInspirationTags: DEFAULT_INSPIRATION_TAGS, allDailyNotes: {}, allRatings: {},
+                allReflections: {}, allDrafts: {}, customInspirationTags: DEFAULT_INSPIRATION_TAGS, allDailyNotes: {}, allRatings: {},
                 lastTodoMigrationDate: null,
             });
             if (typeof window !== 'undefined') {
@@ -172,6 +176,20 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
             dataProvider.saveData(currentUser.uid, { allReflections: newState });
         }
     },
+    setDraftsForSlot: (dateKey, hourSlot, drafts) => {
+        const newState = {
+            ...get().allDrafts,
+            [dateKey]: {
+                ...(get().allDrafts[dateKey] || {}),
+                [hourSlot]: drafts
+            }
+        };
+        set({ allDrafts: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allDrafts: newState });
+        }
+    },
     setDailyNote: (dateKey, note) => {
         const newState = { ...get().allDailyNotes, [dateKey]: note };
         set({ allDailyNotes: newState });
@@ -205,6 +223,10 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     addReflection: (dateKey, hourSlot, reflection) => {
         const newReflection = { ...reflection, id: Date.now().toString() };
         get().setReflectionsForSlot(dateKey, hourSlot, [...(get().allReflections[dateKey]?.[hourSlot] || []), newReflection]);
+    },
+    addDraft: (dateKey, hourSlot, draft) => {
+        const newDraft = { ...draft, id: Date.now().toString() };
+        get().setDraftsForSlot(dateKey, hourSlot, [...(get().allDrafts[dateKey]?.[hourSlot] || []), newDraft]);
     },
     addCustomInspirationTag: (tag) => {
         const newTag = { ...tag, id: Date.now().toString() };
@@ -260,7 +282,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     clearAllPlannerData: () => {
         const emptyState: PlannerData = {
             allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
-            allReflections: {}, customInspirationTags: get().customInspirationTags, allDailyNotes: {}, allRatings: {},
+            allReflections: {}, allDrafts: {}, customInspirationTags: get().customInspirationTags, allDailyNotes: {}, allRatings: {},
             lastTodoMigrationDate: get().lastTodoMigrationDate
         };
         set(emptyState);
@@ -295,6 +317,7 @@ usePlannerStore.subscribe(
                 allMeetingNotes: state.allMeetingNotes,
                 allShareLinks: state.allShareLinks,
                 allReflections: state.allReflections,
+                allDrafts: state.allDrafts,
                 customInspirationTags: state.customInspirationTags,
                 allDailyNotes: state.allDailyNotes,
                 allRatings: state.allRatings,

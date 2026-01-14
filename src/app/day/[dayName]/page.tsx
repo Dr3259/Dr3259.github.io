@@ -20,10 +20,12 @@ const TodoModal = lazy(() => import('@/components/TodoModal').then(module => ({ 
 const MeetingNoteModal = lazy(() => import('@/components/MeetingNoteModal').then(module => ({ default: module.MeetingNoteModal })));
 const ShareLinkModal = lazy(() => import('@/components/ShareLinkModal').then(module => ({ default: module.ShareLinkModal })));
 const ReflectionModal = lazy(() => import('@/components/ReflectionModal').then(module => ({ default: module.ReflectionModal })));
+const DraftModal = lazy(() => import('@/components/DraftModal').then(module => ({ default: module.DraftModal })));
 import type { TodoItem, CategoryType } from '@/components/TodoModal';
 import type { MeetingNoteItem } from '@/components/MeetingNoteModal';
 import type { ShareLinkItem } from '@/components/ShareLinkModal';
 import type { ReflectionItem } from '@/components/ReflectionModal';
+import type { DraftItem } from '@/components/DraftModal';
 import { format, parseISO, isAfter as dateIsAfter, isBefore, addDays, subDays, isToday, isSameWeek } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -113,20 +115,21 @@ function DayDetailPageContent() {
 
   // 优化：仅获取当前日期相关的数据，避免加载全部数据
   const plannerStore = usePlannerStore();
-  const { setDailyNote, setRating, setTodosForSlot, setMeetingNotesForSlot, setShareLinksForSlot, setReflectionsForSlot, addShareLink } = plannerStore;
+  const { setDailyNote, setRating, setTodosForSlot, setMeetingNotesForSlot, setShareLinksForSlot, setReflectionsForSlot, setDraftsForSlot, addShareLink } = plannerStore;
   
   // 仅获取当前日期的数据
   const currentDayData = useMemo(() => {
-    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {} };
+    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {}, drafts: {} };
     return {
       dailyNote: plannerStore.allDailyNotes[dateKey] || '',
       rating: plannerStore.allRatings[dateKey] || null,
       todos: plannerStore.allTodos[dateKey] || {},
       meetingNotes: plannerStore.allMeetingNotes[dateKey] || {},
       shareLinks: plannerStore.allShareLinks[dateKey] || {},
-      reflections: plannerStore.allReflections[dateKey] || {}
+      reflections: plannerStore.allReflections[dateKey] || {},
+      drafts: plannerStore.allDrafts[dateKey] || {}
     };
-  }, [dateKey, plannerStore.allDailyNotes, plannerStore.allRatings, plannerStore.allTodos, plannerStore.allMeetingNotes, plannerStore.allShareLinks, plannerStore.allReflections]);
+  }, [dateKey, plannerStore.allDailyNotes, plannerStore.allRatings, plannerStore.allTodos, plannerStore.allMeetingNotes, plannerStore.allShareLinks, plannerStore.allReflections, plannerStore.allDrafts]);
 
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
@@ -143,6 +146,10 @@ function DayDetailPageContent() {
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
   const [selectedSlotForReflection, setSelectedSlotForReflection] = useState<SlotDetails | null>(null);
   const [editingReflectionItem, setEditingReflectionItem] = useState<ReflectionItem | null>(null);
+
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
+  const [selectedSlotForDraft, setSelectedSlotForDraft] = useState<SlotDetails | null>(null);
+  const [editingDraftItem, setEditingDraftItem] = useState<any | null>(null);
 
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [todoToMove, setTodoToMove] = useState<{todo: TodoItem, fromSlot: string} | null>(null);
@@ -179,7 +186,10 @@ function DayDetailPageContent() {
       editLink: currentLanguage === 'zh-CN' ? '编辑链接' : 'Edit Link',
       deleteLink: currentLanguage === 'zh-CN' ? '删除链接' : 'Delete Link',
       editReflection: currentLanguage === 'zh-CN' ? '编辑思维灵感' : 'Edit Reflection',
-      deleteReflection: currentLanguage === 'zh-CN' ? '删除思维灵感' : 'Delete Reflection'
+      deleteReflection: currentLanguage === 'zh-CN' ? '删除思维灵感' : 'Delete Reflection',
+      addDraft: currentLanguage === 'zh-CN' ? '草稿本' : 'Draft',
+      editDraft: currentLanguage === 'zh-CN' ? '编辑草稿' : 'Edit Draft',
+      deleteDraft: currentLanguage === 'zh-CN' ? '删除草稿' : 'Delete Draft'
     };
   }, [currentLanguage]);
   
@@ -388,6 +398,21 @@ function DayDetailPageContent() {
       cancelButton: isZh ? '取消' : 'Cancel'
     };
   }, [currentLanguage]);
+
+  const tDraftModal = useMemo(() => {
+    const isZh = currentLanguage === 'zh-CN';
+    return {
+      modalTitleNew: isZh ? '新建草稿' : 'New Draft',
+      modalTitleEdit: isZh ? '编辑草稿' : 'Edit Draft',
+      modalDescription: isZh ? '在这里记录你的草稿、临时想法或待整理的内容。' : 'Record your drafts, temporary ideas or content to be organized.',
+      contentLabel: isZh ? '草稿内容' : 'Draft Content',
+      contentPlaceholder: isZh ? '记录你的草稿内容...' : 'Record your draft content...',
+      saveButton: isZh ? '保存草稿' : 'Save Draft',
+      updateButton: isZh ? '更新草稿' : 'Update Draft',
+      deleteButton: isZh ? '删除草稿' : 'Delete Draft',
+      cancelButton: isZh ? '取消' : 'Cancel'
+    };
+  }, [currentLanguage]);
   const timeIntervals = useMemo(() => [
     { key: 'midnight', label: `${t.timeIntervals.midnight} (00:00 - 05:00)` }, 
     { key: 'earlyMorning', label: `${t.timeIntervals.earlyMorning} (05:00 - 09:00)` }, 
@@ -472,6 +497,19 @@ function DayDetailPageContent() {
     const reflections = currentDayData.reflections[hourSlot] || []; 
     setReflectionsForSlot(dateKey, hourSlot, reflections.filter(r => r.id !== reflectionId)); 
   }, [currentDayData.reflections, setReflectionsForSlot]);
+
+  const handleOpenDraftModal = (hourSlot: string, draftToEdit?: DraftItem) => { if (dateKey) { setSelectedSlotForDraft({ dateKey, hourSlot }); setEditingDraftItem(draftToEdit || null); setIsDraftModalOpen(true); } };
+  const handleSaveDraft = useCallback((dateKey: string, hourSlot: string, savedDraft: DraftItem) => { 
+    const drafts = currentDayData.drafts[hourSlot] || []; 
+    const idx = drafts.findIndex(d => d.id === savedDraft.id); 
+    const updated = idx > -1 ? drafts.map((d, i) => i === idx ? savedDraft : d) : [...drafts, savedDraft]; 
+    setDraftsForSlot(dateKey, hourSlot, updated); 
+  }, [currentDayData.drafts, setDraftsForSlot]);
+  
+  const handleDeleteDraft = useCallback((dateKey: string, hourSlot: string, draftId: string) => { 
+    const drafts = currentDayData.drafts[hourSlot] || []; 
+    setDraftsForSlot(dateKey, hourSlot, drafts.filter(d => d.id !== draftId)); 
+  }, [currentDayData.drafts, setDraftsForSlot]);
 
   const handleMoveTodoModal = (dateKey: string, hourSlot: string, todo: TodoItem) => {
     setTodoToMove({ todo, fromSlot: hourSlot });
@@ -561,6 +599,7 @@ function DayDetailPageContent() {
                   allMeetingNotes={{[dateKey]: currentDayData.meetingNotes}} 
                   allShareLinks={{[dateKey]: currentDayData.shareLinks}} 
                   allReflections={{[dateKey]: currentDayData.reflections}} 
+                  allDrafts={{[dateKey]: currentDayData.drafts}} 
                   onToggleTodoCompletion={handleToggleTodoCompletion} 
                   onDeleteTodo={handleDeleteTodo} 
                   onOpenTodoModal={handleOpenTodoModal} 
@@ -569,9 +608,11 @@ function DayDetailPageContent() {
                   onOpenMeetingNoteModal={handleOpenMeetingNoteModal} 
                   onOpenShareLinkModal={handleOpenShareLinkModal} 
                   onOpenReflectionModal={handleOpenReflectionModal} 
+                  onOpenDraftModal={handleOpenDraftModal} 
                   onDeleteMeetingNote={handleDeleteMeetingNote} 
                   onDeleteShareLink={handleDeleteShareLink} 
                   onDeleteReflection={handleDeleteReflection} 
+                  onDeleteDraft={handleDeleteDraft} 
                   translations={t} 
                 /> 
               ))}
@@ -598,6 +639,11 @@ function DayDetailPageContent() {
       {isReflectionModalOpen && selectedSlotForReflection && ( 
         <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
           <ReflectionModal isOpen={isReflectionModalOpen} onClose={() => setIsReflectionModalOpen(false)} onSave={handleSaveReflection} onDelete={(reflectionId) => handleDeleteReflection(selectedSlotForReflection.dateKey, selectedSlotForReflection.hourSlot, reflectionId)} dateKey={selectedSlotForReflection.dateKey} hourSlot={selectedSlotForReflection.hourSlot} initialData={editingReflectionItem} translations={tReflectionModal} /> 
+        </Suspense>
+      )}
+      {isDraftModalOpen && selectedSlotForDraft && ( 
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+          <DraftModal isOpen={isDraftModalOpen} onClose={() => setIsDraftModalOpen(false)} onSave={handleSaveDraft} onDelete={(draftId) => handleDeleteDraft(selectedSlotForDraft.dateKey, selectedSlotForDraft.hourSlot, draftId)} dateKey={selectedSlotForDraft.dateKey} hourSlot={selectedSlotForDraft.hourSlot} initialData={editingDraftItem} translations={tDraftModal} /> 
         </Suspense>
       )}
 

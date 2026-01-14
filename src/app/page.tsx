@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ClipboardModal } from '@/components/ClipboardModal';
 import { QuickAddTodoModal } from '@/components/QuickAddTodoModal';
 import { QuickInspirationModal } from '@/components/QuickInspirationModal';
+import { QuickDraftModal } from '@/components/QuickDraftModal';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import copy from 'copy-to-clipboard';
 import { MainHeader } from '@/components/page/MainHeader';
 import { WeekNavigator } from '@/components/page/WeekNavigator';
@@ -55,7 +57,7 @@ export default function WeekGlancePage() {
   const { user } = useAuth();
   
   const plannerState = usePlannerStore();
-  const { setRating, addShareLink, addTodo: addTodoToStore, addReflection: addReflectionToStore, lastTodoMigrationDate, addUnfinishedTodosToToday } = plannerState;
+  const { setRating, addShareLink, addTodo: addTodoToStore, addReflection: addReflectionToStore, addDraft: addDraftToStore, lastTodoMigrationDate, addUnfinishedTodosToToday } = plannerState;
 
   const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>('en'); 
   const [theme, setTheme] = useState<Theme>('light'); 
@@ -72,6 +74,8 @@ export default function WeekGlancePage() {
   const [lastProcessedClipboardText, setLastProcessedClipboardText] = useState('');
   const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
   const [isQuickInspirationModalOpen, setIsQuickInspirationModalOpen] = useState(false);
+  const [isQuickDraftModalOpen, setIsQuickDraftModalOpen] = useState(false);
+  const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
   const [isLoginPromptDismissed, setIsLoginPromptDismissed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('loginPromptDismissed') === 'true';
@@ -294,7 +298,7 @@ export default function WeekGlancePage() {
   
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (isQuickAddModalOpen || isQuickInspirationModalOpen) return;
+        if (isQuickAddModalOpen || isQuickInspirationModalOpen || isQuickDraftModalOpen) return;
         const activeElement = document.activeElement;
         const isInputFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement || (activeElement as HTMLElement)?.isContentEditable;
         
@@ -322,12 +326,22 @@ export default function WeekGlancePage() {
             setIsQuickInspirationModalOpen(true);
         }
         
+        if (!isInputFocused && event.key.toLowerCase() === 'c') {
+            event.preventDefault();
+            setIsQuickDraftModalOpen(true);
+        }
+        
         if (!isInputFocused && event.key.toLowerCase() === 'h') {
             event.preventDefault();
             // 如果当前有悬停的日期，显示黄历
             if (currentHoveredDate) {
                 setHoveredDate(currentHoveredDate);
             }
+        }
+        
+        if (!isInputFocused && (event.key === '?' || (event.shiftKey && event.key === '/'))) {
+            event.preventDefault();
+            setIsKeyboardShortcutsOpen(true);
         }
         
         if (!isInputFocused && event.key.toLowerCase() === 'l') {
@@ -347,7 +361,7 @@ export default function WeekGlancePage() {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [checkClipboard, isQuickAddModalOpen, isQuickInspirationModalOpen, currentHoveredDate]);
+  }, [checkClipboard, isQuickAddModalOpen, isQuickInspirationModalOpen, isQuickDraftModalOpen, currentHoveredDate]);
 
   const handleSaveFromClipboard = (data: { category: string }) => {
     if (!clipboardContent) return;
@@ -402,6 +416,22 @@ export default function WeekGlancePage() {
     setIsQuickInspirationModalOpen(false);
   };
 
+  const handleSaveQuickDraft = ({ content, date }: { content: string; date: Date }) => {
+    const dateKey = getDateKey(date);
+    const now = new Date();
+    const currentHour = now.getHours();
+    const slotKey = `${String(currentHour).padStart(2, '0')}:00 - ${String(currentHour + 1).padStart(2, '0')}:00`;
+    
+    addDraftToStore(dateKey, slotKey, { 
+      content,
+      timestamp: new Date().toISOString()
+    });
+    
+    const successMessage = currentLanguage === 'zh-CN' ? '草稿已保存！' : 'Draft saved!';
+    toast({ title: successMessage, duration: 3000 });
+    setIsQuickDraftModalOpen(false);
+  };
+
   useEffect(() => {
     if (isClientMounted) {
       if (theme === 'dark') document.documentElement.classList.add('dark');
@@ -423,7 +453,14 @@ export default function WeekGlancePage() {
     <>
       <main className="flex flex-col items-center min-h-screen bg-background text-foreground py-10 sm:py-16 px-4">
         <div className="w-full max-w-4xl">
-           <MainHeader translations={t} currentLanguage={currentLanguage} onLanguageChange={setCurrentLanguage} theme={theme} onThemeChange={setTheme} />
+           <MainHeader 
+             translations={t} 
+             currentLanguage={currentLanguage} 
+             onLanguageChange={setCurrentLanguage} 
+             theme={theme} 
+             onThemeChange={setTheme}
+             onShowKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
+           />
            {!user && !isLoginPromptDismissed && (
              <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg relative">
                <button
@@ -531,6 +568,22 @@ export default function WeekGlancePage() {
           saveButton: t.quickInspiration.saveButton,
           cancelButton: t.quickInspiration.cancelButton
         }} 
+      />
+      <QuickDraftModal
+        isOpen={isQuickDraftModalOpen}
+        onClose={() => setIsQuickDraftModalOpen(false)}
+        onSave={handleSaveQuickDraft}
+        translations={{
+          title: currentLanguage === 'zh-CN' ? '快速草稿' : 'Quick Draft',
+          placeholder: currentLanguage === 'zh-CN' ? '记录你的草稿内容...' : 'Record your draft content...',
+          saveButton: currentLanguage === 'zh-CN' ? '保存' : 'Save',
+          cancelButton: currentLanguage === 'zh-CN' ? '取消' : 'Cancel'
+        }}
+      />
+      <KeyboardShortcutsHelp
+        isOpen={isKeyboardShortcutsOpen}
+        onClose={() => setIsKeyboardShortcutsOpen(false)}
+        translations={t.keyboardShortcuts}
       />
     </>
   );

@@ -75,6 +75,36 @@ export const translations = {
       cancelButton: '取消',
       successToast: '灵感已记录！'
     },
+    keyboardShortcuts: {
+      title: '快捷键帮助',
+      description: '使用键盘快捷键提高效率',
+      categories: {
+        general: '通用',
+        navigation: '导航',
+        actions: '操作',
+        debug: '调试'
+      },
+      shortcuts: {
+        addTodo: '快速添加待办事项',
+        quickInspiration: '快速记录思维灵感',
+        quickDraft: '快速记录草稿',
+        checkClipboard: '检查剪贴板链接',
+        showCalendar: '显示黄历（悬停日期时）',
+        debugMode: '打开调试模式',
+        showHelp: '显示快捷键帮助'
+      }
+    },
+    draftModal: {
+      modalTitleNew: '新建草稿',
+      modalTitleEdit: '编辑草稿',
+      modalDescription: '在这里记录你的草稿、临时想法或待整理的内容。',
+      contentLabel: '草稿内容',
+      contentPlaceholder: '记录你的草稿内容...',
+      saveButton: '保存草稿',
+      updateButton: '更新草稿',
+      deleteButton: '删除草稿',
+      cancelButton: '取消'
+    },
     timeIntervals: {
         midnight: "凌晨",
         earlyMorning: "清晨",
@@ -155,6 +185,36 @@ export const translations = {
       saveButton: 'Save',
       cancelButton: 'Cancel',
       successToast: 'Inspiration recorded!'
+    },
+    keyboardShortcuts: {
+      title: 'Keyboard Shortcuts',
+      description: 'Use keyboard shortcuts to boost your productivity',
+      categories: {
+        general: 'General',
+        navigation: 'Navigation',
+        actions: 'Actions',
+        debug: 'Debug'
+      },
+      shortcuts: {
+        addTodo: 'Quick add to-do',
+        quickInspiration: 'Quick record inspiration',
+        quickDraft: 'Quick record draft',
+        checkClipboard: 'Check clipboard for links',
+        showCalendar: 'Show calendar (when hovering over date)',
+        debugMode: 'Open debug mode',
+        showHelp: 'Show keyboard shortcuts help'
+      }
+    },
+    draftModal: {
+      modalTitleNew: 'New Draft',
+      modalTitleEdit: 'Edit Draft',
+      modalDescription: 'Record your drafts, temporary ideas or content to be organized.',
+      contentLabel: 'Draft Content',
+      contentPlaceholder: 'Record your draft content...',
+      saveButton: 'Save Draft',
+      updateButton: 'Update Draft',
+      deleteButton: 'Delete Draft',
+      cancelButton: 'Cancel'
     },
     timeIntervals: {
         midnight: "Midnight",

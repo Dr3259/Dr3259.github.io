@@ -11,10 +11,10 @@ import { getTagColor } from '@/lib/utils';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import {
     ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText, FileEdit, Trash2,
-    Star as StarIcon, ArrowRight
+    Star as StarIcon, ArrowRight, FileText
 } from 'lucide-react';
 import { CategoryIcons, DeadlineIcons } from '@/components/TodoModal';
-import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, CategoryType } from '@/lib/page-types';
+import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, DraftItem, CategoryType } from '@/lib/page-types';
 
 interface ItemListsProps {
     dateKey: string;
@@ -26,6 +26,7 @@ interface ItemListsProps {
     meetingNotes: MeetingNoteItem[];
     shareLinks: ShareLinkItem[];
     reflections: ReflectionItem[];
+    drafts: DraftItem[];
     translations: any;
     onToggleTodoCompletion: (dateKey: string, hourSlot: string, todoId: string) => void;
     onDeleteTodo: (dateKey: string, hourSlot: string, todoId: string) => void;
@@ -38,13 +39,16 @@ interface ItemListsProps {
     onDeleteShareLink: (dateKey: string, hourSlot: string, linkId: string) => void;
     onOpenReflectionModal: (hourSlot: string, reflection?: ReflectionItem) => void;
     onDeleteReflection: (dateKey: string, hourSlot: string, reflectionId: string) => void;
+    onOpenDraftModal: (hourSlot: string, draft?: DraftItem) => void;
+    onDeleteDraft: (dateKey: string, hourSlot: string, draftId: string) => void;
 }
 
 export const ItemLists: React.FC<ItemListsProps> = ({
     dateKey, slot, isPastDay, isAddingDisabledForThisSlot, hasAnyContentForThisSlot,
-    todos, meetingNotes, shareLinks, reflections, translations: t,
+    todos, meetingNotes, shareLinks, reflections, drafts, translations: t,
     onToggleTodoCompletion, onDeleteTodo, onOpenTodoModal, onOpenEditTodoModal, onMoveTodoModal, onOpenMeetingNoteModal,
-    onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection
+    onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection,
+    onOpenDraftModal, onDeleteDraft
 }) => {
     
     let sectionsRenderedInSlotCount = 0;
@@ -88,6 +92,7 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenMeetingNoteModal(slot)} disabled={isAddingDisabledForThisSlot}><ClipboardList className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addMeetingNote}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenShareLinkModal(slot)} disabled={isAddingDisabledForThisSlot}><LinkIconLucide className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addLink}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenReflectionModal(slot)} disabled={isAddingDisabledForThisSlot}><MessageSquareText className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addReflection}</p></TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenDraftModal(slot)} disabled={isAddingDisabledForThisSlot}><FileText className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addDraft || '草稿本'}</p></TooltipContent></Tooltip>
                 </div>
             </div>
 
@@ -212,6 +217,37 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                                 </li>
                             );
                         })}
+                    </ul>
+                </div>
+            );})()}
+
+            {drafts.length > 0 && (() => { const isFirst = sectionsRenderedInSlotCount === 0; sectionsRenderedInSlotCount++; return (
+                <div className={cn("mb-3", !isFirst && "mt-4")}>
+                    <div className="flex items-center gap-1 mb-2">
+                        <FileText className="h-3.5 w-3.5 text-amber-700" />
+                        <span className="text-xs font-medium text-amber-800 dark:text-amber-600">草稿本</span>
+                    </div>
+                    <ul className="space-y-2 p-px border-l-2 border-amber-700 pl-3">
+                        {drafts.map((draft) => (
+                            <li key={draft.id} className="flex items-start justify-between group/draftitem hover:bg-amber-100 dark:hover:bg-amber-950/30 p-1.5 rounded-md transition-colors">
+                                <div className="flex-1 min-w-0 mr-2">
+                                    {draft.timestamp && (
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <span className="text-xs text-muted-foreground">
+                                                {new Date(draft.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <ScrollArea className="max-h-20 w-full">
+                                        <p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={draft.content}>{draft.content}</p>
+                                    </ScrollArea>
+                                </div>
+                                {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/draftitem:opacity-100 transition-opacity">
+                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenDraftModal(slot, draft)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editDraft || '编辑草稿'}</p></TooltipContent></Tooltip>
+                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteDraft(dateKey, slot, draft.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteDraft || '删除草稿'}</p></TooltipContent></Tooltip>
+                                </div>}
+                            </li>
+                        ))}
                     </ul>
                 </div>
             );})()}

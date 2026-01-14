@@ -17,6 +17,11 @@ export interface ReflectionItem {
   category?: string; // 改为字符串，支持自定义标签
   timestamp?: string;
 }
+export interface DraftItem {
+  id: string;
+  content: string;
+  timestamp?: string;
+}
 
 export type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
@@ -27,6 +32,7 @@ export interface AllLoadedData {
   allMeetingNotes: Record<string, Record<string, MeetingNoteItem[]>>;
   allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
   allReflections: Record<string, Record<string, ReflectionItem[]>>;
+  allDrafts: Record<string, Record<string, DraftItem[]>>;
 }
 
 export interface ReceivedShareData {

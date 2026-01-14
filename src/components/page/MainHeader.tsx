@@ -4,7 +4,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Languages, Sun, Moon, Settings, Check, LayoutGrid, User, LogOut, LogIn } from "lucide-react";
+import { Languages, Sun, Moon, Settings, Check, LayoutGrid, User, LogOut, LogIn, Keyboard } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import type { LanguageKey, Theme } from '@/lib/page-types';
@@ -21,6 +21,7 @@ interface MainHeaderProps {
   onLanguageChange: (lang: LanguageKey) => void;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  onShowKeyboardShortcuts?: () => void;
 }
 
 export const MainHeader: React.FC<MainHeaderProps> = ({
@@ -29,6 +30,7 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
   onLanguageChange,
   theme,
   onThemeChange,
+  onShowKeyboardShortcuts,
 }) => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -98,6 +100,15 @@ export const MainHeader: React.FC<MainHeaderProps> = ({
                       {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                       <span>{t.themeButtonText}</span>
                   </DropdownMenuItem>
+                  {onShowKeyboardShortcuts && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={onShowKeyboardShortcuts}>
+                          <Keyboard className="mr-2 h-4 w-4" />
+                          <span>{currentLanguage === 'zh-CN' ? '快捷键帮助' : 'Keyboard Shortcuts'}</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
               </DropdownMenuContent>
           </DropdownMenu>
 
