@@ -37,58 +37,20 @@ import { usePlannerStore } from '@/hooks/usePlannerStore';
 import { translations, type LanguageKey } from '@/lib/translations';
 import { useAuth } from '@/context/AuthContext';
 
-export type RatingType = 'excellent' | 'terrible' | 'average' | null;
+type RatingType = 'excellent' | 'terrible' | 'average' | null;
 
-// 优化的时间段生成函数，使用缓存避免重复计算
-const slotsCache = new Map<string, string[]>();
-
-export const generateHourlySlots = (intervalLabelWithTime: string): string[] => {
-  if (slotsCache.has(intervalLabelWithTime)) {
-    return slotsCache.get(intervalLabelWithTime)!;
-  }
-
-  const match = intervalLabelWithTime.match(/\((\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\)/);
-  if (!match) {
-    slotsCache.set(intervalLabelWithTime, []);
-    return [];
-  }
-
-  const startTimeStr = match[1];
-  const endTimeStr = match[2];
-  const startHour = parseInt(startTimeStr.split(':')[0]);
-  let endHour = parseInt(endTimeStr.split(':')[0]);
-
-  if (endTimeStr === "00:00" && startHour !== 0 && endHour === 0) endHour = 24;
-
-  const slots: string[] = [];
-  if (startHour > endHour && !(endHour === 0 && startHour > 0) ) {
-     if (!(startHour < 24 && endHour === 0)) {
-       slotsCache.set(intervalLabelWithTime, []);
-       return [];
-     }
-  }
-
-  for (let h = startHour; h < endHour; h++) {
-    const currentSlotStart = `${String(h).padStart(2, '0')}:00`;
-    const nextHour = h + 1;
-    const currentSlotEnd = `${String(nextHour).padStart(2, '0')}:00`;
-    slots.push(`${currentSlotStart} - ${currentSlotEnd}`);
-  }
-  
-  slotsCache.set(intervalLabelWithTime, slots);
-  return slots;
-};
+import { generateHourlySlots } from '@/lib/day-utils';
 
 const URL_REGEX = /(https?:\/\/[^\s$.?#].[^\s]*)/i;
 
-export interface SlotDetails {
+interface SlotDetails {
   dateKey: string; // YYYY-MM-DD
   hourSlot: string;
 }
 
-export const CategoryIcons: Record<CategoryType, React.ElementType> = { work: Briefcase, study: BookOpen, shopping: ShoppingCart, organizing: Archive, relaxing: Coffee, cooking: ChefHat, childcare: Baby, dating: CalendarClock };
-export const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = { hour: Hourglass, today: CalendarCheck, tomorrow: Sunrise, thisWeek: CalendarRange, nextWeek: ArrowRightToLine, nextMonth: CalendarPlus };
-export const RATING_ICONS: Record<string, React.ElementType> = { excellent: Smile, average: Meh, terrible: Frown };
+const CategoryIcons: Record<CategoryType, React.ElementType> = { work: Briefcase, study: BookOpen, shopping: ShoppingCart, organizing: Archive, relaxing: Coffee, cooking: ChefHat, childcare: Baby, dating: CalendarClock };
+const DeadlineIcons: Record<NonNullable<TodoItem['deadline']>, React.ElementType> = { hour: Hourglass, today: CalendarCheck, tomorrow: Sunrise, thisWeek: CalendarRange, nextWeek: ArrowRightToLine, nextMonth: CalendarPlus };
+const RATING_ICONS: Record<string, React.ElementType> = { excellent: Smile, average: Meh, terrible: Frown };
 
 const getDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
 

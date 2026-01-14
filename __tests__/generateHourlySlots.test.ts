@@ -1,5 +1,5 @@
 
-import { generateHourlySlots } from '@/app/day/[dayName]/page';
+import { generateHourlySlots } from '@/lib/day-utils';
 
 describe('generateHourlySlots', () => {
   it('should generate correct hourly slots for a standard morning interval', () => {

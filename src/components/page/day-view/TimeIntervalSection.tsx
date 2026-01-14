@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { generateHourlySlots } from '@/app/day/[dayName]/page';
+import { generateHourlySlots } from '@/lib/day-utils';
 import { ItemLists } from './ItemLists';
 import type { TodoItem } from '@/components/TodoModal';
 import type { MeetingNoteItem } from '@/components/MeetingNoteModal';

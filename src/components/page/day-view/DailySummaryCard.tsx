@@ -5,8 +5,8 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { RATING_ICONS } from '@/app/day/[dayName]/page';
-import type { RatingType } from '@/app/day/[dayName]/page';
+import { RATING_ICONS } from '@/lib/day-constants';
+import type { RatingType } from '@/lib/day-constants';
 
 type DailyNoteDisplayMode = 'read' | 'edit' | 'pending';
 
