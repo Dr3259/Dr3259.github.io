@@ -79,7 +79,7 @@ export const EventRecordModal: React.FC<EventRecordModalProps> = ({
     const d = stepDetail.trim();
     if (!t) return;
     const order = steps.length + 1;
-    setSteps(prev => [...prev, { order, title: t, detail: d || null }]);
+    setSteps(prev => [...prev, { order, title: t, detail: d || undefined }]);
     setStepTitle('');
     setStepDetail('');
   };

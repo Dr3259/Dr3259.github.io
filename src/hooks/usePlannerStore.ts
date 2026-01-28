@@ -203,25 +203,21 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
             dataProvider.saveData(currentUser.uid, { allDrafts: newState }).catch(() => {});
         }
     },
-    setEventRecordsForSlot: (dateKey, hourSlot, items) => {
+    setEventRecordsForSlot: (dateKey: string, hourSlot: string, items) => {
         const sanitizedItems = items.map(item => ({
             ...item,
             title: item.title || '',
             steps: (item.steps || []).map((s, i) => ({
                 order: s.order ?? (i + 1),
                 title: s.title || '',
-                detail: s.detail ?? null
+                detail: s.detail ?? undefined
             })),
             timestamp: item.timestamp || new Date().toISOString(),
             completedAt: item.completedAt || new Date().toISOString()
-        }));
-        const newState = {
-            ...get().allEventRecords,
-            [dateKey]: {
-                ...(get().allEventRecords[dateKey] || {}),
-                [hourSlot]: sanitizedItems
-            }
-        };
+        })) as EventRecordItem[];
+        const byDate = { ...(get().allEventRecords[dateKey] || {}) };
+        byDate[hourSlot] = sanitizedItems;
+        const newState = { ...get().allEventRecords, [dateKey]: byDate };
         set({ allEventRecords: newState });
         const { currentUser } = get();
         if (currentUser) {

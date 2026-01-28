@@ -23,6 +23,7 @@ export interface DraftItem {
   id: string;
   content: string;
   images?: string[];
+  audios?: string[];
   timestamp?: string;
 }
 

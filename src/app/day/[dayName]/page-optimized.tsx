@@ -154,14 +154,15 @@ function DayDetailPageOptimizedContent() {
   // 优化：仅获取当前日期数据
   const plannerStore = usePlannerStore();
   const currentDayData = useMemo(() => {
-    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {} };
+    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {}, eventRecords: {} };
     return {
       dailyNote: plannerStore.allDailyNotes[dateKey] || '',
       rating: plannerStore.allRatings[dateKey] || null,
       todos: plannerStore.allTodos[dateKey] || {},
       meetingNotes: plannerStore.allMeetingNotes[dateKey] || {},
       shareLinks: plannerStore.allShareLinks[dateKey] || {},
-      reflections: plannerStore.allReflections[dateKey] || {}
+      reflections: plannerStore.allReflections[dateKey] || {},
+      eventRecords: plannerStore.allEventRecords[dateKey] || {}
     };
   }, [dateKey, plannerStore.allDailyNotes, plannerStore.allRatings, plannerStore.allTodos, plannerStore.allMeetingNotes, plannerStore.allShareLinks, plannerStore.allReflections]);
 
@@ -340,6 +341,9 @@ function DayDetailPageOptimizedContent() {
                   allShareLinks={{[dateKey]: currentDayData.shareLinks}}
                   allReflections={{[dateKey]: currentDayData.reflections}}
                   allDrafts={{}}
+                  allEventRecords={{ [dateKey]: currentDayData.eventRecords }}
+                  onOpenEventRecordModal={() => {}}
+                  onDeleteEventRecord={() => {}}
                   onToggleTodoCompletion={(dateKey, hourSlot, todoId) => {
                     const todos = currentDayData.todos[hourSlot] || [];
                     plannerStore.setTodosForSlot(dateKey, hourSlot, todos.map(t => 

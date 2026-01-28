@@ -429,7 +429,7 @@ export const ReflectionModal: React.FC<ReflectionModalProps> = ({
                 <div>
                   <Label className="text-xs mb-1 block">图标</Label>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center ring-2" style={{ ringColor: newTagColor }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center border-2" style={{ borderColor: newTagColor }}>
                       <span className="text-xl">{newTagEmoji}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">预览</span>

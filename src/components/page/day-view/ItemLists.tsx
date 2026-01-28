@@ -132,7 +132,7 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenEditTodoModal(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
                                         )}
                                         {todo.completed && (
-                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-slate-700" onClick={() => onOpenEventRecordModal(slot, { title: todo.text, steps: [], completedAt: new Date().toISOString() })}><History className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.addEventRecord || '记录事件'}</p></TooltipContent></Tooltip>
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-slate-700" onClick={() => onOpenEventRecordModal(slot)}><History className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.addEventRecord || '记录事件'}</p></TooltipContent></Tooltip>
                                         )}
                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteTodo(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
                                     </div>}
