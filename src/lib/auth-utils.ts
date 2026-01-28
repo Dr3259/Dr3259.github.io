@@ -19,7 +19,10 @@ export const checkAndRefreshToken = async (user: User): Promise<void> => {
       await user.getIdToken(true); // 强制刷新 token
       console.log('Token 刷新成功');
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'auth/network-request-failed') {
+      return;
+    }
     console.error('Token 刷新失败:', error);
   }
 };

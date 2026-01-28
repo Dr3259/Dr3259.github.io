@@ -11,9 +11,10 @@ import { getTagColor } from '@/lib/utils';
 import { usePlannerStore } from '@/hooks/usePlannerStore';
 import {
     ListChecks, ClipboardList, Link2 as LinkIconLucide, MessageSquareText, FileEdit, Trash2,
-    Star as StarIcon, ArrowRight, FileText
+    Star as StarIcon, ArrowRight, FileText, History
 } from 'lucide-react';
 import { CategoryIcons, DeadlineIcons } from '@/components/TodoModal';
+import type { EventRecordItem } from '@/components/EventRecordModal';
 import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, DraftItem, CategoryType } from '@/lib/page-types';
 
 interface ItemListsProps {
@@ -27,6 +28,7 @@ interface ItemListsProps {
     shareLinks: ShareLinkItem[];
     reflections: ReflectionItem[];
     drafts: DraftItem[];
+    eventRecords: EventRecordItem[];
     translations: any;
     onToggleTodoCompletion: (dateKey: string, hourSlot: string, todoId: string) => void;
     onDeleteTodo: (dateKey: string, hourSlot: string, todoId: string) => void;
@@ -41,21 +43,24 @@ interface ItemListsProps {
     onDeleteReflection: (dateKey: string, hourSlot: string, reflectionId: string) => void;
     onOpenDraftModal: (hourSlot: string, draft?: DraftItem) => void;
     onDeleteDraft: (dateKey: string, hourSlot: string, draftId: string) => void;
+    onOpenEventRecordModal: (hourSlot: string, item?: EventRecordItem) => void;
+    onDeleteEventRecord: (dateKey: string, hourSlot: string, id: string) => void;
 }
 
 export const ItemLists: React.FC<ItemListsProps> = ({
     dateKey, slot, isPastDay, isAddingDisabledForThisSlot, hasAnyContentForThisSlot,
-    todos, meetingNotes, shareLinks, reflections, drafts, translations: t,
+    todos, meetingNotes, shareLinks, reflections, drafts, eventRecords, translations: t,
     onToggleTodoCompletion, onDeleteTodo, onOpenTodoModal, onOpenEditTodoModal, onMoveTodoModal, onOpenMeetingNoteModal,
     onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection,
-    onOpenDraftModal, onDeleteDraft
+    onOpenDraftModal, onDeleteDraft, onOpenEventRecordModal, onDeleteEventRecord
 }) => {
     
     let sectionsRenderedInSlotCount = 0;
     const { customInspirationTags } = usePlannerStore();
 
     const getTagInfo = (categoryId: string) => {
-        return customInspirationTags.find(tag => tag.id === categoryId) || {
+        const tag = customInspirationTags.find(tag => tag.id === categoryId);
+        return tag || {
             id: categoryId,
             name: categoryId,
             emoji: '📌',
@@ -93,6 +98,7 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenShareLinkModal(slot)} disabled={isAddingDisabledForThisSlot}><LinkIconLucide className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addLink}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenReflectionModal(slot)} disabled={isAddingDisabledForThisSlot}><MessageSquareText className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addReflection}</p></TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenDraftModal(slot)} disabled={isAddingDisabledForThisSlot}><FileText className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addDraft || '草稿本'}</p></TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => onOpenEventRecordModal(slot)} disabled={isAddingDisabledForThisSlot}><History className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{t.addEventRecord || '事件记录'}</p></TooltipContent></Tooltip>
                 </div>
             </div>
 
@@ -119,13 +125,14 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                                     </div>
                                     {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/todoitem:opacity-100 transition-opacity">
                                         {isAddingDisabledForThisSlot ? (
-                                            // 过去的时间段：只有未完成的待办事项才显示移动按钮
                                             !todo.completed && (
                                                 <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-purple-500" onClick={() => onMoveTodoModal(dateKey, slot, todo)}><ArrowRight className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.moveTodo}</p></TooltipContent></Tooltip>
                                             )
                                         ) : (
-                                            // 当前和未来的时间段：显示编辑按钮
                                             <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenEditTodoModal(dateKey, slot, todo)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
+                                        )}
+                                        {todo.completed && (
+                                            <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-slate-700" onClick={() => onOpenEventRecordModal(slot, { title: todo.text, steps: [], completedAt: new Date().toISOString() })}><History className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.addEventRecord || '记录事件'}</p></TooltipContent></Tooltip>
                                         )}
                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteTodo(dateKey, slot, todo.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
                                     </div>}
@@ -206,9 +213,30 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                                                 )}
                                             </div>
                                         )}
-                                        <ScrollArea className="max-h-20 w-full">
-                                            <p className="text-xs text-foreground/90 whitespace-pre-wrap break-words" title={reflection.text}>{reflection.text}</p>
-                                        </ScrollArea>
+                                        <ScrollArea className="w-full">
+                                            <div className="space-y-1">
+                                                {reflection.text.split('\n').map((line, idx) => {
+                                                    const trimmed = line.trim();
+                                                    if (trimmed.startsWith('# ')) {
+                                                        return <div key={idx} className="text-sm font-semibold">{trimmed.replace(/^#\s/, '')}</div>;
+                                                    }
+                                                    if (trimmed.startsWith('## ')) {
+                                                        return <div key={idx} className="text-[13px] font-semibold pl-1">{trimmed.replace(/^##\s/, '')}</div>;
+                                                    }
+                                                    if (trimmed.startsWith('### ')) {
+                                                        return <div key={idx} className="text-[12px] font-medium pl-2">{trimmed.replace(/^###\s/, '')}</div>;
+                                                    }
+                                                    if (trimmed.startsWith('- ')) {
+                                                        return <div key={idx} className="flex items-start gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-foreground/70"></span><span className="text-xs">{trimmed.replace(/^-+\s/, '').replace(/^-+\s/, '').replace(/^-+\s/, '')}</span></div>;
+                                                    }
+                                                    if (/^\d+\.\s/.test(trimmed)) {
+                                                        return <div key={idx} className="flex items-start gap-2"><span className="text-[10px]">{trimmed.match(/^\d+/)?.[0]}.</span><span className="text-xs">{trimmed.replace(/^\d+\.\s/, '')}</span></div>;
+                                                    }
+                                                   
+                                                    return <div key={idx} className="text-xs">{line}</div>;
+                                                })}
+                                             </div>
+                                         </ScrollArea>
                                     </div>
                                     {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/reflectionitem:opacity-100 transition-opacity">
                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenReflectionModal(slot, reflection)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editReflection}</p></TooltipContent></Tooltip>
@@ -245,6 +273,45 @@ export const ItemLists: React.FC<ItemListsProps> = ({
                                 {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/draftitem:opacity-100 transition-opacity">
                                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenDraftModal(slot, draft)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editDraft || '编辑草稿'}</p></TooltipContent></Tooltip>
                                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteDraft(dateKey, slot, draft.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteDraft || '删除草稿'}</p></TooltipContent></Tooltip>
+                                </div>}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            );})()}
+            
+            {eventRecords.length > 0 && (() => { const isFirst = sectionsRenderedInSlotCount === 0; sectionsRenderedInSlotCount++; return (
+                <div className={cn("mb-3", !isFirst && "mt-4")}>
+                    <div className="flex items-center gap-1 mb-2">
+                        <History className="h-3.5 w-3.5 text-indigo-500" />
+                        <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">事件记录</span>
+                    </div>
+                    <ul className="space-y-2 p-px border-l-2 border-indigo-200 pl-3">
+                        {eventRecords.map((item) => (
+                            <li key={item.id} className="flex items-start justify-between group/eventitem hover:bg-indigo-50 dark:hover:bg-indigo-950/20 p-1.5 rounded-md transition-colors">
+                                <div className="flex-1 min-w-0 mr-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xs font-medium">{item.title}</span>
+                                        {item.completedAt && (<span className="text-[10px] text-muted-foreground">{new Date(item.completedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>)}
+                                        {item.steps?.length ? (<span className="text-[10px] text-muted-foreground">共 {item.steps.length} 步</span>) : null}
+                                    </div>
+                                    <ScrollArea className="max-h-24 w-full">
+                                        <div className="space-y-1">
+                                            {item.steps.map((s, idx) => (
+                                                <div key={idx} className="flex items-start gap-2">
+                                                  <span className="text-[10px] text-muted-foreground shrink-0">{s.order}.</span>
+                                                  <div className="flex-1">
+                                                    <div className="text-xs font-medium">{s.title}</div>
+                                                    {s.detail && <div className="text-xs text-foreground/90 whitespace-pre-wrap break-words">{s.detail}</div>}
+                                                  </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </div>
+                                {!isPastDay && <div className="flex items-center space-x-0.5 ml-1 shrink-0 opacity-0 group-hover/eventitem:opacity-100 transition-opacity">
+                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onOpenEventRecordModal(slot, item)}><FileEdit className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.editItem}</p></TooltipContent></Tooltip>
+                                    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => onDeleteEventRecord(dateKey, slot, item.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TooltipTrigger><TooltipContent><p>{t.deleteItem}</p></TooltipContent></Tooltip>
                                 </div>}
                             </li>
                         ))}

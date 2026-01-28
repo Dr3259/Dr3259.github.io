@@ -9,6 +9,7 @@ import type { TodoItem } from '@/components/TodoModal';
 import type { MeetingNoteItem } from '@/components/MeetingNoteModal';
 import type { ShareLinkItem } from '@/components/ShareLinkModal';
 import type { ReflectionItem } from '@/components/ReflectionModal';
+import type { EventRecordItem } from '@/components/EventRecordModal';
 
 export interface DraftItem {
     id: string;
@@ -29,6 +30,7 @@ interface TimeIntervalSectionProps {
     allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
     allReflections: Record<string, Record<string, ReflectionItem[]>>;
     allDrafts: Record<string, Record<string, DraftItem[]>>;
+    allEventRecords: Record<string, Record<string, EventRecordItem[]>>;
     translations: any;
     onToggleTodoCompletion: (dateKey: string, hourSlot: string, todoId: string) => void;
     onDeleteTodo: (dateKey: string, hourSlot: string, todoId: string) => void;
@@ -43,15 +45,17 @@ interface TimeIntervalSectionProps {
     onDeleteReflection: (dateKey: string, hourSlot: string, reflectionId: string) => void;
     onOpenDraftModal: (hourSlot: string, draft?: DraftItem) => void;
     onDeleteDraft: (dateKey: string, hourSlot: string, draftId: string) => void;
+    onOpenEventRecordModal: (hourSlot: string, item?: EventRecordItem) => void;
+    onDeleteEventRecord: (dateKey: string, hourSlot: string, id: string) => void;
 }
 
 export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
     interval, dateKey, isPastDay, isViewingCurrentDay, clientPageLoadTime,
     isCurrentActiveInterval, intervalRef, allTodos, allMeetingNotes, allShareLinks,
-    allReflections, allDrafts, translations: t,
+    allReflections, allDrafts, allEventRecords, translations: t,
     onToggleTodoCompletion, onDeleteTodo, onOpenTodoModal, onOpenEditTodoModal, onMoveTodoModal, onOpenMeetingNoteModal,
     onDeleteMeetingNote, onOpenShareLinkModal, onDeleteShareLink, onOpenReflectionModal, onDeleteReflection,
-    onOpenDraftModal, onDeleteDraft
+    onOpenDraftModal, onDeleteDraft, onOpenEventRecordModal, onDeleteEventRecord
 }) => {
 
     const hourlySlotsForInterval = generateHourlySlots(interval.label);
@@ -60,7 +64,8 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
         (allMeetingNotes[dateKey]?.[slot]?.length > 0) ||
         (allShareLinks[dateKey]?.[slot]?.length > 0) ||
         (allReflections[dateKey]?.[slot]?.length > 0) ||
-        (allDrafts[dateKey]?.[slot]?.length > 0)
+        (allDrafts[dateKey]?.[slot]?.length > 0) ||
+        (allEventRecords[dateKey]?.[slot]?.length > 0)
     );
 
     if (isPastDay && !hasContentInAnySlotOfInterval) {
@@ -151,6 +156,7 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                                 shareLinks={allShareLinks[dateKey]?.[slot] || []}
                                 reflections={allReflections[dateKey]?.[slot] || []}
                                 drafts={allDrafts[dateKey]?.[slot] || []}
+                                eventRecords={allEventRecords[dateKey]?.[slot] || []}
                                 onToggleTodoCompletion={onToggleTodoCompletion}
                                 onDeleteTodo={onDeleteTodo}
                                 onOpenTodoModal={onOpenTodoModal}
@@ -165,6 +171,8 @@ export const TimeIntervalSection: React.FC<TimeIntervalSectionProps> = ({
                                 onOpenDraftModal={onOpenDraftModal}
                                 onDeleteDraft={onDeleteDraft}
                                 translations={t}
+                                onOpenEventRecordModal={onOpenEventRecordModal}
+                                onDeleteEventRecord={onDeleteEventRecord}
                             />
                         );
                     })}

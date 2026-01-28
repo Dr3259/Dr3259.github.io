@@ -20,7 +20,17 @@ export interface ReflectionItem {
 export interface DraftItem {
   id: string;
   content: string;
+  images?: string[];
+  audios?: string[];
   timestamp?: string;
+}
+
+export interface EventRecordItem {
+  id: string;
+  title: string;
+  steps: Array<{ order: number; title: string; detail?: string }>;
+  timestamp?: string;
+  completedAt?: string;
 }
 
 export type RatingType = 'excellent' | 'terrible' | 'average' | null;
@@ -33,6 +43,7 @@ export interface AllLoadedData {
   allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
   allReflections: Record<string, Record<string, ReflectionItem[]>>;
   allDrafts: Record<string, Record<string, DraftItem[]>>;
+  allEventRecords?: Record<string, Record<string, EventRecordItem[]>>;
 }
 
 export interface ReceivedShareData {

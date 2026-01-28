@@ -416,7 +416,7 @@ export default function WeekGlancePage() {
     setIsQuickInspirationModalOpen(false);
   };
 
-  const handleSaveQuickDraft = ({ content, date }: { content: string; date: Date }) => {
+  const handleSaveQuickDraft = ({ content, date, images }: { content: string; date: Date; images?: string[] }) => {
     const dateKey = getDateKey(date);
     const now = new Date();
     const currentHour = now.getHours();
@@ -424,6 +424,7 @@ export default function WeekGlancePage() {
     
     addDraftToStore(dateKey, slotKey, { 
       content,
+      images: images || [],
       timestamp: new Date().toISOString()
     });
     

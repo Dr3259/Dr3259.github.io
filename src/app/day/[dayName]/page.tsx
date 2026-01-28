@@ -21,6 +21,7 @@ const MeetingNoteModal = lazy(() => import('@/components/MeetingNoteModal').then
 const ShareLinkModal = lazy(() => import('@/components/ShareLinkModal').then(module => ({ default: module.ShareLinkModal })));
 const ReflectionModal = lazy(() => import('@/components/ReflectionModal').then(module => ({ default: module.ReflectionModal })));
 const DraftModal = lazy(() => import('@/components/DraftModal').then(module => ({ default: module.DraftModal })));
+const EventRecordModal = lazy(() => import('@/components/EventRecordModal').then(module => ({ default: module.EventRecordModal })));
 import type { TodoItem, CategoryType } from '@/components/TodoModal';
 import type { MeetingNoteItem } from '@/components/MeetingNoteModal';
 import type { ShareLinkItem } from '@/components/ShareLinkModal';
@@ -77,11 +78,11 @@ function DayDetailPageContent() {
 
   // 优化：仅获取当前日期相关的数据，避免加载全部数据
   const plannerStore = usePlannerStore();
-  const { setDailyNote, setRating, setTodosForSlot, setMeetingNotesForSlot, setShareLinksForSlot, setReflectionsForSlot, setDraftsForSlot, addShareLink } = plannerStore;
+  const { setDailyNote, setRating, setTodosForSlot, setMeetingNotesForSlot, setShareLinksForSlot, setReflectionsForSlot, setDraftsForSlot, addShareLink, setEventRecordsForSlot } = plannerStore;
   
   // 仅获取当前日期的数据
   const currentDayData = useMemo(() => {
-    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {}, drafts: {} };
+    if (!dateKey) return { dailyNote: '', rating: null, todos: {}, meetingNotes: {}, shareLinks: {}, reflections: {}, drafts: {}, eventRecords: {} };
     return {
       dailyNote: plannerStore.allDailyNotes[dateKey] || '',
       rating: plannerStore.allRatings[dateKey] || null,
@@ -89,9 +90,10 @@ function DayDetailPageContent() {
       meetingNotes: plannerStore.allMeetingNotes[dateKey] || {},
       shareLinks: plannerStore.allShareLinks[dateKey] || {},
       reflections: plannerStore.allReflections[dateKey] || {},
-      drafts: plannerStore.allDrafts[dateKey] || {}
+      drafts: plannerStore.allDrafts[dateKey] || {},
+      eventRecords: plannerStore.allEventRecords[dateKey] || {}
     };
-  }, [dateKey, plannerStore.allDailyNotes, plannerStore.allRatings, plannerStore.allTodos, plannerStore.allMeetingNotes, plannerStore.allShareLinks, plannerStore.allReflections, plannerStore.allDrafts]);
+  }, [dateKey, plannerStore.allDailyNotes, plannerStore.allRatings, plannerStore.allTodos, plannerStore.allMeetingNotes, plannerStore.allShareLinks, plannerStore.allReflections, plannerStore.allDrafts, plannerStore.allEventRecords]);
 
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [selectedSlotForTodo, setSelectedSlotForTodo] = useState<SlotDetails | null>(null);
@@ -112,6 +114,9 @@ function DayDetailPageContent() {
   const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
   const [selectedSlotForDraft, setSelectedSlotForDraft] = useState<SlotDetails | null>(null);
   const [editingDraftItem, setEditingDraftItem] = useState<any | null>(null);
+  const [isEventRecordModalOpen, setIsEventRecordModalOpen] = useState(false);
+  const [selectedSlotForEventRecord, setSelectedSlotForEventRecord] = useState<SlotDetails | null>(null);
+  const [editingEventRecordItem, setEditingEventRecordItem] = useState<any | null>(null);
 
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [todoToMove, setTodoToMove] = useState<{todo: TodoItem, fromSlot: string} | null>(null);
@@ -152,6 +157,27 @@ function DayDetailPageContent() {
       addDraft: currentLanguage === 'zh-CN' ? '草稿本' : 'Draft',
       editDraft: currentLanguage === 'zh-CN' ? '编辑草稿' : 'Edit Draft',
       deleteDraft: currentLanguage === 'zh-CN' ? '删除草稿' : 'Delete Draft'
+    };
+  }, [currentLanguage]);
+  
+  const tEventRecordModal = useMemo(() => {
+    const isZh = currentLanguage === 'zh-CN';
+    return {
+      modalTitleNew: isZh ? '事件记录' : 'Event Record',
+      modalTitleEdit: isZh ? '编辑事件记录' : 'Edit Event Record',
+      modalDescription: isZh ? '记录事件的关键步骤与时间点。' : 'Record key steps and timestamps of an event.',
+      titleLabel: isZh ? '事件标题' : 'Event Title',
+      titlePlaceholder: isZh ? '例如：项目部署' : 'e.g., Project Deployment',
+      stepTitleLabel: isZh ? '步骤标题' : 'Step Title',
+      stepTitlePlaceholder: isZh ? '输入步骤标题...' : 'Enter step title...',
+      stepDetailLabel: isZh ? '步骤详情' : 'Step Detail',
+      stepDetailPlaceholder: isZh ? '补充说明（可选）...' : 'Additional notes (optional)...',
+      stepStatusLabel: isZh ? '步骤状态' : 'Step Status',
+      addStepButton: isZh ? '添加步骤' : 'Add Step',
+      saveButton: isZh ? '保存' : 'Save',
+      updateButton: isZh ? '更新' : 'Update',
+      deleteButton: isZh ? '删除' : 'Delete',
+      cancelButton: isZh ? '取消' : 'Cancel',
     };
   }, [currentLanguage]);
   
@@ -259,6 +285,10 @@ function DayDetailPageContent() {
     const browserLang: LanguageKey = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
     setCurrentLanguage(browserLang);
   }, []);
+  
+  useEffect(() => {
+    import('@/components/DraftModal');
+  }, []);
 
   // 临时翻译对象，直到翻译文件完善
   const tTodoModal = useMemo(() => {
@@ -352,7 +382,7 @@ function DayDetailPageContent() {
       modalTitleEdit: isZh ? '编辑思维灵感' : 'Edit Inspiration',
       modalDescription: isZh ? '为这个时间段记录你的思维火花和创意灵感。' : 'Record your thoughts and creative inspirations for this time slot.',
       textLabel: isZh ? '灵感内容' : 'Inspiration Content',
-      textPlaceholder: isZh ? '记录下你的思维灵感、创意想法或深度思考...' : 'Record your inspirations, creative ideas or deep thoughts...',
+      textPlaceholder: isZh ? '记录下你的思维灵感、创意想法或深度思考...（按 / 打开块菜单）' : 'Record your inspirations, creative ideas or deep thoughts... (Press / for block menu)',
       categoryLabel: isZh ? '分类' : 'Category',
       saveButton: isZh ? '保存灵感' : 'Save Inspiration',
       updateButton: isZh ? '更新灵感' : 'Update Inspiration',
@@ -461,6 +491,7 @@ function DayDetailPageContent() {
   }, [currentDayData.reflections, setReflectionsForSlot]);
 
   const handleOpenDraftModal = (hourSlot: string, draftToEdit?: DraftItem) => { if (dateKey) { setSelectedSlotForDraft({ dateKey, hourSlot }); setEditingDraftItem(draftToEdit || null); setIsDraftModalOpen(true); } };
+  const handleOpenEventRecordModal = (hourSlot: string, item?: any) => { if (dateKey) { setSelectedSlotForEventRecord({ dateKey, hourSlot }); setEditingEventRecordItem(item || null); setIsEventRecordModalOpen(true); } };
   const handleSaveDraft = useCallback((dateKey: string, hourSlot: string, savedDraft: DraftItem) => { 
     const drafts = currentDayData.drafts[hourSlot] || []; 
     const idx = drafts.findIndex(d => d.id === savedDraft.id); 
@@ -472,6 +503,16 @@ function DayDetailPageContent() {
     const drafts = currentDayData.drafts[hourSlot] || []; 
     setDraftsForSlot(dateKey, hourSlot, drafts.filter(d => d.id !== draftId)); 
   }, [currentDayData.drafts, setDraftsForSlot]);
+  const handleSaveEventRecord = useCallback((dateKey: string, hourSlot: string, saved: any) => { 
+    const items = currentDayData.eventRecords[hourSlot] || []; 
+    const idx = items.findIndex((x: any) => x.id === saved.id); 
+    const updated = idx > -1 ? items.map((x: any, i: number) => i === idx ? saved : x) : [...items, saved]; 
+    setEventRecordsForSlot(dateKey, hourSlot, updated); 
+  }, [currentDayData.eventRecords, setEventRecordsForSlot]);
+  const handleDeleteEventRecord = useCallback((dateKey: string, hourSlot: string, id: string) => { 
+    const items = currentDayData.eventRecords[hourSlot] || []; 
+    setEventRecordsForSlot(dateKey, hourSlot, items.filter((x: any) => x.id !== id)); 
+  }, [currentDayData.eventRecords, setEventRecordsForSlot]);
 
   const handleMoveTodoModal = (dateKey: string, hourSlot: string, todo: TodoItem) => {
     setTodoToMove({ todo, fromSlot: hourSlot });
@@ -562,6 +603,7 @@ function DayDetailPageContent() {
                   allShareLinks={{[dateKey]: currentDayData.shareLinks}} 
                   allReflections={{[dateKey]: currentDayData.reflections}} 
                   allDrafts={{[dateKey]: currentDayData.drafts}} 
+                  allEventRecords={{[dateKey]: currentDayData.eventRecords}}
                   onToggleTodoCompletion={handleToggleTodoCompletion} 
                   onDeleteTodo={handleDeleteTodo} 
                   onOpenTodoModal={handleOpenTodoModal} 
@@ -571,10 +613,12 @@ function DayDetailPageContent() {
                   onOpenShareLinkModal={handleOpenShareLinkModal} 
                   onOpenReflectionModal={handleOpenReflectionModal} 
                   onOpenDraftModal={handleOpenDraftModal} 
+                  onOpenEventRecordModal={handleOpenEventRecordModal}
                   onDeleteMeetingNote={handleDeleteMeetingNote} 
                   onDeleteShareLink={handleDeleteShareLink} 
                   onDeleteReflection={handleDeleteReflection} 
                   onDeleteDraft={handleDeleteDraft} 
+                  onDeleteEventRecord={handleDeleteEventRecord}
                   translations={t} 
                 /> 
               ))}
@@ -604,8 +648,13 @@ function DayDetailPageContent() {
         </Suspense>
       )}
       {isDraftModalOpen && selectedSlotForDraft && ( 
-        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+        <Suspense fallback={<div className="fixed inset-0 bg黑/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
           <DraftModal isOpen={isDraftModalOpen} onClose={() => setIsDraftModalOpen(false)} onSave={handleSaveDraft} onDelete={(draftId) => handleDeleteDraft(selectedSlotForDraft.dateKey, selectedSlotForDraft.hourSlot, draftId)} dateKey={selectedSlotForDraft.dateKey} hourSlot={selectedSlotForDraft.hourSlot} initialData={editingDraftItem} translations={tDraftModal} /> 
+        </Suspense>
+      )}
+      {isEventRecordModalOpen && selectedSlotForEventRecord && ( 
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="bg-background p-4 rounded-lg">加载中...</div></div>}>
+          <EventRecordModal isOpen={isEventRecordModalOpen} onClose={() => setIsEventRecordModalOpen(false)} onSave={handleSaveEventRecord} onDelete={(id) => handleDeleteEventRecord(selectedSlotForEventRecord.dateKey, selectedSlotForEventRecord.hourSlot, id)} dateKey={selectedSlotForEventRecord.dateKey} hourSlot={selectedSlotForEventRecord.hourSlot} initialData={editingEventRecordItem} translations={tEventRecordModal} /> 
         </Suspense>
       )}
 

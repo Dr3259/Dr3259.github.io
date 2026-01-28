@@ -2,7 +2,7 @@
 "use client";
 
 import { create } from 'zustand';
-import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, DraftItem, RatingType } from '@/lib/page-types';
+import type { TodoItem, MeetingNoteItem, ShareLinkItem, ReflectionItem, DraftItem, RatingType, EventRecordItem } from '@/lib/page-types';
 import { dataProvider } from '@/lib/data-provider';
 import type { User } from 'firebase/auth';
 
@@ -12,6 +12,7 @@ export interface PlannerData {
     allShareLinks: Record<string, Record<string, ShareLinkItem[]>>;
     allReflections: Record<string, Record<string, ReflectionItem[]>>;
     allDrafts: Record<string, Record<string, DraftItem[]>>;
+    allEventRecords: Record<string, Record<string, EventRecordItem[]>>;
     customInspirationTags: Array<{id: string; name: string; emoji: string; color: string}>; // 自定义标签
     allDailyNotes: Record<string, string>;
     allRatings: Record<string, RatingType>;
@@ -26,6 +27,7 @@ export interface PlannerState extends PlannerData {
     setShareLinksForSlot: (dateKey: string, hourSlot: string, links: ShareLinkItem[]) => void;
     setReflectionsForSlot: (dateKey: string, hourSlot: string, reflections: ReflectionItem[]) => void;
     setDraftsForSlot: (dateKey: string, hourSlot: string, drafts: DraftItem[]) => void;
+    setEventRecordsForSlot: (dateKey: string, hourSlot: string, items: EventRecordItem[]) => void;
     setDailyNote: (dateKey: string, note: string) => void;
     setRating: (dateKey: string, rating: RatingType) => void;
     setLastTodoMigrationDate: (date: string) => void;
@@ -34,6 +36,7 @@ export interface PlannerState extends PlannerData {
     addTodo: (dateKey: string, hourSlot: string, todo: Omit<TodoItem, 'id'>) => void;
     addReflection: (dateKey: string, hourSlot: string, reflection: Omit<ReflectionItem, 'id'>) => void;
     addDraft: (dateKey: string, hourSlot: string, draft: Omit<DraftItem, 'id'>) => void;
+    addEventRecord: (dateKey: string, hourSlot: string, item: Omit<EventRecordItem, 'id'>) => void;
     addCustomInspirationTag: (tag: {name: string; emoji: string; color: string}) => void;
     updateCustomInspirationTag: (id: string, tag: {name: string; emoji: string; color: string}) => void;
     deleteCustomInspirationTag: (id: string) => void;
@@ -48,10 +51,10 @@ let firestoreUnsubscribe: (() => void) | null = null;
 
 const DEFAULT_INSPIRATION_TAGS = [
     { id: 'idea', name: '想法', emoji: '💡', color: '#fbbf24' },
-    { id: 'thought', name: '思考', emoji: '🤔', color: '#8b5cf6' },
-    { id: 'quote', name: '摘录', emoji: '📝', color: '#06b6d4' },
-    { id: 'reminder', name: '提醒', emoji: '⏰', color: '#f59e0b' },
-    { id: 'other', name: '其他', emoji: '📌', color: '#6b7280' }
+    { id: 'reasoning', name: '推理', emoji: '🧠', color: '#8b5cf6' },
+    { id: 'review', name: '复盘', emoji: '🔁', color: '#10b981' },
+    { id: 'knowledge', name: '知识点', emoji: '📚', color: '#06b6d4' },
+    { id: 'goal', name: '目标', emoji: '🎯', color: '#ef4444' },
 ];
 
 const usePlannerStore = create<PlannerState>()((set, get) => ({
@@ -60,6 +63,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     allShareLinks: {},
     allReflections: {},
     allDrafts: {},
+    allEventRecords: {},
     customInspirationTags: DEFAULT_INSPIRATION_TAGS,
     allDailyNotes: {},
     allRatings: {},
@@ -78,7 +82,14 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
             firestoreUnsubscribe = dataProvider.onDataSnapshot(user.uid, (remoteData) => {
                 if (remoteData) {
                     console.log("Firestore data received:", remoteData);
-                    get()._setStore(remoteData);
+                    const current = get();
+                    const remoteTags = remoteData.customInspirationTags || [];
+                    const localTags = current.customInspirationTags || [];
+                    const byId: Record<string, {id:string; name:string; emoji:string; color:string}> = {};
+                    for (const t of remoteTags) byId[t.id] = t;
+                    for (const t of localTags) if (!byId[t.id]) byId[t.id] = t;
+                    const mergedTags = Object.values(byId);
+                    get()._setStore({ ...current, ...remoteData, customInspirationTags: mergedTags });
                 } else {
                     // No data on remote, check local and upload if exists
                     if (typeof window !== 'undefined') {
@@ -104,6 +115,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
                 isFirebaseConnected: false,
                 allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
                 allReflections: {}, allDrafts: {}, customInspirationTags: DEFAULT_INSPIRATION_TAGS, allDailyNotes: {}, allRatings: {},
+                allEventRecords: {},
                 lastTodoMigrationDate: null,
             });
             if (typeof window !== 'undefined') {
@@ -112,6 +124,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
                     if (dataString) {
                         const { state } = JSON.parse(dataString);
                         if (state) get()._setStore(state);
+                        set({ customInspirationTags: DEFAULT_INSPIRATION_TAGS });
                     }
                 } catch (e) {
                     console.error("Failed to load local data after logout:", e);
@@ -131,7 +144,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allTodos: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allTodos: newState });
+            dataProvider.saveData(currentUser.uid, { allTodos: newState }).catch(() => {});
         }
     },
     setMeetingNotesForSlot: (dateKey, hourSlot, notes) => {
@@ -145,7 +158,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allMeetingNotes: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allMeetingNotes: newState });
+            dataProvider.saveData(currentUser.uid, { allMeetingNotes: newState }).catch(() => {});
         }
     },
     setShareLinksForSlot: (dateKey, hourSlot, links) => {
@@ -159,7 +172,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allShareLinks: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allShareLinks: newState });
+            dataProvider.saveData(currentUser.uid, { allShareLinks: newState }).catch(() => {});
         }
     },
     setReflectionsForSlot: (dateKey, hourSlot, reflections) => {
@@ -173,7 +186,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allReflections: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allReflections: newState });
+            dataProvider.saveData(currentUser.uid, { allReflections: newState }).catch(() => {});
         }
     },
     setDraftsForSlot: (dateKey, hourSlot, drafts) => {
@@ -187,7 +200,32 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allDrafts: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allDrafts: newState });
+            dataProvider.saveData(currentUser.uid, { allDrafts: newState }).catch(() => {});
+        }
+    },
+    setEventRecordsForSlot: (dateKey, hourSlot, items) => {
+        const sanitizedItems = items.map(item => ({
+            ...item,
+            title: item.title || '',
+            steps: (item.steps || []).map((s, i) => ({
+                order: s.order ?? (i + 1),
+                title: s.title || '',
+                detail: s.detail ?? null
+            })),
+            timestamp: item.timestamp || new Date().toISOString(),
+            completedAt: item.completedAt || new Date().toISOString()
+        }));
+        const newState = {
+            ...get().allEventRecords,
+            [dateKey]: {
+                ...(get().allEventRecords[dateKey] || {}),
+                [hourSlot]: sanitizedItems
+            }
+        };
+        set({ allEventRecords: newState });
+        const { currentUser } = get();
+        if (currentUser) {
+            dataProvider.saveData(currentUser.uid, { allEventRecords: newState }).catch(() => {});
         }
     },
     setDailyNote: (dateKey, note) => {
@@ -195,7 +233,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allDailyNotes: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allDailyNotes: newState });
+            dataProvider.saveData(currentUser.uid, { allDailyNotes: newState }).catch(() => {});
         }
     },
     setRating: (dateKey, rating) => {
@@ -203,14 +241,14 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ allRatings: newState });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { allRatings: newState });
+            dataProvider.saveData(currentUser.uid, { allRatings: newState }).catch(() => {});
         }
     },
     setLastTodoMigrationDate: (date) => {
         set({ lastTodoMigrationDate: date });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { lastTodoMigrationDate: date });
+            dataProvider.saveData(currentUser.uid, { lastTodoMigrationDate: date }).catch(() => {});
         }
     },
     addTodo: (dateKey, hourSlot, todo) => {
@@ -228,13 +266,28 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         const newDraft = { ...draft, id: Date.now().toString() };
         get().setDraftsForSlot(dateKey, hourSlot, [...(get().allDrafts[dateKey]?.[hourSlot] || []), newDraft]);
     },
+    addEventRecord: (dateKey, hourSlot, item) => {
+        const newItem = { 
+            ...item, 
+            id: Date.now().toString(),
+            title: item.title || '',
+            steps: (item.steps || []).map((s, i) => ({
+                order: (s as any).order ?? (i + 1),
+                title: (s as any).title || '',
+                detail: (s as any).detail ?? null
+            })),
+            timestamp: item.timestamp || new Date().toISOString(),
+            completedAt: item.completedAt || new Date().toISOString()
+        };
+        get().setEventRecordsForSlot(dateKey, hourSlot, [...(get().allEventRecords[dateKey]?.[hourSlot] || []), newItem]);
+    },
     addCustomInspirationTag: (tag) => {
         const newTag = { ...tag, id: Date.now().toString() };
         const newTags = [...get().customInspirationTags, newTag];
         set({ customInspirationTags: newTags });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags });
+            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags }).catch(() => {});
         }
     },
     updateCustomInspirationTag: (id, tag) => {
@@ -242,7 +295,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ customInspirationTags: newTags });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags });
+            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags }).catch(() => {});
         }
     },
     deleteCustomInspirationTag: (id) => {
@@ -250,7 +303,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
         set({ customInspirationTags: newTags });
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags });
+            dataProvider.saveData(currentUser.uid, { customInspirationTags: newTags }).catch(() => {});
         }
     },
     addUnfinishedTodosToToday: (today, yesterday) => {
@@ -272,7 +325,7 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
                 dataProvider.saveData(state.currentUser.uid, {
                     allTodos: get().allTodos,
                     lastTodoMigrationDate: today
-                });
+                }).catch(() => {});
             }
         } else {
             get().setLastTodoMigrationDate(today);
@@ -282,13 +335,13 @@ const usePlannerStore = create<PlannerState>()((set, get) => ({
     clearAllPlannerData: () => {
         const emptyState: PlannerData = {
             allTodos: {}, allMeetingNotes: {}, allShareLinks: {},
-            allReflections: {}, allDrafts: {}, customInspirationTags: get().customInspirationTags, allDailyNotes: {}, allRatings: {},
+            allReflections: {}, allDrafts: {}, allEventRecords: {}, customInspirationTags: get().customInspirationTags, allDailyNotes: {}, allRatings: {},
             lastTodoMigrationDate: get().lastTodoMigrationDate
         };
         set(emptyState);
         const { currentUser } = get();
         if (currentUser) {
-            dataProvider.saveData(currentUser.uid, emptyState);
+            dataProvider.saveData(currentUser.uid, emptyState).catch(() => {});
         }
     },
 }));
@@ -318,6 +371,7 @@ usePlannerStore.subscribe(
                 allShareLinks: state.allShareLinks,
                 allReflections: state.allReflections,
                 allDrafts: state.allDrafts,
+                allEventRecords: state.allEventRecords,
                 customInspirationTags: state.customInspirationTags,
                 allDailyNotes: state.allDailyNotes,
                 allRatings: state.allRatings,
